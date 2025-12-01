@@ -1,0 +1,290 @@
+<route lang="json5">
+{
+  style: {
+    navigationBarTitleText: '地址管理',
+  },
+}
+</route>
+
+<template>
+  <view class="address-page">
+    <!-- 地址列表 -->
+    <view v-if="addressList.length > 0" class="address-list">
+      <view v-for="item in addressList" :key="item.id" class="address-item" @click="handleEdit(item)">
+        <view class="address-info">
+          <view class="address-header">
+            <text class="name">{{ item.name }}</text>
+            <text class="phone">{{ item.phone }}</text>
+            <text v-if="item.isDefault" class="default-tag">默认</text>
+          </view>
+          <view class="address-detail"> {{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }} </view>
+        </view>
+        <view class="address-actions">
+          <view class="action-item" @click.stop="handleSetDefault(item)">
+            <text :class="['i-carbon-checkbox', item.isDefault ? 'checked' : '']" />
+            <text class="action-text">默认</text>
+          </view>
+          <view class="action-item" @click.stop="handleDelete(item)">
+            <text class="i-carbon-trash-can" />
+            <text class="action-text">删除</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view v-else class="empty-state">
+      <text class="i-carbon-location empty-icon" />
+      <text class="empty-text">暂无收货地址</text>
+      <text class="empty-desc">添加收货地址，方便快速下单</text>
+    </view>
+
+    <!-- 添加地址按钮 -->
+    <view class="add-btn-wrapper">
+      <button class="add-btn" @click="handleAdd">
+        <text class="i-carbon-add" />
+        <text>添加新地址</text>
+      </button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
+
+interface AddressItem {
+  id: number;
+  name: string;
+  phone: string;
+  province: string;
+  city: string;
+  district: string;
+  detail: string;
+  isDefault: boolean;
+}
+
+const addressList = ref<AddressItem[]>([]);
+
+onShow(() => {
+  loadAddressList();
+});
+
+// 加载地址列表
+function loadAddressList() {
+  // TODO: 调用实际的 API 获取地址列表
+  // 模拟数据
+  addressList.value = [
+    {
+      id: 1,
+      name: '张三',
+      phone: '138****8888',
+      province: '广东省',
+      city: '深圳市',
+      district: '南山区',
+      detail: '科技园南路88号',
+      isDefault: true,
+    },
+    {
+      id: 2,
+      name: '李四',
+      phone: '139****9999',
+      province: '广东省',
+      city: '深圳市',
+      district: '福田区',
+      detail: '福田中心区68号',
+      isDefault: false,
+    },
+  ];
+}
+
+// 添加地址
+function handleAdd() {
+  uni.showToast({
+    title: '功能开发中',
+    icon: 'none',
+  });
+}
+
+// 编辑地址
+function handleEdit(item: AddressItem) {
+  uni.showToast({
+    title: `编辑地址: ${item.name}`,
+    icon: 'none',
+  });
+}
+
+// 设置默认地址
+function handleSetDefault(item: AddressItem) {
+  if (item.isDefault) return;
+
+  addressList.value.forEach(addr => {
+    addr.isDefault = addr.id === item.id;
+  });
+
+  uni.showToast({
+    title: '设置成功',
+    icon: 'success',
+  });
+}
+
+// 删除地址
+function handleDelete(item: AddressItem) {
+  uni.showModal({
+    title: '提示',
+    content: '确定要删除该地址吗？',
+    success: res => {
+      if (res.confirm) {
+        addressList.value = addressList.value.filter(addr => addr.id !== item.id);
+        uni.showToast({
+          title: '删除成功',
+          icon: 'success',
+        });
+      }
+    },
+  });
+}
+</script>
+
+<style scoped lang="scss">
+.address-page {
+  min-height: 100vh;
+  padding-bottom: calc($uni-safe-area-inset-bottom + 140rpx);
+  background: $uni-bg-color-grey;
+}
+
+// 地址列表
+.address-list {
+  padding: 24rpx;
+
+  .address-item {
+    margin-bottom: 24rpx;
+    padding: 32rpx;
+    border-radius: $uni-border-radius-lg;
+    background: $uni-bg-color;
+    box-shadow: $uni-shadow-sm;
+
+    .address-info {
+      .address-header {
+        display: flex;
+        gap: 16rpx;
+        align-items: center;
+        margin-bottom: 16rpx;
+
+        .name {
+          color: $uni-text-color;
+          font-size: 32rpx;
+          font-weight: 600;
+        }
+
+        .phone {
+          color: $uni-text-color-secondary;
+          font-size: 28rpx;
+        }
+
+        .default-tag {
+          padding: 4rpx 12rpx;
+          border-radius: 4rpx;
+          background: $uni-color-primary;
+          color: #fff;
+          font-size: 22rpx;
+        }
+      }
+
+      .address-detail {
+        color: $uni-text-color-secondary;
+        font-size: 28rpx;
+        line-height: 1.5;
+      }
+    }
+
+    .address-actions {
+      display: flex;
+      gap: 48rpx;
+      justify-content: flex-end;
+      margin-top: 24rpx;
+      padding-top: 24rpx;
+      border-top: 1px solid $uni-border-color-light;
+
+      .action-item {
+        display: flex;
+        gap: 8rpx;
+        align-items: center;
+        color: $uni-text-color-secondary;
+        font-size: 26rpx;
+
+        .i-carbon-checkbox {
+          font-size: 32rpx;
+
+          &.checked {
+            color: $uni-color-primary;
+          }
+        }
+
+        .i-carbon-trash-can {
+          font-size: 32rpx;
+        }
+      }
+    }
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  align-items: center;
+  padding: 120rpx 48rpx;
+
+  .empty-icon {
+    margin-bottom: 16rpx;
+    color: $uni-text-color-placeholder;
+    font-size: 120rpx;
+  }
+
+  .empty-text {
+    color: $uni-text-color;
+    font-size: 32rpx;
+  }
+
+  .empty-desc {
+    color: $uni-text-color-secondary;
+    font-size: 26rpx;
+  }
+}
+
+// 添加按钮
+.add-btn-wrapper {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 24rpx;
+  padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
+  background: $uni-bg-color;
+  box-shadow: 0 -4rpx 16rpx rgb(0 0 0 / 0.05);
+
+  .add-btn {
+    display: flex;
+    gap: 12rpx;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 96rpx;
+    border: none;
+    border-radius: $uni-border-radius-lg;
+    background: $uni-color-primary;
+    color: #fff;
+    font-size: 32rpx;
+
+    .i-carbon-add {
+      font-size: 36rpx;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+}
+</style>

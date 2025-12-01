@@ -1,0 +1,306 @@
+<route lang="json5">
+{
+  style: {
+    navigationBarTitleText: '',
+  },
+}
+</route>
+
+<template>
+  <uni-popup ref="popupRef" type="bottom" :safe-area="false" @change="handlePopupChange">
+    <view class="agreement-popup">
+      <!-- 头部 -->
+      <view class="popup-header">
+        <text class="popup-title">{{ title }}</text>
+        <view class="popup-close" @click="close">
+          <text class="i-carbon-close" />
+        </view>
+      </view>
+
+      <!-- 内容区域 -->
+      <scroll-view class="popup-content" scroll-y>
+        <URichText :content="content" />
+      </scroll-view>
+
+      <!-- 底部按钮 -->
+      <view class="popup-footer">
+        <button class="confirm-btn" @click="handleConfirm">我已阅读并同意</button>
+      </view>
+    </view>
+  </uni-popup>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import URichText from '@/components/URichText/index.vue';
+
+// 协议类型
+type AgreementType = 'user' | 'privacy';
+
+interface Emits {
+  (e: 'confirm', type: AgreementType): void;
+}
+
+const emit = defineEmits<Emits>();
+
+const popupRef = ref();
+const currentType = ref<AgreementType>('user');
+
+// 协议标题
+const title = computed(() => {
+  return currentType.value === 'user' ? '用户协议' : '隐私政策';
+});
+
+// 协议内容
+const content = computed(() => {
+  return currentType.value === 'user' ? USER_AGREEMENT : PRIVACY_POLICY;
+});
+
+// 打开弹窗
+function open(type: AgreementType) {
+  currentType.value = type;
+  popupRef.value?.open();
+}
+
+// 关闭弹窗
+function close() {
+  popupRef.value?.close();
+}
+
+// 确认按钮
+function handleConfirm() {
+  emit('confirm', currentType.value);
+  close();
+}
+
+// 弹窗状态变化
+function handlePopupChange(e: { show: boolean }) {
+  console.log('popup change:', e.show);
+}
+
+// 暴露方法
+defineExpose({
+  open,
+  close,
+});
+
+// 用户协议内容
+const USER_AGREEMENT = `
+<h2>用户服务协议</h2>
+<p>更新日期：2024年1月1日</p>
+<p>生效日期：2024年1月1日</p>
+
+<h3>一、总则</h3>
+<p>1.1 欢迎您使用我们的服务！为使用我们的服务，您应当阅读并遵守《用户服务协议》（以下简称"本协议"）。请您务必审慎阅读、充分理解各条款内容，特别是免除或者限制责任的条款，以及开通或使用某项服务的单独协议。</p>
+<p>1.2 除非您已阅读并接受本协议所有条款，否则您无权使用我们提供的服务。您使用我们的服务即视为您已阅读并同意上述协议的约束。</p>
+<p>1.3 如果您未满18周岁，请在法定监护人的陪同下阅读本协议，并特别注意未成年人使用条款。</p>
+
+<h3>二、账号注册与安全</h3>
+<p>2.1 您在使用本服务前需要注册一个账号。账号注册时，您应当按照注册页面的提示提供真实、准确、完整的信息。</p>
+<p>2.2 您有责任妥善保管注册账号信息及账号密码的安全，您需要对注册账号以及密码下的行为承担法律责任。</p>
+<p>2.3 当您发现他人未经授权使用您的账号时，您应立即通知我们。我们不对因此造成的损失承担责任。</p>
+<p>2.4 您的账号仅限您本人使用，未经我们书面同意，禁止以任何形式赠与、借用、租用、转让或售卖。</p>
+
+<h3>三、用户行为规范</h3>
+<p>3.1 您在使用本服务时，必须遵守中华人民共和国相关法律法规的规定，不得利用本服务进行任何违法或不当行为。</p>
+<p>3.2 您不得利用本服务从事以下行为：</p>
+<ul>
+  <li>发布、传送、传播、储存违反国家法律法规的内容；</li>
+  <li>发布、传送、传播、储存侵害他人名誉权、肖像权、知识产权、商业秘密等合法权利的内容；</li>
+  <li>虚构事实、隐瞒真相以误导、欺骗他人；</li>
+  <li>发布、传送、传播广告信息及垃圾信息；</li>
+  <li>从事其他违反法律法规、政策及社会公德的行为。</li>
+</ul>
+
+<h3>四、知识产权</h3>
+<p>4.1 我们提供的服务中所包含的所有内容，包括但不限于文字、图片、软件、音频、视频等，均受著作权法、商标法等法律法规保护。</p>
+<p>4.2 未经我们或相关权利人书面许可，您不得擅自使用、复制、修改、传播上述内容。</p>
+
+<h3>五、服务变更、中断或终止</h3>
+<p>5.1 我们可能会对服务内容进行变更，也可能会中断、中止或终止服务。</p>
+<p>5.2 如发生下列任何一种情形，我们有权不经通知而中断或终止向您提供的服务：</p>
+<ul>
+  <li>根据法律规定您应提交真实信息，而您提供的个人资料不真实或与注册时信息不一致又未能提供合理证明；</li>
+  <li>您违反相关法律法规或本协议的约定；</li>
+  <li>按照法律规定或有权机关的要求；</li>
+  <li>出于安全的原因或其他必要的情形。</li>
+</ul>
+
+<h3>六、免责声明</h3>
+<p>6.1 鉴于网络服务的特殊性，您同意我们有权不经事先通知，随时变更、中断或终止部分或全部的服务。</p>
+<p>6.2 我们不担保网络服务一定能满足您的要求，也不担保网络服务不会中断，对网络服务的及时性、安全性、准确性也都不作担保。</p>
+<p>6.3 对于因不可抗力或我们不能控制的原因造成的网络服务中断或其他缺陷，我们不承担任何责任。</p>
+
+<h3>七、协议修改</h3>
+<p>7.1 我们有权随时修改本协议的任何条款，一旦本协议的内容发生变动，我们将会在相关页面上公布修改后的协议内容。</p>
+<p>7.2 如果您不同意我们对本协议所做的修改，您有权停止使用我们的服务。如果您继续使用服务，则视为您接受本协议的修改。</p>
+
+<h3>八、其他</h3>
+<p>8.1 本协议的订立、执行和解释及争议的解决均应适用中华人民共和国法律。</p>
+<p>8.2 如双方就本协议内容或其执行发生任何争议，双方应尽量友好协商解决；协商不成时，任何一方均可向我们所在地的人民法院提起诉讼。</p>
+<p>8.3 本协议所有条款的标题仅为阅读方便，本身并无实际涵义，不能作为本协议涵义解释的依据。</p>
+`;
+
+// 隐私政策内容
+const PRIVACY_POLICY = `
+<h2>隐私政策</h2>
+<p>更新日期：2024年1月1日</p>
+<p>生效日期：2024年1月1日</p>
+
+<h3>引言</h3>
+<p>我们深知个人信息对您的重要性，我们将按照法律法规的规定，保护您的个人信息及隐私安全。我们制定本"隐私政策"并特别提示：希望您在使用我们的产品和服务前仔细阅读并理解本隐私政策，以便您做出适当的选择。</p>
+
+<h3>一、我们如何收集和使用您的个人信息</h3>
+<p>个人信息是指以电子或者其他方式记录的能够单独或者与其他信息结合识别特定自然人身份或者反映特定自然人活动情况的各种信息。我们会收集和使用以下类型的个人信息：</p>
+
+<h4>1.1 注册和登录</h4>
+<p>当您注册和登录时，我们会收集您的手机号码，用于创建账号和验证身份。</p>
+
+<h4>1.2 提供产品或服务</h4>
+<p>为了向您提供我们的产品或服务，我们可能会收集以下信息：</p>
+<ul>
+  <li><strong>设备信息：</strong>设备型号、操作系统版本、设备设置、唯一设备标识符等；</li>
+  <li><strong>日志信息：</strong>搜索查询内容、IP地址、浏览器类型、访问日期和时间等；</li>
+  <li><strong>位置信息：</strong>当您使用与位置有关的服务时，我们可能会记录您设备所在的位置信息。</li>
+</ul>
+
+<h4>1.3 安全保障</h4>
+<p>为了保障您的账号安全和系统运行安全，我们可能会收集您的设备信息、日志信息等，用于判断账号风险、防范安全事件。</p>
+
+<h3>二、我们如何共享、转让、公开披露您的个人信息</h3>
+
+<h4>2.1 共享</h4>
+<p>我们不会与其他公司、组织和个人共享您的个人信息，但以下情况除外：</p>
+<ul>
+  <li>事先获得您明确的同意或授权；</li>
+  <li>根据适用的法律法规、法律程序的要求、强制性的行政或司法要求；</li>
+  <li>在法律法规允许的范围内，为维护我们或合作伙伴、您或其他用户的合法权益。</li>
+</ul>
+
+<h4>2.2 转让</h4>
+<p>我们不会将您的个人信息转让给任何公司、组织和个人，但以下情况除外：</p>
+<ul>
+  <li>事先获得您明确的同意或授权；</li>
+  <li>根据适用的法律法规、法律程序的要求、强制性的行政或司法要求；</li>
+  <li>在涉及合并、收购或破产清算时，如涉及到个人信息转让，我们会要求新的持有您个人信息的公司、组织继续受本隐私政策的约束。</li>
+</ul>
+
+<h4>2.3 公开披露</h4>
+<p>我们仅会在以下情况下，公开披露您的个人信息：</p>
+<ul>
+  <li>获得您明确同意后；</li>
+  <li>基于法律的披露：在法律、法律程序、诉讼或政府主管部门强制性要求的情况下。</li>
+</ul>
+
+<h3>三、我们如何保护您的个人信息</h3>
+<p>3.1 我们已采取符合业界标准的安全防护措施保护您提供的个人信息，防止数据遭到未经授权访问、公开披露、使用、修改、损坏或丢失。</p>
+<p>3.2 我们会采取一切合理可行的措施，确保未收集无关的个人信息。我们只会在达成本政策所述目的所需的期限内保留您的个人信息，除非需要延长保留期或受到法律的允许。</p>
+<p>3.3 互联网环境并非百分之百安全，我们将尽力确保您发送给我们的任何信息的安全性。如果我们的物理、技术或管理防护设施遭到破坏，导致信息被非授权访问、公开披露、篡改或毁坏，导致您的合法权益受损，我们将承担相应的法律责任。</p>
+
+<h3>四、您的权利</h3>
+<p>按照中国相关的法律、法规、标准，以及其他国家、地区的通行做法，我们保障您对自己的个人信息行使以下权利：</p>
+
+<h4>4.1 访问和更正您的个人信息</h4>
+<p>您有权访问和更正您的个人信息，法律法规规定的例外情况除外。您可以通过以下方式自行访问和更正：登录账号，进入"我的"页面进行查看和修改。</p>
+
+<h4>4.2 删除您的个人信息</h4>
+<p>在以下情形中，您可以向我们提出删除个人信息的请求：</p>
+<ul>
+  <li>如果我们处理个人信息的行为违反法律法规；</li>
+  <li>如果我们收集、使用您的个人信息，却未征得您的同意；</li>
+  <li>如果我们处理个人信息的行为违反了与您的约定；</li>
+  <li>如果您不再使用我们的产品或服务，或您注销了账号；</li>
+  <li>如果我们不再为您提供产品或服务。</li>
+</ul>
+
+<h4>4.3 注销账号</h4>
+<p>您可以通过联系客服申请注销账号。在注销账号之后，我们将停止为您提供产品或服务，并依据您的要求，删除您的个人信息，法律法规另有规定的除外。</p>
+
+<h3>五、我们如何处理未成年人的个人信息</h3>
+<p>5.1 我们非常重视对未成年人个人信息的保护。若您是18周岁以下的未成年人，在使用我们的产品和/或服务前，应事先取得您的父母或法定监护人的同意。</p>
+<p>5.2 对于经父母或法定监护人同意而收集未成年人个人信息的情况，我们只会在受到法律允许、父母或法定监护人明确同意或者保护未成年人所必要的情况下使用或公开披露此信息。</p>
+
+<h3>六、本隐私政策如何更新</h3>
+<p>6.1 我们的隐私政策可能变更。未经您明确同意，我们不会削减您按照本隐私政策所应享有的权利。</p>
+<p>6.2 对于重大变更，我们还会提供更为显著的通知（包括对于某些服务，我们会通过发送通知，说明隐私政策的具体变更内容）。</p>
+
+<h3>七、如何联系我们</h3>
+<p>如果您对本隐私政策有任何疑问、意见或建议，可以通过以下方式与我们联系：</p>
+<ul>
+  <li>客服邮箱：support@example.com</li>
+  <li>客服电话：400-xxx-xxxx</li>
+</ul>
+<p>我们将在15个工作日内回复您的请求。</p>
+`;
+</script>
+
+<style scoped lang="scss">
+.agreement-popup {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  border-radius: 32rpx 32rpx 0 0;
+  background: #fff;
+}
+
+.popup-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 1px solid $uni-border-color;
+
+  .popup-title {
+    color: $uni-text-color;
+    font-size: 34rpx;
+    font-weight: 600;
+  }
+
+  .popup-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56rpx;
+    height: 56rpx;
+    border-radius: 50%;
+    background: $uni-bg-color-grey;
+
+    .i-carbon-close {
+      color: $uni-text-color-secondary;
+      font-size: 32rpx;
+    }
+  }
+}
+
+.popup-content {
+  flex: 1;
+  min-height: 0;
+  max-height: 60vh;
+  padding: 32rpx;
+  overflow-y: auto;
+}
+
+.popup-footer {
+  flex-shrink: 0;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  border-top: 1px solid $uni-border-color;
+
+  .confirm-btn {
+    width: 100%;
+    height: 88rpx;
+    border: none;
+    border-radius: $uni-border-radius-lg;
+    background: $uni-color-primary;
+    color: #fff;
+    font-size: 32rpx;
+    font-weight: 500;
+    line-height: 88rpx;
+
+    &:active {
+      opacity: 0.8;
+    }
+  }
+}
+</style>

@@ -1,0 +1,18 @@
+# 移动端浏览器配置 - 优化 core-js 体积
+[production staging]
+# iOS Safari 10+ (2016年发布)
+iOS >= 10
+# Android Chrome 70+ (2018年发布)
+Chrome >= 70
+# Android WebView
+Android >= 6.0
+# 其他现代浏览器
+Safari >= 10
+# 排除已停止维护的浏览器
+not dead
+not op_mini all
+not ie 11
+
+[development]
+last 1 chrome version
+last 1 safari version

@@ -1,0 +1,251 @@
+/**
+ * 隐藏滚动条
+ */
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/**
+ * Safe Area 适配 Mixin
+ * 用于适配刘海屏（notch）和 Home 指示器（home indicator）
+ *
+ * @param {string} $position - 适配位置: 'top' | 'right' | 'bottom' | 'left' | 'all' | 'vertical' | 'horizontal'
+ * @param {string|number} $value - 额外的内边距值，默认 0
+ * @param {string} $property - CSS 属性类型: 'padding' | 'margin'，默认 'padding'
+ *
+ * @example
+ * // 顶部适配（刘海屏）
+ * .navbar {
+ *   @include safe-area('top', 20px);
+ *   // 生成: padding-top: calc(env(safe-area-inset-top) + 20px);
+ * }
+ *
+ * @example
+ * // 底部适配（Home 指示器）
+ * .tabbar {
+ *   @include safe-area('bottom', 10px);
+ *   // 生成: padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+ * }
+ *
+ * @example
+ * // 全方向适配
+ * .container {
+ *   @include safe-area('all', 16px);
+ * }
+ *
+ * @example
+ * // 垂直方向适配（上下）
+ * .page {
+ *   @include safe-area('vertical', 20px);
+ * }
+ *
+ * @example
+ * // 使用 margin 而非 padding
+ * .modal {
+ *   @include safe-area('bottom', 0, 'margin');
+ * }
+ */
+@mixin safe-area($position: 'all', $value: 0, $property: 'padding') {
+  @if $position == 'top' {
+    @if $value == 0 {
+      #{$property}-top: env(safe-area-inset-top);
+    } @else {
+      #{$property}-top: calc(env(safe-area-inset-top) + #{$value});
+    }
+  } @else if $position == 'right' {
+    @if $value == 0 {
+      #{$property}-right: env(safe-area-inset-right);
+    } @else {
+      #{$property}-right: calc(env(safe-area-inset-right) + #{$value});
+    }
+  } @else if $position == 'bottom' {
+    @if $value == 0 {
+      #{$property}-bottom: env(safe-area-inset-bottom);
+    } @else {
+      #{$property}-bottom: calc(env(safe-area-inset-bottom) + #{$value});
+    }
+  } @else if $position == 'left' {
+    @if $value == 0 {
+      #{$property}-left: env(safe-area-inset-left);
+    } @else {
+      #{$property}-left: calc(env(safe-area-inset-left) + #{$value});
+    }
+  } @else if $position == 'vertical' {
+    // 垂直方向（上下）
+    @if $value == 0 {
+      #{$property}-top: env(safe-area-inset-top);
+      #{$property}-bottom: env(safe-area-inset-bottom);
+    } @else {
+      #{$property}-top: calc(env(safe-area-inset-top) + #{$value});
+      #{$property}-bottom: calc(env(safe-area-inset-bottom) + #{$value});
+    }
+  } @else if $position == 'horizontal' {
+    // 水平方向（左右）
+    @if $value == 0 {
+      #{$property}-left: env(safe-area-inset-left);
+      #{$property}-right: env(safe-area-inset-right);
+    } @else {
+      #{$property}-left: calc(env(safe-area-inset-left) + #{$value});
+      #{$property}-right: calc(env(safe-area-inset-right) + #{$value});
+    }
+  } @else {
+    // 全方向
+    @if $value == 0 {
+      #{$property}-top: env(safe-area-inset-top);
+      #{$property}-right: env(safe-area-inset-right);
+      #{$property}-bottom: env(safe-area-inset-bottom);
+      #{$property}-left: env(safe-area-inset-left);
+    } @else {
+      #{$property}-top: calc(env(safe-area-inset-top) + #{$value});
+      #{$property}-right: calc(env(safe-area-inset-right) + #{$value});
+      #{$property}-bottom: calc(env(safe-area-inset-bottom) + #{$value});
+      #{$property}-left: calc(env(safe-area-inset-left) + #{$value});
+    }
+  }
+}
+
+/**
+ * 1px 边框解决方案
+ * 用于解决高分屏（devicePixelRatio > 1）下，1px 边框显示为 2px 物理像素的问题
+ *
+ * @param {string} $color - 边框颜色，默认使用 CSS 变量 var(--colorBorder)
+ * @param {string} $direction - 边框方向: 'top' | 'right' | 'bottom' | 'left' | 'all'
+ * @param {number} $radius - 圆角半径，默认 0
+ *
+ * @example
+ * .element {
+ *   @include hairline-border(var(--colorBorder), 'top');
+ * }
+ *
+ * .element {
+ *   @include hairline-border(var(--colorPrimary), 'all', 8px);
+ * }
+ */
+@mixin hairline-border($color: var(--colorBorder), $direction: 'all', $radius: 0) {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: none;
+
+    // 根据方向设置边框位置
+    @if $direction == 'top' {
+      top: 0;
+      right: 0;
+      left: 0;
+      border-top: 1px solid $color;
+    } @else if $direction == 'right' {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      border-right: 1px solid $color;
+    } @else if $direction == 'bottom' {
+      right: 0;
+      bottom: 0;
+      left: 0;
+      border-bottom: 1px solid $color;
+    } @else if $direction == 'left' {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      border-left: 1px solid $color;
+    } @else {
+      // 默认全边框
+      inset: 0;
+      border: 1px solid $color;
+
+      @if $radius != 0 {
+        border-radius: $radius;
+      }
+    }
+
+    // 2倍屏适配
+    @media (-webkit-min-device-pixel-ratio: 2), (resolution >= 2dppx) {
+      @if $direction == 'top' {
+        transform: scaleY(0.5);
+        transform-origin: 0 0;
+      } @else if $direction == 'right' {
+        transform: scaleX(0.5);
+        transform-origin: 100% 0;
+      } @else if $direction == 'bottom' {
+        transform: scaleY(0.5);
+        transform-origin: 0 100%;
+      } @else if $direction == 'left' {
+        transform: scaleX(0.5);
+        transform-origin: 0 0;
+      } @else {
+        width: 200%;
+        height: 200%;
+        transform: scale(0.5);
+        transform-origin: 0 0;
+
+        @if $radius != 0 {
+          border-radius: $radius * 2;
+        }
+      }
+    }
+
+    // 3倍屏适配
+    @media (-webkit-min-device-pixel-ratio: 3), (resolution >= 3dppx) {
+      @if $direction == 'top' {
+        transform: scaleY(0.333);
+        transform-origin: 0 0;
+      } @else if $direction == 'right' {
+        transform: scaleX(0.333);
+        transform-origin: 100% 0;
+      } @else if $direction == 'bottom' {
+        transform: scaleY(0.333);
+        transform-origin: 0 100%;
+      } @else if $direction == 'left' {
+        transform: scaleX(0.333);
+        transform-origin: 0 0;
+      } @else {
+        width: 300%;
+        height: 300%;
+        transform: scale(0.333);
+        transform-origin: 0 0;
+
+        @if $radius != 0 {
+          border-radius: $radius * 3;
+        }
+      }
+    }
+  }
+}
+
+// 单行省略
+@mixin tofl($width) {
+  max-width: $width;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  white-space: nowrap;
+}
+
+// 多行省略
+@mixin erow($row: 2) {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+// 单行省略类名
+.ellipsis {
+  @include tofl(100%);
+}
+
+// 多行省略类名
+@for $i from 1 through 5 {
+  .multi-ellipsis-#{$i} {
+    @include erow(#{$i});
+  }
+}

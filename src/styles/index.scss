@@ -1,0 +1,39 @@
+/**
+ * 全局样式入口
+ * 在 App.vue 中引入
+ */
+
+// 导入 uni.scss 变量
+@use '@/uni.scss' as *;
+
+// ============================================
+// 安全区域适配 (统一定义)
+// ============================================
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-right: env(safe-area-inset-right);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+  --safe-area-inset-left: env(safe-area-inset-left);
+}
+
+.safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 页面基础样式 */
+page {
+  box-sizing: border-box;
+  background-color: $uni-bg-color-grey;
+  color: $uni-text-color;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', STHeiti, 'Microsoft Yahei', Tahoma, Simsun,
+    sans-serif;
+  font-size: $uni-font-size-base;
+  line-height: $uni-line-height-base;
+}

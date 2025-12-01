@@ -1,0 +1,74 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm start:*)",
+      "Bash(pnpm api:gen:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm type-check:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm commit:*)",
+      "Bash(pnpm build:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git fetch:*)"
+    ],
+    "deny": []
+  },
+  "enabledMcpjsonServers": ["figma", "context7", "eslint", "chrome-devtools", "sentry"],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status --short || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '🚀 Vue Admin Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '👋 会话结束！\\n\\n📊 Git 状态：\\n' && git status --short 2>/dev/null || echo '无 Git 仓库'"
+          }
+        ]
+      }
+    ]
+  }
+}

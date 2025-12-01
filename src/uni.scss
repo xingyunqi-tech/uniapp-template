@@ -1,0 +1,102 @@
+/**
+ * uni.scss - UniApp 全局样式变量
+ * 该文件会被 UniApp 自动注入到每个组件的 <style> 中
+ * 无需手动 @import
+ */
+
+// ============================================
+// 主题色 - 与 CSS 变量对应
+// ============================================
+$uni-color-primary: #1989fa;
+$uni-color-primary-light: #66b1ff;
+$uni-color-primary-dark: #1677ff;
+$uni-color-success: #07c160;
+$uni-color-warning: #ff976a;
+$uni-color-error: #ee0a24;
+$uni-color-info: #909399;
+
+// ============================================
+// 文字颜色
+// ============================================
+$uni-text-color: #323233;
+$uni-text-color-secondary: #969799;
+$uni-text-color-placeholder: #c8c9cc;
+$uni-text-color-disabled: #c8c9cc;
+$uni-text-color-inverse: #fff;
+
+// ============================================
+// 背景颜色
+// ============================================
+$uni-bg-color: #fff;
+$uni-bg-color-grey: #f7f8fa;
+$uni-bg-color-hover: #f2f3f5;
+$uni-bg-color-mask: rgb(0 0 0 / 0.7);
+
+// ============================================
+// 边框颜色
+// ============================================
+$uni-border-color: #ebedf0;
+$uni-border-color-light: #f7f8fa;
+
+// ============================================
+// 字体大小
+// ============================================
+$uni-font-size-xs: 20rpx;
+$uni-font-size-sm: 24rpx;
+$uni-font-size-base: 28rpx;
+$uni-font-size-lg: 32rpx;
+$uni-font-size-xl: 36rpx;
+$uni-font-size-xxl: 44rpx;
+
+// ============================================
+// 行高
+// ============================================
+$uni-line-height-xs: 28rpx;
+$uni-line-height-sm: 36rpx;
+$uni-line-height-base: 40rpx;
+$uni-line-height-lg: 48rpx;
+
+// ============================================
+// 圆角
+// ============================================
+$uni-border-radius-sm: 4rpx;
+$uni-border-radius-base: 8rpx;
+$uni-border-radius-lg: 16rpx;
+$uni-border-radius-xl: 24rpx;
+$uni-border-radius-circle: 50%;
+
+// ============================================
+// 间距
+// ============================================
+$uni-spacing-xs: 8rpx;
+$uni-spacing-sm: 16rpx;
+$uni-spacing-base: 24rpx;
+$uni-spacing-lg: 32rpx;
+$uni-spacing-xl: 48rpx;
+
+// ============================================
+// 阴影
+// ============================================
+$uni-shadow-sm: 0 2rpx 8rpx rgb(0 0 0 / 0.08);
+$uni-shadow-base: 0 4rpx 16rpx rgb(0 0 0 / 0.1);
+$uni-shadow-lg: 0 8rpx 24rpx rgb(0 0 0 / 0.12);
+
+// ============================================
+// 动画时间
+// ============================================
+$uni-duration-fast: 0.2s;
+$uni-duration-base: 0.3s;
+$uni-duration-slow: 0.5s;
+
+// ============================================
+// z-index 层级
+// ============================================
+$uni-z-index-popup: 1000;
+$uni-z-index-modal: 1100;
+$uni-z-index-toast: 1200;
+
+// ============================================
+// 安全区域
+// ============================================
+$uni-safe-area-inset-top: env(safe-area-inset-top);
+$uni-safe-area-inset-bottom: env(safe-area-inset-bottom);
