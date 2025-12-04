@@ -26,7 +26,7 @@
         placeholder="请输入手机号"
         prefix-icon="phone"
         type="number"
-        :maxlength="11"
+        :maxlength="PHONE_LENGTH"
         :clearable="true"
       />
 
@@ -35,7 +35,7 @@
         <uni-easyinput
           v-model="formData.password"
           type="password"
-          placeholder="请输入密码（6-20位）"
+          :placeholder="`请输入密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
           prefix-icon="locked"
           :clearable="true"
         />
@@ -50,19 +50,13 @@
       </template>
 
       <!-- 验证码注册 -->
-      <view v-else class="sms-input">
-        <uni-easyinput
-          v-model="formData.code"
-          placeholder="请输入验证码"
-          prefix-icon="email"
-          type="number"
-          :maxlength="6"
-          :clearable="true"
-        />
-        <button class="sms-btn" :disabled="countdown > 0" @click="handleSendCode">
-          {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-        </button>
-      </view>
+      <USmsInput
+        v-else
+        v-model="formData.code"
+        :countdown="sms.countdown.value"
+        :is-counting="sms.isCounting.value"
+        @send="handleSendCode"
+      />
 
       <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleRegister">
         {{ loading ? '注册中...' : '注册' }}
@@ -87,25 +81,19 @@
         <text class="agreement-link" @click.stop="showAgreement('privacy')">《隐私政策》</text>
       </text>
     </view>
-
-    <!-- 协议弹窗 -->
-    <AgreementPopup ref="agreementPopupRef" @confirm="handleAgreementConfirm" />
   </AuthLayout>
 </template>
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter } from '@/composables/useRouter';
-import { isPhone } from '@/utils/validator';
+import { useRouter, useSendSms } from '@/composables';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
-import AgreementPopup from '@/components/AgreementPopup/index.vue';
+import USmsInput from '@/components/USmsInput/index.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
-
-// 协议弹窗引用
-const agreementPopupRef = ref<InstanceType<typeof AgreementPopup>>();
 
 // 注册方式: password | sms
 const registerType = ref<'password' | 'sms'>('password');
@@ -124,21 +112,14 @@ const loading = ref(false);
 // 是否同意协议
 const agreed = ref(false);
 
-// 验证码倒计时
-const countdown = ref(0);
-let countdownTimer: ReturnType<typeof setInterval> | null = null;
+// 短信验证码
+const sms = useSendSms({
+  sendApi: phone => userStore.sendSmsCode(phone),
+});
 
 // 表单验证
 function validateForm(): boolean {
-  if (!formData.phone) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' });
-    return false;
-  }
-
-  if (!isPhone(formData.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-    return false;
-  }
+  if (!sms.validatePhone(formData.phone)) return false;
 
   if (registerType.value === 'password') {
     if (!formData.password) {
@@ -146,8 +127,8 @@ function validateForm(): boolean {
       return false;
     }
 
-    if (formData.password.length < 6 || formData.password.length > 20) {
-      uni.showToast({ title: '密码长度应为6-20位', icon: 'none' });
+    if (formData.password.length < PASSWORD_MIN_LENGTH || formData.password.length > PASSWORD_MAX_LENGTH) {
+      uni.showToast({ title: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`, icon: 'none' });
       return false;
     }
 
@@ -161,14 +142,7 @@ function validateForm(): boolean {
       return false;
     }
   } else {
-    if (!formData.code) {
-      uni.showToast({ title: '请输入验证码', icon: 'none' });
-      return false;
-    }
-    if (formData.code.length !== 6) {
-      uni.showToast({ title: '验证码为6位数字', icon: 'none' });
-      return false;
-    }
+    if (!sms.validateCode(formData.code)) return false;
   }
 
   if (!agreed.value) {
@@ -181,33 +155,9 @@ function validateForm(): boolean {
 
 // 发送验证码
 async function handleSendCode() {
-  if (!formData.phone) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' });
-    return;
-  }
-
-  if (!isPhone(formData.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-    return;
-  }
-
-  try {
-    await userStore.sendSmsCode(formData.phone);
-
+  const success = await sms.send(formData.phone);
+  if (success) {
     uni.showToast({ title: '验证码已发送', icon: 'success' });
-
-    // 开始倒计时
-    countdown.value = 60;
-    countdownTimer = setInterval(() => {
-      countdown.value--;
-      if (countdown.value <= 0) {
-        clearInterval(countdownTimer!);
-        countdownTimer = null;
-      }
-    }, 1000);
-  } catch (error) {
-    console.error('发送验证码失败:', error);
-    uni.showToast({ title: '发送失败，请重试', icon: 'none' });
   }
 }
 
@@ -240,7 +190,7 @@ async function handleRegister() {
     // 跳转到首页
     setTimeout(() => {
       router.switchTab('/pages/index/index');
-    }, 1500);
+    }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('注册失败:', error);
     uni.showToast({
@@ -257,14 +207,9 @@ function goToLogin() {
   router.back();
 }
 
-// 显示协议弹窗
+// 显示协议页面
 function showAgreement(type: 'user' | 'privacy') {
-  agreementPopupRef.value?.open(type);
-}
-
-// 协议确认回调
-function handleAgreementConfirm() {
-  agreed.value = true;
+  router.push(`${PAGES.AGREEMENT}?type=${type}`);
 }
 </script>
 
@@ -300,38 +245,6 @@ function handleAgreementConfirm() {
   display: flex;
   flex-direction: column;
   gap: 32rpx;
-
-  .sms-input {
-    display: flex;
-    gap: 20rpx;
-    align-items: center;
-
-    :deep(.uni-easyinput) {
-      flex: 1;
-    }
-
-    .sms-btn {
-      flex-shrink: 0;
-      width: 200rpx;
-      height: 72rpx;
-      padding: 0;
-      border: none;
-      border-radius: $uni-border-radius-base;
-      background: $uni-color-primary;
-      color: #fff;
-      font-size: 26rpx;
-      line-height: 72rpx;
-
-      &:active {
-        opacity: 0.8;
-      }
-
-      &[disabled] {
-        background: $uni-bg-color-grey;
-        color: $uni-text-color-disabled;
-      }
-    }
-  }
 
   .submit-btn {
     width: 100%;

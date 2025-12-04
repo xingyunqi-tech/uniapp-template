@@ -52,8 +52,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
+import { useRouter } from '@/composables/useRouter';
+import { PAGES } from '@/constants';
 
-interface AddressItem {
+export interface AddressItem {
   id: number;
   name: string;
   phone: string;
@@ -64,6 +66,7 @@ interface AddressItem {
   isDefault: boolean;
 }
 
+const router = useRouter();
 const addressList = ref<AddressItem[]>([]);
 
 onShow(() => {
@@ -78,7 +81,7 @@ function loadAddressList() {
     {
       id: 1,
       name: '张三',
-      phone: '138****8888',
+      phone: '13888888888',
       province: '广东省',
       city: '深圳市',
       district: '南山区',
@@ -88,7 +91,7 @@ function loadAddressList() {
     {
       id: 2,
       name: '李四',
-      phone: '139****9999',
+      phone: '13999999999',
       province: '广东省',
       city: '深圳市',
       district: '福田区',
@@ -100,24 +103,19 @@ function loadAddressList() {
 
 // 添加地址
 function handleAdd() {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none',
-  });
+  router.push(PAGES.ADDRESS_EDIT);
 }
 
 // 编辑地址
 function handleEdit(item: AddressItem) {
-  uni.showToast({
-    title: `编辑地址: ${item.name}`,
-    icon: 'none',
-  });
+  router.push(`${PAGES.ADDRESS_EDIT}?id=${item.id}`);
 }
 
 // 设置默认地址
 function handleSetDefault(item: AddressItem) {
   if (item.isDefault) return;
 
+  // TODO: 调用实际的 API 设置默认地址
   addressList.value.forEach(addr => {
     addr.isDefault = addr.id === item.id;
   });
@@ -135,6 +133,7 @@ function handleDelete(item: AddressItem) {
     content: '确定要删除该地址吗？',
     success: res => {
       if (res.confirm) {
+        // TODO: 调用实际的 API 删除地址
         addressList.value = addressList.value.filter(addr => addr.id !== item.id);
         uni.showToast({
           title: '删除成功',

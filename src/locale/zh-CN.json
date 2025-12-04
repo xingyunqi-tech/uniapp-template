@@ -1,0 +1,21 @@
+{
+  "uni.showModal.cancel": "取消",
+  "uni.showModal.confirm": "确定",
+  "uni.showActionSheet.cancel": "取消",
+  "uni.showToast.unpaired": "请注意 showToast 与 hideToast 必须配对使用",
+  "uni.showLoading.unpaired": "请注意 showLoading 与 hideLoading 必须配对使用",
+  "uni.picker.done": "完成",
+  "uni.picker.cancel": "取消",
+  "uni.video.danmu": "弹幕",
+  "uni.video.volume": "音量",
+  "uni.button.feedback.title": "问题反馈",
+  "uni.button.feedback.send": "发送",
+  "uni.chooseLocation.search": "搜索地点",
+  "uni.chooseLocation.cancel": "取消",
+  "uni.chooseFile.notUserActivation": "请在点击事件中调用 chooseFile",
+  "uni.setClipboardData.success": "内容已复制",
+  "uni.getClipboardData.fail": "读取剪贴板失败",
+  "uni.async.error": "连接服务器超时，点击屏幕重试",
+
+  "common.setting": "设置"
+}

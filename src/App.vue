@@ -7,19 +7,12 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide, onError } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
-import { useUserStore } from '@/store/modules/user';
 
 // 应用启动
 onLaunch(options => {
   console.log('App Launch', options);
 
-  // 初始化全局配置
-  const globalStore = useGlobalStore();
-  globalStore.initTheme();
-
-  // 初始化用户信息
-  const userStore = useUserStore();
-  userStore.initUser();
+  useGlobalStore();
 });
 
 // 应用显示 (从后台进入前台)

@@ -13,8 +13,6 @@ export interface UserInfo {
   id?: number;
   /** 用户名 */
   username?: string;
-  /** 邮箱 */
-  email?: string;
   /** 角色 */
   role?: string;
 }

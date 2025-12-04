@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 /**
  * 用户信息接口
@@ -8,10 +7,8 @@ import { storage, STORAGE_KEYS } from '@/utils/storage';
 export interface UserInfo {
   id?: number;
   username?: string;
-  nickname?: string;
   avatar?: string;
   phone?: string;
-  email?: string;
 }
 
 /**
@@ -69,28 +66,11 @@ export const useUserStore = defineStore(
 
     // ==================== Actions ====================
     /**
-     * 初始化用户状态
-     * 从本地存储恢复 token 和用户信息
-     */
-    function initUser() {
-      const savedToken = storage.get<string>(STORAGE_KEYS.TOKEN);
-      const savedUserInfo = storage.get<UserInfo>(STORAGE_KEYS.USER_INFO);
-
-      if (savedToken) {
-        token.value = savedToken;
-      }
-      if (savedUserInfo) {
-        userInfo.value = savedUserInfo;
-      }
-    }
-
-    /**
      * 设置 Token
      * @param tokenValue Token 字符串
      */
     function setToken(tokenValue: string) {
       token.value = tokenValue;
-      storage.set(STORAGE_KEYS.TOKEN, tokenValue);
     }
 
     /**
@@ -99,11 +79,6 @@ export const useUserStore = defineStore(
      */
     function setUserInfo(info: UserInfo | null) {
       userInfo.value = info;
-      if (info) {
-        storage.set(STORAGE_KEYS.USER_INFO, info);
-      } else {
-        storage.remove(STORAGE_KEYS.USER_INFO);
-      }
     }
 
     /**
@@ -120,10 +95,8 @@ export const useUserStore = defineStore(
         const mockUserInfo: UserInfo = {
           id: 1,
           username: params.phone,
-          nickname: '用户' + params.phone.slice(-4),
           avatar: '',
           phone: params.phone,
-          email: '',
         };
 
         setToken(mockToken);
@@ -149,10 +122,8 @@ export const useUserStore = defineStore(
         const mockUserInfo: UserInfo = {
           id: Date.now(),
           username: params.phone,
-          nickname: '用户' + params.phone.slice(-4),
           avatar: '',
           phone: params.phone,
-          email: '',
         };
 
         setToken(mockToken);
@@ -178,10 +149,8 @@ export const useUserStore = defineStore(
         const mockUserInfo: UserInfo = {
           id: Date.now(),
           username: params.phone,
-          nickname: '用户' + params.phone.slice(-4),
           avatar: '',
           phone: params.phone,
-          email: '',
         };
 
         setToken(mockToken);
@@ -224,10 +193,8 @@ export const useUserStore = defineStore(
         const mockUserInfo: UserInfo = {
           id: Date.now(),
           username: '微信用户',
-          nickname: '微信用户',
           avatar: '',
           phone: '',
-          email: '',
         };
 
         setToken(mockToken);
@@ -270,11 +237,8 @@ export const useUserStore = defineStore(
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
-        // 清除状态
         token.value = '';
         userInfo.value = null;
-        storage.remove(STORAGE_KEYS.TOKEN);
-        storage.remove(STORAGE_KEYS.USER_INFO);
       }
     }
 
@@ -285,7 +249,6 @@ export const useUserStore = defineStore(
       // Getters
       isLoggedIn,
       // Actions
-      initUser,
       setToken,
       setUserInfo,
       login,
@@ -299,17 +262,11 @@ export const useUserStore = defineStore(
   },
   {
     persist: {
-      key: 'user-store',
-      // UniApp 环境下使用自定义存储
-      storage: {
-        getItem: (key: string) => {
-          return storage.get(key) as string | null;
-        },
-        setItem: (key: string, value: string) => {
-          storage.set(key, value);
-        },
-      },
       pick: ['token', 'userInfo'],
+      storage: {
+        getItem: (key: string) => uni.getStorageSync(key),
+        setItem: (key: string, value: string) => uni.setStorageSync(key, value),
+      },
     },
   },
 );

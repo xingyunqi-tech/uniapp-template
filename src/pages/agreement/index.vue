@@ -1,87 +1,43 @@
 <route lang="json5">
 {
   style: {
-    navigationBarTitleText: '',
+    navigationBarTitleText: '协议详情',
   },
 }
 </route>
 
 <template>
-  <uni-popup ref="popupRef" type="bottom" :safe-area="false" @change="handlePopupChange">
-    <view class="agreement-popup">
-      <!-- 头部 -->
-      <view class="popup-header">
-        <text class="popup-title">{{ title }}</text>
-        <view class="popup-close" @click="close">
-          <text class="i-carbon-close" />
-        </view>
-      </view>
-
-      <!-- 内容区域 -->
-      <scroll-view class="popup-content" scroll-y>
-        <URichText :content="content" />
-      </scroll-view>
-
-      <!-- 底部按钮 -->
-      <view class="popup-footer">
-        <button class="confirm-btn" @click="handleConfirm">我已阅读并同意</button>
-      </view>
-    </view>
-  </uni-popup>
+  <view class="agreement-page">
+    <scroll-view class="content-scroll" scroll-y>
+      <URichText :content="content" />
+    </scroll-view>
+  </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import URichText from '@/components/URichText/index.vue';
 
-// 协议类型
-type AgreementType = 'user' | 'privacy';
-
-interface Emits {
-  (e: 'confirm', type: AgreementType): void;
+interface Query {
+  type?: 'user' | 'privacy';
 }
 
-const emit = defineEmits<Emits>();
+const agreementType = ref<'user' | 'privacy'>('user');
 
-const popupRef = ref();
-const currentType = ref<AgreementType>('user');
+onLoad((query?: Query) => {
+  if (query?.type) {
+    agreementType.value = query.type;
+  }
 
-// 协议标题
-const title = computed(() => {
-  return currentType.value === 'user' ? '用户协议' : '隐私政策';
+  // 设置导航栏标题
+  uni.setNavigationBarTitle({
+    title: agreementType.value === 'user' ? '用户协议' : '隐私政策',
+  });
 });
 
-// 协议内容
 const content = computed(() => {
-  return currentType.value === 'user' ? USER_AGREEMENT : PRIVACY_POLICY;
-});
-
-// 打开弹窗
-function open(type: AgreementType) {
-  currentType.value = type;
-  popupRef.value?.open();
-}
-
-// 关闭弹窗
-function close() {
-  popupRef.value?.close();
-}
-
-// 确认按钮
-function handleConfirm() {
-  emit('confirm', currentType.value);
-  close();
-}
-
-// 弹窗状态变化
-function handlePopupChange(e: { show: boolean }) {
-  console.log('popup change:', e.show);
-}
-
-// 暴露方法
-defineExpose({
-  open,
-  close,
+  return agreementType.value === 'user' ? USER_AGREEMENT : PRIVACY_POLICY;
 });
 
 // 用户协议内容
@@ -235,72 +191,14 @@ const PRIVACY_POLICY = `
 </script>
 
 <style scoped lang="scss">
-.agreement-popup {
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
-  border-radius: 32rpx 32rpx 0 0;
-  background: #fff;
+.agreement-page {
+  min-height: 100vh;
+  background: $uni-bg-color;
 }
 
-.popup-header {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: space-between;
+.content-scroll {
+  box-sizing: border-box;
+  height: 100vh;
   padding: 32rpx;
-  border-bottom: 1px solid $uni-border-color;
-
-  .popup-title {
-    color: $uni-text-color;
-    font-size: 34rpx;
-    font-weight: 600;
-  }
-
-  .popup-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56rpx;
-    height: 56rpx;
-    border-radius: 50%;
-    background: $uni-bg-color-grey;
-
-    .i-carbon-close {
-      color: $uni-text-color-secondary;
-      font-size: 32rpx;
-    }
-  }
-}
-
-.popup-content {
-  flex: 1;
-  min-height: 0;
-  max-height: 60vh;
-  padding: 32rpx;
-  overflow-y: auto;
-}
-
-.popup-footer {
-  flex-shrink: 0;
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  border-top: 1px solid $uni-border-color;
-
-  .confirm-btn {
-    width: 100%;
-    height: 88rpx;
-    border: none;
-    border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
-    font-size: 32rpx;
-    font-weight: 500;
-    line-height: 88rpx;
-
-    &:active {
-      opacity: 0.8;
-    }
-  }
 }
 </style>

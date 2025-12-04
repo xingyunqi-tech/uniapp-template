@@ -5,9 +5,20 @@
 
 interface NavigateToOptions {
   url: "/pages/index/index" |
+       "/pages/about/index" |
        "/pages/address/index" |
+       "/pages/address-edit/index" |
+       "/pages/agreement/index" |
+       "/pages/contact/index" |
+       "/pages/error/index" |
+       "/pages/favorite/index" |
+       "/pages/feedback/index" |
+       "/pages/forgot-password/index" |
        "/pages/login/index" |
        "/pages/mine/index" |
+       "/pages/order/index" |
+       "/pages/password/index" |
+       "/pages/profile/index" |
        "/pages/register/index" |
        "/pages/settings/index";
 }

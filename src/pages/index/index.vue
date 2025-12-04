@@ -10,20 +10,7 @@
 <template>
   <view class="home-page">
     <!-- Banner 轮播 -->
-    <swiper
-      class="banner-swiper"
-      :indicator-dots="true"
-      :autoplay="true"
-      :interval="3000"
-      :duration="500"
-      indicator-color="rgba(255, 255, 255, 0.5)"
-      indicator-active-color="#ffffff"
-      circular
-    >
-      <swiper-item v-for="item in bannerList" :key="item.id" @click="handleBannerClick(item)">
-        <image class="banner-image" :src="item.image" mode="aspectFill" />
-      </swiper-item>
-    </swiper>
+    <u-banner :list="bannerList" :height="300" @click="handleBannerClick" />
 
     <!-- 分类标签 -->
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
@@ -68,6 +55,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
+import { useList } from '@/composables';
 
 // Banner 数据类型
 interface BannerItem {
@@ -95,9 +83,9 @@ interface NewsItem {
 
 // Banner 数据
 const bannerList = ref<BannerItem[]>([
-  { id: 1, image: 'https://via.placeholder.com/750x300/1989fa/ffffff?text=时政热点' },
-  { id: 2, image: 'https://via.placeholder.com/750x300/07c160/ffffff?text=备考指南' },
-  { id: 3, image: 'https://via.placeholder.com/750x300/ff976a/ffffff?text=每日一练' },
+  { id: 1, image: '/static/images/banner_1.png' },
+  { id: 2, image: '/static/images/banner_2.png' },
+  { id: 3, image: '/static/images/banner_3.png' },
 ]);
 
 // 试题分类数据
@@ -114,76 +102,53 @@ const categoryList = ref<CategoryItem[]>([
 // 当前选中分类
 const activeCategory = ref(0);
 
-// 时政新闻列表数据
-const newsList = ref<NewsItem[]>([]);
+// 模拟数据
+const mockTitles = [
+  '深入学习贯彻党的二十大精神，推动高质量发展',
+  '国务院常务会议部署推进重点领域改革工作',
+  '全国两会热点解读：民生实事如何落地',
+  '新时代中国特色社会主义思想学习要点',
+  '乡村振兴战略实施取得显著成效',
+  '科技创新驱动发展战略深入推进',
+  '生态文明建设迈上新台阶',
+  '共同富裕示范区建设稳步推进',
+  '高水平对外开放持续深化',
+  '数字经济发展迎来新机遇',
+];
+const mockSources = ['新华社', '人民日报', '央视新闻', '光明日报', '经济日报'];
 
-// 加载状态
-const loading = ref(false);
-const noMore = ref(false);
-const page = ref(1);
-
-// 生成模拟数据
-function generateMockNews(pageNum: number): NewsItem[] {
-  const baseId = (pageNum - 1) * 10;
-  const mockTitles = [
-    '深入学习贯彻党的二十大精神，推动高质量发展',
-    '国务院常务会议部署推进重点领域改革工作',
-    '全国两会热点解读：民生实事如何落地',
-    '新时代中国特色社会主义思想学习要点',
-    '乡村振兴战略实施取得显著成效',
-    '科技创新驱动发展战略深入推进',
-    '生态文明建设迈上新台阶',
-    '共同富裕示范区建设稳步推进',
-    '高水平对外开放持续深化',
-    '数字经济发展迎来新机遇',
-  ];
-
-  const mockSources = ['新华社', '人民日报', '央视新闻', '光明日报', '经济日报'];
-
-  return Array.from({ length: 10 }, (_, index) => ({
-    id: baseId + index + 1,
-    title: mockTitles[index % mockTitles.length],
-    summary: '这是一段时政新闻摘要，概述了新闻的主要内容和核心观点，帮助用户快速了解时政动态...',
-    source: mockSources[index % mockSources.length],
-    time: `${Math.floor(Math.random() * 24)}小时前`,
-    image: index % 3 === 0 ? `https://via.placeholder.com/200x150/${['1989fa', '07c160', 'ff976a'][index % 3]}/ffffff?text=时政${baseId + index + 1}` : undefined,
-    questionCount: Math.random() > 0.5 ? Math.floor(Math.random() * 20) + 5 : undefined,
-  }));
-}
-
-// 加载数据
-async function loadData(isRefresh = false) {
-  if (loading.value) return;
-
-  if (isRefresh) {
-    page.value = 1;
-    noMore.value = false;
-  }
-
-  loading.value = true;
-
-  try {
+// 使用 useList 管理新闻列表
+const {
+  list: newsList,
+  loading,
+  noMore,
+  loadData,
+  refresh,
+} = useList<NewsItem>({
+  pageSize: 10,
+  fetchData: async ({ page, pageSize }) => {
     // 模拟接口请求延迟
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const newData = generateMockNews(page.value);
+    // 模拟最多 3 页数据
+    if (page > 3) return [];
 
-    if (isRefresh) {
-      newsList.value = newData;
-    } else {
-      newsList.value.push(...newData);
-    }
-
-    // 模拟最多加载 3 页
-    if (page.value >= 3) {
-      noMore.value = true;
-    } else {
-      page.value++;
-    }
-  } finally {
-    loading.value = false;
-  }
-}
+    const baseId = (page - 1) * pageSize;
+    return Array.from({ length: pageSize }, (_, index) => ({
+      id: baseId + index + 1,
+      title: mockTitles[index % mockTitles.length],
+      summary: '这是一段时政新闻摘要，概述了新闻的主要内容和核心观点，帮助用户快速了解时政动态...',
+      source: mockSources[index % mockSources.length],
+      time: `${Math.floor(Math.random() * 24)}小时前`,
+      image:
+        index % 3 === 0
+          ? `https://via.placeholder.com/200x150/${['1989fa', '07c160', 'ff976a'][index % 3]}/ffffff?text=时政${baseId + index + 1}`
+          : undefined,
+      questionCount: Math.random() > 0.5 ? Math.floor(Math.random() * 20) + 5 : undefined,
+    }));
+  },
+  hasMore: (data, page) => data.length > 0 && page < 3,
+});
 
 // Banner 点击
 function handleBannerClick(item: BannerItem) {
@@ -194,8 +159,8 @@ function handleBannerClick(item: BannerItem) {
 // 分类点击
 function handleCategoryClick(item: CategoryItem) {
   activeCategory.value = item.id;
-  // 切换分类时重新加载数据
-  loadData(true);
+  // 切换分类时刷新数据
+  refresh();
 }
 
 // 时政新闻点击
@@ -206,7 +171,7 @@ function handleNewsClick(item: NewsItem) {
 
 // 页面加载
 onLoad(() => {
-  loadData(true);
+  loadData();
 });
 
 // 页面显示
@@ -216,7 +181,7 @@ onShow(() => {
 
 // 下拉刷新
 onPullDownRefresh(async () => {
-  await loadData(true);
+  await refresh();
   uni.stopPullDownRefresh();
 });
 
@@ -233,17 +198,6 @@ onReachBottom(() => {
   min-height: 100vh;
   padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx);
   background: $uni-bg-color-grey;
-}
-
-// Banner 轮播
-.banner-swiper {
-  width: 100%;
-  height: 300rpx;
-
-  .banner-image {
-    width: 100%;
-    height: 100%;
-  }
 }
 
 // 分类标签

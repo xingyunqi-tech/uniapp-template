@@ -1,0 +1,21 @@
+{
+  "uni.showModal.cancel": "Cancel",
+  "uni.showModal.confirm": "OK",
+  "uni.showActionSheet.cancel": "Cancel",
+  "uni.showToast.unpaired": "Please note showToast must be paired with hideToast",
+  "uni.showLoading.unpaired": "Please note showLoading must be paired with hideLoading",
+  "uni.picker.done": "Done",
+  "uni.picker.cancel": "Cancel",
+  "uni.video.danmu": "Danmu",
+  "uni.video.volume": "Volume",
+  "uni.button.feedback.title": "Feedback",
+  "uni.button.feedback.send": "Send",
+  "uni.chooseLocation.search": "Search location",
+  "uni.chooseLocation.cancel": "Cancel",
+  "uni.chooseFile.notUserActivation": "Please call chooseFile in click event",
+  "uni.setClipboardData.success": "Content copied",
+  "uni.getClipboardData.fail": "Failed to read clipboard",
+  "uni.async.error": "Connection timed out, tap screen to retry",
+
+  "common.setting": "Setting"
+}

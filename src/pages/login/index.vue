@@ -10,12 +10,7 @@
 <template>
   <AuthLayout title="欢迎回来" card-title="登录账号">
     <!-- 登录方式切换 -->
-    <view class="login-tabs">
-      <view class="tab-item" :class="{ active: loginType === 'password' }" @click="loginType = 'password'">
-        密码登录
-      </view>
-      <view class="tab-item" :class="{ active: loginType === 'sms' }" @click="loginType = 'sms'"> 验证码登录 </view>
-    </view>
+    <UTabs v-model="loginType" :tabs="loginTabs" class="login-tabs" />
 
     <!-- 登录表单 -->
     <view class="auth-form">
@@ -24,7 +19,7 @@
         placeholder="请输入手机号"
         prefix-icon="phone"
         type="number"
-        :maxlength="11"
+        :maxlength="PHONE_LENGTH"
         :clearable="true"
       />
 
@@ -39,19 +34,13 @@
       />
 
       <!-- 验证码登录 -->
-      <view v-else class="sms-input">
-        <uni-easyinput
-          v-model="formData.code"
-          placeholder="请输入验证码"
-          prefix-icon="email"
-          type="number"
-          :maxlength="6"
-          :clearable="true"
-        />
-        <button class="sms-btn" :disabled="countdown > 0" @click="handleSendCode">
-          {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-        </button>
-      </view>
+      <USmsInput
+        v-else
+        v-model="formData.code"
+        :countdown="sms.countdown.value"
+        :is-counting="sms.isCounting.value"
+        @send="handleSendCode"
+      />
 
       <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleLogin">
         {{ loading ? '登录中...' : '登录' }}
@@ -73,10 +62,14 @@
     </view>
     <!-- #endif -->
 
-    <!-- 注册链接 -->
+    <!-- 底部链接 -->
     <view class="link-row">
       <text>还没有账号？</text>
       <text class="link-text" @click="goToRegister">立即注册</text>
+    </view>
+
+    <view class="link-row secondary">
+      <text class="link-text" @click="goToForgotPassword">忘记密码？</text>
     </view>
   </AuthLayout>
 </template>
@@ -85,15 +78,22 @@
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useSendSms } from '@/composables';
 import { isPhone } from '@/utils/validator';
+import { PHONE_LENGTH, SMS_CODE_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
+import UTabs from '@/components/UTabs/index.vue';
+import USmsInput from '@/components/USmsInput/index.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
 
 // 登录方式: password | sms
 const loginType = ref<'password' | 'sms'>('password');
+const loginTabs = [
+  { label: '密码登录', value: 'password' },
+  { label: '验证码登录', value: 'sms' },
+];
 
 // 表单数据
 const formData = reactive({
@@ -105,9 +105,10 @@ const formData = reactive({
 // 加载状态
 const loading = ref(false);
 
-// 验证码倒计时
-const countdown = ref(0);
-let countdownTimer: ReturnType<typeof setInterval> | null = null;
+// 短信验证码
+const sms = useSendSms({
+  sendApi: phone => userStore.sendSmsCode(phone),
+});
 
 // 重定向地址
 let redirectUrl = '';
@@ -135,15 +136,7 @@ function navigateAfterLogin() {
 
 // 表单验证
 function validateForm(): boolean {
-  if (!formData.phone) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' });
-    return false;
-  }
-
-  if (!isPhone(formData.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-    return false;
-  }
+  if (!sms.validatePhone(formData.phone)) return false;
 
   if (loginType.value === 'password') {
     if (!formData.password) {
@@ -151,14 +144,7 @@ function validateForm(): boolean {
       return false;
     }
   } else {
-    if (!formData.code) {
-      uni.showToast({ title: '请输入验证码', icon: 'none' });
-      return false;
-    }
-    if (formData.code.length !== 6) {
-      uni.showToast({ title: '验证码为6位数字', icon: 'none' });
-      return false;
-    }
+    if (!sms.validateCode(formData.code)) return false;
   }
 
   return true;
@@ -166,33 +152,9 @@ function validateForm(): boolean {
 
 // 发送验证码
 async function handleSendCode() {
-  if (!formData.phone) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' });
-    return;
-  }
-
-  if (!isPhone(formData.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-    return;
-  }
-
-  try {
-    await userStore.sendSmsCode(formData.phone);
-
+  const success = await sms.send(formData.phone);
+  if (success) {
     uni.showToast({ title: '验证码已发送', icon: 'success' });
-
-    // 开始倒计时
-    countdown.value = 60;
-    countdownTimer = setInterval(() => {
-      countdown.value--;
-      if (countdown.value <= 0) {
-        clearInterval(countdownTimer!);
-        countdownTimer = null;
-      }
-    }, 1000);
-  } catch (error) {
-    console.error('发送验证码失败:', error);
-    uni.showToast({ title: '发送失败，请重试', icon: 'none' });
   }
 }
 
@@ -225,7 +187,7 @@ async function handleLogin() {
     // 跳转
     setTimeout(() => {
       navigateAfterLogin();
-    }, 1500);
+    }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('登录失败:', error);
     uni.showToast({
@@ -238,7 +200,7 @@ async function handleLogin() {
 }
 
 // 处理微信登录（小程序）
-async function handleWechatLogin(e: UniApp.GetPhoneNumberEventDetail) {
+async function handleWechatLogin(e: any) {
   // 获取手机号失败
   if (e.detail.errMsg !== 'getPhoneNumber:ok') {
     uni.showToast({
@@ -275,7 +237,7 @@ async function handleWechatLogin(e: UniApp.GetPhoneNumberEventDetail) {
     // 跳转
     setTimeout(() => {
       navigateAfterLogin();
-    }, 1500);
+    }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('微信登录失败:', error);
     uni.showToast({
@@ -291,31 +253,39 @@ async function handleWechatLogin(e: UniApp.GetPhoneNumberEventDetail) {
 function goToRegister() {
   router.push('/pages/register/index');
 }
+
+// 跳转忘记密码页
+function goToForgotPassword() {
+  router.push('/pages/forgot-password/index');
+}
 </script>
 
 <style scoped lang="scss">
 // 登录方式切换
 .login-tabs {
-  display: flex;
-  gap: 0;
-  justify-content: center;
   margin-bottom: 48rpx;
+  overflow: hidden;
   border-radius: $uni-border-radius-base;
-  background: $uni-bg-color-grey;
 
-  .tab-item {
-    flex: 1;
-    padding: 20rpx 0;
-    transition: all $uni-duration-fast;
-    border-radius: $uni-border-radius-base;
-    color: $uni-text-color-secondary;
-    font-size: 28rpx;
-    text-align: center;
+  :deep(.u-tabs__list) {
+    background: $uni-bg-color-grey;
+  }
 
-    &.active {
+  :deep(.u-tabs__item) {
+    height: 80rpx;
+    padding: 0 24rpx;
+
+    &--active {
+      border-radius: $uni-border-radius-base;
       background: $uni-color-primary;
-      color: #fff;
-      font-weight: 500;
+
+      .u-tabs__text {
+        color: #fff;
+      }
+
+      &::after {
+        display: none;
+      }
     }
   }
 }
@@ -325,38 +295,6 @@ function goToRegister() {
   display: flex;
   flex-direction: column;
   gap: 32rpx;
-
-  .sms-input {
-    display: flex;
-    gap: 20rpx;
-    align-items: center;
-
-    :deep(.uni-easyinput) {
-      flex: 1;
-    }
-
-    .sms-btn {
-      flex-shrink: 0;
-      width: 200rpx;
-      height: 72rpx;
-      padding: 0;
-      border: none;
-      border-radius: $uni-border-radius-base;
-      background: $uni-color-primary;
-      color: #fff;
-      font-size: 26rpx;
-      line-height: 72rpx;
-
-      &:active {
-        opacity: 0.8;
-      }
-
-      &[disabled] {
-        background: $uni-bg-color-grey;
-        color: $uni-text-color-disabled;
-      }
-    }
-  }
 
   .submit-btn {
     width: 100%;
@@ -453,6 +391,10 @@ function goToRegister() {
   margin-top: 40rpx;
   color: $uni-text-color-secondary;
   font-size: 28rpx;
+
+  &.secondary {
+    margin-top: 24rpx;
+  }
 
   .link-text {
     transition: color $uni-duration-fast;
