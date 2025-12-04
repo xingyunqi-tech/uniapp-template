@@ -7,8 +7,42 @@
 </route>
 
 <template>
-  <component
-    :is="isLink ? 'view' : 'button'"
+  <!-- 链接模式：使用 view -->
+  <view
+    v-if="isLink"
+    class="u-menu-item"
+    :class="{
+      'u-menu-item--clickable': clickable || isLink,
+      'u-menu-item--border': border,
+      'u-menu-item--danger': danger,
+    }"
+    @click="handleClick"
+  >
+    <!-- 左侧图标 -->
+    <text v-if="icon" class="u-menu-item__icon" :class="icon" />
+    <slot v-else name="icon" />
+
+    <!-- 标题区域 -->
+    <view class="u-menu-item__content">
+      <text class="u-menu-item__title">{{ title }}</text>
+      <text v-if="label" class="u-menu-item__label">{{ label }}</text>
+    </view>
+
+    <!-- 右侧内容 -->
+    <view class="u-menu-item__value">
+      <slot name="value">
+        <text v-if="value" class="u-menu-item__value-text">{{ value }}</text>
+      </slot>
+    </view>
+
+    <!-- 右侧箭头 -->
+    <text v-if="isLink || showArrow" class="i-carbon-chevron-right u-menu-item__arrow" />
+    <slot name="right-icon" />
+  </view>
+
+  <!-- 按钮模式：使用 button -->
+  <button
+    v-else
     class="u-menu-item"
     :class="{
       'u-menu-item--clickable': clickable || isLink,
@@ -39,7 +73,7 @@
     <!-- 右侧箭头 -->
     <text v-if="isLink || showArrow" class="i-carbon-chevron-right u-menu-item__arrow" />
     <slot name="right-icon" />
-  </component>
+  </button>
 </template>
 
 <script setup lang="ts">

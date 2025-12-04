@@ -274,18 +274,18 @@ function goToForgotPassword() {
   :deep(.u-tabs__item) {
     height: 80rpx;
     padding: 0 24rpx;
+  }
 
-    &--active {
-      border-radius: $uni-border-radius-base;
-      background: $uni-color-primary;
+  :deep(.u-tabs__item--active) {
+    border-radius: $uni-border-radius-base;
+    background: $uni-color-primary;
 
-      .u-tabs__text {
-        color: #fff;
-      }
+    .u-tabs__text {
+      color: #fff;
+    }
 
-      &::after {
-        display: none;
-      }
+    &::after {
+      display: none;
     }
   }
 }
