@@ -5,9 +5,6 @@ import pinia from './store';
 import { i18n } from './utils/locale';
 import { setupRouterInterceptor } from './utils/routerInterceptor';
 
-// 引入 UnoCSS
-import 'virtual:uno.css';
-
 /**
  * UniApp 应用入口
  */

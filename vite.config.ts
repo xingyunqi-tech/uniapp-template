@@ -3,7 +3,6 @@ import uni from '@dcloudio/vite-plugin-uni';
 import { resolve } from 'node:path';
 import { loadEnv } from 'vite';
 import type { PluginOption } from 'vite';
-import UnoCSS from 'unocss/vite';
 import legacy from '@vitejs/plugin-legacy';
 import UniPages from '@uni-helper/vite-plugin-uni-pages';
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts';
@@ -55,8 +54,6 @@ function generatePlugins(mode: string): PluginOption[] {
     UniManifest(),
     // uni() 插件
     uni(),
-    // UnoCSS 原子化 CSS
-    UnoCSS(),
   ];
 
   // H5 生产环境添加 legacy 兼容 (仅 H5，小程序和 App 不支持)

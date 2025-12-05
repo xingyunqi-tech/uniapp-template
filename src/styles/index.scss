@@ -6,16 +6,15 @@
 // 导入 uni.scss 变量
 @use '@/uni.scss' as *;
 
-// ============================================
-// 安全区域适配 (统一定义)
-// ============================================
-:root {
-  --safe-area-inset-top: env(safe-area-inset-top);
-  --safe-area-inset-right: env(safe-area-inset-right);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom);
-  --safe-area-inset-left: env(safe-area-inset-left);
-}
+// 导入尺寸系统
+@use './size';
 
+// 导入主题系统
+@use './theme';
+
+// ============================================
+// 安全区域工具类
+// ============================================
 .safe-area-top {
   padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top);
@@ -29,8 +28,11 @@
 /* 页面基础样式 */
 page {
   box-sizing: border-box;
-  background-color: $uni-bg-color-grey;
-  color: $uni-text-color;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+  background-color: var(--color-bg-grey);
+  color: var(--color-text);
   font-family:
     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', STHeiti, 'Microsoft Yahei', Tahoma, Simsun,
     sans-serif;

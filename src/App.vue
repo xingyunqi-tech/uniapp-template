@@ -13,8 +13,9 @@ import { checkUpdate } from '@/utils/update';
 onLaunch(options => {
   console.log('App Launch', options);
 
-  // 初始化全局状态
-  useGlobalStore();
+  // 初始化全局状态和主题
+  const globalStore = useGlobalStore();
+  globalStore.initTheme();
 
   // 检查小程序更新
   checkUpdate({

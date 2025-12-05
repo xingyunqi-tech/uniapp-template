@@ -24,9 +24,26 @@
           icon="i-carbon-information"
           title="关于我们"
           :value="`v${version}`"
-          :border="false"
-          @click="handleMenuClick('about')"
+          :border="!showDevOptions"
+          @click="handleAboutClick"
         />
+        <!-- 连续点击版本号 5 次显示 -->
+        <UMenuItem v-if="showDevOptions" icon="i-carbon-sun" title="主题模式">
+          <template #right-icon>
+            <view class="switch-wrapper">
+              <text class="switch-label">{{ isDarkMode ? '深色' : '浅色' }}</text>
+              <switch :checked="isDarkMode" color="#1989fa" @change="handleToggleTheme" />
+            </view>
+          </template>
+        </UMenuItem>
+        <UMenuItem v-if="showDevOptions" icon="i-carbon-translate" title="国际化" :border="false">
+          <template #right-icon>
+            <view class="switch-wrapper">
+              <text class="switch-label">{{ isEnglish ? 'English' : '中文' }}</text>
+              <switch :checked="isEnglish" color="#1989fa" @change="handleToggleLocale" />
+            </view>
+          </template>
+        </UMenuItem>
       </UMenuGroup>
     </view>
 
@@ -48,13 +65,15 @@
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
+import { useGlobalStore } from '@/store/modules/global';
 import { useRouter } from '@/composables/useRouter';
-import { PAGES } from '@/constants';
+import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UMenuItem from '@/components/UMenuItem/index.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
+const globalStore = useGlobalStore();
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn);
@@ -62,6 +81,15 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 // 设置状态
 const cacheSize = ref('0 MB');
 const version = ref('1.0.0');
+
+// ==================== 隐藏开发者选项 ====================
+const devModeClickCount = ref(0);
+const showDevOptions = ref(false);
+let devModeTimer: ReturnType<typeof setTimeout> | null = null;
+
+// 主题和语言状态
+const isDarkMode = computed(() => globalStore.currentTheme === THEME_TYPE.DARK);
+const isEnglish = computed(() => globalStore.currentLocale === LOCALE_TYPE.EN_US);
 
 onShow(() => {
   calculateCacheSize();
@@ -116,9 +144,6 @@ function handleMenuClick(type: string) {
     case 'address':
       router.push(PAGES.ADDRESS);
       break;
-    case 'about':
-      router.push(PAGES.ABOUT);
-      break;
   }
 }
 
@@ -142,6 +167,54 @@ function handleLogout() {
       }
     },
   });
+}
+
+// ==================== 隐藏开发者选项功能 ====================
+/**
+ * 点击关于我们：连续点击 5 次触发开发者选项，否则跳转关于页面
+ */
+function handleAboutClick() {
+  devModeClickCount.value++;
+
+  // 清除之前的定时器
+  if (devModeTimer) {
+    clearTimeout(devModeTimer);
+  }
+
+  // 500ms 内未达到次数则重置并跳转
+  devModeTimer = setTimeout(() => {
+    if (devModeClickCount.value < 5) {
+      router.push(PAGES.ABOUT);
+    }
+    devModeClickCount.value = 0;
+  }, 500);
+
+  // 达到 5 次点击
+  if (devModeClickCount.value >= 5) {
+    if (devModeTimer) {
+      clearTimeout(devModeTimer);
+    }
+    devModeClickCount.value = 0;
+    showDevOptions.value = !showDevOptions.value;
+    uni.showToast({
+      title: showDevOptions.value ? '已开启开发者选项' : '已关闭开发者选项',
+      icon: 'none',
+    });
+  }
+}
+
+/**
+ * 切换主题
+ */
+function handleToggleTheme() {
+  globalStore.toggleTheme();
+}
+
+/**
+ * 切换语言
+ */
+function handleToggleLocale() {
+  globalStore.toggleLocale();
 }
 
 // 账号注销
@@ -203,6 +276,18 @@ function handleDeleteAccount() {
 // 设置分组
 .settings-section {
   padding: 24rpx;
+}
+
+// Switch 包装器
+.switch-wrapper {
+  display: flex;
+  gap: 16rpx;
+  align-items: center;
+}
+
+.switch-label {
+  color: $uni-text-color-secondary;
+  font-size: 26rpx;
 }
 
 // 退出登录

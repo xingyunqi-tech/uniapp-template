@@ -1,0 +1,94 @@
+/**
+ * 尺寸系统 CSS 变量
+ * 固定值，不随主题变化
+ *
+ * 使用方式：
+ * 1. 组件中使用 var(--font-size-base) 等变量
+ * 2. 与 uni.scss 中的 SCSS 变量保持一致
+ */
+
+page,
+:root {
+  // ============================================
+  // 字体大小
+  // ============================================
+  --font-size-xs: 20rpx;
+  --font-size-sm: 24rpx;
+  --font-size-base: 28rpx;
+  --font-size-lg: 32rpx;
+  --font-size-xl: 36rpx;
+  --font-size-xxl: 44rpx;
+
+  // ============================================
+  // 行高
+  // ============================================
+  --line-height-xs: 28rpx;
+  --line-height-sm: 36rpx;
+  --line-height-base: 40rpx;
+  --line-height-lg: 48rpx;
+  --line-height-xl: 56rpx;
+
+  // ============================================
+  // 圆角
+  // ============================================
+  --radius-sm: 4rpx;
+  --radius-base: 8rpx;
+  --radius-lg: 16rpx;
+  --radius-xl: 24rpx;
+  --radius-full: 9999rpx;
+  --radius-circle: 50%;
+
+  // ============================================
+  // 间距
+  // ============================================
+  --spacing-xs: 8rpx;
+  --spacing-sm: 16rpx;
+  --spacing-base: 24rpx;
+  --spacing-lg: 32rpx;
+  --spacing-xl: 48rpx;
+  --spacing-xxl: 64rpx;
+
+  // ============================================
+  // 动画时间
+  // ============================================
+  --duration-fast: 0.2s;
+  --duration-base: 0.3s;
+  --duration-slow: 0.5s;
+
+  // ============================================
+  // 动画曲线
+  // ============================================
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  // ============================================
+  // z-index 层级
+  // ============================================
+  --z-index-dropdown: 900;
+  --z-index-sticky: 950;
+  --z-index-popup: 1000;
+  --z-index-modal: 1100;
+  --z-index-toast: 1200;
+  --z-index-loading: 1300;
+
+  // ============================================
+  // 边框宽度
+  // ============================================
+  --border-width-base: 1rpx;
+  --border-width-bold: 2rpx;
+
+  // ============================================
+  // 透明度
+  // ============================================
+  --opacity-disabled: 0.5;
+  --opacity-hover: 0.8;
+
+  // ============================================
+  // 安全区域
+  // ============================================
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-right: env(safe-area-inset-right);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+  --safe-area-inset-left: env(safe-area-inset-left);
+}
