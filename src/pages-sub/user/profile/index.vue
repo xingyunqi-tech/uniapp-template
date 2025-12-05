@@ -9,12 +9,16 @@
 <template>
   <view class="profile-page" :class="themeClass">
     <!-- 头像区域 -->
-    <view class="avatar-section" @click="handleChooseAvatar">
-      <view class="avatar-wrapper">
-        <image class="avatar" :src="formData.avatar || '/static/images/default-avatar.png'" mode="aspectFill" />
-        <view class="avatar-edit">
-          <text class="i-carbon-camera" />
-        </view>
+    <view class="avatar-section">
+      <view class="avatar-upload-wrapper">
+        <UImageUpload
+          v-model="avatarList"
+          :max-count="1"
+          :max-size="5"
+          :auto-upload="false"
+          add-text="更换头像"
+          @change="handleAvatarChange"
+        />
       </view>
       <text class="avatar-tip">点击更换头像</text>
     </view>
@@ -61,8 +65,9 @@ import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UFormItem from '@/components/UFormItem/index.vue';
-
 import UFixedButton from '@/components/UFixedButton/index.vue';
+import UImageUpload from '@/components/UImageUpload/index.vue';
+import type { FileItem } from '@/components/UImageUpload/index.vue';
 
 const { themeClass } = useTheme();
 const userStore = useUserStore();
@@ -70,6 +75,9 @@ const userStore = useUserStore();
 // 性别选项
 const genderLabels = GENDER_OPTIONS.map(item => item.label);
 const genderIndex = ref(0);
+
+// 头像列表 (用于 UImageUpload)
+const avatarList = ref<FileItem[]>([]);
 
 // 表单数据
 const formData = reactive({
@@ -109,25 +117,26 @@ onLoad(() => {
     formData.avatar = userStore.userInfo.avatar || '';
     formData.username = userStore.userInfo.username || '';
     formData.phone = userStore.userInfo.phone || '';
+
+    // 初始化头像列表
+    if (formData.avatar) {
+      avatarList.value = [{ url: formData.avatar, status: 'done' }];
+    }
   }
 });
 
-// 选择头像
-function handleChooseAvatar() {
-  uni.chooseImage({
-    count: 1,
-    sizeType: ['compressed'],
-    sourceType: ['album', 'camera'],
-    success: res => {
-      const tempFilePath = res.tempFilePaths[0];
-      // TODO: 上传头像到服务器
-      formData.avatar = tempFilePath;
-      uni.showToast({
-        title: '头像已更换',
-        icon: 'success',
-      });
-    },
-  });
+// 头像变化
+function handleAvatarChange(files: FileItem[]) {
+  if (files.length > 0) {
+    // TODO: 上传头像到服务器
+    formData.avatar = files[0].url;
+    uni.showToast({
+      title: '头像已更换',
+      icon: 'success',
+    });
+  } else {
+    formData.avatar = '';
+  }
 }
 
 // 性别变化
@@ -172,28 +181,25 @@ function handleSave() {
   padding: 48rpx 0;
   background: var(--color-bg);
 
-  .avatar-wrapper {
-    position: relative;
+  .avatar-upload-wrapper {
+    // 覆盖 UImageUpload 样式，使其显示为圆形头像
+    :deep(.u-image-upload) {
+      .upload-item,
+      .upload-add {
+        width: 160rpx;
+        height: 160rpx;
+        border-radius: 50%;
+      }
 
-    .avatar {
-      width: 160rpx;
-      height: 160rpx;
-      border-radius: 50%;
-    }
+      .upload-image {
+        border-radius: 50%;
+      }
 
-    .avatar-edit {
-      display: flex;
-      position: absolute;
-      right: 0;
-      bottom: 0;
-      align-items: center;
-      justify-content: center;
-      width: 48rpx;
-      height: 48rpx;
-      border-radius: 50%;
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-      font-size: 24rpx;
+      .upload-delete {
+        top: 4rpx;
+        right: 4rpx;
+        border-radius: 50%;
+      }
     }
   }
 

@@ -1,160 +1,108 @@
 /**
- * 网络状态监听 Composable
- * 用于监听网络状态变化，提供离线提示等功能
+ * 网络状态 Composable
+ * 提供组件级的网络状态访问，引用全局单例状态
+ *
+ * 注意：全局网络监听由 App.vue 中的 setupNetworkListener 初始化
+ * 此 composable 仅提供访问接口，不会重复注册监听器
  */
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, onUnmounted } from 'vue';
+import {
+  globalNetworkState,
+  onNetworkChange,
+  checkNetworkStatus,
+  withNetworkRequired,
+  isWifiNetwork,
+  isMobileNetwork,
+  type NetworkType,
+  type NetworkState,
+  type NetworkChangeCallback,
+} from '@/utils/network';
 
-/** 网络类型 */
-export type NetworkType = 'wifi' | '2g' | '3g' | '4g' | '5g' | 'ethernet' | 'unknown' | 'none';
-
-/** 网络状态接口 */
-export interface NetworkState {
-  /** 是否连接 */
-  isConnected: boolean;
-  /** 网络类型 */
-  networkType: NetworkType;
-}
+// 重新导出类型，保持向后兼容
+export type { NetworkType, NetworkState };
 
 /** useNetwork 配置选项 */
 export interface UseNetworkOptions {
-  /** 断网时是否自动显示提示 */
-  showToast?: boolean;
-  /** 断网提示文案 */
-  offlineMessage?: string;
-  /** 恢复网络提示文案 */
-  onlineMessage?: string;
+  /** 网络状态变化回调 */
+  onChange?: NetworkChangeCallback;
 }
 
 /**
- * 网络状态监听
+ * 网络状态 Composable
+ *
+ * @description
+ * 提供响应式的网络状态访问，基于全局单例状态。
+ * 全局监听由 App.vue 初始化，此 composable 仅提供访问接口。
+ *
  * @param options 配置选项
- * @returns 网络状态和方法
+ * @returns 网络状态和工具方法
  *
  * @example
  * ```ts
- * const { isConnected, networkType, checkNetwork } = useNetwork({
- *   showToast: true,
- *   offlineMessage: '网络已断开'
- * })
+ * const { isConnected, networkType, isWifi, withNetwork } = useNetwork();
+ *
+ * // 响应式访问
+ * watchEffect(() => {
+ *   if (!isConnected.value) {
+ *     console.log('网络已断开');
+ *   }
+ * });
+ *
+ * // 执行需要网络的操作
+ * await withNetwork(() => api.fetchData());
+ * ```
+ *
+ * @example
+ * ```ts
+ * // 监听网络变化
+ * const { isConnected } = useNetwork({
+ *   onChange: (connected, type) => {
+ *     console.log('网络变化:', connected, type);
+ *   }
+ * });
  * ```
  */
 export function useNetwork(options: UseNetworkOptions = {}) {
-  const { showToast = true, offlineMessage = '网络已断开，请检查网络设置', onlineMessage = '网络已恢复' } = options;
+  const { onChange } = options;
 
-  /** 是否连接网络 */
-  const isConnected = ref(true);
-  /** 网络类型 */
-  const networkType = ref<NetworkType>('unknown');
-  /** 是否正在检查网络 */
-  const isChecking = ref(false);
+  // 注册变化回调（组件卸载时自动移除）
+  let unsubscribe: (() => void) | null = null;
 
-  /**
-   * 网络状态变化回调
-   */
-  const handleNetworkChange = (res: UniApp.OnNetworkStatusChangeSuccess) => {
-    const wasConnected = isConnected.value;
-    isConnected.value = res.isConnected;
-    networkType.value = res.networkType as NetworkType;
-
-    if (showToast) {
-      // 从有网变成无网
-      if (wasConnected && !res.isConnected) {
-        uni.showToast({
-          title: offlineMessage,
-          icon: 'none',
-          duration: 2000,
-        });
-      }
-      // 从无网恢复有网
-      else if (!wasConnected && res.isConnected) {
-        uni.showToast({
-          title: onlineMessage,
-          icon: 'success',
-          duration: 1500,
-        });
-      }
-    }
-  };
-
-  /**
-   * 主动检查网络状态
-   */
-  async function checkNetwork(): Promise<NetworkState> {
-    isChecking.value = true;
-    try {
-      const res = await uni.getNetworkType();
-      const connected = res.networkType !== 'none';
-      isConnected.value = connected;
-      networkType.value = res.networkType as NetworkType;
-
-      return {
-        isConnected: connected,
-        networkType: res.networkType as NetworkType,
-      };
-    } finally {
-      isChecking.value = false;
-    }
+  if (onChange) {
+    unsubscribe = onNetworkChange(onChange);
   }
 
-  /**
-   * 判断是否是 WiFi 网络
-   */
-  function isWifi(): boolean {
-    return networkType.value === 'wifi';
-  }
+  // 组件卸载时取消监听
+  onUnmounted(() => {
+    unsubscribe?.();
+  });
+
+  // 计算属性：是否是 WiFi
+  const isWifi = computed(() => isWifiNetwork());
+
+  // 计算属性：是否是移动网络
+  const isMobile = computed(() => isMobileNetwork());
 
   /**
-   * 判断是否是移动网络
-   */
-  function isMobile(): boolean {
-    return ['2g', '3g', '4g', '5g'].includes(networkType.value);
-  }
-
-  /**
-   * 执行需要网络的操作（自动检查网络状态）
+   * 执行需要网络的操作
    * @param action 要执行的操作
-   * @param errorMessage 无网络时的提示信息
+   * @param errorMessage 无网络时的提示
    */
   async function withNetwork<T>(action: () => Promise<T>, errorMessage?: string): Promise<T> {
-    if (!isConnected.value) {
-      const state = await checkNetwork();
-      if (!state.isConnected) {
-        uni.showToast({
-          title: errorMessage || offlineMessage,
-          icon: 'none',
-        });
-        return Promise.reject(new Error('No network connection'));
-      }
-    }
-    return action();
+    return withNetworkRequired(action, errorMessage);
   }
 
-  // 组件挂载时开始监听
-  onMounted(() => {
-    // 获取初始网络状态
-    checkNetwork();
-    // 监听网络变化
-    uni.onNetworkStatusChange(handleNetworkChange);
-  });
-
-  // 组件卸载时移除监听
-  onUnmounted(() => {
-    uni.offNetworkStatusChange(handleNetworkChange);
-  });
-
   return {
-    /** 是否连接网络 */
-    isConnected,
-    /** 网络类型 */
-    networkType,
-    /** 是否正在检查 */
-    isChecking,
-    /** 主动检查网络状态 */
-    checkNetwork,
-    /** 判断是否是 WiFi */
+    /** 是否连接网络 (响应式) */
+    isConnected: globalNetworkState.isConnected,
+    /** 网络类型 (响应式) */
+    networkType: globalNetworkState.networkType,
+    /** 是否是 WiFi 网络 (计算属性) */
     isWifi,
-    /** 判断是否是移动网络 */
+    /** 是否是移动网络 (计算属性) */
     isMobile,
+    /** 主动检查网络状态 */
+    checkNetwork: checkNetworkStatus,
     /** 执行需要网络的操作 */
     withNetwork,
   };

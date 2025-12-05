@@ -10,3 +10,5 @@ export * from './datetime';
 export * from './formatters';
 export * from './validator';
 export * from './update';
+export * from './network';
+export * from './errorReporter';

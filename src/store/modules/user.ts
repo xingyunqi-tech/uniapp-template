@@ -1,51 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
 
-/**
- * 用户信息接口
- */
-export interface UserInfo {
-  id?: number;
-  username?: string;
-  avatar?: string;
-  phone?: string;
-}
-
-/**
- * 登录参数接口
- */
-export interface LoginParams {
-  phone: string;
-  password: string;
-}
-
-/**
- * 注册参数接口
- */
-export interface RegisterParams {
-  phone: string;
-  password: string;
-}
-
-/**
- * 验证码登录参数接口
- */
-export interface SmsLoginParams {
-  phone: string;
-  code: string;
-}
-
-/**
- * 微信登录参数接口
- */
-export interface WechatLoginParams {
-  /** 微信登录 code */
-  code: string;
-  /** 加密数据（小程序获取手机号） */
-  encryptedData?: string;
-  /** 加密向量（小程序获取手机号） */
-  iv?: string;
-}
+// 重新导出类型，保持向后兼容
+export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams };
 
 /**
  * 用户状态管理 Store
