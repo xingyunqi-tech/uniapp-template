@@ -5,22 +5,22 @@
 
 interface NavigateToOptions {
   url: "/pages/index/index" |
-       "/pages/about/index" |
-       "/pages/address/index" |
-       "/pages/address-edit/index" |
        "/pages/agreement/index" |
-       "/pages/contact/index" |
        "/pages/error/index" |
-       "/pages/favorite/index" |
-       "/pages/feedback/index" |
        "/pages/forgot-password/index" |
        "/pages/login/index" |
        "/pages/mine/index" |
-       "/pages/order/index" |
-       "/pages/password/index" |
-       "/pages/profile/index" |
        "/pages/register/index" |
-       "/pages/settings/index";
+       "/pages-sub/order/list/index" |
+       "/pages-sub/user/address/index" |
+       "/pages-sub/user/address-edit/index" |
+       "/pages-sub/user/favorite/index" |
+       "/pages-sub/user/password/index" |
+       "/pages-sub/user/profile/index" |
+       "/pages-sub/user/settings/index" |
+       "/pages-sub/other/about/index" |
+       "/pages-sub/other/contact/index" |
+       "/pages-sub/other/feedback/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}
 

@@ -1,16 +1,17 @@
-import { defineConfig, presetAttributify, presetIcons } from 'unocss';
+import { defineConfig, presetAttributify, presetIcons, type Preset } from 'unocss';
 import presetUni from 'unocss-preset-uni';
 
 export default defineConfig({
   presets: [
     // UniApp 预设 - 自动处理 rpx 单位
-    presetUni(),
+    presetUni() as Preset,
     // 属性模式
     presetAttributify(),
     // 图标
     presetIcons({
       scale: 1.2,
-      warn: true,
+      // 关闭警告：动态类名会产生误报（如 i-carbon-view-off-xxx）
+      warn: false,
       extraProperties: {
         display: 'inline-block',
         'vertical-align': 'middle',
@@ -80,5 +81,17 @@ export default defineConfig({
   ],
 
   // 安全列表 - 确保这些类始终生成
-  safelist: ['flex-center', 'flex-between', 'text-ellipsis', 'btn-primary', 'btn-default'],
+  safelist: [
+    'flex-center',
+    'flex-between',
+    'text-ellipsis',
+    'btn-primary',
+    'btn-default',
+    // 动态图标 - 避免 UnoCSS 静态分析误报
+    'i-carbon-view',
+    'i-carbon-view-off',
+    'i-carbon-checkmark',
+    'i-carbon-close',
+    'i-carbon-checkbox',
+  ],
 });

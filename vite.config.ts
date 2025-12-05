@@ -49,6 +49,7 @@ function generatePlugins(mode: string): PluginOption[] {
     // @uni-helper 插件必须在 uni() 之前
     UniPages({
       dts: 'typings/uni-pages.d.ts',
+      subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other'],
     }),
     UniLayouts(),
     UniManifest(),
@@ -88,6 +89,18 @@ export default ({ mode }: { mode: string }) => {
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
+      },
+    },
+
+    /** CSS 配置 */
+    css: {
+      preprocessorOptions: {
+        scss: {
+          // 使用新版 Sass API，抑制废弃警告
+          api: 'modern-compiler',
+          // 抑制第三方库（如 uni-ui）的废弃警告
+          silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin'],
+        },
       },
     },
   });

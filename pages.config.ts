@@ -9,7 +9,37 @@ export default defineUniPages({
     },
   },
   pages: [],
-  subPackages: [],
+  /**
+   * 分包配置
+   * 用于将小程序划分成不同的子包，减小主包体积
+   * 主包大小限制：2M，总包大小限制：20M（微信小程序）
+   *
+   * 分包原则：
+   * 1. TabBar 页面必须在主包
+   * 2. 启动页面必须在主包
+   * 3. 按业务模块划分分包
+   * 4. 分包之间不能相互引用
+   * 5. 主包可以引用分包资源
+   *
+   * 使用方法：
+   * 1. 在 src/ 下创建分包目录，如 src/pages-sub/order/
+   * 2. 在分包目录下创建页面，如 src/pages-sub/order/list/index.vue
+   * 3. 页面会被自动扫描并添加到对应分包中
+   */
+  subPackages: [
+    {
+      root: 'pages-sub/order',
+      pages: [],
+    },
+    {
+      root: 'pages-sub/user',
+      pages: [],
+    },
+    {
+      root: 'pages-sub/other',
+      pages: [],
+    },
+  ],
   globalStyle: {
     navigationBarTextStyle: 'black',
     navigationBarTitleText: 'UniApp',

@@ -2,23 +2,47 @@
  * 页面路径常量
  */
 export const PAGES = {
+  // ========== 主包页面 ==========
+  /** 首页 (TabBar) */
   HOME: '/pages/index/index',
-  LOGIN: '/pages/login/index',
-  REGISTER: '/pages/register/index',
-  FORGOT_PASSWORD: '/pages/forgot-password/index',
+  /** 我的 (TabBar) */
   MINE: '/pages/mine/index',
-  ADDRESS: '/pages/address/index',
-  ADDRESS_EDIT: '/pages/address-edit/index',
-  SETTINGS: '/pages/settings/index',
-  PROFILE: '/pages/profile/index',
-  PASSWORD: '/pages/password/index',
+  /** 登录 */
+  LOGIN: '/pages/login/index',
+  /** 注册 */
+  REGISTER: '/pages/register/index',
+  /** 忘记密码 */
+  FORGOT_PASSWORD: '/pages/forgot-password/index',
+  /** 404 错误页 */
   ERROR: '/pages/error/index',
-  FAVORITE: '/pages/favorite/index',
-  FEEDBACK: '/pages/feedback/index',
-  ABOUT: '/pages/about/index',
+  /** 协议详情 */
   AGREEMENT: '/pages/agreement/index',
-  CONTACT: '/pages/contact/index',
-  ORDER: '/pages/order/index',
+
+  // ========== order 分包 ==========
+  /** 我的订单 */
+  ORDER: '/pages-sub/order/list/index',
+
+  // ========== user 分包 ==========
+  /** 地址管理 */
+  ADDRESS: '/pages-sub/user/address/index',
+  /** 编辑地址 */
+  ADDRESS_EDIT: '/pages-sub/user/address-edit/index',
+  /** 设置 */
+  SETTINGS: '/pages-sub/user/settings/index',
+  /** 编辑资料 */
+  PROFILE: '/pages-sub/user/profile/index',
+  /** 修改密码 */
+  PASSWORD: '/pages-sub/user/password/index',
+  /** 我的收藏 */
+  FAVORITE: '/pages-sub/user/favorite/index',
+
+  // ========== other 分包 ==========
+  /** 意见反馈 */
+  FEEDBACK: '/pages-sub/other/feedback/index',
+  /** 关于我们 */
+  ABOUT: '/pages-sub/other/about/index',
+  /** 联系客服 */
+  CONTACT: '/pages-sub/other/contact/index',
 } as const;
 
 /**
