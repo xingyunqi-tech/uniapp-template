@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="feedback-page">
+  <view class="feedback-page" :class="themeClass">
     <!-- 反馈类型 -->
     <view class="form-section">
       <view class="section-title">反馈类型</view>
@@ -75,7 +75,8 @@
 
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
-import { useAsyncAction } from '@/composables';
+import { useAsyncAction, useTheme } from '@/composables';
+
 import {
   FEEDBACK_TYPES,
   FEEDBACK_CONTENT_MIN_LENGTH,
@@ -83,6 +84,8 @@ import {
   FEEDBACK_CONTENT_MAX_LENGTH,
 } from '@/constants';
 import UFixedButton from '@/components/UFixedButton/index.vue';
+
+const { themeClass } = useTheme();
 
 const formData = reactive({
   type: FEEDBACK_TYPES[0].value,
@@ -150,18 +153,18 @@ function handleSubmit() {
   min-height: 100vh;
   padding: 24rpx;
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 .form-section {
   margin-bottom: 32rpx;
   padding: 32rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
+  background: var(--color-bg);
 
   .section-title {
     margin-bottom: 24rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 30rpx;
     font-weight: 500;
   }
@@ -176,16 +179,16 @@ function handleSubmit() {
   .type-item {
     padding: 16rpx 32rpx;
     transition: all $uni-duration-fast;
-    border: 1px solid $uni-border-color;
+    border: 1px solid var(--color-border);
     border-radius: $uni-border-radius-base;
-    background: $uni-bg-color-grey;
-    color: $uni-text-color-secondary;
+    background: var(--color-bg-grey);
+    color: var(--color-text-secondary);
     font-size: 28rpx;
 
     &.active {
-      border-color: $uni-color-primary;
-      background: $uni-color-primary-light;
-      color: #fff;
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
     }
   }
 }
@@ -199,15 +202,15 @@ function handleSubmit() {
     width: 100%;
     height: 240rpx;
     padding: 24rpx;
-    border: 1px solid $uni-border-color;
+    border: 1px solid var(--color-border);
     border-radius: $uni-border-radius-base;
-    background: $uni-bg-color-grey;
-    color: $uni-text-color;
+    background: var(--color-bg-grey);
+    color: var(--color-text);
     font-size: 28rpx;
     line-height: 1.6;
 
     &::placeholder {
-      color: $uni-text-color-placeholder;
+      color: var(--color-text-placeholder);
     }
   }
 
@@ -215,7 +218,7 @@ function handleSubmit() {
     position: absolute;
     right: 24rpx;
     bottom: 24rpx;
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 24rpx;
   }
 }
@@ -248,10 +251,10 @@ function handleSubmit() {
       width: 40rpx;
       height: 40rpx;
       border-radius: 50%;
-      background: $uni-color-error;
+      background: var(--color-error);
 
       .i-carbon-close {
-        color: #fff;
+        color: var(--color-text-inverse);
         font-size: 24rpx;
       }
     }
@@ -265,17 +268,17 @@ function handleSubmit() {
     justify-content: center;
     width: 200rpx;
     height: 200rpx;
-    border: 1px dashed $uni-border-color;
+    border: 1px dashed var(--color-border);
     border-radius: $uni-border-radius-base;
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
 
     .i-carbon-add {
-      color: $uni-text-color-placeholder;
+      color: var(--color-text-placeholder);
       font-size: 48rpx;
     }
 
     .upload-text {
-      color: $uni-text-color-placeholder;
+      color: var(--color-text-placeholder);
       font-size: 24rpx;
     }
   }
@@ -287,14 +290,14 @@ function handleSubmit() {
   width: 100%;
   height: 88rpx;
   padding: 0 24rpx;
-  border: 1px solid $uni-border-color;
+  border: 1px solid var(--color-border);
   border-radius: $uni-border-radius-base;
-  background: $uni-bg-color-grey;
-  color: $uni-text-color;
+  background: var(--color-bg-grey);
+  color: var(--color-text);
   font-size: 28rpx;
 
   &::placeholder {
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
   }
 }
 </style>

@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="order-page">
+  <view class="order-page" :class="themeClass">
     <!-- 订单状态标签栏 -->
     <UTabs v-model="currentTab" :tabs="tabs" scrollable @change="handleTabChange" />
 
@@ -106,11 +106,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useConfirmModal } from '@/composables';
+import { useConfirmModal, useTheme } from '@/composables';
+
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
 import UTabs, { type TabItem } from '@/components/UTabs/index.vue';
+
+const { themeClass } = useTheme();
 
 interface GoodsItem {
   id: string;
@@ -145,10 +148,6 @@ const loading = ref(false);
 const refreshing = ref(false);
 const noMore = ref(false);
 const page = ref(1);
-
-onMounted(() => {
-  loadOrders();
-});
 
 onShow(() => {
   // 每次显示时刷新
@@ -322,7 +321,7 @@ function handleGoShopping() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 订单列表
@@ -340,12 +339,12 @@ function handleGoShopping() {
   padding: 120rpx 0;
 
   .empty-icon {
-    color: $uni-text-color-disabled;
+    color: var(--color-text-disabled);
     font-size: 120rpx;
   }
 
   .empty-text {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 
@@ -355,8 +354,8 @@ function handleGoShopping() {
     margin-top: 16rpx;
     border: none;
     border-radius: $uni-border-radius-base;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 28rpx;
     line-height: 72rpx;
 
@@ -371,18 +370,18 @@ function handleGoShopping() {
   margin-bottom: 24rpx;
   padding: 24rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-sm;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
 
   .order-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding-bottom: 20rpx;
-    border-bottom: 1px solid $uni-border-color-light;
+    border-bottom: 1px solid var(--color-border-light);
 
     .order-no {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 24rpx;
     }
 
@@ -391,23 +390,23 @@ function handleGoShopping() {
       font-weight: 500;
 
       &.warning {
-        color: $uni-color-warning;
+        color: var(--color-warning);
       }
 
       &.info {
-        color: $uni-color-primary;
+        color: var(--color-primary);
       }
 
       &.primary {
-        color: $uni-color-primary;
+        color: var(--color-primary);
       }
 
       &.success {
-        color: $uni-color-success;
+        color: var(--color-success);
       }
 
       &.disabled {
-        color: $uni-text-color-disabled;
+        color: var(--color-text-disabled);
       }
     }
   }
@@ -428,7 +427,7 @@ function handleGoShopping() {
         width: 160rpx;
         height: 160rpx;
         border-radius: $uni-border-radius-base;
-        background: $uni-bg-color-grey;
+        background: var(--color-bg-grey);
       }
 
       .goods-info {
@@ -440,7 +439,7 @@ function handleGoShopping() {
         .goods-name {
           display: -webkit-box;
           overflow: hidden;
-          color: $uni-text-color;
+          color: var(--color-text);
           font-size: 28rpx;
           line-height: 1.4;
           text-overflow: ellipsis;
@@ -449,7 +448,7 @@ function handleGoShopping() {
         }
 
         .goods-spec {
-          color: $uni-text-color-secondary;
+          color: var(--color-text-secondary);
           font-size: 24rpx;
         }
 
@@ -460,13 +459,13 @@ function handleGoShopping() {
           margin-top: auto;
 
           .goods-price {
-            color: $uni-color-error;
+            color: var(--color-error);
             font-size: 28rpx;
             font-weight: 500;
           }
 
           .goods-count {
-            color: $uni-text-color-secondary;
+            color: var(--color-text-secondary);
             font-size: 24rpx;
           }
         }
@@ -475,7 +474,7 @@ function handleGoShopping() {
 
     .goods-more {
       padding-top: 16rpx;
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 24rpx;
       text-align: center;
     }
@@ -486,19 +485,19 @@ function handleGoShopping() {
     align-items: center;
     justify-content: space-between;
     padding-top: 20rpx;
-    border-top: 1px solid $uni-border-color-light;
+    border-top: 1px solid var(--color-border-light);
 
     .order-total {
       display: flex;
       align-items: baseline;
 
       .total-label {
-        color: $uni-text-color-secondary;
+        color: var(--color-text-secondary);
         font-size: 26rpx;
       }
 
       .total-price {
-        color: $uni-color-error;
+        color: var(--color-error);
         font-size: 32rpx;
         font-weight: 600;
       }
@@ -511,10 +510,10 @@ function handleGoShopping() {
       .action-btn {
         height: 60rpx;
         padding: 0 24rpx;
-        border: 1px solid $uni-border-color;
+        border: 1px solid var(--color-border);
         border-radius: $uni-border-radius-base;
-        background: $uni-bg-color;
-        color: $uni-text-color;
+        background: var(--color-bg);
+        color: var(--color-text);
         font-size: 26rpx;
         line-height: 58rpx;
 
@@ -523,14 +522,14 @@ function handleGoShopping() {
         }
 
         &.primary {
-          border-color: $uni-color-primary;
-          background: $uni-color-primary;
-          color: #fff;
+          border-color: var(--color-primary);
+          background: var(--color-primary);
+          color: var(--color-text-inverse);
         }
 
         &.cancel {
-          border-color: $uni-text-color-secondary;
-          color: $uni-text-color-secondary;
+          border-color: var(--color-text-secondary);
+          color: var(--color-text-secondary);
         }
       }
     }
@@ -540,7 +539,7 @@ function handleGoShopping() {
 // 加载更多
 .load-more {
   padding: 32rpx 0;
-  color: $uni-text-color-secondary;
+  color: var(--color-text-secondary);
   font-size: 26rpx;
   text-align: center;
 }

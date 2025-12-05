@@ -122,7 +122,7 @@ function handleMaskClick() {
     justify-content: center;
     padding: 32rpx;
     border-radius: 16rpx;
-    background-color: rgb(0 0 0 / 0.7);
+    background-color: var(--color-bg-mask);
   }
 
   &__spinner {
@@ -134,9 +134,9 @@ function handleMaskClick() {
         width: 100%;
         height: 100%;
         animation: u-loading-rotate 0.8s linear infinite;
-        border: 4rpx solid rgb(255 255 255 / 0.3);
+        border: 4rpx solid var(--color-overlay-medium);
         border-radius: 50%;
-        border-top-color: #fff;
+        border-top-color: var(--color-text-inverse);
       }
     }
 
@@ -152,7 +152,7 @@ function handleMaskClick() {
         transform-origin: center bottom;
         animation: u-loading-fade 1s linear infinite;
         border-radius: 2rpx;
-        background-color: rgb(255 255 255 / 0.5);
+        background-color: var(--color-overlay-heavy);
 
         @for $i from 1 through 12 {
           &:nth-child(#{$i}) {
@@ -166,14 +166,14 @@ function handleMaskClick() {
 
   &__text {
     margin-top: 16rpx;
-    color: #fff;
+    color: var(--color-text-inverse);
     font-size: 28rpx;
   }
 
   // 主色调
   &--primary {
     .u-loading__content {
-      background-color: var(--colorPrimary, #07c160);
+      background-color: var(--color-primary);
     }
   }
 }

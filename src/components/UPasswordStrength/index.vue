@@ -107,7 +107,7 @@ withDefaults(
   align-items: center;
 
   .strength-label {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 24rpx;
   }
 
@@ -120,10 +120,10 @@ withDefaults(
       height: 6rpx;
       transition: background 0.3s;
       border-radius: 3rpx;
-      background: $uni-border-color;
+      background: var(--color-border);
 
       &.active {
-        background: $uni-color-primary;
+        background: var(--color-primary);
       }
     }
   }
@@ -132,15 +132,15 @@ withDefaults(
     font-size: 24rpx;
 
     &.weak {
-      color: $uni-color-error;
+      color: var(--color-error);
     }
 
     &.medium {
-      color: $uni-color-warning;
+      color: var(--color-warning);
     }
 
     &.strong {
-      color: $uni-color-success;
+      color: var(--color-success);
     }
   }
 }
@@ -150,7 +150,7 @@ withDefaults(
   .rules-title {
     display: block;
     margin-bottom: 12rpx;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 26rpx;
   }
 
@@ -168,11 +168,11 @@ withDefaults(
       display: flex;
       gap: 4rpx;
       align-items: center;
-      color: $uni-text-color-placeholder;
+      color: var(--color-text-placeholder);
       font-size: 24rpx;
 
       &.valid {
-        color: $uni-color-success;
+        color: var(--color-success);
       }
     }
   }

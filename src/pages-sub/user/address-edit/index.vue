@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="address-edit-page">
+  <view class="address-edit-page" :class="themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
       <view class="form-group">
@@ -63,6 +63,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useTheme } from '@/composables';
+
+const { themeClass } = useTheme();
 
 // 表单数据
 const formData = reactive({
@@ -323,7 +326,7 @@ function handleDelete() {
 .address-edit-page {
   min-height: 100vh;
   padding-bottom: calc($uni-safe-area-inset-bottom + 200rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 表单区域
@@ -333,8 +336,8 @@ function handleDelete() {
   .form-group {
     overflow: hidden;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
 
     .form-item {
       display: flex;
@@ -342,25 +345,25 @@ function handleDelete() {
       padding: 32rpx;
 
       &:not(:last-child) {
-        border-bottom: 1px solid $uni-border-color-light;
+        border-bottom: 1px solid var(--color-border-light);
       }
 
       .form-label {
         flex-shrink: 0;
         width: 160rpx;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
 
         &.required::before {
           content: '*';
           margin-right: 4rpx;
-          color: $uni-color-error;
+          color: var(--color-error);
         }
       }
 
       .form-input {
         flex: 1;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
       }
 
@@ -370,15 +373,15 @@ function handleDelete() {
         gap: 8rpx;
         align-items: center;
         justify-content: flex-end;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
 
         .placeholder {
-          color: $uni-text-color-placeholder;
+          color: var(--color-text-placeholder);
         }
 
         .i-carbon-chevron-right {
-          color: $uni-text-color-secondary;
+          color: var(--color-text-secondary);
           font-size: 28rpx;
         }
       }
@@ -395,7 +398,7 @@ function handleDelete() {
         .form-textarea {
           width: 100%;
           min-height: 120rpx;
-          color: $uni-text-color;
+          color: var(--color-text);
           font-size: 30rpx;
           line-height: 1.5;
         }
@@ -414,11 +417,11 @@ function handleDelete() {
     justify-content: space-between;
     padding: 32rpx;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
 
     .default-label {
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 30rpx;
     }
   }
@@ -434,8 +437,8 @@ function handleDelete() {
   flex-direction: column;
   padding: 24rpx;
   padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
-  background: $uni-bg-color;
-  box-shadow: 0 -4rpx 16rpx rgb(0 0 0 / 0.05);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-light);
   gap: 16rpx;
 
   .save-btn {
@@ -443,8 +446,8 @@ function handleDelete() {
     height: 96rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 32rpx;
     line-height: 96rpx;
 
@@ -462,8 +465,8 @@ function handleDelete() {
     height: 96rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color-grey;
-    color: $uni-color-error;
+    background: var(--color-bg-grey);
+    color: var(--color-error);
     font-size: 32rpx;
     line-height: 96rpx;
 

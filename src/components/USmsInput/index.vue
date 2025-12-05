@@ -84,8 +84,8 @@ function handleClick() {
     padding: 0;
     border: none;
     border-radius: $uni-border-radius-base;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 26rpx;
     line-height: 72rpx;
 
@@ -98,8 +98,8 @@ function handleClick() {
     }
 
     &[disabled] {
-      background: $uni-bg-color-grey;
-      color: $uni-text-color-disabled;
+      background: var(--color-bg-grey);
+      color: var(--color-text-disabled);
     }
   }
 }

@@ -53,21 +53,21 @@ withDefaults(defineProps<Props>(), {
     bottom: 0;
     left: 32rpx;
     height: 1px;
-    background: $uni-border-color-light;
+    background: var(--color-border-light);
   }
 
   &--required {
     .u-form-item__label::before {
       content: '*';
       margin-right: 8rpx;
-      color: $uni-color-error;
+      color: var(--color-error);
     }
   }
 
   &__label {
     flex-shrink: 0;
     width: 160rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 30rpx;
   }
 
@@ -78,7 +78,7 @@ withDefaults(defineProps<Props>(), {
     align-items: center;
     justify-content: flex-end;
     min-width: 0;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 30rpx;
     text-align: right;
 
@@ -86,7 +86,7 @@ withDefaults(defineProps<Props>(), {
     :deep(input),
     :deep(textarea) {
       flex: 1;
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 30rpx;
       text-align: right;
     }
@@ -94,19 +94,19 @@ withDefaults(defineProps<Props>(), {
     // 占位符样式
     :deep(.input-placeholder),
     :deep(.textarea-placeholder) {
-      color: $uni-text-color-placeholder;
+      color: var(--color-text-placeholder);
     }
 
     // 禁用状态
     &.disabled {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
     }
   }
 
   &__arrow {
     flex-shrink: 0;
     margin-left: 8rpx;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 }

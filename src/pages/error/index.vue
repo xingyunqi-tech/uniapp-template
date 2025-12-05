@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="error-page">
+  <view class="error-page" :class="themeClass">
     <view class="error-content">
       <!-- 错误图标 -->
       <view class="error-icon">
@@ -31,9 +31,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useTheme } from '@/composables';
+
 import { canGoBack as checkCanGoBack } from '@/utils/router';
 
+const { themeClass } = useTheme();
 const router = useRouter();
 
 // 错误类型
@@ -98,7 +100,7 @@ function goBack() {
   justify-content: center;
   min-height: 100vh;
   padding: 40rpx;
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 .error-content {
@@ -109,8 +111,8 @@ function goBack() {
   max-width: 600rpx;
   padding: 80rpx 40rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-base;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-base);
   text-align: center;
 }
 
@@ -122,17 +124,17 @@ function goBack() {
   height: 160rpx;
   margin-bottom: 40rpx;
   border-radius: 50%;
-  background: rgb(250 173 20 / 0.1);
+  background: var(--color-warning-bg);
 
   .i-carbon-warning-alt {
-    color: $uni-color-warning;
+    color: var(--color-warning);
     font-size: 80rpx;
   }
 }
 
 .error-code {
   margin-bottom: 16rpx;
-  color: $uni-text-color-disabled;
+  color: var(--color-text-disabled);
   font-size: 100rpx;
   font-weight: 700;
   line-height: 1;
@@ -140,14 +142,14 @@ function goBack() {
 
 .error-title {
   margin-bottom: 16rpx;
-  color: $uni-text-color;
+  color: var(--color-text);
   font-size: 36rpx;
   font-weight: 600;
 }
 
 .error-desc {
   margin-bottom: 48rpx;
-  color: $uni-text-color-secondary;
+  color: var(--color-text-secondary);
   font-size: 28rpx;
   line-height: 1.6;
 }
@@ -161,10 +163,10 @@ function goBack() {
   .action-btn {
     width: 100%;
     height: 88rpx;
-    border: 1px solid $uni-border-color;
+    border: 1px solid var(--color-border);
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    color: $uni-text-color;
+    background: var(--color-bg);
+    color: var(--color-text);
     font-size: 30rpx;
     line-height: 88rpx;
 
@@ -178,8 +180,8 @@ function goBack() {
 
     &.primary {
       border: none;
-      background: $uni-color-primary;
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
     }
   }
 }

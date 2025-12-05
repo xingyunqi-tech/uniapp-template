@@ -29,15 +29,15 @@ defineProps<Props>();
   &__title {
     margin-bottom: 16rpx;
     padding-left: 8rpx;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 26rpx;
   }
 
   &__content {
     overflow: hidden;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
   }
 }
 </style>

@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="创建账号" card-title="手机号注册">
+  <AuthLayout title="创建账号" card-title="手机号注册" :class="themeClass">
     <!-- 注册方式切换 -->
     <view class="register-tabs">
       <view class="tab-item" :class="{ active: registerType === 'password' }" @click="registerType = 'password'">
@@ -87,10 +87,13 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms } from '@/composables';
+import { useRouter, useSendSms, useTheme } from '@/composables';
+
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
+
+const { themeClass } = useTheme();
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -221,20 +224,20 @@ function showAgreement(type: 'user' | 'privacy') {
   justify-content: center;
   margin-bottom: 48rpx;
   border-radius: $uni-border-radius-base;
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 
   .tab-item {
     flex: 1;
     padding: 20rpx 0;
     transition: all $uni-duration-fast;
     border-radius: $uni-border-radius-base;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
     text-align: center;
 
     &.active {
-      background: $uni-color-primary;
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
       font-weight: 500;
     }
   }
@@ -252,8 +255,8 @@ function showAgreement(type: 'user' | 'privacy') {
     margin-top: 16rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 32rpx;
     font-weight: 500;
     line-height: 96rpx;
@@ -274,12 +277,12 @@ function showAgreement(type: 'user' | 'privacy') {
   gap: 8rpx;
   justify-content: center;
   margin-top: 40rpx;
-  color: $uni-text-color-secondary;
+  color: var(--color-text-secondary);
   font-size: 28rpx;
 
   .link-text {
     transition: color $uni-duration-fast;
-    color: $uni-color-primary;
+    color: var(--color-primary);
     font-weight: 500;
 
     &:active {
@@ -304,28 +307,28 @@ function showAgreement(type: 'user' | 'privacy') {
     height: 36rpx;
     margin-top: 4rpx;
     transition: all $uni-duration-fast;
-    border: 2rpx solid $uni-border-color;
+    border: 2rpx solid var(--color-border);
     border-radius: 8rpx;
 
     &.checked {
-      border-color: $uni-color-primary;
-      background: $uni-color-primary;
+      border-color: var(--color-primary);
+      background: var(--color-primary);
     }
 
     .i-carbon-checkmark {
-      color: #fff;
+      color: var(--color-text-inverse);
       font-size: 24rpx;
     }
   }
 
   .agreement-text {
     flex: 1;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 24rpx;
     line-height: 1.6;
 
     .agreement-link {
-      color: $uni-color-primary;
+      color: var(--color-primary);
 
       &:active {
         opacity: 0.8;

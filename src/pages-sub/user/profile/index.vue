@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="profile-page">
+  <view class="profile-page" :class="themeClass">
     <!-- 头像区域 -->
     <view class="avatar-section" @click="handleChooseAvatar">
       <view class="avatar-wrapper">
@@ -55,13 +55,16 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useAsyncAction } from '@/composables';
+import { useAsyncAction, useTheme } from '@/composables';
+
 import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UFormItem from '@/components/UFormItem/index.vue';
+
 import UFixedButton from '@/components/UFixedButton/index.vue';
 
+const { themeClass } = useTheme();
 const userStore = useUserStore();
 
 // 性别选项
@@ -157,7 +160,7 @@ function handleSave() {
   min-height: 100vh;
   padding: 24rpx;
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 头像区域
@@ -167,7 +170,7 @@ function handleSave() {
   gap: 16rpx;
   align-items: center;
   padding: 48rpx 0;
-  background: $uni-bg-color;
+  background: var(--color-bg);
 
   .avatar-wrapper {
     position: relative;
@@ -188,14 +191,14 @@ function handleSave() {
       width: 48rpx;
       height: 48rpx;
       border-radius: 50%;
-      background: $uni-color-primary;
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
       font-size: 24rpx;
     }
   }
 
   .avatar-tip {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 26rpx;
   }
 }
@@ -206,7 +209,7 @@ function handleSave() {
 
   .form-value {
     &.disabled {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
     }
   }
 }

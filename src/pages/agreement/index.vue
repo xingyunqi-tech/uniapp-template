@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="agreement-page">
+  <view class="agreement-page" :class="themeClass">
     <scroll-view class="content-scroll" scroll-y>
       <URichText :content="content" />
     </scroll-view>
@@ -17,7 +17,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useTheme } from '@/composables';
 import URichText from '@/components/URichText/index.vue';
+
+const { themeClass } = useTheme();
 
 interface Query {
   type?: 'user' | 'privacy';
@@ -193,7 +196,7 @@ const PRIVACY_POLICY = `
 <style scoped lang="scss">
 .agreement-page {
   min-height: 100vh;
-  background: $uni-bg-color;
+  background: var(--color-bg);
 }
 
 .content-scroll {

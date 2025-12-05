@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="欢迎回来" card-title="登录账号">
+  <AuthLayout title="欢迎回来" card-title="登录账号" :class="themeClass">
     <!-- 登录方式切换 -->
     <UTabs v-model="loginType" :tabs="loginTabs" class="login-tabs" />
 
@@ -78,13 +78,14 @@
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms } from '@/composables';
+import { useRouter, useSendSms, useTheme } from '@/composables';
 import { isPhone } from '@/utils/validator';
 import { PHONE_LENGTH, SMS_CODE_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import UTabs from '@/components/UTabs/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
 
+const { themeClass } = useTheme();
 const router = useRouter();
 const userStore = useUserStore();
 
@@ -268,7 +269,7 @@ function goToForgotPassword() {
   border-radius: $uni-border-radius-base;
 
   :deep(.u-tabs__list) {
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
   }
 
   :deep(.u-tabs__item) {
@@ -278,10 +279,10 @@ function goToForgotPassword() {
 
   :deep(.u-tabs__item--active) {
     border-radius: $uni-border-radius-base;
-    background: $uni-color-primary;
+    background: var(--color-primary);
 
     .u-tabs__text {
-      color: #fff;
+      color: var(--color-text-inverse);
     }
 
     &::after {
@@ -302,8 +303,8 @@ function goToForgotPassword() {
     margin-top: 16rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 32rpx;
     font-weight: 500;
     line-height: 96rpx;
@@ -334,15 +335,15 @@ function goToForgotPassword() {
       left: 0;
       width: 100%;
       height: 1px;
-      background: $uni-border-color;
+      background: var(--color-border);
     }
 
     .divider-text {
       position: relative;
       z-index: 1;
       padding: 0 32rpx;
-      background: $uni-bg-color;
-      color: $uni-text-color-secondary;
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
       font-size: 26rpx;
     }
   }
@@ -360,9 +361,9 @@ function goToForgotPassword() {
       height: 96rpx;
       padding: 0;
       transition: all $uni-duration-fast ease;
-      border: 1px solid $uni-border-color;
+      border: 1px solid var(--color-border);
       border-radius: 50%;
-      background: $uni-bg-color;
+      background: var(--color-bg);
       font-size: 0;
       line-height: 1;
 
@@ -372,11 +373,11 @@ function goToForgotPassword() {
 
       &:active {
         transform: scale(0.95);
-        border-color: $uni-color-primary;
+        border-color: var(--color-primary);
       }
 
       .i-carbon-logo-wechat {
-        color: #09bb07;
+        color: var(--color-brand-wechat);
         font-size: 48rpx;
       }
     }
@@ -389,7 +390,7 @@ function goToForgotPassword() {
   gap: 8rpx;
   justify-content: center;
   margin-top: 40rpx;
-  color: $uni-text-color-secondary;
+  color: var(--color-text-secondary);
   font-size: 28rpx;
 
   &.secondary {
@@ -398,7 +399,7 @@ function goToForgotPassword() {
 
   .link-text {
     transition: color $uni-duration-fast;
-    color: $uni-color-primary;
+    color: var(--color-primary);
     font-weight: 500;
 
     &:active {

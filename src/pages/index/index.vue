@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <view class="home-page">
+  <view class="home-page" :class="themeClass">
     <!-- Banner 轮播 -->
     <u-banner :list="bannerList" :height="300" @click="handleBannerClick" />
 
@@ -55,7 +55,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
-import { useList } from '@/composables';
+import { useList, useTheme } from '@/composables';
+
+const { themeClass } = useTheme();
 
 // Banner 数据类型
 interface BannerItem {
@@ -197,13 +199,13 @@ onReachBottom(() => {
 .home-page {
   min-height: 100vh;
   padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 分类标签
 .category-scroll {
   width: 100%;
-  background: $uni-bg-color;
+  background: var(--color-bg);
   white-space: nowrap;
 
   .category-list {
@@ -216,18 +218,18 @@ onReachBottom(() => {
       padding: 16rpx 32rpx;
       transition: all $uni-duration-fast;
       border-radius: 32rpx;
-      background: $uni-bg-color-grey;
+      background: var(--color-bg-grey);
 
       &.active {
-        background: $uni-color-primary;
+        background: var(--color-primary);
 
         .category-name {
-          color: #fff;
+          color: var(--color-text-inverse);
         }
       }
 
       .category-name {
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 28rpx;
       }
     }
@@ -244,12 +246,12 @@ onReachBottom(() => {
     padding: 24rpx;
     transition: all $uni-duration-fast;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
     gap: 20rpx;
 
     &:active {
-      background: $uni-bg-color-hover;
+      background: var(--color-bg-hover);
     }
 
     .news-content {
@@ -260,7 +262,7 @@ onReachBottom(() => {
         display: -webkit-box;
         margin-bottom: 12rpx;
         overflow: hidden;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
         font-weight: 500;
         line-height: 1.4;
@@ -273,7 +275,7 @@ onReachBottom(() => {
         display: -webkit-box;
         margin-bottom: 16rpx;
         overflow: hidden;
-        color: $uni-text-color-secondary;
+        color: var(--color-text-secondary);
         font-size: 26rpx;
         line-height: 1.5;
         text-overflow: ellipsis;
@@ -288,20 +290,20 @@ onReachBottom(() => {
         align-items: center;
 
         .news-source {
-          color: $uni-color-primary;
+          color: var(--color-primary);
           font-size: 24rpx;
         }
 
         .news-time {
-          color: $uni-text-color-placeholder;
+          color: var(--color-text-placeholder);
           font-size: 24rpx;
         }
 
         .news-questions {
           padding: 4rpx 12rpx;
           border-radius: 4rpx;
-          background: rgb(25 137 250 / 0.1);
-          color: $uni-color-primary;
+          background: var(--color-primary-bg);
+          color: var(--color-primary);
           font-size: 22rpx;
         }
       }
@@ -322,7 +324,7 @@ onReachBottom(() => {
   text-align: center;
 
   .load-text {
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 26rpx;
   }
 }

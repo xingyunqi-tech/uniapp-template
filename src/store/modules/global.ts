@@ -1,15 +1,21 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE } from '@/constants';
 import { i18n } from '@/utils/locale';
 import type { LocaleKey, ThemeStyleKey } from '@/interface/system';
 
 /**
  * 应用主题到页面
- * 通过设置导航栏和 TabBar 样式来切换主题
+ * 通过设置导航栏、TabBar 样式来切换主题
+ * 注意：页面级 dark-theme 类名由各页面通过 useTheme composable 控制
  */
 function applyTheme(theme: ThemeStyleKey) {
   const isDark = theme === THEME_TYPE.DARK;
+
+  // H5 环境：设置根元素 class
+  // #ifdef H5
+  document.documentElement.classList.toggle('dark-theme', isDark);
+  // #endif
 
   // 更新导航栏颜色
   uni.setNavigationBarColor({
@@ -63,11 +69,6 @@ export const useGlobalStore = defineStore(
     function initTheme() {
       applyTheme(currentTheme.value);
     }
-
-    // 监听主题变化自动应用
-    watch(currentTheme, newTheme => {
-      applyTheme(newTheme);
-    });
 
     // ==================== 语言相关 ====================
     const currentLocale = ref<LocaleKey>(DEFAULT_LOCALE);

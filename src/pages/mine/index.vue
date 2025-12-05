@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <view class="user-page">
+  <view class="user-page" :class="themeClass">
     <!-- 用户信息卡片 -->
     <view class="user-card">
       <view class="user-info" @click="handleUserClick">
@@ -49,10 +49,13 @@
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useTheme } from '@/composables';
+
 import { PAGES } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UMenuItem from '@/components/UMenuItem/index.vue';
+
+const { themeClass } = useTheme();
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -118,13 +121,13 @@ function handleMenuClick(type: string) {
 .user-page {
   min-height: 100vh;
   padding-bottom: calc($uni-safe-area-inset-bottom + 120rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 用户信息卡片
 .user-card {
   padding: 40rpx;
-  background: linear-gradient(135deg, $uni-color-primary 0%, rgb(7 193 96 / 0.8) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-success) 100%);
 
   .user-info {
     display: flex;
@@ -132,14 +135,14 @@ function handleMenuClick(type: string) {
     align-items: center;
     padding: 32rpx;
     border-radius: $uni-border-radius-lg;
-    background: rgb(255 255 255 / 0.15);
+    background: var(--color-overlay-light);
     backdrop-filter: blur(10px);
 
     .avatar {
       flex-shrink: 0;
       width: 120rpx;
       height: 120rpx;
-      border: 4rpx solid rgb(255 255 255 / 0.5);
+      border: 4rpx solid var(--color-overlay-heavy);
       border-radius: 50%;
     }
 
@@ -150,19 +153,19 @@ function handleMenuClick(type: string) {
       gap: 8rpx;
 
       .username {
-        color: #fff;
+        color: var(--color-text-inverse);
         font-size: 36rpx;
         font-weight: 600;
       }
 
       .desc {
-        color: rgb(255 255 255 / 0.8);
+        color: var(--color-overlay-solid);
         font-size: 26rpx;
       }
     }
 
     .arrow {
-      color: rgb(255 255 255 / 0.8);
+      color: var(--color-overlay-solid);
       font-size: 32rpx;
     }
   }

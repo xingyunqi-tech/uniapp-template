@@ -162,18 +162,18 @@ function handleRetry() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
     inset: 0;
     gap: 8rpx;
   }
 
   &__icon {
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 48rpx;
   }
 
   &__error-text {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 24rpx;
   }
 }

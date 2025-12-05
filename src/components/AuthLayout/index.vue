@@ -46,7 +46,7 @@ withDefaults(defineProps<Props>(), {
   padding-top: calc($uni-safe-area-inset-top + 40rpx);
   padding-bottom: calc($uni-safe-area-inset-bottom + 40rpx);
   overflow-y: auto;
-  background: linear-gradient(135deg, rgb(25 137 250 / 0.15) 0%, rgb(7 193 96 / 0.15) 100%);
+  background: linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-success-bg) 100%);
 }
 
 // Logo 头部
@@ -62,7 +62,7 @@ withDefaults(defineProps<Props>(), {
     width: 128rpx;
     height: 128rpx;
     border-radius: 24rpx;
-    box-shadow: $uni-shadow-base;
+    box-shadow: var(--shadow-base);
   }
 
   .logo-text {
@@ -71,14 +71,14 @@ withDefaults(defineProps<Props>(), {
     gap: 8rpx;
 
     .logo-title {
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 48rpx;
       font-weight: 600;
       line-height: 1.3;
     }
 
     .logo-subtitle {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 28rpx;
       line-height: 1.4;
     }
@@ -91,13 +91,13 @@ withDefaults(defineProps<Props>(), {
   width: 100%;
   padding: 64rpx 48rpx;
   border-radius: 32rpx;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-lg;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-lg);
 
   .card-title {
     display: block;
     margin-bottom: 32rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 44rpx;
     font-weight: 600;
     line-height: 1.3;

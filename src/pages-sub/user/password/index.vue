@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="password-page">
+  <view class="password-page" :class="themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
       <view class="form-group">
@@ -89,10 +89,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { usePasswordStrength } from '@/composables';
+import { usePasswordStrength, useTheme } from '@/composables';
+
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import UPasswordStrength from '@/components/UPasswordStrength/index.vue';
 import UFixedButton from '@/components/UFixedButton/index.vue';
+
+const { themeClass } = useTheme();
 
 const userStore = useUserStore();
 
@@ -187,7 +190,7 @@ async function handleSave() {
 .password-page {
   min-height: 100vh;
   padding-bottom: calc($uni-safe-area-inset-bottom + 140rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 表单区域
@@ -197,8 +200,8 @@ async function handleSave() {
   .form-group {
     overflow: hidden;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
 
     .form-item {
       display: flex;
@@ -207,26 +210,26 @@ async function handleSave() {
       padding: 32rpx;
 
       &:not(:last-child) {
-        border-bottom: 1px solid $uni-border-color-light;
+        border-bottom: 1px solid var(--color-border-light);
       }
 
       .form-label {
         flex-shrink: 0;
         width: 160rpx;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
       }
 
       .form-input {
         flex: 1;
-        color: $uni-text-color;
+        color: var(--color-text);
         font-size: 30rpx;
       }
 
       .toggle-eye {
         flex-shrink: 0;
         padding: 8rpx;
-        color: $uni-text-color-secondary;
+        color: var(--color-text-secondary);
         font-size: 36rpx;
       }
     }
@@ -238,7 +241,7 @@ async function handleSave() {
   margin: 0 24rpx;
   padding: 24rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-sm;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
 }
 </style>

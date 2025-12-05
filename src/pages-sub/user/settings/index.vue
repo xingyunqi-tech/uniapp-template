@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="settings-page">
+  <view class="settings-page" :class="themeClass">
     <!-- 设置菜单 -->
     <view class="settings-section">
       <UMenuGroup title="账号设置">
@@ -66,10 +66,13 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useTheme } from '@/composables';
+
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UMenuItem from '@/components/UMenuItem/index.vue';
+
+const { themeClass } = useTheme();
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -270,7 +273,7 @@ function handleDeleteAccount() {
 .settings-page {
   min-height: 100vh;
   padding-bottom: calc($uni-safe-area-inset-bottom + 48rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 设置分组
@@ -286,7 +289,7 @@ function handleDeleteAccount() {
 }
 
 .switch-label {
-  color: $uni-text-color-secondary;
+  color: var(--color-text-secondary);
   font-size: 26rpx;
 }
 
@@ -299,9 +302,9 @@ function handleDeleteAccount() {
     height: 96rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
-    color: $uni-color-error;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
+    color: var(--color-error);
     font-size: 32rpx;
     line-height: 96rpx;
 

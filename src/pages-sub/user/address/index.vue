@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="address-page">
+  <view class="address-page" :class="themeClass">
     <!-- 地址列表 -->
     <view v-if="addressList.length > 0" class="address-list">
       <view v-for="item in addressList" :key="item.id" class="address-item" @click="handleEdit(item)">
@@ -52,8 +52,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useTheme } from '@/composables';
+
 import { PAGES } from '@/constants';
+
+const { themeClass } = useTheme();
 
 export interface AddressItem {
   id: number;
@@ -149,7 +152,7 @@ function handleDelete(item: AddressItem) {
 .address-page {
   min-height: 100vh;
   padding-bottom: calc($uni-safe-area-inset-bottom + 140rpx);
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 地址列表
@@ -160,8 +163,8 @@ function handleDelete(item: AddressItem) {
     margin-bottom: 24rpx;
     padding: 32rpx;
     border-radius: $uni-border-radius-lg;
-    background: $uni-bg-color;
-    box-shadow: $uni-shadow-sm;
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
 
     .address-info {
       .address-header {
@@ -171,27 +174,27 @@ function handleDelete(item: AddressItem) {
         margin-bottom: 16rpx;
 
         .name {
-          color: $uni-text-color;
+          color: var(--color-text);
           font-size: 32rpx;
           font-weight: 600;
         }
 
         .phone {
-          color: $uni-text-color-secondary;
+          color: var(--color-text-secondary);
           font-size: 28rpx;
         }
 
         .default-tag {
           padding: 4rpx 12rpx;
           border-radius: 4rpx;
-          background: $uni-color-primary;
-          color: #fff;
+          background: var(--color-primary);
+          color: var(--color-text-inverse);
           font-size: 22rpx;
         }
       }
 
       .address-detail {
-        color: $uni-text-color-secondary;
+        color: var(--color-text-secondary);
         font-size: 28rpx;
         line-height: 1.5;
       }
@@ -203,20 +206,20 @@ function handleDelete(item: AddressItem) {
       justify-content: flex-end;
       margin-top: 24rpx;
       padding-top: 24rpx;
-      border-top: 1px solid $uni-border-color-light;
+      border-top: 1px solid var(--color-border-light);
 
       .action-item {
         display: flex;
         gap: 8rpx;
         align-items: center;
-        color: $uni-text-color-secondary;
+        color: var(--color-text-secondary);
         font-size: 26rpx;
 
         .i-carbon-checkbox {
           font-size: 32rpx;
 
           &.checked {
-            color: $uni-color-primary;
+            color: var(--color-primary);
           }
         }
 
@@ -238,17 +241,17 @@ function handleDelete(item: AddressItem) {
 
   .empty-icon {
     margin-bottom: 16rpx;
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 120rpx;
   }
 
   .empty-text {
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 32rpx;
   }
 
   .empty-desc {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 26rpx;
   }
 }
@@ -261,8 +264,8 @@ function handleDelete(item: AddressItem) {
   left: 0;
   padding: 24rpx;
   padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
-  background: $uni-bg-color;
-  box-shadow: 0 -4rpx 16rpx rgb(0 0 0 / 0.05);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-light);
 
   .add-btn {
     display: flex;
@@ -273,8 +276,8 @@ function handleDelete(item: AddressItem) {
     height: 96rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 32rpx;
 
     .i-carbon-add {

@@ -57,12 +57,12 @@ const iconClass = computed(() => {
 
   &__icon {
     margin-bottom: 24rpx;
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 128rpx;
   }
 
   &__text {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
     line-height: 1.5;
     text-align: center;

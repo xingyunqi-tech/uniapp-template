@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="找回密码" card-title="重置密码">
+  <AuthLayout title="找回密码" card-title="重置密码" :class="themeClass">
     <!-- 步骤指示器 -->
     <view class="steps">
       <view :class="['step', { active: step >= 1, done: step > 1 }]">
@@ -89,11 +89,14 @@
 <script setup lang="ts">
 import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
+import { useRouter, useSendSms, usePasswordStrength, useTheme } from '@/composables';
+
 import { PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
 import UPasswordStrength from '@/components/UPasswordStrength/index.vue';
+
+const { themeClass } = useTheme();
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -225,27 +228,27 @@ function goBack() {
       width: 48rpx;
       height: 48rpx;
       transition: all $uni-duration-fast;
-      border: 2rpx solid $uni-border-color;
+      border: 2rpx solid var(--color-border);
       border-radius: 50%;
-      background: $uni-bg-color;
-      color: $uni-text-color-secondary;
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
       font-size: 24rpx;
     }
 
     .step-text {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 24rpx;
     }
 
     &.active {
       .step-dot {
-        border-color: $uni-color-primary;
-        background: $uni-color-primary;
-        color: #fff;
+        border-color: var(--color-primary);
+        background: var(--color-primary);
+        color: var(--color-text-inverse);
       }
 
       .step-text {
-        color: $uni-color-primary;
+        color: var(--color-primary);
       }
     }
 
@@ -257,8 +260,8 @@ function goBack() {
           width: 16rpx;
           height: 8rpx;
           transform: rotate(-45deg);
-          border-bottom: 3rpx solid #fff;
-          border-left: 3rpx solid #fff;
+          border-bottom: 3rpx solid var(--color-text-inverse);
+          border-left: 3rpx solid var(--color-text-inverse);
         }
       }
     }
@@ -270,10 +273,10 @@ function goBack() {
     margin: 0 16rpx;
     margin-bottom: 32rpx;
     transition: background $uni-duration-fast;
-    background: $uni-border-color;
+    background: var(--color-border);
 
     &.active {
-      background: $uni-color-primary;
+      background: var(--color-primary);
     }
   }
 }
@@ -290,8 +293,8 @@ function goBack() {
     margin-top: 16rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 32rpx;
     font-weight: 500;
     line-height: 96rpx;
@@ -314,7 +317,7 @@ function goBack() {
 
   .link-text {
     transition: color $uni-duration-fast;
-    color: $uni-color-primary;
+    color: var(--color-primary);
     font-size: 28rpx;
     font-weight: 500;
 

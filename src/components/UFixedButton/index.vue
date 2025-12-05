@@ -52,15 +52,15 @@ function handleClick() {
   left: 0;
   padding: 24rpx;
   padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
-  background: $uni-bg-color;
-  box-shadow: 0 -4rpx 16rpx rgb(0 0 0 / 0.05);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-light);
 
   .u-fixed-btn {
     width: 100%;
     height: 96rpx;
     border: none;
     border-radius: $uni-border-radius-lg;
-    color: #fff;
+    color: var(--color-text-inverse);
     font-size: 32rpx;
     line-height: 96rpx;
 
@@ -69,17 +69,17 @@ function handleClick() {
     }
 
     &.primary {
-      background: $uni-color-primary;
+      background: var(--color-primary);
     }
 
     &.danger {
-      background: $uni-color-error;
+      background: var(--color-error);
     }
 
     &.default {
-      border: 1px solid $uni-border-color;
-      background: $uni-bg-color;
-      color: $uni-text-color;
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
     }
 
     &[disabled] {

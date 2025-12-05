@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="about-page">
+  <view class="about-page" :class="themeClass">
     <!-- Logo 和应用信息 -->
     <view class="app-info">
       <image class="app-logo" src="/static/images/logo.png" mode="aspectFit" />
@@ -44,10 +44,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables/useRouter';
+import { useRouter, useTheme } from '@/composables';
+
 import { PAGES } from '@/constants';
 import { APP_NAME, COPYRIGHT } from '@/constants/system';
 
+const { themeClass } = useTheme();
 const router = useRouter();
 
 const version = ref('1.0.0');
@@ -112,7 +114,7 @@ function checkUpdate() {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 应用信息
@@ -121,7 +123,7 @@ function checkUpdate() {
   flex-direction: column;
   align-items: center;
   padding: 80rpx 0 60rpx;
-  background: $uni-bg-color;
+  background: var(--color-bg);
 
   .app-logo {
     width: 160rpx;
@@ -132,13 +134,13 @@ function checkUpdate() {
 
   .app-name {
     margin-bottom: 12rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 36rpx;
     font-weight: 600;
   }
 
   .app-version {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 }
@@ -148,7 +150,7 @@ function checkUpdate() {
   margin-top: 24rpx;
   overflow: hidden;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
+  background: var(--color-bg);
 
   .menu-item {
     display: flex;
@@ -157,15 +159,15 @@ function checkUpdate() {
     padding: 32rpx;
 
     &:not(:last-child) {
-      border-bottom: 1px solid $uni-border-color-light;
+      border-bottom: 1px solid var(--color-border-light);
     }
 
     &:active {
-      background: $uni-bg-color-hover;
+      background: var(--color-bg-hover);
     }
 
     .menu-text {
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 30rpx;
     }
 
@@ -178,13 +180,13 @@ function checkUpdate() {
     .update-badge {
       padding: 4rpx 12rpx;
       border-radius: 20rpx;
-      background: $uni-color-error;
-      color: #fff;
+      background: var(--color-error);
+      color: var(--color-text-inverse);
       font-size: 22rpx;
     }
 
     .menu-arrow {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 28rpx;
     }
   }
@@ -200,7 +202,7 @@ function checkUpdate() {
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 
   .copyright-text {
-    color: $uni-text-color-placeholder;
+    color: var(--color-text-placeholder);
     font-size: 24rpx;
   }
 }

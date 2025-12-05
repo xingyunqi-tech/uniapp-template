@@ -10,3 +10,4 @@ export * from './useConfirmModal';
 export * from './useAsyncAction';
 export * from './useNetwork';
 export * from './useShare';
+export * from './useTheme';

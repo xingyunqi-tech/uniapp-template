@@ -56,6 +56,16 @@ page,
   --shadow-base: 0 4rpx 16rpx rgb(0 0 0 / 0.1);
   --shadow-lg: 0 8rpx 24rpx rgb(0 0 0 / 0.12);
   --shadow-xl: 0 16rpx 48rpx rgb(0 0 0 / 0.16);
+  --shadow-light: 0 2rpx 12rpx rgb(0 0 0 / 0.05);
+
+  // 透明度颜色 (用于渐变、遮罩等)
+  --color-overlay-light: rgb(255 255 255 / 0.15);
+  --color-overlay-medium: rgb(255 255 255 / 0.3);
+  --color-overlay-heavy: rgb(255 255 255 / 0.5);
+  --color-overlay-solid: rgb(255 255 255 / 0.8);
+
+  // 第三方品牌色
+  --color-brand-wechat: #07c160;
 
   // 导航栏
   --color-nav-bg: #fff;
@@ -70,8 +80,8 @@ page,
 // ============================================
 // 深色主题
 // ============================================
-page[data-theme='dark'],
-[data-theme='dark'] {
+page.dark-theme,
+.dark-theme {
   // 主题色 (深色模式下稍微调亮)
   --color-primary: #409eff;
   --color-primary-light: #66b1ff;
@@ -113,6 +123,16 @@ page[data-theme='dark'],
   --shadow-base: 0 4rpx 16rpx rgb(0 0 0 / 0.4);
   --shadow-lg: 0 8rpx 24rpx rgb(0 0 0 / 0.5);
   --shadow-xl: 0 16rpx 48rpx rgb(0 0 0 / 0.6);
+  --shadow-light: 0 2rpx 12rpx rgb(0 0 0 / 0.15);
+
+  // 透明度颜色 (深色模式下调整)
+  --color-overlay-light: rgb(255 255 255 / 0.08);
+  --color-overlay-medium: rgb(255 255 255 / 0.15);
+  --color-overlay-heavy: rgb(255 255 255 / 0.25);
+  --color-overlay-solid: rgb(255 255 255 / 0.5);
+
+  // 第三方品牌色
+  --color-brand-wechat: #07c160;
 
   // 导航栏
   --color-nav-bg: #1d1d1d;

@@ -83,8 +83,8 @@ function handleTabClick(tab: TabItem) {
 
 <style scoped lang="scss">
 .u-tabs {
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-sm;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
 
   &__scroll {
     white-space: nowrap;
@@ -113,7 +113,7 @@ function handleTabClick(tab: TabItem) {
 
     &--active {
       .u-tabs__text {
-        color: $uni-color-primary;
+        color: var(--color-primary);
         font-weight: 500;
       }
 
@@ -125,14 +125,14 @@ function handleTabClick(tab: TabItem) {
         left: 32rpx;
         height: 4rpx;
         border-radius: 2rpx;
-        background: $uni-color-primary;
+        background: var(--color-primary);
       }
     }
   }
 
   &__text {
     transition: color $uni-duration-fast;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 
@@ -144,8 +144,8 @@ function handleTabClick(tab: TabItem) {
     height: 32rpx;
     padding: 0 8rpx;
     border-radius: 16rpx;
-    background: $uni-color-error;
-    color: #fff;
+    background: var(--color-error);
+    color: var(--color-text-inverse);
     font-size: 20rpx;
     line-height: 32rpx;
     text-align: center;

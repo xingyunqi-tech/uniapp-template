@@ -156,21 +156,21 @@ function handleClick(event: Event) {
     bottom: 0;
     left: 32rpx;
     height: 1px;
-    background: $uni-border-color-light;
+    background: var(--color-border-light);
   }
 
   &--clickable {
     transition: background $uni-duration-fast;
 
     &:active {
-      background: $uni-bg-color-hover;
+      background: var(--color-bg-hover);
     }
   }
 
   &--danger {
     .u-menu-item__icon,
     .u-menu-item__title {
-      color: $uni-color-error;
+      color: var(--color-error);
     }
   }
 
@@ -180,7 +180,7 @@ function handleClick(event: Event) {
 
   &__icon {
     flex-shrink: 0;
-    color: $uni-color-primary;
+    color: var(--color-primary);
     font-size: 40rpx;
   }
 
@@ -193,13 +193,13 @@ function handleClick(event: Event) {
   }
 
   &__title {
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 30rpx;
     line-height: 1.4;
   }
 
   &__label {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 24rpx;
     line-height: 1.4;
   }
@@ -212,13 +212,13 @@ function handleClick(event: Event) {
   }
 
   &__value-text {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 26rpx;
   }
 
   &__arrow {
     flex-shrink: 0;
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 }

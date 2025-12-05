@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="contact-page">
+  <view class="contact-page" :class="themeClass">
     <!-- 客服热线 -->
     <view class="contact-section">
       <view class="section-header">
@@ -55,6 +55,10 @@
 </template>
 
 <script setup lang="ts">
+import { useTheme } from '@/composables';
+
+const { themeClass } = useTheme();
+
 // 客服信息配置
 const phoneNumber = '400-123-4567';
 const serviceTime = '工作日 9:00-18:00';
@@ -87,7 +91,7 @@ function handleOnlineChat() {
   min-height: 100vh;
   padding: 24rpx;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 .contact-section {
@@ -101,12 +105,12 @@ function handleOnlineChat() {
     padding-left: 8rpx;
 
     .section-icon {
-      color: $uni-color-primary;
+      color: var(--color-primary);
       font-size: 32rpx;
     }
 
     .section-title {
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 30rpx;
       font-weight: 500;
     }
@@ -119,8 +123,8 @@ function handleOnlineChat() {
   justify-content: space-between;
   padding: 32rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-sm;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
 
   .contact-info {
     display: flex;
@@ -128,18 +132,18 @@ function handleOnlineChat() {
     gap: 8rpx;
 
     .contact-label {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 24rpx;
     }
 
     .contact-value {
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 36rpx;
       font-weight: 600;
     }
 
     .contact-desc {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 26rpx;
     }
   }
@@ -152,8 +156,8 @@ function handleOnlineChat() {
     padding: 20rpx 32rpx;
     border: none;
     border-radius: $uni-border-radius-base;
-    background: $uni-color-primary;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
     font-size: 28rpx;
 
     &::after {

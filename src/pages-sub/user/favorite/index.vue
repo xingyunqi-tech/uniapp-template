@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="favorite-page">
+  <view class="favorite-page" :class="themeClass">
     <!-- 空状态 -->
     <view v-if="!loading && list.length === 0" class="empty-state">
       <text class="i-carbon-star empty-icon" />
@@ -42,6 +42,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useTheme } from '@/composables';
+
+const { themeClass } = useTheme();
 
 interface FavoriteItem {
   id: string;
@@ -99,7 +102,7 @@ function handleRemove(item: FavoriteItem) {
 .favorite-page {
   min-height: 100vh;
   padding: 24rpx;
-  background: $uni-bg-color-grey;
+  background: var(--color-bg-grey);
 }
 
 // 空状态
@@ -112,18 +115,18 @@ function handleRemove(item: FavoriteItem) {
 
   .empty-icon {
     margin-bottom: 32rpx;
-    color: $uni-text-color-disabled;
+    color: var(--color-text-disabled);
     font-size: 120rpx;
   }
 
   .empty-text {
     margin-bottom: 16rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-size: 32rpx;
   }
 
   .empty-desc {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 }
@@ -141,8 +144,8 @@ function handleRemove(item: FavoriteItem) {
   align-items: center;
   padding: 24rpx;
   border-radius: $uni-border-radius-lg;
-  background: $uni-bg-color;
-  box-shadow: $uni-shadow-sm;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-sm);
 
   .item-cover {
     flex-shrink: 0;
@@ -161,7 +164,7 @@ function handleRemove(item: FavoriteItem) {
 
     .item-title {
       overflow: hidden;
-      color: $uni-text-color;
+      color: var(--color-text);
       font-size: 30rpx;
       font-weight: 500;
       text-overflow: ellipsis;
@@ -171,7 +174,7 @@ function handleRemove(item: FavoriteItem) {
     .item-desc {
       display: -webkit-box;
       overflow: hidden;
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 26rpx;
       text-overflow: ellipsis;
       -webkit-line-clamp: 2;
@@ -183,7 +186,7 @@ function handleRemove(item: FavoriteItem) {
       align-items: center;
 
       .item-time {
-        color: $uni-text-color-placeholder;
+        color: var(--color-text-placeholder);
         font-size: 24rpx;
       }
     }
@@ -197,10 +200,10 @@ function handleRemove(item: FavoriteItem) {
     width: 56rpx;
     height: 56rpx;
     border-radius: 50%;
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
 
     .i-carbon-close {
-      color: $uni-text-color-secondary;
+      color: var(--color-text-secondary);
       font-size: 28rpx;
     }
   }
@@ -213,7 +216,7 @@ function handleRemove(item: FavoriteItem) {
   padding: 48rpx;
 
   .loading-text {
-    color: $uni-text-color-secondary;
+    color: var(--color-text-secondary);
     font-size: 28rpx;
   }
 }

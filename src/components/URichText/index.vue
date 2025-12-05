@@ -64,7 +64,7 @@ function handleItemClick(e: { detail: { node: object } }) {
 <style scoped lang="scss">
 .u-rich-text {
   width: 100%;
-  color: $uni-text-color;
+  color: var(--color-text);
   font-size: $uni-font-size-base;
   line-height: 1.8;
   overflow-wrap: break-word;
@@ -81,7 +81,7 @@ function handleItemClick(e: { detail: { node: object } }) {
   :deep(h5),
   :deep(h6) {
     margin: 32rpx 0 16rpx;
-    color: $uni-text-color;
+    color: var(--color-text);
     font-weight: 600;
     line-height: 1.4;
   }
@@ -108,7 +108,7 @@ function handleItemClick(e: { detail: { node: object } }) {
   }
 
   :deep(a) {
-    color: $uni-color-primary;
+    color: var(--color-primary);
     text-decoration: none;
   }
 
@@ -135,9 +135,9 @@ function handleItemClick(e: { detail: { node: object } }) {
   :deep(blockquote) {
     margin: 16rpx 0;
     padding: 16rpx 24rpx;
-    border-left: 6rpx solid $uni-color-primary;
-    background: $uni-bg-color-grey;
-    color: $uni-text-color-secondary;
+    border-left: 6rpx solid var(--color-primary);
+    background: var(--color-bg-grey);
+    color: var(--color-text-secondary);
   }
 
   :deep(table) {
@@ -149,12 +149,12 @@ function handleItemClick(e: { detail: { node: object } }) {
   :deep(th),
   :deep(td) {
     padding: 12rpx 16rpx;
-    border: 1px solid $uni-border-color;
+    border: 1px solid var(--color-border);
     text-align: left;
   }
 
   :deep(th) {
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
     font-weight: 600;
   }
 
@@ -168,13 +168,13 @@ function handleItemClick(e: { detail: { node: object } }) {
   :deep(hr) {
     margin: 32rpx 0;
     border: none;
-    border-top: 1px solid $uni-border-color;
+    border-top: 1px solid var(--color-border);
   }
 
   :deep(code) {
     padding: 4rpx 12rpx;
     border-radius: $uni-border-radius-sm;
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
     font-family: monospace;
     font-size: 26rpx;
   }
@@ -184,7 +184,7 @@ function handleItemClick(e: { detail: { node: object } }) {
     padding: 24rpx;
     overflow-x: auto;
     border-radius: $uni-border-radius-base;
-    background: $uni-bg-color-grey;
+    background: var(--color-bg-grey);
 
     code {
       padding: 0;
