@@ -21,13 +21,15 @@
           <input v-model="formData.phone" class="form-input" type="number" placeholder="请输入手机号" :maxlength="11" />
         </view>
 
-        <view class="form-item" @click="handleChooseRegion">
-          <text class="form-label required">所在地区</text>
-          <view class="form-value">
-            <text :class="{ placeholder: !regionText }">{{ regionText || '请选择省市区' }}</text>
-            <text class="i-carbon-chevron-right" />
+        <picker mode="region" :value="regionValue" @change="handleRegionChange">
+          <view class="form-item">
+            <text class="form-label required">所在地区</text>
+            <view class="form-value">
+              <text :class="{ placeholder: !regionText }">{{ regionText || '请选择省市区' }}</text>
+              <text class="i-carbon-chevron-right" />
+            </view>
           </view>
-        </view>
+        </picker>
 
         <view class="form-item form-item-textarea">
           <text class="form-label required">详细地址</text>
@@ -93,6 +95,14 @@ const regionText = computed(() => {
   return '';
 });
 
+// 地区选择器值
+const regionValue = computed(() => {
+  if (formData.province && formData.city && formData.district) {
+    return [formData.province, formData.city, formData.district];
+  }
+  return [];
+});
+
 onLoad(options => {
   if (options?.id) {
     isEdit.value = true;
@@ -149,78 +159,12 @@ function loadAddressDetail(id: number) {
   }
 }
 
-// 选择地区
-function handleChooseRegion() {
-  // #ifdef MP-WEIXIN
-  uni.chooseLocation({
-    success: () => {
-      // 微信小程序可以使用地图选择
-    },
-    fail: () => {
-      // 降级使用地区选择器
-      showRegionPicker();
-    },
-  });
-  // #endif
-
-  // #ifndef MP-WEIXIN
-  showRegionPicker();
-  // #endif
-}
-
-// 显示地区选择器
-function showRegionPicker() {
-  // 使用 uni-app 内置的地区选择器
-  uni.chooseLocation?.({
-    success: (res: { address?: string }) => {
-      // 解析地址
-      if (res.address) {
-        // 简单解析
-        formData.province = res.address;
-      }
-    },
-  });
-
-  // 备用方案：使用 picker
-  // 这里使用简单的三级联动模拟
-  const provinces = ['广东省', '北京市', '上海市', '浙江省'];
-  const cities: Record<string, string[]> = {
-    广东省: ['深圳市', '广州市', '东莞市'],
-    北京市: ['北京市'],
-    上海市: ['上海市'],
-    浙江省: ['杭州市', '宁波市', '温州市'],
-  };
-  const districts: Record<string, string[]> = {
-    深圳市: ['南山区', '福田区', '罗湖区', '宝安区'],
-    广州市: ['天河区', '越秀区', '海珠区'],
-    杭州市: ['西湖区', '上城区', '滨江区'],
-  };
-
-  // 先选省
-  uni.showActionSheet({
-    itemList: provinces,
-    success: res1 => {
-      formData.province = provinces[res1.tapIndex];
-      const cityList = cities[formData.province] || [];
-
-      // 再选市
-      uni.showActionSheet({
-        itemList: cityList,
-        success: res2 => {
-          formData.city = cityList[res2.tapIndex];
-          const districtList = districts[formData.city] || ['其他'];
-
-          // 最后选区
-          uni.showActionSheet({
-            itemList: districtList,
-            success: res3 => {
-              formData.district = districtList[res3.tapIndex];
-            },
-          });
-        },
-      });
-    },
-  });
+// 地区选择变更
+function handleRegionChange(e: { detail: { value: string[] } }) {
+  const [province, city, district] = e.detail.value;
+  formData.province = province;
+  formData.city = city;
+  formData.district = district;
 }
 
 // 设置默认
@@ -325,7 +269,7 @@ function handleDelete() {
 <style scoped lang="scss">
 .address-edit-page {
   min-height: 100vh;
-  padding-bottom: calc($uni-safe-area-inset-bottom + 200rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 200rpx);
   background: var(--color-bg-grey);
 }
 
@@ -335,7 +279,7 @@ function handleDelete() {
 
   .form-group {
     overflow: hidden;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
 
@@ -416,7 +360,7 @@ function handleDelete() {
     align-items: center;
     justify-content: space-between;
     padding: 32rpx;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
 
@@ -436,7 +380,7 @@ function handleDelete() {
   left: 0;
   flex-direction: column;
   padding: 24rpx;
-  padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
+  padding-bottom: calc(24rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg);
   box-shadow: var(--shadow-light);
   gap: 16rpx;
@@ -445,7 +389,7 @@ function handleDelete() {
     width: 100%;
     height: 96rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;
@@ -464,7 +408,7 @@ function handleDelete() {
     width: 100%;
     height: 96rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg-grey);
     color: var(--color-error);
     font-size: 32rpx;

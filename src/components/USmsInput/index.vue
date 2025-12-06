@@ -132,7 +132,7 @@ defineExpose({
     height: 72rpx;
     padding: 0;
     border: none;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 26rpx;

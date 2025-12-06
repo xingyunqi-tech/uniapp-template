@@ -64,7 +64,7 @@ function handleClick() {
   bottom: 0;
   left: 0;
   padding: 24rpx;
-  padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
+  padding-bottom: calc(24rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg);
   box-shadow: var(--shadow-light);
 
@@ -72,7 +72,7 @@ function handleClick() {
     width: 100%;
     height: 96rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     color: var(--color-text-inverse);
     font-size: 32rpx;
     line-height: 96rpx;

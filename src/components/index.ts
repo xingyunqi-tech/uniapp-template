@@ -64,6 +64,14 @@ export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';
 export { default as UTabs } from './UTabs/index.vue';
 export type { TabItem, TabValue, TabType } from './UTabs/index.vue';
 
+// 加载更多组件 (列表底部加载状态)
+export { default as ULoadMore } from './ULoadMore/index.vue';
+export type { LoadMoreStatus } from './ULoadMore/index.vue';
+
+// 标签组件 (标记、分类、状态展示)
+export { default as UTag } from './UTag/index.vue';
+export type { TagType, TagSize } from './UTag/index.vue';
+
 // ==================== 表单组件 ====================
 // 表单项包装组件
 export { default as UFormItem } from './UFormItem/index.vue';

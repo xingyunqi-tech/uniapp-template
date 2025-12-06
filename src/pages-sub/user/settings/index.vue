@@ -11,39 +11,49 @@
     <!-- 设置菜单 -->
     <view class="settings-section">
       <UMenuGroup title="账号设置">
-        <UMenuItem icon="i-carbon-user-avatar" title="个人资料" @click="handleMenuClick('profile')" />
-        <UMenuItem icon="i-carbon-locked" title="账号安全" @click="handleMenuClick('security')" />
-        <UMenuItem icon="i-carbon-location" title="收货地址" :border="false" @click="handleMenuClick('address')" />
+        <UMenuItem icon="i-carbon-user-avatar" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
+        <UMenuItem icon="i-carbon-locked" title="账号安全" show-arrow @click="handleMenuClick('security')" />
+        <UMenuItem
+          icon="i-carbon-location"
+          title="收货地址"
+          show-arrow
+          :border="false"
+          @click="handleMenuClick('address')"
+        />
       </UMenuGroup>
     </view>
 
     <view class="settings-section">
       <UMenuGroup title="通用设置">
-        <UMenuItem icon="i-carbon-clean" title="清除缓存" :value="cacheSize" @click="handleClearCache" />
+        <UMenuItem icon="i-carbon-clean" title="清除缓存" :right-text="cacheSize" @click="handleClearCache" />
         <UMenuItem
           icon="i-carbon-information"
           title="关于我们"
-          :value="`v${version}`"
+          :right-text="`v${version}`"
+          show-arrow
           :border="!showDevOptions"
           @click="handleAboutClick"
         />
         <!-- 连续点击版本号 5 次显示 -->
-        <UMenuItem v-if="showDevOptions" icon="i-carbon-sun" title="主题模式">
-          <template #right-icon>
-            <view class="switch-wrapper">
-              <text class="switch-label">{{ isDarkMode ? '深色' : '浅色' }}</text>
-              <switch :checked="isDarkMode" color="#1989fa" @change="handleToggleTheme" />
-            </view>
-          </template>
-        </UMenuItem>
-        <UMenuItem v-if="showDevOptions" icon="i-carbon-translate" title="国际化" :border="false">
-          <template #right-icon>
-            <view class="switch-wrapper">
-              <text class="switch-label">{{ isEnglish ? 'English' : '中文' }}</text>
-              <switch :checked="isEnglish" color="#1989fa" @change="handleToggleLocale" />
-            </view>
-          </template>
-        </UMenuItem>
+        <UMenuItem
+          v-if="showDevOptions"
+          icon="i-carbon-sun"
+          title="主题模式"
+          :right-text="isDarkMode ? '深色' : '浅色'"
+          show-switch
+          :switch-checked="isDarkMode"
+          @switch-change="handleToggleTheme"
+        />
+        <UMenuItem
+          v-if="showDevOptions"
+          icon="i-carbon-translate"
+          title="国际化"
+          :right-text="isEnglish ? 'English' : '中文'"
+          :border="false"
+          show-switch
+          :switch-checked="isEnglish"
+          @switch-change="handleToggleLocale"
+        />
       </UMenuGroup>
     </view>
 
@@ -207,15 +217,15 @@ function handleAboutClick() {
 /**
  * 切换主题
  */
-function handleToggleTheme() {
-  globalStore.toggleTheme();
+function handleToggleTheme(checked: boolean) {
+  globalStore.setTheme(checked ? THEME_TYPE.DARK : THEME_TYPE.LIGHT);
 }
 
 /**
  * 切换语言
  */
-function handleToggleLocale() {
-  globalStore.toggleLocale();
+function handleToggleLocale(checked: boolean) {
+  globalStore.setLocale(checked ? LOCALE_TYPE.EN_US : LOCALE_TYPE.ZH_CN);
 }
 
 // 账号注销
@@ -270,25 +280,13 @@ function handleDeleteAccount() {
 <style scoped lang="scss">
 .settings-page {
   min-height: 100vh;
-  padding-bottom: calc($uni-safe-area-inset-bottom + 48rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 48rpx);
   background: var(--color-bg-grey);
 }
 
 // 设置分组
 .settings-section {
   padding: 24rpx;
-}
-
-// Switch 包装器
-.switch-wrapper {
-  display: flex;
-  gap: 16rpx;
-  align-items: center;
-}
-
-.switch-label {
-  color: var(--color-text-secondary);
-  font-size: 26rpx;
 }
 
 // 退出登录
@@ -299,7 +297,7 @@ function handleDeleteAccount() {
     width: 100%;
     height: 96rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
     color: var(--color-error);

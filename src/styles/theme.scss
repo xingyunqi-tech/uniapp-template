@@ -5,7 +5,7 @@
  * 使用方式：
  * 1. 组件中使用 var(--color-primary) 等变量
  * 2. 通过 useGlobalStore().setTheme('dark') 切换主题
- * 3. 页面根元素会自动添加 data-theme="light|dark" 属性
+ * 3. 页面根 view 会自动添加 dark-theme 类
  *
  * 注意：尺寸变量请查看 size.scss
  */
@@ -79,8 +79,13 @@ page,
 
 // ============================================
 // 深色主题
+// 支持多种触发方式：
+// 1. page.dark-theme - 小程序 page 元素有 dark-theme 类
+// 2. html.dark-theme - H5 根元素有 dark-theme 类
+// 3. .dark-theme - 任意元素有 dark-theme 类（用于页面根 view）
 // ============================================
 page.dark-theme,
+:root.dark-theme,
 .dark-theme {
   // 主题色 (深色模式下稍微调亮)
   --color-primary: #409eff;

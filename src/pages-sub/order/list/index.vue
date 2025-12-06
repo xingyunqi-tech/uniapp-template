@@ -97,19 +97,17 @@
       </view>
 
       <!-- 加载更多 -->
-      <view v-if="orderList.length > 0" class="load-more">
-        <text v-if="loading">加载中...</text>
-        <text v-else-if="noMore">没有更多了</text>
-      </view>
+      <ULoadMore v-if="orderList.length > 0" :status="loadMoreStatus" />
     </scroll-view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { confirm } from '@/utils';
+import type { LoadMoreStatus } from '@/components';
 
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
 import UTabs, { type TabItem } from '@/components/UTabs/index.vue';
@@ -149,6 +147,13 @@ const loading = ref(false);
 const refreshing = ref(false);
 const noMore = ref(false);
 const page = ref(1);
+
+// 加载更多状态
+const loadMoreStatus = computed<LoadMoreStatus>(() => {
+  if (loading.value) return 'loading';
+  if (noMore.value) return 'nomore';
+  return 'loadmore';
+});
 
 onShow(() => {
   // 每次显示时刷新
@@ -352,7 +357,7 @@ function handleGoShopping() {
     height: 72rpx;
     margin-top: 16rpx;
     border: none;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 28rpx;
@@ -368,7 +373,7 @@ function handleGoShopping() {
 .order-card {
   margin-bottom: 24rpx;
   padding: 24rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-sm);
 
@@ -425,7 +430,7 @@ function handleGoShopping() {
         flex-shrink: 0;
         width: 160rpx;
         height: 160rpx;
-        border-radius: $uni-border-radius-base;
+        border-radius: var(--radius-base);
         background: var(--color-bg-grey);
       }
 
@@ -510,7 +515,7 @@ function handleGoShopping() {
         height: 60rpx;
         padding: 0 24rpx;
         border: 1px solid var(--color-border);
-        border-radius: $uni-border-radius-base;
+        border-radius: var(--radius-base);
         background: var(--color-bg);
         color: var(--color-text);
         font-size: 26rpx;
@@ -533,13 +538,5 @@ function handleGoShopping() {
       }
     }
   }
-}
-
-// 加载更多
-.load-more {
-  padding: 32rpx 0;
-  color: var(--color-text-secondary);
-  font-size: 26rpx;
-  text-align: center;
 }
 </style>

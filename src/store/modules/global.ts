@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE } from '@/constants';
 import type { LocaleType, ThemeType } from '@/constants';
 import { i18n } from '@/utils/locale';
 
 /**
  * 应用主题到页面
- * 通过设置导航栏、TabBar 样式来切换主题
+ * 设置导航栏、TabBar 样式
  */
 function applyTheme(theme: ThemeType) {
   const isDark = theme === THEME_TYPE.DARK;
 
-  // H5 环境：设置根元素 class
   // #ifdef H5
+  // H5: 设置根元素 class，让导航栏/TabBar 通过 CSS 变量获取主题色
   document.documentElement.classList.toggle('dark-theme', isDark);
   // #endif
 
@@ -90,17 +90,17 @@ export const useGlobalStore = defineStore(
       i18n.global.locale.value = locale;
     }
 
+    /** 是否为深色主题 */
+    const isDark = computed(() => currentTheme.value === THEME_TYPE.DARK);
+
+    /** 主题类名 */
+    const themeClass = computed(() => (currentTheme.value === THEME_TYPE.DARK ? 'dark-theme' : ''));
+
     return {
       // 主题相关
       currentTheme,
-      /** 是否为深色主题 */
-      get isDark() {
-        return currentTheme.value === THEME_TYPE.DARK;
-      },
-      /** 主题类名 */
-      get themeClass() {
-        return currentTheme.value === THEME_TYPE.DARK ? 'dark-theme' : '';
-      },
+      isDark,
+      themeClass,
       initTheme,
       setTheme,
       toggleTheme,

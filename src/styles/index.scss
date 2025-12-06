@@ -3,9 +3,6 @@
  * 在 App.vue 中引入
  */
 
-// 导入 uni.scss 变量
-@use '@/uni.scss' as *;
-
 // 导入尺寸系统
 @use './size';
 
@@ -36,8 +33,8 @@ page {
   font-family:
     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', STHeiti, 'Microsoft Yahei', Tahoma, Simsun,
     sans-serif;
-  font-size: $uni-font-size-base;
-  line-height: $uni-line-height-base;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
 }
 
 // ============================================
@@ -78,24 +75,6 @@ page {
     &.uni-tabbar__item--active .uni-tabbar__label {
       color: var(--color-tabbar-text-active) !important;
     }
-  }
-}
-
-// 深色主题下的特殊处理
-.dark-theme,
-[data-theme='dark'] {
-  .uni-page-head {
-    background-color: var(--color-nav-bg) !important;
-
-    .uni-page-head__title,
-    .uni-page-head-btn {
-      color: var(--color-nav-text) !important;
-    }
-  }
-
-  .uni-tabbar {
-    border-top-color: var(--color-border) !important;
-    background-color: var(--color-tabbar-bg) !important;
   }
 }
 

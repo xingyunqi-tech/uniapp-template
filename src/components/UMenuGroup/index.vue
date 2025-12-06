@@ -48,7 +48,7 @@ withDefaults(defineProps<Props>(), {
 
   &__list {
     overflow: hidden;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
   }

@@ -266,7 +266,7 @@ defineExpose({
 }
 
 :deep(.file-picker__box-content) {
-  border-radius: $uni-border-radius-base !important;
+  border-radius: var(--radius-base) !important;
   background: var(--color-bg-grey) !important;
 }
 

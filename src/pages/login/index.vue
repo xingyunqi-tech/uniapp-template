@@ -266,7 +266,7 @@ function goToForgotPassword() {
 .login-tabs {
   margin-bottom: 48rpx;
   overflow: hidden;
-  border-radius: $uni-border-radius-base;
+  border-radius: var(--radius-base);
 
   :deep(.u-tabs__list) {
     background: var(--color-bg-grey);
@@ -278,7 +278,7 @@ function goToForgotPassword() {
   }
 
   :deep(.u-tabs__item--active) {
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-primary);
 
     .u-tabs__text {
@@ -302,7 +302,7 @@ function goToForgotPassword() {
     height: 96rpx;
     margin-top: 16rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;
@@ -360,7 +360,7 @@ function goToForgotPassword() {
       width: 96rpx;
       height: 96rpx;
       padding: 0;
-      transition: all $uni-duration-fast ease;
+      transition: all var(--duration-fast) ease;
       border: 1px solid var(--color-border);
       border-radius: 50%;
       background: var(--color-bg);
@@ -398,7 +398,7 @@ function goToForgotPassword() {
   }
 
   .link-text {
-    transition: color $uni-duration-fast;
+    transition: color var(--duration-fast);
     color: var(--color-primary);
     font-weight: 500;
 

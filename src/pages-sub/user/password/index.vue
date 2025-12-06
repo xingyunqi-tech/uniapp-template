@@ -190,7 +190,7 @@ async function handleSave() {
 <style scoped lang="scss">
 .password-page {
   min-height: 100vh;
-  padding-bottom: calc($uni-safe-area-inset-bottom + 140rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 140rpx);
   background: var(--color-bg-grey);
 }
 
@@ -200,7 +200,7 @@ async function handleSave() {
 
   .form-group {
     overflow: hidden;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
 
@@ -241,7 +241,7 @@ async function handleSave() {
 .strength-section {
   margin: 0 24rpx;
   padding: 24rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-sm);
 }

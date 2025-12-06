@@ -279,7 +279,7 @@ function handleBack() {
     .back-btn {
       width: 240rpx;
       height: 80rpx;
-      border-radius: $uni-border-radius-base;
+      border-radius: var(--radius-base);
       font-size: 28rpx;
       line-height: 80rpx;
 

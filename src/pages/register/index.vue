@@ -224,14 +224,14 @@ function showAgreement(type: 'user' | 'privacy') {
   gap: 0;
   justify-content: center;
   margin-bottom: 48rpx;
-  border-radius: $uni-border-radius-base;
+  border-radius: var(--radius-base);
   background: var(--color-bg-grey);
 
   .tab-item {
     flex: 1;
     padding: 20rpx 0;
-    transition: all $uni-duration-fast;
-    border-radius: $uni-border-radius-base;
+    transition: all var(--duration-fast);
+    border-radius: var(--radius-base);
     color: var(--color-text-secondary);
     font-size: 28rpx;
     text-align: center;
@@ -255,7 +255,7 @@ function showAgreement(type: 'user' | 'privacy') {
     height: 96rpx;
     margin-top: 16rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;
@@ -282,7 +282,7 @@ function showAgreement(type: 'user' | 'privacy') {
   font-size: 28rpx;
 
   .link-text {
-    transition: color $uni-duration-fast;
+    transition: color var(--duration-fast);
     color: var(--color-primary);
     font-weight: 500;
 
@@ -307,7 +307,7 @@ function showAgreement(type: 'user' | 'privacy') {
     width: 36rpx;
     height: 36rpx;
     margin-top: 4rpx;
-    transition: all $uni-duration-fast;
+    transition: all var(--duration-fast);
     border: 2rpx solid var(--color-border);
     border-radius: 8rpx;
 

@@ -150,7 +150,7 @@ function checkUpdate() {
 .menu-section {
   margin-top: 24rpx;
   overflow: hidden;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
 
   .menu-item {

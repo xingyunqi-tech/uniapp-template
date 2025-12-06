@@ -8,8 +8,9 @@
 
 <template>
   <view class="u-tabs" :class="tabsClasses">
-    <component :is="scrollable ? 'scroll-view' : 'view'" :scroll-x="scrollable" :class="containerClass">
-      <view class="u-tabs__list" :class="{ 'u-tabs__list--flex': !scrollable }">
+    <!-- 可滚动模式 -->
+    <scroll-view v-if="scrollable" scroll-x class="u-tabs__scroll">
+      <view class="u-tabs__list">
         <view
           v-for="tab in tabs"
           :key="tab.value"
@@ -23,7 +24,24 @@
           </view>
         </view>
       </view>
-    </component>
+    </scroll-view>
+    <!-- 非滚动模式 -->
+    <view v-else>
+      <view class="u-tabs__list u-tabs__list--flex">
+        <view
+          v-for="tab in tabs"
+          :key="tab.value"
+          class="u-tabs__item"
+          :class="getItemClasses(tab)"
+          @click="handleTabClick(tab)"
+        >
+          <text class="u-tabs__text">{{ tab.label }}</text>
+          <view v-if="tab.badge && tab.badge > 0" class="u-tabs__badge">
+            {{ tab.badge > 99 ? '99+' : tab.badge }}
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -86,9 +104,6 @@ const tabsClasses = computed(() => ({
   'u-tabs--card': props.type === 'card',
 }));
 
-// 滚动容器样式类
-const containerClass = computed(() => (props.scrollable ? 'u-tabs__scroll' : ''));
-
 // ==================== Methods ====================
 
 // 获取标签项样式类
@@ -134,7 +149,7 @@ function handleTabClick(tab: TabItem) {
     justify-content: center;
     height: 96rpx;
     padding: 0 32rpx;
-    transition: all $uni-duration-fast;
+    transition: all var(--duration-fast);
     cursor: pointer;
 
     &--active {
@@ -166,7 +181,7 @@ function handleTabClick(tab: TabItem) {
   }
 
   &__text {
-    transition: color $uni-duration-fast;
+    transition: color var(--duration-fast);
     color: var(--color-text-secondary);
     font-size: 28rpx;
   }
@@ -196,7 +211,7 @@ function handleTabClick(tab: TabItem) {
   // 卡片类型样式
   &--card {
     padding: 8rpx;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg-grey);
     box-shadow: none;
 
@@ -208,7 +223,7 @@ function handleTabClick(tab: TabItem) {
     .u-tabs__item {
       height: 72rpx;
       padding: 0 24rpx;
-      border-radius: $uni-border-radius-base;
+      border-radius: var(--radius-base);
       background: transparent;
 
       &--active {

@@ -157,11 +157,11 @@ defineExpose({
 
 <style scoped lang="scss">
 .u-notice-bar {
-  border-radius: $uni-border-radius-base;
+  border-radius: var(--radius-base);
 
   // 覆盖 uni-notice-bar 默认样式
   :deep(.uni-noticebar) {
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
   }
 
   :deep(.uni-noticebar-icon) {

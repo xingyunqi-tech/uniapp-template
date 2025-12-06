@@ -440,7 +440,6 @@ src/store/modules/       # Pinia Store
 # 样式
 src/styles/theme.scss    # 主题变量
 src/styles/size.scss     # 尺寸变量
-src/uni.scss             # 全局样式变量
 
 # 配置
 src/manifest.json        # 平台配置

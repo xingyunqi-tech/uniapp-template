@@ -59,8 +59,8 @@ withDefaults(defineProps<Props>(), {
   width: 100%;
   min-height: 100vh;
   padding: 40rpx;
-  padding-top: calc($uni-safe-area-inset-top + 40rpx);
-  padding-bottom: calc($uni-safe-area-inset-bottom + 40rpx);
+  padding-top: calc(var(--safe-area-inset-top) + 40rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 40rpx);
   overflow-y: auto;
   background: linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-success-bg) 100%);
 }

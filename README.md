@@ -166,7 +166,6 @@ uniapp-template/
 │   ├── main.ts                # 应用入口
 │   ├── pages.json             # 路由配置
 │   ├── manifest.json          # 平台配置
-│   └── uni.scss               # 全局样式变量
 ├── tests/                     # 测试文件
 ├── .mcp.json                  # Claude Code MCP 配置
 ├── orval.config.ts            # Orval API 生成配置

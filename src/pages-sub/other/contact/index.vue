@@ -122,7 +122,7 @@ function handleOnlineChat() {
   align-items: center;
   justify-content: space-between;
   padding: 32rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-sm);
 
@@ -155,7 +155,7 @@ function handleOnlineChat() {
     align-items: center;
     padding: 20rpx 32rpx;
     border: none;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 28rpx;

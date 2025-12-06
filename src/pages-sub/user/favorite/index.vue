@@ -143,7 +143,7 @@ function handleRemove(item: FavoriteItem) {
   gap: 24rpx;
   align-items: center;
   padding: 24rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-sm);
 
@@ -151,7 +151,7 @@ function handleRemove(item: FavoriteItem) {
     flex-shrink: 0;
     width: 160rpx;
     height: 160rpx;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     object-fit: cover;
   }
 

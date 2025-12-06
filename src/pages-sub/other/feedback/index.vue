@@ -168,7 +168,7 @@ function handleSubmit() {
 .form-section {
   margin-bottom: 32rpx;
   padding: 32rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
 
   .section-title {
@@ -187,9 +187,9 @@ function handleSubmit() {
 
   .type-item {
     padding: 16rpx 32rpx;
-    transition: all $uni-duration-fast;
+    transition: all var(--duration-fast);
     border: 1px solid var(--color-border);
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-bg-grey);
     color: var(--color-text-secondary);
     font-size: 28rpx;
@@ -212,7 +212,7 @@ function handleSubmit() {
     height: 240rpx;
     padding: 24rpx;
     border: 1px solid var(--color-border);
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-bg-grey);
     color: var(--color-text);
     font-size: 28rpx;
@@ -246,7 +246,7 @@ function handleSubmit() {
     image {
       width: 100%;
       height: 100%;
-      border-radius: $uni-border-radius-base;
+      border-radius: var(--radius-base);
       object-fit: cover;
     }
 
@@ -278,7 +278,7 @@ function handleSubmit() {
     width: 200rpx;
     height: 200rpx;
     border: 1px dashed var(--color-border);
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-bg-grey);
 
     .i-carbon-add {
@@ -300,7 +300,7 @@ function handleSubmit() {
   height: 88rpx;
   padding: 0 24rpx;
   border: 1px solid var(--color-border);
-  border-radius: $uni-border-radius-base;
+  border-radius: var(--radius-base);
   background: var(--color-bg-grey);
   color: var(--color-text);
   font-size: 28rpx;

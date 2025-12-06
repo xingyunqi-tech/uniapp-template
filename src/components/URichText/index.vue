@@ -126,7 +126,7 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
 .u-rich-text {
   width: 100%;
   color: var(--color-text);
-  font-size: $uni-font-size-base;
+  font-size: var(--font-size-base);
   line-height: 1.8;
   overflow-wrap: break-word;
 
@@ -223,7 +223,7 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
     max-width: 100%;
     height: auto;
     margin: 16rpx 0;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
   }
 
   :deep(.u-rt-hr) {
@@ -234,7 +234,7 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
 
   :deep(.u-rt-code) {
     padding: 4rpx 12rpx;
-    border-radius: $uni-border-radius-sm;
+    border-radius: var(--radius-sm);
     background: var(--color-bg-grey);
     font-family: monospace;
     font-size: 26rpx;
@@ -244,7 +244,7 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
     margin: 16rpx 0;
     padding: 24rpx;
     overflow-x: auto;
-    border-radius: $uni-border-radius-base;
+    border-radius: var(--radius-base);
     background: var(--color-bg-grey);
 
     .u-rt-code {

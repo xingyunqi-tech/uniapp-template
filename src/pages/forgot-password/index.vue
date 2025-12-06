@@ -228,7 +228,7 @@ function goBack() {
       justify-content: center;
       width: 48rpx;
       height: 48rpx;
-      transition: all $uni-duration-fast;
+      transition: all var(--duration-fast);
       border: 2rpx solid var(--color-border);
       border-radius: 50%;
       background: var(--color-bg);
@@ -273,7 +273,7 @@ function goBack() {
     height: 2rpx;
     margin: 0 16rpx;
     margin-bottom: 32rpx;
-    transition: background $uni-duration-fast;
+    transition: background var(--duration-fast);
     background: var(--color-border);
 
     &.active {
@@ -293,7 +293,7 @@ function goBack() {
     height: 96rpx;
     margin-top: 16rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;
@@ -317,7 +317,7 @@ function goBack() {
   margin-top: 40rpx;
 
   .link-text {
-    transition: color $uni-duration-fast;
+    transition: color var(--duration-fast);
     color: var(--color-primary);
     font-size: 28rpx;
     font-weight: 500;

@@ -111,7 +111,7 @@ function goBack() {
   width: 100%;
   max-width: 600rpx;
   padding: 80rpx 40rpx;
-  border-radius: $uni-border-radius-lg;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-base);
   text-align: center;
@@ -165,7 +165,7 @@ function goBack() {
     width: 100%;
     height: 88rpx;
     border: 1px solid var(--color-border);
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     color: var(--color-text);
     font-size: 30rpx;

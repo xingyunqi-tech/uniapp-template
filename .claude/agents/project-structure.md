@@ -72,7 +72,6 @@ uniapp-template/
 │   ├── main.ts                 # 应用入口
 │   ├── pages.json              # 页面路由配置
 │   ├── manifest.json           # 应用配置
-│   └── uni.scss                # Uni-app 样式变量
 ├── typings/                    # TypeScript 类型声明
 ├── package.json                # 项目配置
 └── vite.config.ts              # Vite 配置

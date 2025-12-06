@@ -15,7 +15,7 @@
           <view class="address-header">
             <text class="name">{{ item.name }}</text>
             <text class="phone">{{ item.phone }}</text>
-            <text v-if="item.isDefault" class="default-tag">默认</text>
+            <UTag v-if="item.isDefault" type="primary" size="small" text="默认" />
           </view>
           <view class="address-detail"> {{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }} </view>
         </view>
@@ -152,7 +152,7 @@ function handleDelete(item: AddressItem) {
 <style scoped lang="scss">
 .address-page {
   min-height: 100vh;
-  padding-bottom: calc($uni-safe-area-inset-bottom + 140rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 140rpx);
   background: var(--color-bg-grey);
 }
 
@@ -163,7 +163,7 @@ function handleDelete(item: AddressItem) {
   .address-item {
     margin-bottom: 24rpx;
     padding: 32rpx;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
 
@@ -183,14 +183,6 @@ function handleDelete(item: AddressItem) {
         .phone {
           color: var(--color-text-secondary);
           font-size: 28rpx;
-        }
-
-        .default-tag {
-          padding: 4rpx 12rpx;
-          border-radius: 4rpx;
-          background: var(--color-primary);
-          color: var(--color-text-inverse);
-          font-size: 22rpx;
         }
       }
 
@@ -264,7 +256,7 @@ function handleDelete(item: AddressItem) {
   bottom: 0;
   left: 0;
   padding: 24rpx;
-  padding-bottom: calc(24rpx + $uni-safe-area-inset-bottom);
+  padding-bottom: calc(24rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg);
   box-shadow: var(--shadow-light);
 
@@ -276,7 +268,7 @@ function handleDelete(item: AddressItem) {
     width: 100%;
     height: 96rpx;
     border: none;
-    border-radius: $uni-border-radius-lg;
+    border-radius: var(--radius-lg);
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;

@@ -44,19 +44,16 @@
     </view>
 
     <!-- 加载更多 -->
-    <view class="load-more">
-      <text v-if="loading" class="load-text">加载中...</text>
-      <text v-else-if="noMore" class="load-text">没有更多了</text>
-      <text v-else class="load-text">上拉加载更多</text>
-    </view>
+    <ULoadMore :status="loadMoreStatus" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 
@@ -153,6 +150,13 @@ const {
   hasMore: (data, page) => data.length > 0 && page < 3,
 });
 
+// 加载更多状态
+const loadMoreStatus = computed<LoadMoreStatus>(() => {
+  if (loading.value) return 'loading';
+  if (noMore.value) return 'nomore';
+  return 'loadmore';
+});
+
 // Banner 点击
 function handleBannerClick(item: BannerItem) {
   console.log('点击 Banner:', item);
@@ -217,7 +221,7 @@ onReachBottom(() => {
     .category-item {
       flex-shrink: 0;
       padding: 16rpx 32rpx;
-      transition: all $uni-duration-fast;
+      transition: all var(--duration-fast);
       border-radius: 32rpx;
       background: var(--color-bg-grey);
 
@@ -245,8 +249,8 @@ onReachBottom(() => {
     display: flex;
     margin-bottom: 20rpx;
     padding: 24rpx;
-    transition: all $uni-duration-fast;
-    border-radius: $uni-border-radius-lg;
+    transition: all var(--duration-fast);
+    border-radius: var(--radius-lg);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
     gap: 20rpx;
@@ -314,19 +318,8 @@ onReachBottom(() => {
       flex-shrink: 0;
       width: 200rpx;
       height: 150rpx;
-      border-radius: $uni-border-radius-base;
+      border-radius: var(--radius-base);
     }
-  }
-}
-
-// 加载更多
-.load-more {
-  padding: 32rpx;
-  text-align: center;
-
-  .load-text {
-    color: var(--color-text-placeholder);
-    font-size: 26rpx;
   }
 }
 </style>
