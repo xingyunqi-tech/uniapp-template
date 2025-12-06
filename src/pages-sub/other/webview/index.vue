@@ -1,0 +1,304 @@
+<route lang="json5">
+{
+  style: {
+    navigationBarTitleText: '加载中...',
+  },
+}
+</route>
+
+<template>
+  <view class="webview-page" :class="globalStore.themeClass">
+    <!-- 加载进度条 -->
+    <view v-if="loading" class="progress-bar">
+      <view class="progress-inner" :style="{ width: `${progress}%` }" />
+    </view>
+
+    <!-- Webview 容器 -->
+    <web-view :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
+
+    <!-- 加载失败状态 -->
+    <view v-if="error" class="error-state">
+      <text class="i-carbon-warning-alt error-icon" />
+      <text class="error-text">页面加载失败</text>
+      <text class="error-desc">{{ errorMessage }}</text>
+      <view class="error-actions">
+        <button class="retry-btn" @click="handleRetry">重新加载</button>
+        <button class="back-btn" @click="handleBack">返回上一页</button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import { useRouter } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
+
+const globalStore = useGlobalStore();
+const router = useRouter();
+
+// 状态
+const url = ref('');
+const title = ref('');
+const loading = ref(true);
+const progress = ref(0);
+const error = ref(false);
+const errorMessage = ref('');
+
+// 原始参数（用于重试）
+let originalUrl = '';
+
+// 进度模拟定时器
+let progressTimer: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * 页面加载
+ */
+onLoad(options => {
+  if (options?.url) {
+    // URL 需要解码
+    originalUrl = decodeURIComponent(options.url);
+    url.value = originalUrl;
+  }
+
+  if (options?.title) {
+    title.value = decodeURIComponent(options.title);
+    uni.setNavigationBarTitle({ title: title.value });
+  }
+
+  // 开始模拟进度
+  startProgress();
+});
+
+onMounted(() => {
+  // 组件卸载时清理定时器
+  return () => {
+    if (progressTimer) {
+      clearInterval(progressTimer);
+    }
+  };
+});
+
+/**
+ * 模拟加载进度
+ */
+function startProgress() {
+  progress.value = 0;
+  progressTimer = setInterval(() => {
+    if (progress.value < 90) {
+      // 模拟进度，越接近90越慢
+      const increment = Math.max(1, (90 - progress.value) / 10);
+      progress.value = Math.min(90, progress.value + increment);
+    }
+  }, 100);
+}
+
+/**
+ * 完成进度
+ */
+function finishProgress() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+  progress.value = 100;
+  setTimeout(() => {
+    loading.value = false;
+  }, 200);
+}
+
+/**
+ * 处理 Webview 消息
+ * H5 页面可以通过 postMessage 与小程序通信
+ */
+function handleMessage(e: { detail: { data: unknown[] } }) {
+  const messages = e.detail.data;
+  console.log('[Webview] 收到消息:', messages);
+
+  // 处理来自 H5 的消息
+  messages.forEach((msg: unknown) => {
+    if (typeof msg === 'object' && msg !== null) {
+      const data = msg as Record<string, unknown>;
+
+      // 更新标题
+      if (data.type === 'setTitle' && typeof data.title === 'string') {
+        title.value = data.title;
+        uni.setNavigationBarTitle({ title: data.title });
+      }
+
+      // 跳转页面
+      if (data.type === 'navigateTo' && typeof data.url === 'string') {
+        router.push(data.url);
+      }
+
+      // 返回上一页
+      if (data.type === 'navigateBack') {
+        router.back();
+      }
+
+      // 分享
+      if (data.type === 'share') {
+        // 触发分享
+        uni.showShareMenu({
+          withShareTicket: true,
+          menus: ['shareAppMessage', 'shareTimeline'],
+        });
+      }
+
+      // 复制文本
+      if (data.type === 'copy' && typeof data.text === 'string') {
+        uni.setClipboardData({
+          data: data.text,
+          success: () => {
+            uni.showToast({ title: '复制成功', icon: 'success' });
+          },
+        });
+      }
+
+      // 关闭 Webview
+      if (data.type === 'close') {
+        router.back();
+      }
+    }
+  });
+}
+
+/**
+ * 处理加载完成
+ */
+function handleLoad() {
+  error.value = false;
+  finishProgress();
+
+  // 如果没有传入标题，尝试从 URL 解析
+  if (!title.value && url.value) {
+    try {
+      const urlObj = new URL(url.value);
+      const hostname = urlObj.hostname;
+      uni.setNavigationBarTitle({ title: hostname });
+    } catch {
+      uni.setNavigationBarTitle({ title: '详情' });
+    }
+  }
+}
+
+/**
+ * 处理加载错误
+ */
+function handleError(e: { detail: { errMsg: string } }) {
+  console.error('[Webview] 加载失败:', e.detail.errMsg);
+  error.value = true;
+  errorMessage.value = e.detail.errMsg || '网络异常，请检查网络连接';
+  finishProgress();
+}
+
+/**
+ * 重新加载
+ */
+function handleRetry() {
+  error.value = false;
+  loading.value = true;
+  startProgress();
+  // 通过重新赋值触发 web-view 重新加载
+  url.value = '';
+  setTimeout(() => {
+    url.value = originalUrl;
+  }, 100);
+}
+
+/**
+ * 返回上一页
+ */
+function handleBack() {
+  router.back();
+}
+</script>
+
+<style scoped lang="scss">
+.webview-page {
+  position: relative;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+// 进度条
+.progress-bar {
+  position: fixed;
+  z-index: 999;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4rpx;
+  background: var(--color-bg-grey);
+
+  .progress-inner {
+    height: 100%;
+    transition: width 0.1s linear;
+    background: var(--color-primary);
+  }
+}
+
+// 错误状态
+.error-state {
+  display: flex;
+  position: fixed;
+  z-index: 998;
+  inset: 0;
+  flex-direction: column;
+  gap: 24rpx;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+  background: var(--color-bg);
+
+  .error-icon {
+    margin-bottom: 16rpx;
+    color: var(--color-warning);
+    font-size: 120rpx;
+  }
+
+  .error-text {
+    color: var(--color-text);
+    font-size: 32rpx;
+    font-weight: 500;
+  }
+
+  .error-desc {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+    text-align: center;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 24rpx;
+    margin-top: 32rpx;
+
+    .retry-btn,
+    .back-btn {
+      width: 240rpx;
+      height: 80rpx;
+      border-radius: $uni-border-radius-base;
+      font-size: 28rpx;
+      line-height: 80rpx;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    .retry-btn {
+      border: none;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+    }
+
+    .back-btn {
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+  }
+}
+</style>

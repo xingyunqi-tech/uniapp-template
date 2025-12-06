@@ -8,20 +8,34 @@ export interface StorageOptions {
   expires?: number;
 }
 
-interface StorageData<T> {
-  value: T;
-  expires?: number;
-  timestamp: number;
+/** 带过期时间的存储数据格式 */
+interface StorageDataWithExpiry<T> {
+  /** 存储的值 */
+  __value: T;
+  /** 过期时间戳 (毫秒) */
+  __expires?: number;
 }
 
 /**
  * 存储键名常量
  */
 export const STORAGE_KEYS = {
+  /** 用户 Token */
   TOKEN: 'token',
-  USER_INFO: 'userInfo',
-  THEME: 'theme',
+  /** 搜索历史 */
+  SEARCH_HISTORY: 'search_history',
+  /** 浏览历史 */
+  VIEW_HISTORY: 'view_history',
+  /** 草稿数据 */
+  DRAFT: 'draft',
 } as const;
+
+/**
+ * 检查是否为带过期时间的数据格式
+ */
+function isStorageDataWithExpiry<T>(data: unknown): data is StorageDataWithExpiry<T> {
+  return data !== null && typeof data === 'object' && '__value' in data;
+}
 
 /**
  * 统一存储类
@@ -37,14 +51,6 @@ class UniStorage {
   }
 
   /**
-   * 检查数据是否过期
-   */
-  private isExpired(data: StorageData<unknown>): boolean {
-    if (!data.expires) return false;
-    return Date.now() > data.timestamp + data.expires;
-  }
-
-  /**
    * 获取存储数据
    * @param key 存储键名
    * @param defaultValue 默认值
@@ -54,30 +60,23 @@ class UniStorage {
       const fullKey = this.getKey(key);
       const rawData = uni.getStorageSync(fullKey);
 
-      if (!rawData) {
+      if (rawData === '' || rawData === null || rawData === undefined) {
         return defaultValue ?? null;
       }
 
-      // 尝试解析为带过期时间的数据格式
-      try {
-        const data = JSON.parse(rawData) as StorageData<T>;
-
-        // 检查是否为新格式数据
-        if (data && typeof data === 'object' && 'value' in data && 'timestamp' in data) {
-          // 检查是否过期
-          if (this.isExpired(data)) {
-            this.remove(key);
-            return defaultValue ?? null;
-          }
-          return data.value;
+      // uni.getStorageSync 已自动处理 JSON 解析
+      // 检查是否为带过期时间的数据格式
+      if (isStorageDataWithExpiry<T>(rawData)) {
+        // 检查是否过期
+        if (rawData.__expires && Date.now() > rawData.__expires) {
+          this.remove(key);
+          return defaultValue ?? null;
         }
-
-        // 兼容旧格式数据
-        return data as T;
-      } catch {
-        // 如果解析失败，返回原始数据
-        return rawData as T;
+        return rawData.__value;
       }
+
+      // 普通数据直接返回
+      return rawData as T;
     } catch (error) {
       console.error('Storage get error:', error);
       return defaultValue ?? null;
@@ -88,17 +87,23 @@ class UniStorage {
    * 设置存储数据
    * @param key 存储键名
    * @param value 存储值
-   * @param options 存储选项
+   * @param options 存储选项 (设置 expires 时会包装数据)
    */
   set<T>(key: string, value: T, options?: StorageOptions): void {
     try {
       const fullKey = this.getKey(key);
-      const data: StorageData<T> = {
-        value,
-        timestamp: Date.now(),
-        expires: options?.expires,
-      };
-      uni.setStorageSync(fullKey, JSON.stringify(data));
+
+      // 有过期时间时，包装数据
+      if (options?.expires) {
+        const data: StorageDataWithExpiry<T> = {
+          __value: value,
+          __expires: Date.now() + options.expires,
+        };
+        uni.setStorageSync(fullKey, data);
+      } else {
+        // 无过期时间，直接存储原始值
+        uni.setStorageSync(fullKey, value);
+      }
     } catch (error) {
       console.error('Storage set error:', error);
     }
@@ -144,7 +149,27 @@ class UniStorage {
    * 检查是否存在某个键
    */
   has(key: string): boolean {
-    return this.get(key) !== null;
+    try {
+      const fullKey = this.getKey(key);
+      const rawData = uni.getStorageSync(fullKey);
+
+      // 空值判断
+      if (rawData === '' || rawData === null || rawData === undefined) {
+        return false;
+      }
+
+      // 检查是否为带过期时间的数据且已过期
+      if (isStorageDataWithExpiry(rawData)) {
+        if (rawData.__expires && Date.now() > rawData.__expires) {
+          this.remove(key);
+          return false;
+        }
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

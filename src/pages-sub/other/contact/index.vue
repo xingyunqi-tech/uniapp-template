@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="contact-page" :class="themeClass">
+  <view class="contact-page" :class="globalStore.themeClass">
     <!-- 客服热线 -->
     <view class="contact-section">
       <view class="section-header">
@@ -55,9 +55,9 @@
 </template>
 
 <script setup lang="ts">
-import { useTheme } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 // 客服信息配置
 const phoneNumber = '400-123-4567';

@@ -1,4 +1,5 @@
 import { computed, type Ref, type ComputedRef } from 'vue';
+import { PASSWORD_RULES } from '@/constants/form';
 
 export interface PasswordRules {
   /** 最小长度 */
@@ -47,14 +48,8 @@ export interface UsePasswordStrengthReturn {
   validation: ComputedRef<PasswordValidation>;
 }
 
-/** 默认密码规则 */
-export const DEFAULT_PASSWORD_RULES: PasswordRules = {
-  minLength: 6,
-  maxLength: 20,
-  requireLetter: true,
-  requireNumber: true,
-  requireSpecialChar: false,
-};
+/** 默认密码规则 - 从 constants/form.ts 导入 */
+export const DEFAULT_PASSWORD_RULES: PasswordRules = { ...PASSWORD_RULES };
 
 /** 特殊字符正则 */
 const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>]/;

@@ -13,7 +13,7 @@
     "build:mp-weixin": "uni build -p mp-weixin",
     "build:mp-alipay": "uni build -p mp-alipay",
     "build:app": "uni build -p app",
-    "type-check": "vue-tsc --noEmit",
+    "type-check": "vue-tsc --noEmit -p tsconfig.app.json",
     "lint": "pnpm lint:script && pnpm lint:style",
     "lint:script": "eslint . --fix",
     "lint:style": "stylelint '**/*.{css,scss,vue}' --fix",

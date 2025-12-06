@@ -1,44 +1,56 @@
 ---
 name: common-patterns
-description: 项目通用开发模式和规范,供其他 agent 引用,作为单一真实来源
+description: 项目通用开发模式和规范，供其他 agent 引用，作为单一真实来源 (Uni-app 版本)
 ---
 
 # 通用开发模式 (Common Patterns)
 
 ## 职责
-提供项目通用的开发模式、规范和最佳实践,作为单一真实来源(Single Source of Truth),供其他 agent 文档引用,避免重复定义。
+提供 Uni-app 项目通用的开发模式、规范和最佳实践，作为单一真实来源(Single Source of Truth)，供其他 agent 文档引用，避免重复定义。
+
+**重要**: 本项目是 Uni-app 多端项目，使用 uni-ui 组件库，需要注意跨平台兼容性。
 
 ---
 
 ## 🎨 Vue 组件模式
 
-### 图标使用规范 ⚠️ **禁止内联 SVG**
+### 图标使用规范
 
-**核心原则**: 所有 SVG 必须下载为文件，使用 `<img>` 标签引用，严禁 `<svg>` 标签或 `v-html`
+**Uni-app 图标使用方式**:
 
 ```vue
-<!-- ✅ 正确 -->
-<img src="@/assets/icons/home/icon-name.svg" alt="Icon" class="w-6 h-6" />
+<!-- ✅ 正确 1: 使用 uni-icons 组件 -->
+<uni-icons type="home" size="24" color="#333" />
 
-<!-- ❌ 错误 -->
+<!-- ✅ 正确 2: 使用 image 标签 (静态资源) -->
+<image src="/static/icons/home.png" mode="aspectFit" class="icon" />
+
+<!-- ✅ 正确 3: 使用 iconfont -->
+<text class="iconfont icon-home" />
+
+<!-- ❌ 错误: 小程序不支持 img 标签 -->
+<img src="@/assets/icons/home.svg" />
+
+<!-- ❌ 错误: 内联 SVG -->
 <svg><path d="M..." /></svg>
-<div v-html="svgContent"></div>
 ```
 
 **动态图标**:
 ```vue
-<img :src="iconSrc" alt="图标" />
+<image :src="iconSrc" mode="aspectFit" class="icon" />
 
 <script setup lang="ts">
 const iconSrc = computed(() =>
   props.type === 'primary'
-    ? '@/assets/icons/home/icon-primary.svg'
-    : '@/assets/icons/home/icon-secondary.svg'
+    ? '/static/icons/icon-primary.png'
+    : '/static/icons/icon-secondary.png'
 );
 </script>
 ```
 
-**详见**: [component-development.md#svg-使用规范](component-development.md#svg-使用规范)
+**注意**: 小程序中静态资源路径必须以 `/static/` 开头或使用网络地址。
+
+**详见**: [component-development.md#图标使用规范](component-development.md#图标使用规范)
 
 ---
 
@@ -178,93 +190,28 @@ const displayName = computed(() => {
 
 ### 骨架屏模式
 
-#### 路由级骨架屏配置
+#### 使用 USkeleton 组件
 
-在路由 `meta.skeleton` 中配置，页面组件加载时自动显示骨架屏。
-
-```typescript
-// ✅ 正确：使用预置类型 - 卡片型
-{
-  path: '/home',
-  name: 'Home',
-  component: () => import('@/views/home/index.vue'),
-  meta: {
-    title: '首页',
-    skeleton: {
-      type: 'card',
-      props: {
-        count: 4,      // 卡片数量
-        rows: 3,       // 每个卡片的行数
-        columns: 2,    // 每行卡片列数
-      },
-    },
-  },
-}
-
-// ✅ 正确：使用预置类型 - 列表型
-{
-  path: '/user-list',
-  name: 'UserList',
-  component: () => import('@/views/user-list/index.vue'),
-  meta: {
-    title: '用户列表',
-    skeleton: {
-      type: 'list',
-      props: {
-        count: 10,          // 列表项数量
-        rows: 3,            // 每项显示行数
-        showSearchBar: true, // 是否显示搜索栏
-        showAvatar: true,   // 是否显示头像
-      },
-    },
-  },
-}
-
-// ✅ 正确：使用自定义组件
-import LoginSkeleton from '@/components/Skeleton/LoginSkeleton/index.vue';
-
-{
-  path: '/login',
-  name: 'Login',
-  component: () => import('@/views/login/index.vue'),
-  meta: {
-    title: '登录',
-    skeleton: {
-      component: LoginSkeleton,
-      props: {
-        // 自定义组件的 props
-      },
-    },
-  },
-}
-
-// ❌ 错误：type 和 component 同时使用
-{
-  meta: {
-    skeleton: {
-      type: 'card',              // 不能同时存在
-      component: CustomSkeleton, // 不能同时存在
-    },
-  },
-}
-
-// ❌ 错误：使用不存在的 type
-{
-  meta: {
-    skeleton: {
-      type: 'unknown', // 只支持 'card'、'list'、'form'、'detail'、'grid'
-    },
-  },
-}
-```
-
-#### 组件内骨架屏使用
-
-在组件内部处理异步数据加载时使用 Vant 的 `van-skeleton`。
+项目封装了 `USkeleton` 组件用于显示骨架屏：
 
 ```vue
+<template>
+  <view class="container">
+    <!-- ✅ 正确：加载中显示骨架屏 -->
+    <u-skeleton v-if="loading" :rows="5" animated />
+
+    <!-- 加载完成显示数据 -->
+    <view v-else class="content">
+      <view v-for="item in data" :key="item.id" class="item">
+        {{ item.name }}
+      </view>
+    </view>
+  </view>
+</template>
+
 <script setup lang="ts">
 import { ref } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 
 const loading = ref(true);
 const data = ref<IDataItem[]>([]);
@@ -281,149 +228,43 @@ const fetchData = async (): Promise<void> => {
   }
 };
 
-onMounted(() => {
+onLoad(() => {
   fetchData();
 });
 </script>
-
-<template>
-  <div class="container">
-    <!-- ✅ 正确：加载中显示骨架屏 -->
-    <van-skeleton v-if="loading" :row="5" animated />
-
-    <!-- 加载完成显示数据 -->
-    <div v-else class="content">
-      <div v-for="item in data" :key="item.id" class="item">
-        {{ item.name }}
-      </div>
-    </div>
-  </div>
-</template>
-
-<!-- ❌ 错误：没有骨架屏，直接显示空白 -->
-<template>
-  <div v-if="!loading" class="content">
-    <!-- 数据内容 -->
-  </div>
-</template>
 ```
 
-#### 骨架屏组件 Props 规范
-
-开发自定义骨架屏组件时，遵循以下 Props 定义规范：
+#### USkeleton Props
 
 ```typescript
-// ✅ 正确：完整的骨架屏 Props 定义
-interface CardSkeletonProps {
-  /** 卡片数量 */
-  count?: number;
-  /** 每个卡片的行数 */
+interface SkeletonProps {
+  /** 是否加载中 */
+  loading?: boolean;
+  /** 段落行数 */
   rows?: number;
-  /** 每行卡片列数 */
-  columns?: number;
+  /** 是否显示标题 */
+  title?: boolean;
+  /** 标题宽度 */
+  titleWidth?: string | number;
+  /** 是否显示头像 */
+  avatar?: boolean;
+  /** 头像形状 */
+  avatarShape?: 'round' | 'square';
+  /** 头像大小 */
+  avatarSize?: string | number;
   /** 是否显示动画 */
   animated?: boolean;
+  /** 每行宽度 */
+  rowsWidth?: (string | number)[];
 }
-
-const props = withDefaults(defineProps<CardSkeletonProps>(), {
-  count: 4,
-  rows: 4,
-  columns: 2,
-  animated: true,
-});
-
-// ✅ 正确：列表骨架屏 Props 定义
-interface ListSkeletonProps {
-  /** 列表项数量 */
-  count?: number;
-  /** 每项显示行数 */
-  rows?: number;
-  /** 是否显示搜索栏 */
-  showSearchBar?: boolean;
-  /** 是否显示头像 */
-  showAvatar?: boolean;
-  /** 是否显示标题 */
-  showTitle?: boolean;
-}
-
-const props = withDefaults(defineProps<ListSkeletonProps>(), {
-  count: 10,
-  rows: 3,
-  showSearchBar: true,
-  showAvatar: true,
-  showTitle: true,
-});
-
-// ❌ 错误：Props 缺少类型定义
-const props = defineProps({
-  count: Number,  // 应该使用 TypeScript 接口
-  rows: Number,
-});
-```
-
-#### 骨架屏类型定义
-
-项目在 `src/interface/skeleton.ts` 中定义了完整的骨架屏类型系统：
-
-```typescript
-// 骨架屏配置类型（discriminated union 确保类型安全）
-type SkeletonConfig =
-  | { type: 'card'; props?: CardSkeletonProps }
-  | { type: 'list'; props?: ListSkeletonProps }
-  | { type: 'form'; props?: FormSkeletonProps }
-  | { type: 'detail'; props?: DetailSkeletonProps }
-  | { type: 'grid'; props?: GridSkeletonProps }
-  | { component: Component; props?: Record<string, any> };
-
-// 扩展路由 meta
-interface RouteMeta {
-  title?: string;
-  roles?: string[];
-  requiresAuth?: boolean;
-  skeleton?: SkeletonConfig;  // 骨架屏配置
-}
-```
-
-#### 骨架屏工具函数
-
-项目提供了工具函数用于获取骨架屏组件和 props：
-
-```typescript
-import { getSkeletonComponent, getSkeletonProps } from '@/components/Skeleton';
-
-// 在 Layout 或路由守卫中使用
-const SkeletonComponent = getSkeletonComponent(route);
-const skeletonProps = getSkeletonProps(route);
-
-// ✅ 正确：检查组件是否存在
-if (SkeletonComponent) {
-  // 渲染骨架屏
-}
-
-// ❌ 错误：不检查直接使用
-const SkeletonComponent = getSkeletonComponent(route);
-// 如果返回 null 会报错
 ```
 
 #### 骨架屏使用原则
 
-1. **路由级优先** - 优先在路由配置中使用 `meta.skeleton`，适用于整个页面加载
-2. **组件内备用** - 组件内异步数据加载使用 Vant `van-skeleton`，适用于局部数据加载
-3. **动画增强** - 启用 `animated` 属性提升视觉效果
-4. **尺寸匹配** - 骨架屏尺寸应与实际内容接近，避免布局跳动
-5. **类型安全** - 使用 TypeScript discriminated union 确保配置类型安全
-
-#### 预置骨架屏组件
-
-| 组件 | 位置 | 说明 | 使用场景 |
-|------|------|------|---------|
-| **CardSkeleton** | `src/components/Skeleton/CardSkeleton/` | 卡片型骨架屏 | 首页卡片布局 |
-| **ListSkeleton** | `src/components/Skeleton/ListSkeleton/` | 列表型骨架屏 | 列表数据页面 |
-| **FormSkeleton** | `src/components/Skeleton/FormSkeleton/` | 表单型骨架屏 | 表单页面 |
-| **DetailSkeleton** | `src/components/Skeleton/DetailSkeleton/` | 详情型骨架屏 | 详情页面 |
-| **GridSkeleton** | `src/components/Skeleton/GridSkeleton/` | 网格型骨架屏 | 网格布局页面 |
-| **LayoutSkeleton** | `src/components/Skeleton/LayoutSkeleton/` | Layout 整体骨架屏 | Layout 加载时显示 |
-| **LoginSkeleton** | `src/components/Skeleton/LoginSkeleton/` | 登录页专用骨架屏 | 登录页加载时显示 |
+1. **异步加载必须有骨架屏** - 避免空白页面
+2. **动画增强** - 启用 `animated` 属性提升视觉效果
+3. **尺寸匹配** - 骨架屏尺寸应与实际内容接近，避免布局跳动
+4. **easycom 自动导入** - 使用 `<u-skeleton>` 无需 import
 
 ---
 
@@ -548,26 +389,26 @@ const statsData = ref([
 
 ## 🎨 CSS 变量使用规范
 
-### 必须使用 public/theme.css 中定义的 CSS 变量
+### 必须使用 src/styles/theme.scss 中定义的 CSS 变量
 
-项目在 `public/theme.css` 中定义了完整的 CSS 变量系统,所有样式中的颜色**必须**使用这些变量,**禁止硬编码颜色值**。
+项目在 `src/styles/theme.scss` 中定义了完整的 CSS 变量系统，支持 Light/Dark 主题切换。所有样式中的颜色**必须**使用这些变量，**禁止硬编码颜色值**。
 
-**⚠️ Figma 设计稿还原例外**: 当还原 Figma 设计稿时,如果设计稿中明确标注了颜色和尺寸数值,**优先使用 Figma 标注的数值**。只有在 Figma 没有明确标注时,才使用 CSS 变量。
+**⚠️ Figma 设计稿还原例外**: 当还原 Figma 设计稿时，如果设计稿中明确标注了颜色和尺寸数值，**优先使用 Figma 标注的数值**。只有在 Figma 没有明确标注时，才使用 CSS 变量。
 
 #### 文本颜色变量
 ```scss
 .component {
   // ✅ 正确：使用 CSS 变量
-  color: var(--colorTextHeading);        // 标题文本 rgba(0,0,0,0.88)
-  color: var(--colorText);               // 普通文本 rgba(0,0,0,0.88)
-  color: var(--colorTextSecondary);      // 次要文本 rgba(0,0,0,0.65)
-  color: var(--colorTextTertiary);       // 三级文本 rgba(0,0,0,0.45)
-  color: var(--colorTextPlaceholder);    // 占位符 rgba(0,0,0,0.25)
-  color: var(--colorTextQuaternary);     // 四级文本 rgba(0,0,0,0.25)
+  color: var(--color-text);               // 主文本 #323233
+  color: var(--color-text-secondary);     // 次要文本 #969799
+  color: var(--color-text-placeholder);   // 占位符 #c8c9cc
+  color: var(--color-text-disabled);      // 禁用文本 #c8c9cc
+  color: var(--color-text-inverse);       // 反色文本 #fff
+  color: var(--color-text-link);          // 链接文本
 
   // ❌ 错误：硬编码颜色
   color: #333;
-  color: rgba(0,0,0,0.88);
+  color: #323233;
 }
 ```
 
@@ -575,27 +416,30 @@ const statsData = ref([
 ```scss
 .component {
   // ✅ 正确：使用 CSS 变量
-  background: var(--colorBgContainer);   // 容器背景 #ffffff
-  background: var(--colorBgLayout);      // 布局背景 #f5f5f5
-  background: var(--colorBgElevated);    // 浮层背景 #ffffff
-  background: var(--colorBgMask);        // 遮罩背景 rgba(0,0,0,0.45)
-  background: var(--colorBgBase);        // 基础背景 #ffffff
+  background: var(--color-bg);            // 背景色 #fff
+  background: var(--color-bg-grey);       // 灰色背景 #f7f8fa
+  background: var(--color-bg-hover);      // 悬浮背景 #f2f3f5
+  background: var(--color-bg-active);     // 激活背景 #ededed
+  background: var(--color-bg-mask);       // 遮罩背景 rgba(0 0 0 / 0.7)
+  background: var(--color-bg-card);       // 卡片背景 #fff
+  background: var(--color-bg-input);      // 输入框背景 #f7f8fa
 
   // ❌ 错误：硬编码颜色
   background: #fff;
-  background: #f5f5f5;
+  background: #f7f8fa;
 }
 ```
 
 #### 边框颜色变量
 ```scss
 .component {
-  // ✅ 正确：使用 CSS 变量
-  border: 1px solid var(--colorBorder);           // 默认边框 #d9d9d9
-  border: 1px solid var(--colorBorderSecondary);  // 次要边框 #eeeeee
+  // ✅ 正确：使用 CSS 变量 (注意使用 rpx 单位)
+  border: 1rpx solid var(--color-border);        // 默认边框 #ebedf0
+  border: 1rpx solid var(--color-border-light);  // 浅色边框 #f7f8fa
+  border: 1rpx solid var(--color-border-dark);   // 深色边框 #dcdee0
 
   // ❌ 错误：硬编码颜色
-  border: 1px solid #e0e0e0;
+  border: 1rpx solid #e0e0e0;
 }
 ```
 
@@ -603,13 +447,13 @@ const statsData = ref([
 ```scss
 .component {
   // ✅ 正确：使用 CSS 变量
-  background: var(--colorPrimary);         // 主色 rgb(0,180,180)
-  color: var(--colorPrimaryText);          // 主色文本
-  border-color: var(--colorPrimaryBorder); // 主色边框
-  background: var(--colorPrimaryBg);       // 主色浅背景
+  background: var(--color-primary);         // 主色 #1989fa
+  background: var(--color-primary-light);   // 主色浅 #66b1ff
+  background: var(--color-primary-dark);    // 主色深 #1677ff
+  background: var(--color-primary-bg);      // 主色背景 rgba(25 137 250 / 0.1)
 
   // ❌ 错误：硬编码主题色
-  background: rgb(0,180,180);
+  background: #1989fa;
 }
 ```
 
@@ -617,29 +461,35 @@ const statsData = ref([
 ```scss
 .component {
   // ✅ 正确：使用 CSS 变量
-  color: var(--colorSuccess);            // 成功色
-  color: var(--colorWarning);            // 警告色
-  color: var(--colorError);              // 错误色
-  color: var(--colorInfo);               // 信息色
+  color: var(--color-success);            // 成功色 #07c160
+  color: var(--color-warning);            // 警告色 #ff976a
+  color: var(--color-error);              // 错误色 #ee0a24
+  color: var(--color-info);               // 信息色 #909399
+
+  // 带背景的状态色
+  background: var(--color-success-bg);    // 成功背景
+  background: var(--color-warning-bg);    // 警告背景
+  background: var(--color-error-bg);      // 错误背景
+  background: var(--color-info-bg);       // 信息背景
 
   // ❌ 错误：硬编码状态颜色
-  color: #52c41a;  // 应该使用 var(--colorSuccess)
-  color: #ff4d4f;  // 应该使用 var(--colorError)
+  color: #07c160;  // 应该使用 var(--color-success)
+  color: #ee0a24;  // 应该使用 var(--color-error)
 }
 ```
 
-#### 色板变量（辅助色）
+#### 阴影变量
 ```scss
 .component {
-  // ✅ 正确：使用色板变量
-  background: var(--cyan-1);   // 青色系列 (1-10)
-  background: var(--cyan-2);
-  background: var(--blue-4);   // 蓝色系列
-  background: var(--green-5);  // 绿色系列
-  background: var(--red-6);    // 红色系列
+  // ✅ 正确：使用 CSS 变量
+  box-shadow: var(--shadow-sm);     // 小阴影
+  box-shadow: var(--shadow-base);   // 基础阴影
+  box-shadow: var(--shadow-lg);     // 大阴影
+  box-shadow: var(--shadow-xl);     // 特大阴影
+  box-shadow: var(--shadow-light);  // 轻阴影
 
-  // ❌ 错误：硬编码辅助色
-  background: #e6f7ff;
+  // ❌ 错误：硬编码阴影
+  box-shadow: 0 2rpx 8rpx rgba(0 0 0 / 0.08);
 }
 ```
 
@@ -812,39 +662,39 @@ Frame 1000004439:
 ```scss
 // ❌ 错误：直接使用标签选择器
 h1 {
-  font-size: 24px;
-  color: var(--colorTextHeading);
+  font-size: 48rpx;
+  color: var(--color-text);
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 40rpx;
 }
 
 p {
-  color: var(--colorText);
+  color: var(--color-text);
 }
 
 div {
-  padding: 20px;
+  padding: 40rpx;
 }
 
 // ✅ 正确：为每个元素添加 class
 .page-title {
-  font-size: 24px;
-  color: var(--colorTextHeading);
+  font-size: 48rpx;
+  color: var(--color-text);
 }
 
 .section-title {
-  font-size: 20px;
-  color: var(--colorTextHeading);
+  font-size: 40rpx;
+  color: var(--color-text);
 }
 
 .text-content {
-  color: var(--colorText);
+  color: var(--color-text);
 }
 
 .content-wrapper {
-  padding: 20px;
+  padding: 40rpx;
 }
 ```
 
@@ -856,8 +706,8 @@ div {
 // ✅ 正确：BEM 命名
 .user-card {
   // Block
-  padding: 20px;
-  border: 1px solid var(--colorBorder);
+  padding: 40rpx;
+  border: 2rpx solid var(--color-border);
 
   &__header {
     // Element
@@ -867,23 +717,23 @@ div {
 
   &__title {
     // Element
-    font-size: 18px;
-    color: var(--colorTextHeading);
+    font-size: 36rpx;
+    color: var(--color-text);
   }
 
   &__content {
     // Element
-    margin-top: 16px;
+    margin-top: 32rpx;
   }
 
   &--large {
     // Modifier
-    padding: 32px;
+    padding: 64rpx;
   }
 
   &--highlighted {
     // Modifier
-    border-color: var(--colorPrimary);
+    border-color: var(--color-primary);
   }
 }
 
@@ -1074,7 +924,7 @@ const loginAction = async (credentials: ILoginRequest): Promise<void> => {
     userInfo.value = response.userInfo;
 
     // 持久化存储
-    localStorage.setItem('token', token.value);
+    uni.setStorageSync('token', token.value);
   } catch (error) {
     console.error('登录失败:', error);
     throw error;  // 重新抛出,让调用方处理
@@ -1142,7 +992,7 @@ const loginAction = async (credentials: ILoginRequest) => {
 
 ### 骨架屏使用检查
 - [ ] 页面级路由配置了 `meta.skeleton`
-- [ ] 组件内异步加载使用 `van-skeleton`
+- [ ] 组件内异步加载使用 `USkeleton`
 - [ ] 骨架屏启用了 `animated` 动画
 - [ ] 骨架屏尺寸与实际内容匹配
 - [ ] 使用 TypeScript 类型安全配置

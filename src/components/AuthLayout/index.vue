@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    AuthLayout - 认证页面布局组件
+    用于登录、注册、忘记密码等认证页面的统一布局
+  -->
   <view class="auth-page">
     <!-- Logo 头部 -->
     <view class="auth-header">
@@ -20,6 +32,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: 'AuthLayout',
+});
+
 interface Props {
   /** 页面标题 */
   title?: string;

@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    URichText - 富文本渲染组件
+    支持 HTML 字符串解析，自动处理图片、视频等标签
+  -->
   <view class="u-rich-text" :class="{ 'u-rich-text--selectable': selectable }">
     <rich-text :nodes="parsedNodes" :selectable="selectable" :space="space" @itemclick="handleItemClick" />
   </view>
@@ -7,6 +19,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { RichTextNodes, RichTextNode, RichTextSpace } from '@uni-helper/uni-app-types';
+
+defineOptions({
+  name: 'URichText',
+});
 
 interface Props {
   /** 富文本内容 (HTML 字符串或 nodes 数组) */

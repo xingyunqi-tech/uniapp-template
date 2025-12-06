@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="error-page" :class="themeClass">
+  <view class="error-page" :class="globalStore.themeClass">
     <view class="error-content">
       <!-- 错误图标 -->
       <view class="error-icon">
@@ -31,11 +31,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useRouter, useTheme } from '@/composables';
+import { useRouter } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { canGoBack as checkCanGoBack } from '@/utils/router';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 const router = useRouter();
 
 // 错误类型

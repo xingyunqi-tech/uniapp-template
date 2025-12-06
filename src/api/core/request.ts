@@ -36,7 +36,7 @@ const http = new Request({
 // 请求拦截器
 http.interceptors.request.use(
   config => {
-    // 添加 Token
+    // 从 storage 获取 Token（无依赖，可立即读取）
     const token = storage.get<string>(STORAGE_KEYS.TOKEN);
     if (token) {
       config.header = {
@@ -91,8 +91,8 @@ http.interceptors.response.use(
 
     // 401 未授权
     if (statusCode === 401) {
+      // 清除 Token
       storage.remove(STORAGE_KEYS.TOKEN);
-      storage.remove(STORAGE_KEYS.USER_INFO);
 
       uni.showToast({
         title: '登录已过期，请重新登录',

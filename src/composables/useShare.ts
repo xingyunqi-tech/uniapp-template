@@ -113,7 +113,7 @@ export function useShare(options: UseShareOptions = {}) {
   }
 
   // 分享给朋友
-  onShareAppMessage((res): UniApp.CustomShareContent => {
+  onShareAppMessage((res): Page.CustomShareContent => {
     const from = res.from as ShareFrom;
     const target = res.target as ShareTarget | undefined;
 
@@ -133,7 +133,7 @@ export function useShare(options: UseShareOptions = {}) {
   // 分享到朋友圈（仅微信小程序支持）
   if (enableTimeline) {
     // #ifdef MP-WEIXIN
-    onShareTimeline((): UniApp.CustomShareTimelineContent => {
+    onShareTimeline((): Page.ShareTimelineContent => {
       // 触发分享前回调
       onBeforeShare?.('menu');
 
@@ -189,5 +189,6 @@ export function showShareMenu(): void {
  * 隐藏分享菜单
  */
 export function hideShareMenu(): void {
+  // @ts-expect-error - hideShareItems 在部分平台不是必填
   uni.hideShareMenu({});
 }

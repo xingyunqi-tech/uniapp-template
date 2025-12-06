@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="创建账号" card-title="手机号注册" :class="themeClass">
+  <AuthLayout title="创建账号" card-title="手机号注册" :class="globalStore.themeClass">
     <!-- 注册方式切换 -->
     <view class="register-tabs">
       <view class="tab-item" :class="{ active: registerType === 'password' }" @click="registerType = 'password'">
@@ -87,13 +87,14 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms, useTheme } from '@/composables';
+import { useRouter, useSendSms } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 const router = useRouter();
 const userStore = useUserStore();

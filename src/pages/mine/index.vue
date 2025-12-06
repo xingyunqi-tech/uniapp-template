@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <view class="user-page" :class="themeClass">
+  <view class="user-page" :class="globalStore.themeClass">
     <!-- 用户信息卡片 -->
     <view class="user-card">
       <view class="user-info" @click="handleUserClick">
@@ -49,13 +49,14 @@
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useTheme } from '@/composables';
+import { useRouter } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PAGES } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UMenuItem from '@/components/UMenuItem/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 const router = useRouter();
 const userStore = useUserStore();

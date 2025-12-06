@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="address-edit-page" :class="themeClass">
+  <view class="address-edit-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
       <view class="form-group">
@@ -63,9 +63,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useTheme } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 // 表单数据
 const formData = reactive({

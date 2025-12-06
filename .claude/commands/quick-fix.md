@@ -20,7 +20,7 @@ description: 快速修复常见问题的诊断和解决方案
 | **API** | Orval 生成失败 | 检查 openapi.json → `pnpm api:gen` | [详见](#api-调用问题) |
 | **路由** | 404 Not Found | 检查路由配置 → path | [详见](#路由问题) |
 | **路由** | 403 Forbidden | 检查权限配置 → roles | [详见](#路由问题) |
-| **样式** | 硬编码颜色 | 运行 `pnpm checkCssVars` 检查 | [详见](#样式问题) |
+| **样式** | 硬编码颜色 | 使用 CSS 变量 (src/styles/theme.scss) | [详见](#样式问题) |
 | **样式** | 标签选择器 | 改用 class 选择器 | [详见](#样式问题) |
 | **构建** | Build 失败 | `pnpm type-check` → 修复类型 | [详见](#构建问题) |
 | **构建** | 产物过大 | `pnpm analyzer` → 代码分割 | [详见](#构建问题) |
@@ -167,14 +167,22 @@ pnpm lint                    # 代码检查
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `router.push 不跳转` | 路由未注册或路径错误 | 检查路由配置 → 检查路径格式(需要 `/`) |
-| `403 Forbidden` | 用户角色不匹配 | 检查 `meta.roles` → 确认用户角色 |
-| `404 Not Found` | 路由未注册 | 添加路由配置到 routes/ 目录 |
+| `页面跳转失败` | 路由未注册或路径错误 | 检查 pages.json 配置 → 检查路径格式 |
+| `页面不存在` | pages.json 未配置 | 添加页面配置到 pages.json |
+| `分包加载失败` | 分包配置错误 | 检查 subPackages 配置 |
 
-**工具命令:**
-```bash
-# 手动配置路由
-# 参考 @router-development 文档
+**解决方案:**
+```typescript
+// 使用 useRouter composable
+import { useRouter } from '@/composables';
+
+const { navigateTo, redirectTo, switchTab } = useRouter();
+
+// 普通页面跳转
+navigateTo('/pages-sub/user/profile/index');
+
+// TabBar 页面跳转
+switchTab('/pages/mine/index');
 ```
 
 **详细文档:** [router-development.md](../agents/router-development.md)
@@ -185,17 +193,17 @@ pnpm lint                    # 代码检查
 
 ### 🚀 快速解决方案
 
-**推荐流程: 自动检查 → 手动修复**
+**推荐流程: 检查 → 手动修复**
 
 ```bash
-# 1️⃣ 运行 CSS 变量检查脚本
-pnpm checkCssVars
+# 1️⃣ 检查样式问题
+pnpm lint
 
 # 2️⃣ 根据提示修复硬编码颜色
-# 查看 public/theme.css 中的可用变量
+# 查看 src/styles/theme.scss 中的可用变量
 
-# 3️⃣ 运行代码检查
-pnpm lint
+# 3️⃣ 确保使用 rpx 单位
+# 750rpx = 设计稿宽度
 ```
 
 ---
@@ -204,16 +212,13 @@ pnpm lint
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `CSS 变量未生效` | 变量未定义或拼写错误 | 检查 `theme.css` 中的变量定义 |
-| `TailwindCSS 不生效` | 配置错误或未编译 | 检查 `tailwind.config.ts` → 重启服务 |
+| `CSS 变量未生效` | 变量未定义或拼写错误 | 检查 `src/styles/theme.scss` 中的变量定义 |
+| `样式在小程序不生效` | 使用了不支持的选择器 | 避免标签选择器，使用 class |
 | `Scoped 样式不生效` | 选择器特异性问题 | 使用 class 选择器 → `:deep()` 穿透 |
-| `硬编码颜色警告` | 使用了 hex/rgb 颜色 | 运行 `pnpm checkCssVars` → 根据提示修复 |
+| `单位不正确` | 使用了 px 而非 rpx | 改用 rpx (1px = 2rpx) |
 
 **工具命令:**
 ```bash
-# CSS 变量检查
-pnpm checkCssVars
-
 # 代码检查
 pnpm lint
 
@@ -262,7 +267,7 @@ pnpm analyzer
 
 **解决方案:**
 ```typescript
-// 启用持久化
+// 启用持久化 (使用 uni.setStorageSync)
 export const useUserStore = defineStore(
   'user',
   () => {
@@ -271,8 +276,6 @@ export const useUserStore = defineStore(
   },
   {
     persist: {
-      key: 'user-store',
-      storage: localStorage,
       pick: ['userInfo'],
     },
   }

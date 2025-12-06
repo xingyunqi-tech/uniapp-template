@@ -1,5 +1,17 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
-  <view v-if="visible" class="u-loading" :class="[`u-loading--${type}`, { 'u-loading--fullscreen': fullscreen }]">
+  <!--
+    ULoading - 加载动画组件
+    支持命令式 API 和组件式调用，可全屏或局部显示
+  -->
+  <view v-if="isVisible" class="u-loading" :class="[`u-loading--${type}`, { 'u-loading--fullscreen': fullscreen }]">
     <view class="u-loading__mask" :style="maskStyle" @click="handleMaskClick" />
     <view class="u-loading__content">
       <!-- 加载图标 -->
@@ -8,13 +20,15 @@
         <view v-for="i in 12" v-else :key="i" class="u-loading__spinner-dot" />
       </view>
       <!-- 加载文字 -->
-      <text v-if="text" class="u-loading__text" :style="textStyle">{{ text }}</text>
+      <text v-if="displayText" class="u-loading__text" :style="textStyle">{{ displayText }}</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, CSSProperties } from 'vue';
+import { computed } from 'vue';
+import type { CSSProperties } from 'vue';
+import { useLoading } from '@/composables/useLoading';
 
 /** Loading 类型 */
 export type LoadingType = 'default' | 'primary';
@@ -24,7 +38,7 @@ export type SpinnerType = 'circular' | 'spinner';
 
 /** Props 定义 */
 export interface ULoadingProps {
-  /** 是否显示 */
+  /** 是否显示（组件模式） */
   visible?: boolean;
   /** 加载类型 */
   type?: LoadingType;
@@ -42,6 +56,8 @@ export interface ULoadingProps {
   maskBackground?: string;
   /** 点击遮罩是否关闭 */
   closeOnClickMask?: boolean;
+  /** 是否使用全局状态（命令式 API） */
+  global?: boolean;
 }
 
 /** Emits 定义 */
@@ -60,9 +76,19 @@ const props = withDefaults(defineProps<ULoadingProps>(), {
   size: 64,
   maskBackground: 'rgba(0, 0, 0, 0.5)',
   closeOnClickMask: false,
+  global: false,
 });
 
 const emit = defineEmits<ULoadingEmits>();
+
+// 全局状态
+const { visible: globalVisible, text: globalText } = useLoading();
+
+// 是否显示（支持 props 和全局状态两种模式）
+const isVisible = computed(() => (props.global ? globalVisible.value : props.visible));
+
+// 显示的文字
+const displayText = computed(() => (props.global ? globalText.value : props.text));
 
 /** 遮罩样式 */
 const maskStyle = computed<CSSProperties>(() => ({

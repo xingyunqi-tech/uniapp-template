@@ -137,7 +137,8 @@ describe('useUserStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();
-    localStorage.clear();
+    // Uni-app 环境下清理存储
+    uni.clearStorageSync();
   });
 
   it('应该有正确的初始状态', () => {
@@ -314,7 +315,7 @@ describe('Custom Auth API', () => {
     await postAuthLogin({ username: 'test', password: '123' });
 
     expect(generatedLogin).toHaveBeenCalled();
-    expect(storage('localStorage').set).toHaveBeenCalledWith(
+    expect(uni.setStorageSync).toHaveBeenCalledWith(
       'token',
       'test-token'
     );
@@ -378,8 +379,7 @@ describe('UserStore', () => {
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
-import { showToast } from 'vant';
-import UserManagement from '@/views/UserManagement/index.vue';
+import UserManagement from '@/pages-sub/user/profile/index.vue';
 
 // ✅ Mock generated API
 vi.mock('@/api/generated/auth/auth', () => ({
@@ -389,16 +389,14 @@ vi.mock('@/api/generated/auth/auth', () => ({
 
 import { getAuthUserInfo, postAuthLogin } from '@/api';
 
-// Mock Vant Toast
-vi.mock('vant', async () => {
-  const actual = await vi.importActual('vant');
-  return {
-    ...actual,
-    showToast: vi.fn(),
-    showSuccessToast: vi.fn(),
-    showFailToast: vi.fn(),
-  };
-});
+// Mock Uni-app Toast
+vi.mock('@/utils/toast', () => ({
+  showToast: vi.fn(),
+  showSuccess: vi.fn(),
+  showError: vi.fn(),
+}));
+
+import { showToast } from '@/utils/toast';
 
 describe('UserManagement Integration', () => {
   beforeEach(() => {
@@ -563,8 +561,8 @@ describe('InfiniteScroll', () => {
   it('应该触发加载更多', async () => {
     const wrapper = mount(UserList);
 
-    // 触发 van-list 的 load 事件
-    await wrapper.find('.van-list').trigger('load');
+    // 触发 scroll-view 的 scrolltolower 事件
+    await wrapper.find('.scroll-view').trigger('scrolltolower');
 
     expect(mockedApi.getUserList).toHaveBeenCalledWith({ page: 2, pageSize: 20 });
   });
@@ -572,8 +570,8 @@ describe('InfiniteScroll', () => {
   it('应该触发下拉刷新', async () => {
     const wrapper = mount(UserList);
 
-    // 触发 van-pull-refresh 的 refresh 事件
-    await wrapper.find('.van-pull-refresh').trigger('refresh');
+    // 触发 scroll-view 的 refresherrefresh 事件
+    await wrapper.find('.scroll-view').trigger('refresherrefresh');
 
     expect(mockedApi.getUserList).toHaveBeenCalledWith({ page: 1, pageSize: 20 });
   });

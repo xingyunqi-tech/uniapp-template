@@ -1,15 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE } from '@/constants';
+import type { LocaleType, ThemeType } from '@/constants';
 import { i18n } from '@/utils/locale';
-import type { LocaleKey, ThemeStyleKey } from '@/interface/system';
 
 /**
  * 应用主题到页面
  * 通过设置导航栏、TabBar 样式来切换主题
- * 注意：页面级 dark-theme 类名由各页面通过 useTheme composable 控制
  */
-function applyTheme(theme: ThemeStyleKey) {
+function applyTheme(theme: ThemeType) {
   const isDark = theme === THEME_TYPE.DARK;
 
   // H5 环境：设置根元素 class
@@ -44,7 +43,24 @@ export const useGlobalStore = defineStore(
   'global',
   () => {
     // ==================== 主题相关 ====================
-    const currentTheme = ref<ThemeStyleKey>(DEFAULT_THEME_STYLE);
+    /** 当前主题 */
+    const currentTheme = ref<ThemeType>(DEFAULT_THEME_STYLE);
+
+    /**
+     * 初始化主题 (应用启动时调用)
+     */
+    function initTheme() {
+      applyTheme(currentTheme.value);
+    }
+
+    /**
+     * 设置主题
+     * @param theme 主题值
+     */
+    function setTheme(theme: ThemeType) {
+      currentTheme.value = theme;
+      applyTheme(theme);
+    }
 
     /**
      * 切换主题
@@ -54,24 +70,8 @@ export const useGlobalStore = defineStore(
       setTheme(newTheme);
     }
 
-    /**
-     * 设置主题
-     * @param theme 主题值
-     */
-    function setTheme(theme: ThemeStyleKey) {
-      currentTheme.value = theme;
-      applyTheme(theme);
-    }
-
-    /**
-     * 初始化主题 (应用启动时调用)
-     */
-    function initTheme() {
-      applyTheme(currentTheme.value);
-    }
-
     // ==================== 语言相关 ====================
-    const currentLocale = ref<LocaleKey>(DEFAULT_LOCALE);
+    const currentLocale = ref<LocaleType>(DEFAULT_LOCALE);
 
     /**
      * 切换语言
@@ -85,7 +85,7 @@ export const useGlobalStore = defineStore(
      * 设置语言
      * @param locale 语言值
      */
-    function setLocale(locale: LocaleKey) {
+    function setLocale(locale: LocaleType) {
       currentLocale.value = locale;
       i18n.global.locale.value = locale;
     }
@@ -93,9 +93,17 @@ export const useGlobalStore = defineStore(
     return {
       // 主题相关
       currentTheme,
-      toggleTheme,
-      setTheme,
+      /** 是否为深色主题 */
+      get isDark() {
+        return currentTheme.value === THEME_TYPE.DARK;
+      },
+      /** 主题类名 */
+      get themeClass() {
+        return currentTheme.value === THEME_TYPE.DARK ? 'dark-theme' : '';
+      },
       initTheme,
+      setTheme,
+      toggleTheme,
       // 语言相关
       currentLocale,
       toggleLocale,

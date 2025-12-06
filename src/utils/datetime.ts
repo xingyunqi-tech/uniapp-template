@@ -6,6 +6,15 @@
  * 格式化日期时间
  * @param date 日期对象、时间戳或日期字符串
  * @param format 格式化模板，默认 'YYYY-MM-DD HH:mm:ss'
+ *
+ * 支持的格式化占位符：
+ * - YYYY: 四位年份
+ * - MM: 两位月份 (01-12)
+ * - DD: 两位日期 (01-31)
+ * - HH: 两位小时 (00-23)
+ * - mm: 两位分钟 (00-59)
+ * - ss: 两位秒数 (00-59)
+ *
  * @returns 格式化后的日期字符串
  */
 export function formatDateTime(date: Date | number | string, format = 'YYYY-MM-DD HH:mm:ss'): string {
@@ -24,18 +33,18 @@ export function formatDateTime(date: Date | number | string, format = 'YYYY-MM-D
 
   const padZero = (num: number): string => String(num).padStart(2, '0');
 
-  return format
-    .replace('YYYY', String(year))
-    .replace('MM', padZero(month))
-    .replace('DD', padZero(day))
-    .replace('HH', padZero(hour))
-    .replace('mm', padZero(minute))
-    .replace('ss', padZero(second))
-    .replace('M', String(month))
-    .replace('D', String(day))
-    .replace('H', String(hour))
-    .replace('m', String(minute))
-    .replace('s', String(second));
+  // 使用对象映射和正则表达式确保正确替换，避免顺序问题
+  const replacements: Record<string, string> = {
+    YYYY: String(year),
+    MM: padZero(month),
+    DD: padZero(day),
+    HH: padZero(hour),
+    mm: padZero(minute),
+    ss: padZero(second),
+  };
+
+  // 按照占位符长度降序排列，确保先替换长的占位符
+  return format.replace(/YYYY|MM|DD|HH|mm|ss/g, match => replacements[match] || match);
 }
 
 /**

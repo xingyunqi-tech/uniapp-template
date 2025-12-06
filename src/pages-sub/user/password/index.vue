@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="password-page" :class="themeClass">
+  <view class="password-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
       <view class="form-group">
@@ -89,13 +89,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { usePasswordStrength, useTheme } from '@/composables';
+import { usePasswordStrength } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import UPasswordStrength from '@/components/UPasswordStrength/index.vue';
 import UFixedButton from '@/components/UFixedButton/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 const userStore = useUserStore();
 

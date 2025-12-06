@@ -22,8 +22,6 @@ export interface Router {
   replace: (url: string, params?: QueryParams) => Promise<void>;
   /** 返回上一页 */
   back: (delta?: number) => Promise<void>;
-  /** 返回上一页 (别名) */
-  go: (delta: number) => Promise<void>;
   /** 切换到 TabBar 页面 */
   switchTab: (url: string) => Promise<void>;
   /** 重启应用到指定页面 */
@@ -55,7 +53,6 @@ export function useRouter(): Router {
     push: navigateTo,
     replace: redirectTo,
     back: navigateBack,
-    go: (delta: number) => navigateBack(Math.abs(delta)),
     switchTab,
     reLaunch,
     canGoBack,
@@ -88,9 +85,27 @@ export function useRoute(): Route {
 }
 
 /**
- * 监听页面参数变化
- * 用于页面间传参时的响应式处理
+ * 获取页面参数
+ * 用于页面间传参时的参数获取
+ *
+ * @description
+ * 返回 Partial<T> 类型，因为 URL 参数可能不存在。
+ * 使用时请注意处理 undefined 值。
+ *
+ * @example
+ * ```ts
+ * interface PageQuery {
+ *   id: string;
+ *   type?: string;
+ * }
+ *
+ * const query = useRouteQuery<PageQuery>();
+ * // query.id 类型为 string | undefined
+ * if (query.id) {
+ *   fetchDetail(query.id);
+ * }
+ * ```
  */
-export function useRouteQuery<T extends QueryParams = QueryParams>(): T {
-  return getCurrentQuery() as T;
+export function useRouteQuery<T extends QueryParams = QueryParams>(): Partial<T> {
+  return getCurrentQuery() as Partial<T>;
 }

@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="profile-page" :class="themeClass">
+  <view class="profile-page" :class="globalStore.themeClass">
     <!-- 头像区域 -->
     <view class="avatar-section">
       <view class="avatar-upload-wrapper">
@@ -59,7 +59,8 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useAsyncAction, useTheme } from '@/composables';
+import { useAsyncAction } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
@@ -69,7 +70,7 @@ import UFixedButton from '@/components/UFixedButton/index.vue';
 import UImageUpload from '@/components/UImageUpload/index.vue';
 import type { FileItem } from '@/components/UImageUpload/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 const userStore = useUserStore();
 
 // 性别选项
@@ -120,7 +121,7 @@ onLoad(() => {
 
     // 初始化头像列表
     if (formData.avatar) {
-      avatarList.value = [{ url: formData.avatar, status: 'done' }];
+      avatarList.value = [{ name: 'avatar', extname: 'png', url: formData.avatar, status: 'success' }];
     }
   }
 });

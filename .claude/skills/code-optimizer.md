@@ -26,10 +26,10 @@ description: 代码优化器 - 自动检测并提取常量、函数、Composable
 
 ```bash
 # 分析指定目录
-/code-optimizer src/views/user-management/
+/code-optimizer src/pages-sub/user/management/
 
 # 分析指定文件
-/code-optimizer src/views/user-management/list.vue
+/code-optimizer src/pages-sub/user/management/index.vue
 
 # 分析整个项目
 /code-optimizer src/
@@ -72,10 +72,10 @@ description: 代码优化器 - 自动检测并提取常量、函数、Composable
 /component-generator UserManagement --smart
 
 # 步骤 2: 拼装页面
-/page-assembler src/views/user-management/index.vue
+/page-assembler src/pages-sub/user/management/index.vue
 
 # 步骤 3: 代码优化 ⭐
-/code-optimizer src/views/user-management/ --full
+/code-optimizer src/pages-sub/user/management/ --full
 
 # 步骤 4: 质量检查
 /test-coverage-checker --auto-generate
@@ -205,7 +205,7 @@ TodoWrite([
 **识别目标范围**
 
 ```bash
-Glob: src/views/[模块名]/**/*.{vue,ts}
+Glob: src/pages-sub/[模块名]/**/*.{vue,ts}
 Glob: src/components/[模块名]/**/*.{vue,ts}
 Glob: src/store/modules/*.ts
 ```
@@ -240,7 +240,7 @@ Glob: src/store/modules/*.ts
 - ...
 
 ### 修改文件
-- `src/views/[module]/list.vue`
+- `src/pages-sub/[module]/[page]/index.vue`
 - ...
 
 ## ⚠️ 待处理项

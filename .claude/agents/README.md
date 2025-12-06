@@ -43,7 +43,7 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 **核心内容**:
 - Vue 组件模式 (Props/Emits/响应式数据)
 - 数据驱动模式 (列表渲染/业务数据传入)
-- CSS 变量使用规范 (public/theme.css)
+- CSS 变量使用规范 (src/styles/theme.scss)
 - CSS 盒模型规范 (box-sizing: border-box)
 - 样式选择器规范 (BEM 命名)
 - RGB 颜色函数规范 (新语法)
@@ -77,8 +77,8 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 
 **适用场景**:
 - ✅ 开发基础组件 (src/components/)
-- ✅ 开发页面级组件 (src/views/[page]/components/)
-- ✅ 开发页面组件 (src/views/)
+- ✅ 开发页面级组件 (src/pages/[page]/components/ 或 src/pages-sub/[module]/[page]/components/)
+- ✅ 开发页面组件 (src/pages/ 或 src/pages-sub/)
 - ✅ Figma 设计稿还原
 - ✅ 组件路由配置
 
@@ -94,7 +94,7 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 ---
 
 ### 🚦 [router-development.md](router-development.md)
-**职责**: Vue Router 路由开发指导,包括路由配置、权限控制、路由守卫
+**职责**: Uni-app pages.json 路由开发指导,包括路由配置、权限控制、路由守卫
 
 **适用场景**:
 - ✅ 配置基础路由 (登录/404/403)
@@ -104,12 +104,12 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 - ✅ 配置路由守卫
 
 **核心内容**:
-- 三层路由体系 (base/common/async)
-- 路由命名规范 (path 短横线,name 大驼峰)
-- Meta 元信息配置 (title/roles/skeleton)
+- Uni-app pages.json 路由配置
+- 分包配置 (pages-sub/)
+- 路由守卫实现 (routerInterceptor)
+- 路由跳转方式 (navigateTo/redirectTo/switchTab)
 - Permission Store 实现
-- 路由守卫执行流程
-- 动态路由生成
+- 页面生命周期 (onLoad/onShow/onHide)
 
 ---
 
@@ -203,7 +203,7 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 
 **核心内容**:
 - 项目技术栈和架构模式
-- 目录结构详解 (src/api/、src/components/、src/views/ 等)
+- 目录结构详解 (src/api/、src/components/、src/pages/、src/pages-sub/ 等)
 - Orval API 架构说明 (引用 api-development.md)
 - 文件引用规范 (路径别名/@/api 统一导入)
 - 目录创建指导 (新增页面/组件/API)

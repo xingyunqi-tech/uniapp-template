@@ -176,7 +176,7 @@ export const postAuthLogin = async (
 
     // 2. 业务逻辑: 保存 Token
     if (response.token) {
-      storage('localStorage').set('token', response.token);
+      uni.setStorageSync('token', response.token);
     }
 
     // 3. 业务逻辑: 保存用户信息到 Store
@@ -532,28 +532,29 @@ export * from './custom/polling';   // 如果存在
 ```vue
 <!-- 示例: 文件上传组件 -->
 <template>
-  <div class="upload-demo">
-    <input type="file" @change="handleFileChange" />
-    <van-button @click="handleUpload" :loading="uploading">
-      上传文件
-    </van-button>
-    <van-progress v-if="uploading" :percentage="progress" />
-  </div>
+  <view class="upload-demo">
+    <UImageUpload @change="handleFileChange" />
+    <button class="upload-btn" @tap="handleUpload" :disabled="uploading">
+      {{ uploading ? '上传中...' : '上传文件' }}
+    </button>
+    <view v-if="uploading" class="progress-bar">
+      <view class="progress-fill" :style="{ width: progress + '%' }"></view>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { uploadFile } from '@/api';
-import { showToast, showSuccessToast, showFailToast } from 'vant';
+import { showToast, showSuccess, showError } from '@/utils/toast';
 
 const file = ref<File | null>(null);
 const uploading = ref(false);
 const progress = ref(0);
 
-const handleFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    file.value = target.files[0];
+const handleFileChange = (files: UniApp.ChooseImageSuccessCallbackResultFile[]) => {
+  if (files && files[0]) {
+    file.value = files[0];
   }
 };
 
@@ -571,10 +572,10 @@ const handleUpload = async () => {
       progress.value = p;
     });
 
-    showSuccessToast('上传成功');
+    showSuccess('上传成功');
     console.log('文件 URL:', response.data.url);
   } catch (error: any) {
-    showFailToast(error.message || '上传失败');
+    showError(error.message || '上传失败');
   } finally {
     uploading.value = false;
   }
@@ -721,7 +722,7 @@ import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
 export const postAuthLogin = async (data: LoginRequest) => {
   const response = await generatedLogin(data);
   // 添加业务逻辑
-  storage('localStorage').set('token', response.token);
+  uni.setStorageSync('token', response.token);
   return response;
 };
 ```

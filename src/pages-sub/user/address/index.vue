@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="address-page" :class="themeClass">
+  <view class="address-page" :class="globalStore.themeClass">
     <!-- 地址列表 -->
     <view v-if="addressList.length > 0" class="address-list">
       <view v-for="item in addressList" :key="item.id" class="address-item" @click="handleEdit(item)">
@@ -52,11 +52,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useRouter, useTheme } from '@/composables';
+import { useRouter } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PAGES } from '@/constants';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 export interface AddressItem {
   id: number;

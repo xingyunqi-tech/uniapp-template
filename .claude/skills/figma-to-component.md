@@ -1,13 +1,13 @@
 ---
 name: figma-to-component
-description: 【有Figma设计稿时使用】从设计稿还原Vue组件,自动下载切图、映射CSS变量、智能拆分页面。无设计稿请用component-generator
+description: 【有Figma设计稿时使用】从设计稿还原Uni-app组件,自动下载切图、映射CSS变量、智能拆分页面。无设计稿请用component-generator
 ---
 
 # Figma 组件生成器 Skill
 
 ## 功能概述
 
-从 Figma 设计稿自动提取设计数据,生成符合项目规范的 Vue 组件代码,包括样式、切图、类型定义等。
+从 Figma 设计稿自动提取设计数据,生成符合 Uni-app 项目规范的 Vue 组件代码,包括样式、切图、类型定义等。
 
 **核心能力**:
 - ✅ **单组件还原** - 还原单个 UI 组件 (UserCard, ProductCard)
@@ -47,7 +47,7 @@ description: 【有Figma设计稿时使用】从设计稿还原Vue组件,自动�
 /figma-to-component <figma-url> --type page --auto-split --depth 2
 
 # 自动下载切图到指定目录
-/figma-to-component <figma-url> --images-dir public/images/user-card
+/figma-to-component <figma-url> --images-dir src/static/images/user-card
 
 # 使用自定义颜色映射
 /figma-to-component <figma-url> --color-mapping theme-mapping.json
@@ -121,7 +121,7 @@ description: 【有Figma设计稿时使用】从设计稿还原Vue组件,自动�
 
    ✓ 已下载 2 个资源:
 
-   public/images/user-card/
+   src/static/images/user-card/
    ├── avatar.png (48x48 px, 12 KB)
    └── icon.svg (24x24 px, 2 KB)
 
@@ -156,40 +156,40 @@ description: 【有Figma设计稿时使用】从设计稿还原Vue组件,自动�
 #### index.vue
 
 ```vue
-<!-- src/components/UserCard/index.vue -->
+<!-- src/components/UUserCard/index.vue -->
 <template>
-  <div class="user-card" :class="{ 'user-card--active': isActive }">
+  <view class="u-user-card" :class="{ 'u-user-card--active': isActive }">
     <!-- 头像 -->
-    <div class="user-card__avatar">
-      <img :src="avatarUrl || defaultAvatar" :alt="userName" />
-    </div>
+    <view class="u-user-card__avatar">
+      <image :src="avatarUrl || defaultAvatar" mode="aspectFill" />
+    </view>
 
     <!-- 信息区域 -->
-    <div class="user-card__info">
-      <h3 class="user-card__title">{{ userName }}</h3>
-      <p class="user-card__description">{{ description }}</p>
+    <view class="u-user-card__info">
+      <text class="u-user-card__title">{{ userName }}</text>
+      <text class="u-user-card__description">{{ description }}</text>
 
       <!-- 标签 -->
-      <div class="user-card__tags">
-        <span
+      <view class="u-user-card__tags">
+        <text
           v-for="tag in tags"
           :key="tag"
-          class="user-card__tag"
+          class="u-user-card__tag"
         >
           {{ tag }}
-        </span>
-      </div>
-    </div>
+        </text>
+      </view>
+    </view>
 
     <!-- 操作按钮 -->
-    <div class="user-card__actions">
+    <view class="u-user-card__actions">
       <slot name="actions">
-        <van-button size="small" @click="handleViewClick">
+        <button class="u-user-card__btn" @tap="handleViewClick">
           查看详情
-        </van-button>
+        </button>
       </slot>
-    </div>
-  </div>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -214,7 +214,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 // 默认头像
-const defaultAvatar = '/images/user-card/avatar.png';
+const defaultAvatar = '/static/images/user-card/avatar.png';
 
 const handleViewClick = () => {
   emit('view-click', { userName: props.userName, userId: props.userId });
@@ -222,22 +222,17 @@ const handleViewClick = () => {
 </script>
 
 <style scoped lang="scss">
-.user-card {
+.u-user-card {
   /* 从 Figma 提取的样式 */
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px;
+  gap: 32rpx;
+  padding: 48rpx;
   background: var(--colorBgContainer);
-  border: 1px solid var(--colorBorder);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  border: 1rpx solid var(--colorBorder);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgb(0 0 0 / 10%);
   transition: all 0.3s ease;
-
-  &:hover {
-    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
-    border-color: var(--colorPrimary);
-  }
 
   &--active {
     border-color: var(--colorPrimary);
@@ -245,15 +240,14 @@ const handleViewClick = () => {
   }
 
   &__avatar {
-    width: 48px;
-    height: 48px;
+    width: 96rpx;
+    height: 96rpx;
     border-radius: 50%;
     overflow: hidden;
 
-    img {
+    image {
       width: 100%;
       height: 100%;
-      object-fit: cover;
     }
   }
 
@@ -262,37 +256,37 @@ const handleViewClick = () => {
   }
 
   &__title {
-    margin: 0 0 8px;
-    font-size: 16px;
+    margin: 0 0 16rpx;
+    font-size: 32rpx;
     font-weight: 500;
     color: var(--colorTextHeading);
   }
 
   &__description {
-    margin: 0 0 12px;
-    font-size: 14px;
+    margin: 0 0 24rpx;
+    font-size: 28rpx;
     color: var(--colorTextSecondary);
     line-height: 1.6;
   }
 
   &__tags {
     display: flex;
-    gap: 8px;
+    gap: 16rpx;
     flex-wrap: wrap;
   }
 
   &__tag {
-    padding: 2px 8px;
-    font-size: 12px;
+    padding: 4rpx 16rpx;
+    font-size: 24rpx;
     color: var(--colorPrimary);
     background: var(--colorPrimaryBg);
-    border: 1px solid var(--colorPrimaryBorder);
-    border-radius: 4px;
+    border: 1rpx solid var(--colorPrimaryBorder);
+    border-radius: 8rpx;
   }
 
   &__actions {
     display: flex;
-    gap: 8px;
+    gap: 16rpx;
     justify-content: flex-end;
   }
 }
@@ -371,7 +365,7 @@ export interface UserCardEmits {
    └── README.md (48 行)
 
 3️⃣ 下载的资源
-   public/images/user-card/
+   src/static/images/user-card/
    ├── avatar.png (12 KB)
    └── icon.svg (2 KB)
 
@@ -460,31 +454,31 @@ export interface UserCardEmits {
    📝 拆分计划:
 
    1️⃣ UserManagement (页面组件)
-      路径: src/views/user-management/index.vue
+      路径: src/pages-sub/user-management/index.vue
       类型: Page
       职责: 页面容器,协调子组件
 
    2️⃣ UserSearch (业务组件)
-      路径: src/views/user-management/components/UserSearch.vue
+      路径: src/pages-sub/user-management/components/UserSearch.vue
       类型: Business
       职责: 搜索表单,新增按钮
       原因: 独立 Auto Layout,包含交互逻辑
 
    3️⃣ UserList (业务组件)
-      路径: src/views/user-management/components/UserList.vue
+      路径: src/pages-sub/user-management/components/UserList.vue
       类型: List (移动端列表)
-      职责: 用户列表展示 (van-list 无限滚动)
+      职责: 用户列表展示 (scroll-view 无限滚动)
       原因: 独立 Auto Layout,数据驱动
 
    4️⃣ UserCard (全局组件) ⭐
-      路径: src/components/UserCard/index.vue
+      路径: src/components/UUserCard/index.vue
       类型: Card
       职责: 单个用户信息展示
       原因: 在 UserList 中重复 10 次 (可复用)
 
-   5️⃣ 下拉加载 (复用 Vant)
-      组件: <van-list> + <van-pull-refresh>
-      原因: 项目已有 Vant,移动端标准交互模式
+   5️⃣ 下拉加载 (使用 scroll-view)
+      组件: <scroll-view> with refresher-enabled
+      原因: Uni-app 原生滚动组件,跨平台兼容
 ```
 
 #### 步骤 3: 批量生成组件
@@ -493,15 +487,15 @@ export interface UserCardEmits {
 🎨 批量生成组件代码...
 
    1️⃣ 生成全局组件...
-   ✓ src/components/UserCard/index.vue (158 行)
-   ✓ src/components/UserCard/types.ts (35 行)
+   ✓ src/components/UUserCard/index.vue (158 行)
+   ✓ src/components/UUserCard/types.ts (35 行)
 
    2️⃣ 生成页面级组件...
-   ✓ src/views/user-management/components/UserSearch.vue (89 行)
-   ✓ src/views/user-management/components/UserList.vue (142 行)
+   ✓ src/pages-sub/user-management/components/UserSearch.vue (89 行)
+   ✓ src/pages-sub/user-management/components/UserList.vue (142 行)
 
    3️⃣ 生成主页面...
-   ✓ src/views/user-management/index.vue (176 行)
+   ✓ src/pages-sub/user-management/index.vue (176 行)
 
    📊 进度: [████████████████████] 100%
 ```
@@ -515,7 +509,7 @@ export interface UserCardEmits {
    UserManagement
    ├─ import UserSearch
    ├─ import UserList
-   └─ import UserCard (通过 UserList)
+   └─ import UUserCard (通过 UserList)
 
    生成数据流:
    UserManagement (页面)
@@ -524,17 +518,17 @@ export interface UserCardEmits {
      ↓ @search (emit)
    UserManagement (处理)
      ↓ 调用 API
-   UserList (更新数据, van-list 无限滚动)
+   UserList (更新数据, scroll-view 无限滚动)
      ↓ v-for
-   UserCard × N (渲染)
+   UUserCard × N (渲染)
 
    生成事件处理:
    - handleSearch: 搜索事件
    - handleCreate: 新增用户
    - handleEdit: 编辑用户
    - handleDelete: 删除用户
-   - handleLoad: 加载更多 (van-list @load)
-   - handleRefresh: 下拉刷新 (van-pull-refresh @refresh)
+   - handleLoadMore: 加载更多 (scroll-view @scrolltolower)
+   - handleRefresh: 下拉刷新 (scroll-view @refresherrefresh)
 ```
 
 #### 步骤 5: 下载切图资源
@@ -547,7 +541,7 @@ export interface UserCardEmits {
    下载中... [████████████████████] 100%
 
    ✓ 已下载 15 个资源:
-   public/images/user-management/
+   src/static/images/user-management/
    ├── avatars/
    │   ├── user-1.png (48x48, 8 KB)
    │   ├── user-2.png (48x48, 9 KB)
@@ -569,23 +563,21 @@ export interface UserCardEmits {
 
    ✓ 检测到 --with-router 参数
 
-   追加到: src/router/routes/async.ts
+   追加到: src/pages.json (subPackages)
 
    {
-     path: '/user-management',
-     component: Layout,
-     children: [
+     "root": "pages-sub/user-management",
+     "pages": [
        {
-         path: '',
-         name: 'UserManagement',
-         component: () => import('@/views/user-management/index.vue'),
-         meta: {
-           title: '用户管理',
-           roles: [ROLES.ADMIN],  // 从 Figma 注释提取
-         },
-       },
-     ],
+         "path": "index",
+         "style": {
+           "navigationBarTitleText": "用户管理"
+         }
+       }
+     ]
    }
+
+   ⚠️ 注意: 如需权限控制,请在路由拦截器中配置
 ```
 
 #### 步骤 7: 生成完成报告
@@ -604,26 +596,26 @@ export interface UserCardEmits {
 2️⃣ 拆分统计
    - 检测组件: 4 个
    - 拆分组件: 4 个
-   - 全局组件: 1 个 (UserCard)
+   - 全局组件: 1 个 (UUserCard)
    - 页面组件: 3 个 (UserManagement + 2 子组件)
 
 3️⃣ 生成的文件 (5 个组件 + 1 路由)
    src/components/
-   └── UserCard/
+   └── UUserCard/
        ├── index.vue (158 行)
        └── types.ts (35 行)
 
-   src/views/user-management/
+   src/pages-sub/user-management/
    ├── index.vue (176 行) ← 主页面
    └── components/
        ├── UserSearch.vue (89 行)
        └── UserList.vue (142 行)
 
-   src/router/routes/
-   └── async.ts (追加 1 个路由)
+   src/pages.json
+   └── subPackages (追加 1 个分包路由)
 
 4️⃣ 下载的资源
-   public/images/user-management/
+   src/static/images/user-management/
    ├── avatars/ (10 个文件, 82 KB)
    └── icons/ (5 个文件, 16 KB)
 
@@ -636,7 +628,7 @@ export interface UserCardEmits {
 
 6️⃣ 智能拆分命中规则
    ✓ Auto Layout 规则: 2 次 (UserSearch, UserList)
-   ✓ 复用检测规则: 1 次 (UserCard ×10)
+   ✓ 复用检测规则: 1 次 (UUserCard ×10)
    ✓ 内联规则: 18 次 (文本/形状)
 
 ═════════════════════════════════════════════
@@ -767,25 +759,25 @@ const DEFAULT_SPLIT_RULES = [
 
 ┌─────────────────────────────────────────────────────────┐
 │ 组件 1: UserManagement (页面)                            │
-│ ├─ 路径: src/views/user-management/index.vue           │
+│ ├─ 路径: src/pages-sub/user-management/index.vue       │
 │ ├─ 类型: Page                                           │
 │ ├─ 子组件: 3 个                                          │
 │ └─ 预估行数: ~180 行                                     │
 ├─────────────────────────────────────────────────────────┤
 │ 组件 2: UserSearch (业务)                                │
-│ ├─ 路径: src/views/user-management/components/         │
+│ ├─ 路径: src/pages-sub/user-management/components/     │
 │ ├─ 类型: Business                                       │
 │ ├─ 命中规则: auto-layout-rule                           │
 │ └─ 预估行数: ~90 行                                      │
 ├─────────────────────────────────────────────────────────┤
 │ 组件 3: UserList (业务)                                  │
-│ ├─ 路径: src/views/user-management/components/         │
+│ ├─ 路径: src/pages-sub/user-management/components/     │
 │ ├─ 类型: List (移动端列表)                               │
 │ ├─ 命中规则: auto-layout-rule                           │
 │ └─ 预估行数: ~140 行                                     │
 ├─────────────────────────────────────────────────────────┤
-│ 组件 4: UserCard (全局) ⭐                               │
-│ ├─ 路径: src/components/UserCard/                      │
+│ 组件 4: UUserCard (全局) ⭐                              │
+│ ├─ 路径: src/components/UUserCard/                     │
 │ ├─ 类型: Card                                           │
 │ ├─ 命中规则: reuse-detection-rule (×10)                │
 │ └─ 预估行数: ~160 行                                     │
@@ -1007,13 +999,13 @@ pnpm commit
 ```bash
 # 当 Figma 设计更新时:
 # 步骤 1: 备份现有代码
-cp -r src/components/UserCard src/components/UserCard.backup
+cp -r src/components/UUserCard src/components/UUserCard.backup
 
 # 步骤 2: 重新生成
-/figma-to-component <figma-url> --output src/components/UserCard
+/figma-to-component <figma-url> --output src/components/UUserCard
 
 # 步骤 3: 对比差异
-diff -r src/components/UserCard.backup src/components/UserCard
+diff -r src/components/UUserCard.backup src/components/UUserCard
 
 # 步骤 4: 合并手动修改的逻辑
 ```
@@ -1088,7 +1080,7 @@ pnpm lint
 # 2. 前端开发从 Figma 生成组件
 /figma-to-component https://www.figma.com/file/xxx?node-id=123:456 \
   --type basic \
-  --output src/components/UserCard
+  --output src/components/UUserCard
 
 # 输出:
 # ✓ 组件代码生成完成
@@ -1096,23 +1088,23 @@ pnpm lint
 # ✓ 类型定义生成完成
 
 # 3. 补充业务逻辑
-# 编辑 src/components/UserCard/index.vue
+# 编辑 src/components/UUserCard/index.vue
 # 添加 API 调用、状态管理等
 
 # 4. 国际化处理
-pnpm i18n src/components/UserCard/
+pnpm i18n src/components/UUserCard/
 
 # 5. 生成测试并检查覆盖率
-/test-coverage-checker src/components/UserCard/ --auto-generate
+/test-coverage-checker src/components/UUserCard/ --auto-generate
 
 # 6. 质量检查
 pnpm type-check
 pnpm lint
 
 # 8. 提交代码
-git add src/components/UserCard/
-git add public/images/user-card/
-git commit -m "feat: add UserCard component from Figma"
+git add src/components/UUserCard/
+git add src/static/images/user-card/
+git commit -m "feat: add UUserCard component from Figma"
 
 # 总耗时: 10 分钟
 # 传统方式: 60-90 分钟

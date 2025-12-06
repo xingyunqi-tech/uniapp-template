@@ -1,45 +1,94 @@
 ---
-description: 性能优化提示，包含Vue组件、API调用、构建优化等最佳实践
+description: Uni-app 性能优化提示，包含组件、API调用、分包优化等最佳实践
 ---
 
-# 性能优化最佳实践
+# Uni-app 性能优化最佳实践
 
 在开始优化前，请先**测量性能**，找出真正的瓶颈，避免过早优化。
 
-## 📊 性能测量工具
+## 性能测量工具
 
-### 1. 浏览器开发者工具
+### 1. 小程序开发者工具
+```bash
+# 微信开发者工具
+- 调试器 > Performance 面板
+- 调试器 > Audits 面板（体验评分）
+- 调试器 > Memory 面板（内存分析）
+```
+
+### 2. H5 调试
 ```bash
 # Chrome DevTools
 - Performance 面板：录制性能
 - Lighthouse：综合评分
 - Network 面板：网络请求分析
-- Memory 面板：内存分析
-```
-
-### 2. Vue DevTools
-```bash
-- Performance：组件渲染性能
-- Timeline：组件生命周期
-- Inspector：组件树分析
 ```
 
 ### 3. 构建分析
 ```bash
-# 运行构建分析
-pnpm analyzer
-
-# 查看 dist/ 目录大小
-du -sh dist/
+# 查看各平台构建产物大小
+pnpm build:h5 && du -sh dist/build/h5
+pnpm build:mp-weixin && du -sh dist/build/mp-weixin
 ```
 
 ---
 
-## 🚀 优化清单
+## 优化清单
 
-### 1. Vue 组件优化
+### 1. 分包优化（小程序关键）
 
-#### 1.1 避免不必要的重新渲染
+#### 1.1 合理划分分包
+
+```json
+// pages.json
+{
+  "pages": [
+    // 主包：TabBar 页面 + 高频页面（控制在 2MB 以内）
+    { "path": "pages/index/index" },
+    { "path": "pages/mine/index" },
+    { "path": "pages/login/index" }
+  ],
+  "subPackages": [
+    {
+      "root": "pages-sub/order",
+      "pages": [
+        { "path": "list/index" }
+      ]
+    },
+    {
+      "root": "pages-sub/user",
+      "pages": [
+        { "path": "profile/index" },
+        { "path": "settings/index" }
+      ]
+    }
+  ]
+}
+```
+
+#### 1.2 分包预加载
+
+```json
+// pages.json
+{
+  "preloadRule": {
+    "pages/index/index": {
+      "network": "all",
+      "packages": ["pages-sub/order"]
+    },
+    "pages/mine/index": {
+      "network": "wifi",
+      "packages": ["pages-sub/user"]
+    }
+  }
+}
+```
+
+---
+
+### 2. 组件优化
+
+#### 2.1 避免不必要的重新渲染
 
 ```typescript
 // ❌ 每次父组件更新都会重新渲染
@@ -57,148 +106,103 @@ const computedData = computed(() => expensiveComputation());
 </script>
 ```
 
-#### 1.2 使用 v-memo 缓存渲染结果
+#### 2.2 使用 v-show 代替 v-if（频繁切换场景）
 
-```typescript
-// ✅ 只有 user.id 变化时才重新渲染
-<template>
-  <UserCard v-memo="[user.id]" :user="user" />
-</template>
+```vue
+<!-- ❌ 频繁切换时性能差 -->
+<view v-if="visible">内容</view>
+
+<!-- ✅ 频繁切换时性能好 -->
+<view v-show="visible">内容</view>
 ```
 
-#### 1.3 使用 v-once 渲染静态内容
+#### 2.3 长列表优化
 
-```typescript
-// ✅ 只渲染一次，不会更新
-<template>
-  <div v-once>
-    <h1>{{ staticTitle }}</h1>
-    <p>{{ staticDescription }}</p>
-  </div>
-</template>
-```
-
-#### 1.4 拆分大组件
-
-```typescript
-// ❌ 大组件（超过 300 行）
-<template>
-  <div class="dashboard">
-    <!-- 用户信息 -->
-    <div>...</div>
-    <!-- 图表 -->
-    <div>...</div>
-    <!-- 列表 -->
-    <div>...</div>
-  </div>
-</template>
-
-// ✅ 拆分为多个小组件
-<template>
-  <div class="dashboard">
-    <UserInfo :user="user" />
-    <ChartPanel :data="chartData" />
-    <DataTable :items="items" />
-  </div>
-</template>
-```
-
----
-
-### 2. 列表和表格优化
-
-#### 2.1 虚拟滚动（长列表）
-
-```typescript
-// ❌ 直接渲染 10000 条数据
-<template>
-  <div v-for="item in items" :key="item.id">
+```vue
+<!-- ✅ 使用 scroll-view + 虚拟列表 -->
+<scroll-view
+  scroll-y
+  :scroll-top="scrollTop"
+  @scrolltolower="loadMore"
+>
+  <view
+    v-for="item in visibleItems"
+    :key="item.id"
+    :style="{ height: itemHeight + 'rpx' }"
+  >
     {{ item.name }}
-  </div>
-</template>
+  </view>
+</scroll-view>
 
-// ✅ 使用虚拟滚动（vueuc 或 vue-virtual-scroller）
+<script setup lang="ts">
+// 只渲染可见区域的数据
+const visibleItems = computed(() => {
+  const start = Math.floor(scrollTop.value / itemHeight);
+  const end = start + visibleCount;
+  return items.value.slice(start, end);
+});
+</script>
+```
+
+#### 2.4 骨架屏提升感知性能
+
+```vue
 <template>
-  <VirtualList :items="items" :itemHeight="50">
-    <template #default="{ item }">
-      <div>{{ item.name }}</div>
-    </template>
-  </VirtualList>
+  <view class="page">
+    <!-- 骨架屏 -->
+    <USkeleton v-if="loading" type="list" :rows="5" />
+
+    <!-- 实际内容 -->
+    <view v-else>
+      <!-- 内容 -->
+    </view>
+  </view>
 </template>
-```
-
-#### 2.2 分页加载
-
-```typescript
-// ✅ 分页加载大数据
-const currentPage = ref(1);
-const pageSize = 20;
-
-const paginatedItems = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return items.value.slice(start, start + pageSize);
-});
-```
-
-#### 2.3 懒加载（无限滚动）
-
-```typescript
-// ✅ 滚动到底部时加载更多
-import { useInfiniteScroll } from '@vueuse/core';
-
-const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-  queryKey: ['users'],
-  queryFn: ({ pageParam = 1 }) => fetchUsers(pageParam),
-  getNextPageParam: (lastPage) => lastPage.nextPage,
-});
-
-useInfiniteScroll(
-  target,
-  () => {
-    if (hasNextPage.value) fetchNextPage();
-  },
-  { distance: 100 }
-);
 ```
 
 ---
 
-### 3. 图片和媒体优化
+### 3. 图片优化
 
 #### 3.1 图片懒加载
 
-```typescript
-// ✅ 使用 loading="lazy" 原生懒加载
-<template>
-  <img src="/path/to/image.jpg" loading="lazy" alt="description" />
-</template>
-```
+```vue
+<!-- ✅ 使用 lazy-load 属性 -->
+<image
+  src="/static/images/banner.png"
+  lazy-load
+  mode="aspectFill"
+/>
 
-#### 3.2 图片格式优化
-
-```bash
-# 使用现代图片格式
-- WebP：比 JPEG 小 25-35%
-- AVIF：比 WebP 更小
-
-# 响应式图片
-<img
-  srcset="
-    /image-small.webp 400w,
-    /image-medium.webp 800w,
-    /image-large.webp 1200w
-  "
-  sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
-  src="/image.webp"
-  alt="description"
+<!-- ✅ 使用 UImage 组件（内置懒加载） -->
+<UImage
+  src="/static/images/banner.png"
+  width="750rpx"
+  height="300rpx"
 />
 ```
 
-#### 3.3 图片压缩
+#### 3.2 图片压缩和格式
 
 ```bash
-# 使用 vite-plugin-imagemin 自动压缩
-pnpm add -D vite-plugin-imagemin
+# 推荐图片格式
+- WebP：比 JPEG 小 25-35%
+- PNG：透明图片
+- JPEG：照片类图片
+
+# 图片尺寸
+- 根据实际显示尺寸裁剪，避免过大图片
+- 提供 @2x 和 @3x 版本适配高清屏
+```
+
+#### 3.3 使用 CDN
+
+```typescript
+// ✅ 图片使用 CDN 地址
+const imageUrl = 'https://cdn.example.com/images/banner.webp';
+
+// ❌ 避免将大图片打包到项目中
+import banner from '@/assets/images/large-banner.png';
 ```
 
 ---
@@ -208,12 +212,14 @@ pnpm add -D vite-plugin-imagemin
 #### 4.1 使用 Pinia Store 缓存
 
 ```typescript
-// ✅ Pinia Store 自动缓存和去重
+// ✅ Pinia Store 自动缓存
 import { useUserStore } from '@/store/modules/user';
 import { storeToRefs } from 'pinia';
 
 const userStore = useUserStore();
 const { userInfo, loading } = storeToRefs(userStore);
+
+// 数据已缓存，避免重复请求
 ```
 
 #### 4.2 并行请求
@@ -221,14 +227,14 @@ const { userInfo, loading } = storeToRefs(userStore);
 ```typescript
 // ❌ 串行请求（慢）
 const user = await getUserInfo();
-const orders = await getUserOrders(user.id);
-const products = await getUserProducts(user.id);
+const orders = await getOrderList();
+const favorites = await getFavoriteList();
 
 // ✅ 并行请求（快）
-const [user, orders, products] = await Promise.all([
+const [user, orders, favorites] = await Promise.all([
   getUserInfo(),
-  getUserOrders(),
-  getUserProducts(),
+  getOrderList(),
+  getFavoriteList(),
 ]);
 ```
 
@@ -236,77 +242,37 @@ const [user, orders, products] = await Promise.all([
 
 ```typescript
 // ✅ Orval mutator 自动去重（已配置）
-// 参考 src/api/core/mutator.ts
+// 用户快速点击两次，第二次会复用第一次的请求
 ```
 
-#### 4.4 预加载数据
+#### 4.4 数据预加载
 
 ```typescript
-// ✅ 路由守卫预加载数据
-router.beforeEach(async (to, from, next) => {
-  if (to.name === 'UserDetail') {
-    await prefetchUserData(to.params.id);
-  }
-  next();
-});
+// ✅ 页面跳转前预加载数据
+const goToDetail = async (id: string) => {
+  // 先预加载数据到 Store
+  await detailStore.prefetch(id);
+  // 再跳转页面
+  uni.navigateTo({ url: `/pages-sub/detail/index?id=${id}` });
+};
 ```
 
 ---
 
-### 5. 路由和代码分割
+### 5. 代码分割
 
-#### 5.1 路由懒加载
-
-```typescript
-// ✅ 路由组件懒加载（已配置）
-const routes = [
-  {
-    path: '/user',
-    component: () => import('@/views/user/index.vue'),
-  },
-];
-```
-
-#### 5.2 组件懒加载
+#### 5.1 异步组件
 
 ```typescript
-// ✅ 动态导入组件
-<script setup lang="ts">
+// ✅ 动态导入大组件
 import { defineAsyncComponent } from 'vue';
 
-const HeavyComponent = defineAsyncComponent(() =>
-  import('@/components/HeavyComponent.vue')
-);
-</script>
-```
-
-#### 5.3 预加载关键路由
-
-```typescript
-// ✅ 使用 webpackPrefetch 预加载
-const UserDetail = () => import(
-  /* webpackPrefetch: true */
-  '@/views/user/detail.vue'
+const HeavyChart = defineAsyncComponent(() =>
+  import('@/components/HeavyChart/index.vue')
 );
 ```
 
----
-
-### 6. 构建优化
-
-#### 6.1 依赖分析
-
-```bash
-# 运行构建分析
-pnpm analyzer
-
-# 查看依赖大小
-- 移除不必要的依赖
-- 替换大依赖为轻量级替代品
-- 使用 CDN 加载大依赖
-```
-
-#### 6.2 Tree Shaking
+#### 5.2 按需导入
 
 ```typescript
 // ✅ 按需导入（推荐）
@@ -316,241 +282,159 @@ import { debounce } from 'lodash-es';
 import _ from 'lodash';
 ```
 
-#### 6.3 代码压缩
-
-```typescript
-// vite.config.ts (已配置)
-export default defineConfig({
-  build: {
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,  // 删除 console
-        drop_debugger: true, // 删除 debugger
-      },
-    },
-  },
-});
-```
-
-#### 6.4 CSS 优化
-
-```bash
-# PurgeCSS 移除未使用的 CSS
-# TailwindCSS 自动优化（已配置）
-```
-
 ---
 
-### 7. 运行时优化
+### 6. 运行时优化
 
-#### 7.1 使用 Object.freeze 冻结静态数据
+#### 6.1 防抖和节流
+
+```typescript
+import { useDebounce, useThrottle } from '@/composables';
+
+// 搜索输入防抖
+const { debouncedFn: debouncedSearch } = useDebounce(search, 300);
+
+// 滚动事件节流
+const { throttledFn: throttledScroll } = useThrottle(handleScroll, 100);
+```
+
+#### 6.2 避免频繁 setData（小程序）
+
+```typescript
+// ❌ 频繁更新数据
+items.value.forEach((item, index) => {
+  items.value[index].checked = true;
+});
+
+// ✅ 批量更新
+const newItems = items.value.map(item => ({
+  ...item,
+  checked: true,
+}));
+items.value = newItems;
+```
+
+#### 6.3 使用 Object.freeze 冻结静态数据
 
 ```typescript
 // ✅ 冻结大数组/对象，避免响应式开销
 const staticData = Object.freeze([
   { id: 1, name: 'Item 1' },
   { id: 2, name: 'Item 2' },
-  // ... 1000 items
+  // ... 大量静态数据
 ]);
 ```
 
-#### 7.2 使用 shallowRef/shallowReactive
-
-```typescript
-// ✅ 只追踪第一层响应式
-import { shallowRef } from 'vue';
-
-const largeObject = shallowRef({
-  nested: {
-    deep: {
-      data: 'value',
-    },
-  },
-});
-```
-
-#### 7.3 使用 markRaw 标记非响应式对象
-
-```typescript
-// ✅ 标记第三方库实例为非响应式
-import { markRaw } from 'vue';
-import SomeLibrary from 'some-library';
-
-const instance = markRaw(new SomeLibrary());
-```
-
 ---
 
-### 8. 网络优化
+### 7. 小程序特有优化
 
-#### 8.1 启用 HTTP/2
+#### 7.1 减少 setData 数据量
 
-```nginx
-# nginx.conf (已配置)
-listen 443 ssl http2;
+```typescript
+// ❌ 传输整个列表
+items.value = newList;
+
+// ✅ 只更新变化的数据
+items.value[index] = newItem;
 ```
 
-#### 8.2 启用 Gzip/Brotli 压缩
+#### 7.2 合理使用 WXS（仅微信小程序）
 
-```nginx
-# nginx.conf
-gzip on;
-gzip_types text/plain text/css application/json application/javascript;
-```
-
-#### 8.3 设置缓存策略
-
-```nginx
-# 静态资源缓存 1 年
-location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-  expires 1y;
-  add_header Cache-Control "public, immutable";
+```vue
+<!-- 复杂的数据处理放到 WXS 中，减少逻辑层和视图层通信 -->
+<wxs module="utils">
+module.exports = {
+  formatPrice: function(price) {
+    return (price / 100).toFixed(2);
+  }
 }
+</wxs>
+
+<template>
+  <text>{{ utils.formatPrice(price) }}</text>
+</template>
 ```
 
-#### 8.4 使用 CDN
+#### 7.3 使用自定义组件
 
-```html
-<!-- 使用 CDN 加载大依赖 -->
-<script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+```vue
+<!-- ✅ 使用自定义组件隔离更新范围 -->
+<template>
+  <view class="page">
+    <Header />  <!-- 独立组件，不受列表更新影响 -->
+    <List :items="items" />
+    <Footer />  <!-- 独立组件，不受列表更新影响 -->
+  </view>
+</template>
 ```
 
 ---
 
-## 🎯 性能目标
+## 性能目标
 
-### Lighthouse 评分目标
+### 小程序性能指标
 
 | 指标 | 目标 | 说明 |
 |------|------|------|
-| **Performance** | >= 90 | 性能评分 |
-| **FCP** | < 1.5s | 首次内容绘制 |
-| **LCP** | < 2.5s | 最大内容绘制 |
-| **TTI** | < 3.5s | 可交互时间 |
-| **TBT** | < 200ms | 总阻塞时间 |
-| **CLS** | < 0.1 | 累积布局偏移 |
+| **主包大小** | < 2 MB | 影响启动速度 |
+| **分包大小** | < 2 MB | 单个分包限制 |
+| **总包大小** | < 20 MB | 所有包总大小 |
+| **首屏时间** | < 3 s | 用户感知 |
+| **setData 大小** | < 1 MB | 单次传输限制 |
 
-### 构建产物大小目标
+### H5 性能指标
 
-| 产物 | 目标 | 说明 |
+| 指标 | 目标 | 说明 |
 |------|------|------|
-| **index.html** | < 10 KB | HTML 文件 |
-| **CSS** | < 100 KB | 样式文件 |
-| **JS (vendor)** | < 500 KB | 第三方依赖 |
-| **JS (app)** | < 200 KB | 应用代码 |
-| **Total** | < 1 MB | 总大小（Gzip 后） |
+| **FCP** | < 1.5 s | 首次内容绘制 |
+| **LCP** | < 2.5 s | 最大内容绘制 |
+| **TTI** | < 3.5 s | 可交互时间 |
+| **JS 大小** | < 500 KB | Gzip 后 |
+| **CSS 大小** | < 100 KB | Gzip 后 |
 
 ---
 
-## 🔍 性能检查流程
-
-```bash
-# 1. 运行构建分析
-pnpm analyzer
-
-# 2. 检查构建产物大小
-du -sh dist/
-du -sh dist/assets/*.js
-
-# 3. 运行 Lighthouse
-# Chrome DevTools > Lighthouse > Generate Report
-
-# 4. 运行性能测试
-# Chrome DevTools > Performance > Record
-
-# 5. 检查内存泄漏
-# Chrome DevTools > Memory > Take Heap Snapshot
-```
-
----
-
-## 📚 常见性能问题和解决方案
+## 常见性能问题
 
 ### 问题 1: 首屏加载慢
 
-**原因:**
-- 初始包太大
-- 同步请求过多
-- 图片未优化
-
 **解决方案:**
-- [ ] 路由懒加载
-- [ ] 代码分割
-- [ ] 预加载关键数据
-- [ ] 图片懒加载和压缩
-- [ ] 使用骨架屏提升感知性能
+- [ ] 分包加载
+- [ ] 预加载分包
+- [ ] 骨架屏
+- [ ] 图片懒加载
+- [ ] 精简主包
 
 ### 问题 2: 列表滚动卡顿
 
-**原因:**
-- 渲染节点过多
-- 重复计算
-- 图片未懒加载
-
 **解决方案:**
 - [ ] 虚拟滚动
-- [ ] 使用 `v-memo` 缓存
+- [ ] 减少 DOM 节点
 - [ ] 图片懒加载
 - [ ] 避免复杂计算
 
-### 问题 3: 页面交互延迟
-
-**原因:**
-- 主线程阻塞
-- 频繁的 DOM 操作
-- 重排/重绘过多
+### 问题 3: 页面切换慢
 
 **解决方案:**
-- [ ] 使用防抖/节流
-- [ ] 批量更新 DOM
-- [ ] 使用 CSS 动画代替 JS 动画
-- [ ] 避免强制同步布局
+- [ ] 预加载分包
+- [ ] 预加载数据
+- [ ] 页面缓存（keep-alive）
 
 ### 问题 4: 内存泄漏
 
-**原因:**
-- 事件监听未清理
-- 定时器未清理
-- 闭包引用
-
 **解决方案:**
-- [ ] `onBeforeUnmount` 清理事件监听
-- [ ] 清理定时器
-- [ ] 清理 Pinia Store 订阅
-- [ ] 使用 WeakMap 存储对象
+- [ ] 清理定时器（onUnload）
+- [ ] 清理事件监听
+- [ ] 避免循环引用
 
 ---
 
-## 🛠️ 优化工具推荐
+## 相关文档
 
-### 性能监控
-- **Lighthouse** - 综合性能评分
-- **WebPageTest** - 详细性能分析
-- **Chrome DevTools** - 实时性能分析
-
-### 构建优化
-- **vite-plugin-compression** - Gzip/Brotli 压缩
-- **vite-plugin-imagemin** - 图片压缩
-- **rollup-plugin-visualizer** - 构建分析（已配置）
-
-### 运行时优化
-- **vue-virtual-scroller** - 虚拟滚动
-- **@vueuse/core** - 实用工具库
-
----
-
-## 📖 相关资源
-
-### Agent 文档
 - `@component-development` - 组件开发规范
 - `@common-patterns` - 通用开发模式
-- `@deployment` - 部署优化
-
-### 官方文档
-- [Vue Performance Guide](https://vuejs.org/guide/best-practices/performance.html)
-- [Vite Performance Guide](https://vitejs.dev/guide/performance.html)
-- [Web.dev Performance](https://web.dev/performance/)
+- `@project-structure` - 项目结构
 
 ---
 

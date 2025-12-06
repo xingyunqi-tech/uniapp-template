@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <view class="home-page" :class="themeClass">
+  <view class="home-page" :class="globalStore.themeClass">
     <!-- Banner 轮播 -->
     <u-banner :list="bannerList" :height="300" @click="handleBannerClick" />
 
@@ -55,9 +55,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
-import { useList, useTheme } from '@/composables';
+import { useList } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 // Banner 数据类型
 interface BannerItem {

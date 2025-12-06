@@ -5,3 +5,4 @@ export * from './system';
 export * from './pages';
 export * from './form';
 export * from './order';
+export * from './permission';

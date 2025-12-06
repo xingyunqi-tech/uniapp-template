@@ -1,0 +1,261 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
+<template>
+  <!--
+    UActionSheet - 操作菜单组件
+    基于 UPopup 封装，从底部弹出的操作选项列表
+    支持分组、危险操作、禁用状态等
+  -->
+  <UPopup
+    ref="popupRef"
+    type="bottom"
+    :mask-closable="maskClosable"
+    :show-close="false"
+    :border-radius="24"
+    class="u-action-sheet"
+    @change="handleChange"
+  >
+    <view class="u-action-sheet__content">
+      <!-- 标题 -->
+      <view v-if="title || description" class="u-action-sheet__header">
+        <text v-if="title" class="u-action-sheet__title">{{ title }}</text>
+        <text v-if="description" class="u-action-sheet__description">{{ description }}</text>
+      </view>
+
+      <!-- 操作项列表 -->
+      <view class="u-action-sheet__actions">
+        <view
+          v-for="(action, index) in actions"
+          :key="action.value ?? index"
+          class="u-action-sheet__item"
+          :class="getItemClasses(action)"
+          @click="handleSelect(action, index)"
+        >
+          <text v-if="action.icon" :class="['u-action-sheet__icon', action.icon]" />
+          <text class="u-action-sheet__text">{{ action.label }}</text>
+          <text v-if="action.subLabel" class="u-action-sheet__sub-text">{{ action.subLabel }}</text>
+        </view>
+      </view>
+
+      <!-- 取消按钮 -->
+      <view v-if="showCancel" class="u-action-sheet__cancel" @click="handleCancel">
+        <text class="u-action-sheet__cancel-text">{{ cancelText }}</text>
+      </view>
+    </view>
+  </UPopup>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import UPopup from '../UPopup/index.vue';
+
+defineOptions({
+  name: 'UActionSheet',
+});
+
+// ==================== Types ====================
+
+export interface ActionItem {
+  /** 显示文本 */
+  label: string;
+  /** 选项值 */
+  value?: string | number;
+  /** 副文本 */
+  subLabel?: string;
+  /** 左侧图标 (UnoCSS 图标类名) */
+  icon?: string;
+  /** 是否为危险操作 */
+  danger?: boolean;
+  /** 是否禁用 */
+  disabled?: boolean;
+}
+
+// ==================== Props ====================
+
+interface Props {
+  /** 操作项列表 */
+  actions: ActionItem[];
+  /** 标题 */
+  title?: string;
+  /** 描述文字 */
+  description?: string;
+  /** 是否显示取消按钮 */
+  showCancel?: boolean;
+  /** 取消按钮文字 */
+  cancelText?: string;
+  /** 点击遮罩是否关闭 */
+  maskClosable?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  title: '',
+  description: '',
+  showCancel: true,
+  cancelText: '取消',
+  maskClosable: true,
+});
+
+// ==================== Emits ====================
+
+const emit = defineEmits<{
+  select: [action: ActionItem, index: number];
+  cancel: [];
+  change: [{ show: boolean }];
+}>();
+
+// ==================== Refs ====================
+
+/** UPopup 组件实例类型 */
+interface UPopupInstance {
+  open: () => void;
+  close: () => void;
+}
+
+const popupRef = ref<UPopupInstance | null>(null);
+
+// ==================== Methods ====================
+
+/** 获取选项样式类 */
+function getItemClasses(action: ActionItem) {
+  return {
+    'u-action-sheet__item--danger': action.danger,
+    'u-action-sheet__item--disabled': action.disabled,
+  };
+}
+
+/** 处理选择 */
+function handleSelect(action: ActionItem, index: number) {
+  if (action.disabled) return;
+  emit('select', action, index);
+  close();
+}
+
+/** 处理取消 */
+function handleCancel() {
+  emit('cancel');
+  close();
+}
+
+/** 处理弹窗状态变化 */
+function handleChange(e: { show: boolean }) {
+  emit('change', e);
+}
+
+/** 打开操作菜单 */
+function open() {
+  popupRef.value?.open();
+}
+
+/** 关闭操作菜单 */
+function close() {
+  popupRef.value?.close();
+}
+
+// ==================== Expose ====================
+
+defineExpose({
+  open,
+  close,
+});
+</script>
+
+<style scoped lang="scss">
+.u-action-sheet {
+  &__content {
+    width: 100vw;
+  }
+
+  &__header {
+    padding: 32rpx 32rpx 16rpx;
+    text-align: center;
+  }
+
+  &__title {
+    display: block;
+    color: var(--color-text);
+    font-size: 32rpx;
+    font-weight: 500;
+  }
+
+  &__description {
+    display: block;
+    margin-top: 8rpx;
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
+
+  &__actions {
+    padding: 8rpx 0;
+  }
+
+  &__item {
+    display: flex;
+    gap: 16rpx;
+    align-items: center;
+    justify-content: center;
+    height: 112rpx;
+    transition: background-color 0.2s;
+    cursor: pointer;
+
+    &:active {
+      background: var(--color-bg-grey);
+    }
+
+    &--danger {
+      .u-action-sheet__text,
+      .u-action-sheet__icon {
+        color: var(--color-error);
+      }
+    }
+
+    &--disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      &:active {
+        background: transparent;
+      }
+    }
+  }
+
+  &__icon {
+    color: var(--color-text);
+    font-size: 40rpx;
+  }
+
+  &__text {
+    color: var(--color-text);
+    font-size: 32rpx;
+  }
+
+  &__sub-text {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
+
+  &__cancel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 112rpx;
+    margin-top: 16rpx;
+    border-top: 16rpx solid var(--color-bg-grey);
+    cursor: pointer;
+
+    &:active {
+      background: var(--color-bg-grey);
+    }
+  }
+
+  &__cancel-text {
+    color: var(--color-text);
+    font-size: 32rpx;
+  }
+}
+</style>

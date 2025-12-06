@@ -7,219 +7,186 @@
 </route>
 
 <template>
-  <!-- 链接模式：使用 view -->
-  <view
-    v-if="isLink"
-    class="u-menu-item"
-    :class="{
-      'u-menu-item--clickable': clickable || isLink,
-      'u-menu-item--border': border,
-      'u-menu-item--danger': danger,
-    }"
+  <!--
+    UMenuItem - 基于 uni-list-item 的菜单项组件
+    封装常用功能，简化 API，保持项目风格一致性
+  -->
+  <uni-list-item
+    :title="title"
+    :note="label"
+    :right-text="rightText"
+    :show-arrow="showArrow || !!to"
+    :clickable="clickable || !!to"
+    :disabled="disabled"
+    :show-extra-icon="isUniIcon"
+    :extra-icon="extraIconConfig"
+    :show-badge="!!badge"
+    :badge-text="badge"
+    :badge-type="badgeType"
+    :show-switch="showSwitch"
+    :switch-checked="switchChecked"
+    :thumb="thumb"
+    :thumb-size="thumbSize"
+    :link="linkType"
+    :to="to"
+    :border="border"
+    :custom-style="customStyle"
+    :class="{ 'u-menu-item--danger': danger }"
     @click="handleClick"
+    @switch-change="handleSwitchChange"
   >
-    <!-- 左侧图标 -->
-    <text v-if="icon" class="u-menu-item__icon" :class="icon" />
-    <slot v-else name="icon" />
+    <!-- 自定义左侧图标 (UnoCSS 图标或自定义 slot) -->
+    <template v-if="$slots.icon || isCustomIcon" #header>
+      <view class="u-menu-item__icon-slot">
+        <slot name="icon">
+          <text v-if="isCustomIcon" :class="[icon, 'u-menu-item__custom-icon']" :style="customIconStyle" />
+        </slot>
+      </view>
+    </template>
 
-    <!-- 标题区域 -->
-    <view class="u-menu-item__content">
-      <text class="u-menu-item__title">{{ title }}</text>
-      <text v-if="label" class="u-menu-item__label">{{ label }}</text>
-    </view>
+    <!-- 自定义内容 -->
+    <template v-if="$slots.default" #body>
+      <slot />
+    </template>
 
-    <!-- 右侧内容 -->
-    <view class="u-menu-item__value">
-      <slot name="value">
-        <text v-if="value" class="u-menu-item__value-text">{{ value }}</text>
-      </slot>
-    </view>
-
-    <!-- 右侧箭头 -->
-    <text v-if="isLink || showArrow" class="i-carbon-chevron-right u-menu-item__arrow" />
-    <slot name="right-icon" />
-  </view>
-
-  <!-- 按钮模式：使用 button -->
-  <button
-    v-else
-    class="u-menu-item"
-    :class="{
-      'u-menu-item--clickable': clickable || isLink,
-      'u-menu-item--border': border,
-      'u-menu-item--danger': danger,
-      'u-menu-item--contact': isContact,
-    }"
-    :open-type="isContact ? 'contact' : undefined"
-    @click="handleClick"
-  >
-    <!-- 左侧图标 -->
-    <text v-if="icon" class="u-menu-item__icon" :class="icon" />
-    <slot v-else name="icon" />
-
-    <!-- 标题区域 -->
-    <view class="u-menu-item__content">
-      <text class="u-menu-item__title">{{ title }}</text>
-      <text v-if="label" class="u-menu-item__label">{{ label }}</text>
-    </view>
-
-    <!-- 右侧内容 -->
-    <view class="u-menu-item__value">
-      <slot name="value">
-        <text v-if="value" class="u-menu-item__value-text">{{ value }}</text>
-      </slot>
-    </view>
-
-    <!-- 右侧箭头 -->
-    <text v-if="isLink || showArrow" class="i-carbon-chevron-right u-menu-item__arrow" />
-    <slot name="right-icon" />
-  </button>
+    <!-- 自定义右侧内容 -->
+    <template v-if="$slots.footer" #footer>
+      <slot name="footer" />
+    </template>
+  </uni-list-item>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 
+defineOptions({
+  name: 'UMenuItem',
+});
+
+// ==================== Props ====================
+
 interface Props {
-  /** 左侧图标类名 */
-  icon?: string;
   /** 标题 */
   title: string;
   /** 标题下方描述 */
   label?: string;
-  /** 右侧值 */
-  value?: string | number;
-  /** 是否显示下边框 */
-  border?: boolean;
-  /** 是否可点击 */
-  clickable?: boolean;
+  /** 右侧文字 */
+  rightText?: string;
+  /** 左侧图标 (uni-icons 类型或 UnoCSS 图标类名，如 i-carbon-*) */
+  icon?: string;
+  /** 图标颜色 */
+  iconColor?: string;
+  /** 图标大小 */
+  iconSize?: number;
+  /** 左侧缩略图 */
+  thumb?: string;
+  /** 缩略图大小 */
+  thumbSize?: 'sm' | 'base' | 'lg';
   /** 是否显示右侧箭头 */
   showArrow?: boolean;
-  /** 点击跳转链接 */
+  /** 是否可点击 */
+  clickable?: boolean;
+  /** 是否禁用 */
+  disabled?: boolean;
+  /** 是否显示下边框 */
+  border?: boolean;
+  /** 跳转链接 */
   to?: string;
-  /** 是否为危险操作（红色） */
+  /** 跳转方式 */
+  linkType?: 'navigateTo' | 'redirectTo' | 'reLaunch' | 'switchTab';
+  /** 右侧角标文字 */
+  badge?: string;
+  /** 角标类型 */
+  badgeType?: UniHelper.UniBadgeType;
+  /** 是否显示开关 */
+  showSwitch?: boolean;
+  /** 开关状态 */
+  switchChecked?: boolean;
+  /** 是否为危险操作 */
   danger?: boolean;
-  /** 是否为微信客服按钮 */
-  isContact?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  border: true,
-  clickable: false,
+  label: '',
+  rightText: '',
+  icon: undefined,
+  iconColor: '',
+  iconSize: 24,
+  thumb: '',
+  thumbSize: 'base',
   showArrow: false,
+  clickable: false,
+  disabled: false,
+  border: true,
+  to: '',
+  linkType: 'navigateTo',
+  badge: '',
+  badgeType: 'error',
+  showSwitch: false,
+  switchChecked: false,
   danger: false,
-  isContact: false,
 });
 
+/** uni-list-item 点击事件数据 */
+interface ListItemClickData {
+  data: Record<string, unknown>;
+}
+
 const emit = defineEmits<{
-  click: [event: Event];
+  click: [event: ListItemClickData];
+  switchChange: [checked: boolean];
 }>();
 
-// 是否为链接
-const isLink = computed(() => !!props.to);
+/** 是否是自定义图标 (UnoCSS 图标类名，如 i-carbon-*) */
+const isCustomIcon = computed(() => props.icon?.startsWith('i-') || false);
 
-// 点击处理
-function handleClick(event: Event) {
-  if (props.to) {
-    uni.navigateTo({ url: props.to });
-  }
-  emit('click', event);
+/** 是否是 uni-icons 图标 */
+const isUniIcon = computed(() => !!props.icon && !isCustomIcon.value);
+
+// uni-icons 图标配置
+const extraIconConfig = computed(() => ({
+  type: props.icon as UniHelper.UniIconsType,
+  color: props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
+  size: props.iconSize,
+}));
+
+// 自定义图标样式
+const customIconStyle = computed(() => ({
+  color: props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
+  fontSize: `${props.iconSize}px`,
+}));
+
+// 自定义样式
+const customStyle = computed(() => ({
+  backgroundColor: 'var(--color-bg)',
+}));
+
+// 处理点击
+function handleClick(e: ListItemClickData) {
+  emit('click', e);
+}
+
+// 处理开关变化
+function handleSwitchChange(e: { value: boolean }) {
+  emit('switchChange', e.value);
 }
 </script>
 
 <style scoped lang="scss">
-.u-menu-item {
+.u-menu-item__icon-slot {
   display: flex;
-  position: relative;
-  box-sizing: border-box;
   align-items: center;
-  width: 100%;
+  margin-right: 24rpx;
+}
 
-  // 重置 button 样式
-  margin: 0;
-  padding: 32rpx;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  font-size: inherit;
-  line-height: inherit;
-  text-align: left;
-  gap: 24rpx;
+.u-menu-item__custom-icon {
+  display: block;
+}
 
-  &::after {
-    display: none;
-  }
-
-  &--border:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 32rpx;
-    height: 1px;
-    background: var(--color-border-light);
-  }
-
-  &--clickable {
-    transition: background $uni-duration-fast;
-
-    &:active {
-      background: var(--color-bg-hover);
-    }
-  }
-
-  &--danger {
-    .u-menu-item__icon,
-    .u-menu-item__title {
-      color: var(--color-error);
-    }
-  }
-
-  &--contact {
-    // 微信客服按钮特殊样式
-  }
-
-  &__icon {
-    flex-shrink: 0;
-    color: var(--color-primary);
-    font-size: 40rpx;
-  }
-
-  &__content {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 4rpx;
-    min-width: 0;
-  }
-
-  &__title {
-    color: var(--color-text);
-    font-size: 30rpx;
-    line-height: 1.4;
-  }
-
-  &__label {
-    color: var(--color-text-secondary);
-    font-size: 24rpx;
-    line-height: 1.4;
-  }
-
-  &__value {
-    display: flex;
-    flex-shrink: 0;
-    gap: 8rpx;
-    align-items: center;
-  }
-
-  &__value-text {
-    color: var(--color-text-secondary);
-    font-size: 26rpx;
-  }
-
-  &__arrow {
-    flex-shrink: 0;
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
+// 危险操作样式覆盖
+.u-menu-item--danger {
+  :deep(.uni-list-item__content-title) {
+    color: var(--color-error);
   }
 }
 </style>

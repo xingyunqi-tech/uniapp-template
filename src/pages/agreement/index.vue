@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="agreement-page" :class="themeClass">
+  <view class="agreement-page" :class="globalStore.themeClass">
     <scroll-view class="content-scroll" scroll-y>
       <URichText :content="content" />
     </scroll-view>
@@ -17,10 +17,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useTheme } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 import URichText from '@/components/URichText/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 interface Query {
   type?: 'user' | 'privacy';

@@ -1,3 +1,5 @@
+import { ROLE } from './permission';
+
 /**
  * 页面路径常量
  */
@@ -17,6 +19,8 @@ export const PAGES = {
   ERROR: '/pages/error/index',
   /** 协议详情 */
   AGREEMENT: '/pages/agreement/index',
+  /** 403 无权限页 */
+  FORBIDDEN: '/pages/error/index',
 
   // ========== order 分包 ==========
   /** 我的订单 */
@@ -43,9 +47,35 @@ export const PAGES = {
   ABOUT: '/pages-sub/other/about/index',
   /** 联系客服 */
   CONTACT: '/pages-sub/other/contact/index',
+  /** Webview 容器 */
+  WEBVIEW: '/pages-sub/other/webview/index',
 } as const;
 
 /**
  * 白名单页面（无需登录）
  */
-export const WHITE_LIST = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.HOME, PAGES.ERROR] as const;
+export const WHITE_LIST = [
+  PAGES.LOGIN,
+  PAGES.REGISTER,
+  PAGES.FORGOT_PASSWORD,
+  PAGES.HOME,
+  PAGES.ERROR,
+  PAGES.AGREEMENT,
+  PAGES.ABOUT,
+  PAGES.WEBVIEW,
+] as const;
+
+/**
+ * 页面权限配置
+ * 配置需要特定角色才能访问的页面
+ *
+ * @example
+ * ```ts
+ * // 配置管理员专属页面
+ * PAGE_ROLES['/pages-sub/admin/dashboard/index'] = [ROLE.ADMIN];
+ * ```
+ */
+export const PAGE_ROLES: Record<string, ROLE[]> = {
+  // 示例：管理员专属页面
+  // '/pages-sub/admin/dashboard/index': [ROLE.ADMIN],
+};

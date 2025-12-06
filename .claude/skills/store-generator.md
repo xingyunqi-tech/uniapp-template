@@ -81,7 +81,7 @@ function resetQueryParams() {
 /store-generator UserStore --api getUserList,createUser,updateUser,deleteUser
 
 # 指定持久化策略
-/store-generator CartStore --persist --storage localStorage
+/store-generator CartStore --persist
 
 # 🆕 智能模式 + 持久化
 /store-generator SettingsStore --smart --persist
@@ -105,7 +105,7 @@ function resetQueryParams() {
 - `--smart`: 智能分析 Store 名称，自动推断需要的 API 和功能
 - `--api`: 手动指定需要集成的 API 函数
 - `--persist`: 是否需要持久化
-- `--storage`: 持久化存储类型 (localStorage / sessionStorage)
+- `--storage`: 持久化存储类型 (Uni-app 使用 uni.setStorageSync)
 
 如果用户只提供 Store 名称，询问是否需要持久化：
 ```json
@@ -127,7 +127,7 @@ function resetQueryParams() {
 1. **分析 Store 名称关键词**:
    - `UserStore` → API: `getUserList`, `getUserById`, `createUser`, `updateUser`, `deleteUser`
    - `ProductStore` → API: `getProductList`, `getProductById`, `createProduct`, `updateProduct`, `deleteProduct`
-   - `SettingsStore` → 持久化到 localStorage，无需 API
+   - `SettingsStore` → 持久化到 uni storage，无需 API
 
 2. **检查可用 API**:
    - 扫描 `src/api/generated/` 目录，查找匹配的 API 函数
@@ -393,7 +393,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { getProductList, getProductById } from '@/api';
 import type { Product, ProductListRequest } from '@/api';
-import { showToast } from 'vant';
+import { showToast } from '@/utils/toast';
 
 /**
  * 产品管理 Store
@@ -583,40 +583,40 @@ export interface ProductQueryParams {
 ### 步骤 4: 生成使用示例
 
 ```vue
-<!-- src/views/product/index.vue -->
+<!-- src/pages-sub/product/index.vue -->
 <template>
-  <div class="product-list">
+  <view class="product-list">
     <!-- Loading 状态 -->
-    <div v-if="productStore.loading" class="loading">
-      <van-skeleton :row="5" animated />
-    </div>
+    <view v-if="productStore.loading" class="loading">
+      <USkeleton :row="5" animated />
+    </view>
 
     <!-- 错误状态 -->
-    <div v-else-if="productStore.error" class="error">
-      <van-empty :description="productStore.error.message" />
-    </div>
+    <view v-else-if="productStore.error" class="error">
+      <UEmpty :description="productStore.error.message" />
+    </view>
 
     <!-- 产品列表 -->
-    <div v-else class="content">
-      <div
+    <view v-else class="content">
+      <view
         v-for="product in productStore.productList"
         :key="product.id"
         class="product-item"
       >
-        <h3>{{ product.name }}</h3>
-        <p>{{ product.description }}</p>
-      </div>
-    </div>
-  </div>
+        <text class="product-name">{{ product.name }}</text>
+        <text class="product-desc">{{ product.description }}</text>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
 import { useProductStore } from '@/store/modules/product';
 
 const productStore = useProductStore();
 
-onMounted(() => {
+onLoad(() => {
   // 获取产品列表
   productStore.fetchProductList({
     page: 1,
@@ -642,7 +642,7 @@ onMounted(() => {
 📂 生成内容:
    ✓ Store 文件 (src/store/modules/product.ts)
    ✓ 类型定义 (src/store/modules/product/types.ts)
-   ✓ 使用示例 (src/views/product/index.vue)
+   ✓ 使用示例 (src/pages-sub/product/index.vue)
 
 📋 Store 功能:
    ✅ Composition API 风格
@@ -750,7 +750,7 @@ async function fetchData() {
 
 ### 核心原则
 
-⚠️ **项目使用 `pinia-plugin-persistedstate` 插件，默认存储在 IndexedDB**
+⚠️ **项目使用 `pinia-plugin-persistedstate` 插件，默认存储通过 uni.setStorageSync/uni.getStorageSync**
 
 ### 三种配置方式
 
@@ -851,7 +851,7 @@ export const useSettingsStore = defineStore(
 ⚠️ **配置要点**:
 - 只支持 `pick` 和 `omit` 两个参数
 - 插件自动处理 `key` 和 `storage`，无需手动配置
-- 默认存储在 IndexedDB
+- 默认存储通过 uni.setStorageSync/uni.getStorageSync
 
 ## 最佳实践
 
@@ -893,6 +893,8 @@ export const useSettingsStore = defineStore('settings', () => {});
 
 ```typescript
 // src/store/modules/cart.ts
+import { showToast } from '@/utils/toast';
+
 export const useCartStore = defineStore('cart', () => {
   const userStore = useUserStore();
   const productStore = useProductStore();
@@ -1030,7 +1032,7 @@ const queryParams = ref<ListXxxParams>({
 # - src/store/modules/user.ts
 
 # 步骤 3: 在组件中使用
-# src/views/login/index.vue
+# src/pages/login/index.vue
 import { useUserStore } from '@/store/modules/user';
 
 const userStore = useUserStore();

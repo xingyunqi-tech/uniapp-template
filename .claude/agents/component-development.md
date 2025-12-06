@@ -1,22 +1,106 @@
 ---
 name: component-development
-description: Vue组件开发指导，包括组件设计原则、开发模式、最佳实践，区分基础组件和业务组件的开发规范
+description: Uni-app 组件开发指导，包括组件设计原则、开发模式、最佳实践，区分基础组件和业务组件的开发规范
 ---
 
-# 组件开发规范
+# Uni-app 组件开发规范
 
 ## 职责
-专门负责Vue组件开发指导，包括组件设计原则、开发模式、最佳实践，区分基础组件和业务组件的开发规范。
+专门负责 Uni-app 组件开发指导，包括组件设计原则、开发模式、最佳实践，区分基础组件和业务组件的开发规范。
 
-> **通用规范参考**: 本文档中使用的通用开发模式详见 [common-patterns.md](common-patterns.md),包括:
+> **通用规范参考**: 本文档中使用的通用开发模式详见 [common-patterns.md](common-patterns.md)，包括:
 > - [Props/Emits 定义规范](common-patterns.md#props-定义规范)
 > - [数据驱动模式](common-patterns.md#数据驱动模式)
 > - [CSS 变量使用规范](common-patterns.md#css-变量使用规范)
-> - [CSS 盒模型规范](common-patterns.md#css-盒模型规范) ⚠️ **重要**
+> - [CSS 盒模型规范](common-patterns.md#css-盒模型规范) - **重要**
 > - [样式选择器规范](common-patterns.md#样式选择器规范)
 > - [错误处理模式](common-patterns.md#错误处理模式)
 
-## 🎯 组件设计原则
+## Uni-app 组件核心概念
+
+### 1. 元素标签映射
+
+Uni-app 使用小程序风格的标签，而非 HTML 标签：
+
+| HTML 标签 | Uni-app 标签 | 说明 |
+|-----------|-------------|------|
+| `<div>` | `<view>` | 通用容器 |
+| `<span>` | `<text>` | 文本容器 |
+| `<img>` | `<image>` | 图片元素 |
+| `<a>` | `<navigator>` | 导航链接 |
+| `<input>` | `<input>` | 输入框（属性不同） |
+| `<textarea>` | `<textarea>` | 多行输入 |
+| `<button>` | `<button>` | 按钮 |
+| `<select>` | `<picker>` | 选择器 |
+| `<ul>/<li>` | `<view>` + `v-for` | 列表 |
+| `<iframe>` | `<web-view>` | 网页容器 |
+
+### 2. easycom 自动导入
+
+项目配置了 easycom，符合规范的组件会自动导入，无需手动 import：
+
+```json
+// pages.json 中的 easycom 配置
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
+      "^U(.*)": "@/components/U$1/index.vue"
+    }
+  }
+}
+```
+
+**使用方式**：
+```vue
+<template>
+  <!-- uni-ui 组件自动导入 -->
+  <uni-icons type="home" size="24" />
+  <uni-badge text="99+" />
+
+  <!-- 自定义 U 前缀组件自动导入 -->
+  <UNavBar title="页面标题" />
+  <ULoading :visible="loading" />
+  <USkeleton :loading="loading" />
+</template>
+
+<script setup lang="ts">
+// 无需手动 import 组件！
+</script>
+```
+
+### 3. 尺寸单位规范
+
+**必须使用 rpx 单位**，基于 750rpx 设计稿：
+
+```scss
+// ✅ 正确：使用 rpx 单位
+.container {
+  width: 750rpx;           // 全屏宽度
+  padding: 32rpx;          // 内边距
+  font-size: 28rpx;        // 字体大小
+  border-radius: 16rpx;    // 圆角
+}
+
+.button {
+  width: 200rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+}
+
+// ❌ 错误：使用 px 单位
+.container {
+  width: 375px;            // 禁止！
+  padding: 16px;           // 禁止！
+}
+```
+
+**换算公式**：`rpx = 设计稿px × 2`（基于 375px 设计稿）
+
+---
+
+## 组件设计原则
 
 ### 1. 单一职责原则
 - **功能聚焦**: 每个组件只负责一个明确的功能
@@ -25,171 +109,314 @@ description: Vue组件开发指导，包括组件设计原则、开发模式、�
 
 ### 2. 可复用性原则
 - **通用设计**: 基础组件应该具有通用性，避免业务耦合
-- **配置灵活**: 通过Props提供灵活的配置选项
+- **配置灵活**: 通过 Props 提供灵活的配置选项
 - **插槽支持**: 使用插槽提供内容定制能力
 
 ### 3. 组合优于继承
 - **组合模式**: 通过组合小组件构建复杂功能
-- **Hooks复用**: 使用Composition API实现逻辑复用
+- **Composables 复用**: 使用 Composition API 实现逻辑复用
 
-## 📐 页面布局约定
+---
 
-- **全局Layout已提供**: 项目已在 `src/layout/` 目录实现完整的头部、侧边导航等布局，不需要在业务页面或组件中重复构建。
-- **遵循现有容器**: 页面开发时应直接在既有 Layout 提供的主内容区域内组合业务组件，保持与全局布局的一致性。
-- **处理含 Layout 的设计稿**: 如果设计稿包含头部或侧栏，仅作为参考，上线代码仍需要复用现有 Layout 结构，避免重复创建 header、nav 等外围元素。
-
-## 🎨 视觉规范补充
-
-- **颜色和尺寸** ⚠️ **重要**: 还原 Figma 设计稿时,**优先使用 Figma 中标注的颜色和尺寸数值**。只有在 Figma 没有明确标注时,才使用 `public/theme.css` 中的 CSS 变量。
-- **字体**: 默认字体使用 `"'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif"`。当设计稿的 `font-family` 明确为其他字体时，再在组件/页面样式中单独声明该字体；不得自行更换或追加未标注的字体。
-- **间距**: 组件和页面的 `padding`、`margin` 必须严格遵循设计稿标注，禁止随意估计数值；建议在开发前记录关键尺寸，确保还原度。
-- **盒模型** ⚠️ **重要**:
-  - **Figma 尺寸包含 padding**: Figma 中标注的 width/height 是整体尺寸，包含 padding 和 border
-  - **必须使用 border-box**: 凡是同时设置了 `width/height` 和 `padding` 的元素，**必须**声明 `box-sizing: border-box;`
-  - **直接使用 Figma 值**: height/width 直接使用 Figma 标注值，不要手动计算内容区尺寸
-  - 详见 [common-patterns.md#css-盒模型规范](common-patterns.md#css-盒模型规范)
-- **装饰图层**: 若设计稿只是单纯的背景色或渐变，可直接使用 CSS；不要额外添加无意义的 DOM 结构模拟光晕或遮罩层。
-- **布局方式**: 优先通过设计稿标注的 padding、margin、栅格还原布局；仅当设计稿明确给出绝对坐标或层级需求时再使用定位，避免为了省事而用 `position: absolute` 解决问题。
-- **背景图片**: 当元素的背景图与容器尺寸一致时直接使用 `background`；若尺寸不一致或需偏移位置，可在容器内使用绝对定位的元素承载图片并配合 `overflow` 控制。
-- **颜色函数**: 必须使用 rgb() 的新语法形式（如 `rgb(0 0 0 / 0.5)`），禁止使用 rgba() 函数。详见 [common-patterns.md#RGB颜色函数规范](common-patterns.md)
-
-## 📦 组件分类体系
+## 组件分类体系
 
 ### 基础组件 (Base Components)
 - **位置**: `src/components/`
-- **特点**: 纯UI组件，无业务逻辑，高度可复用
-- **命名**: 使用 `Base` 前缀，如 `BaseInput`、`BaseButton`
+- **特点**: 纯 UI 组件，无业务逻辑，高度可复用
+- **命名**: 使用 `U` 前缀，如 `UNavBar`、`ULoading`、`UEmpty`
+- **导入**: 通过 easycom 自动导入
+
+**现有基础组件**：
+| 组件 | 说明 |
+|------|------|
+| `UNavBar` | 导航栏 |
+| `ULoading` | 加载指示器 |
+| `UEmpty` | 空状态 |
+| `USkeleton` | 骨架屏 |
+| `UImage` | 图片（支持懒加载） |
+| `UImageUpload` | 图片上传 |
+| `UTabs` | 标签页 |
+| `UBanner` | 轮播图 |
+| `UPopup` | 弹出层 |
+| `UActionSheet` | 动作面板 |
+| `UNoticeBar` | 通知栏 |
+| `UMenuItem` | 菜单项 |
+| `UMenuGroup` | 菜单组 |
+| `UFormItem` | 表单项 |
+| `UFixedButton` | 固定按钮 |
+| `URichText` | 富文本 |
+| `USmsInput` | 短信验证码输入 |
+| `UPasswordStrength` | 密码强度 |
 
 ### 页面级组件 (Page-specific Components)
-- **位置**: `src/views/[page]/components/`
-- **特点**: 特定页面的专属组件，包含特定业务逻辑，与业务流程关联
-- **命名**: 业务功能描述，如 `LoginInput`、`QrCodeLogin`
-- **说明**: 页面级组件放在对应页面目录下的 `components` 子目录中
+- **位置**: `src/pages/[page]/components/` 或 `src/pages-sub/[module]/[page]/components/`
+- **特点**: 特定页面的专属组件，包含特定业务逻辑
+- **命名**: 业务功能描述，如 `LoginForm`、`OrderCard`
+- **导入**: 需要手动 import（不符合 easycom 规则）
 
 ### 页面组件 (Page Components)
-- **位置**: `src/views/`
+- **位置**: `src/pages/` (主包) 或 `src/pages-sub/` (分包)
 - **特点**: 完整的页面实现，路由对应的组件
-- **命名**: 页面名称，如 `Login`、`Home`
+- **配置**: 在 `pages.json` 中注册
 
-#### 页面路由规范
-- **同步配置**: 创建新页面组件时,必须同步在 `src/router/index.ts` 配置路由
-- **命名规范**:
-  - 路由 `path` 使用小写和短横线 (如 `/lab-reservation`)
-  - 路由 `name` 使用大驼峰 (如 `LabReservation`)
-  - 路由 `name` 必须全局唯一
-- **元信息完整**: 必须设置 `meta.title`,根据需要设置 `meta.requiresAuth` 等
+---
 
-```typescript
-// ✅ 正确：完整的路由配置示例
-{
-  path: '/lab-reservation',
-  name: 'LabReservation',
-  component: () => import('@/views/labreservation/index.vue'),
-  meta: {
-    title: '功能名称',
-    requiresAuth: true,
-    roles: ['admin', 'user']
-  }
+## 视觉规范
+
+### 1. 颜色使用 CSS 变量
+
+所有颜色必须使用 `src/styles/theme.scss` 中定义的 CSS 变量：
+
+```scss
+// ✅ 正确：使用 CSS 变量
+.container {
+  color: var(--color-text);              // #323233
+  background: var(--color-bg-grey);      // #f7f8fa
+  border: 1rpx solid var(--color-border); // #ebedf0
 }
 
-// ❌ 错误：路由命名不规范
-{
-  path: '/labReservation',        // 应该使用短横线
-  name: 'lab-reservation',        // 应该使用大驼峰
-  component: () => import('@/views/labreservation/index.vue')
-  // 缺少 meta 配置
+.title {
+  color: var(--color-text);              // 主文本
+}
+
+.subtitle {
+  color: var(--color-text-secondary);    // 次要文本 #969799
+}
+
+.hint {
+  color: var(--color-text-placeholder);  // 占位符 #c8c9cc
+}
+
+.link {
+  color: var(--color-primary);           // 主题色 #1989fa
+}
+
+.error {
+  color: var(--color-danger);            // 危险色 #ee0a24
+}
+
+// ❌ 错误：硬编码颜色
+.container {
+  color: #323233;           // 禁止！
+  background: #f7f8fa;      // 禁止！
 }
 ```
 
-### 骨架屏组件 (Skeleton Components)
-- **位置**: `src/components/Skeleton/`
-- **特点**: 在页面/组件加载时显示，提升用户体验
-- **命名**: 使用 `Skeleton` 后缀
+### 2. 盒模型规范
 
-> **完整指南**: 骨架屏配置、Props、开发自定义组件详见 [common-patterns.md#骨架屏模式](common-patterns.md#骨架屏模式)
+- **Figma 尺寸包含 padding**: Figma 中标注的 width/height 是整体尺寸
+- **必须使用 border-box**: 同时设置 width/height 和 padding 时必须声明
+- **直接使用 Figma 值**: 不要手动计算内容区尺寸
 
-#### 预置骨架屏组件
-
-| 组件 | 使用场景 |
-|------|---------|
-| **CardSkeleton** | 首页卡片布局 |
-| **ListSkeleton** | 列表数据页面 |
-| **FormSkeleton** | 表单页面 |
-| **DetailSkeleton** | 详情页面 |
-| **GridSkeleton** | 网格布局页面 |
-| **LayoutSkeleton** | Layout 加载时显示 |
-| **LoginSkeleton** | 登录页加载时显示 |
-
-#### 骨架屏开发要点
-
-在组件开发中使用骨架屏时，需注意：
-1. **Props 类型安全**: 使用 TypeScript 接口定义
-2. **尺寸匹配**: 与实际内容尺寸接近，避免布局跳动
-3. **样式隔离**: 使用 `scoped` 样式
-4. **基于 Vant**: 使用 `van-skeleton` 保持风格统一
-
-详细开发步骤、Props 配置和代码示例见 [common-patterns.md#骨架屏模式](common-patterns.md#骨架屏模式)
-
-## 🎯 组件层级开发规范(重要)
-
-### 复杂组件的正确开发顺序
-
-当需要开发包含复杂交互的业务组件时,必须遵循以下开发顺序:
-
-#### 步骤1: 分析组件需求,识别基础能力
+```scss
+// ✅ 正确
+.card {
+  box-sizing: border-box;
+  width: 690rpx;
+  height: 200rpx;
+  padding: 32rpx;
+}
 ```
-问题: 需要开发"功能日历"组件
+
+### 3. 字体规范
+
+```scss
+// 默认字体（已全局配置）
+// font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+
+// 常用字体大小
+.text-xs { font-size: 20rpx; }   // 极小
+.text-sm { font-size: 24rpx; }   // 小
+.text-base { font-size: 28rpx; } // 默认
+.text-lg { font-size: 32rpx; }   // 大
+.text-xl { font-size: 36rpx; }   // 特大
+```
+
+---
+
+## 图标和图片使用规范
+
+### 1. uni-icons 图标
+
+优先使用 uni-ui 内置图标：
+
+```vue
+<template>
+  <!-- uni-icons 图标 -->
+  <uni-icons type="home" size="24" color="#333" />
+  <uni-icons type="search" size="20" />
+  <uni-icons type="cart" size="28" color="var(--color-primary)" />
+</template>
+```
+
+### 2. 自定义 SVG 图标
+
+当 uni-icons 不满足需求时，使用 `<image>` 标签引用 SVG 文件：
+
+```vue
+<template>
+  <!-- ✅ 正确：使用 image 标签 -->
+  <image
+    src="@/assets/icons/[project]/icon-name.svg"
+    class="icon"
+    mode="aspectFit"
+  />
+</template>
+
+<style lang="scss" scoped>
+.icon {
+  width: 48rpx;
+  height: 48rpx;
+}
+</style>
+```
+
+**禁止内联 SVG**：
+```vue
+<!-- ❌ 错误：内联 SVG -->
+<svg><path d="M..." /></svg>
+<view v-html="svgContent"></view>
+```
+
+### 3. 图片资源规范
+
+```
+src/assets/
+├── icons/[project-name]/    # SVG 图标（kebab-case 命名）
+│   ├── icon-home.svg
+│   └── icon-user.svg
+└── images/[project-name]/   # PNG/JPG 图片（kebab-case 命名）
+    ├── banner-home.png
+    └── avatar-default.png
+```
+
+**图片使用**：
+```vue
+<template>
+  <!-- 使用 UImage 组件（支持懒加载） -->
+  <UImage
+    src="@/assets/images/home/banner.png"
+    width="750rpx"
+    height="300rpx"
+    mode="aspectFill"
+  />
+
+  <!-- 或使用原生 image -->
+  <image
+    src="@/assets/images/home/banner.png"
+    mode="aspectFill"
+    lazy-load
+  />
+</template>
+```
+
+---
+
+## 骨架屏组件
+
+### USkeleton 组件使用
+
+```vue
+<template>
+  <view class="page">
+    <!-- 骨架屏 -->
+    <USkeleton v-if="loading" type="list" :rows="5" />
+
+    <!-- 实际内容 -->
+    <view v-else class="content">
+      <!-- ... -->
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+const loading = ref(true);
+
+onLoad(async () => {
+  await fetchData();
+  loading.value = false;
+});
+</script>
+```
+
+### USkeleton Props
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `loading` | `boolean` | `true` | 是否显示骨架屏 |
+| `type` | `'card' \| 'list' \| 'form' \| 'detail'` | `'list'` | 预设类型 |
+| `rows` | `number` | `3` | 行数 |
+| `avatar` | `boolean` | `false` | 是否显示头像 |
+| `title` | `boolean` | `true` | 是否显示标题 |
+| `animate` | `boolean` | `true` | 是否开启动画 |
+
+---
+
+## 组件层级开发规范
+
+### 复杂组件的开发顺序
+
+当需要开发包含复杂交互的业务组件时，必须遵循以下开发顺序：
+
+#### 步骤 1: 分析组件需求，识别基础能力
+```
+问题: 需要开发"订单卡片"组件
 分析:
-- 基础能力: 日历展示、日期选择
-- 业务能力: 显示预约状态、处理预约逻辑
-结论: 需要先开发基础日历组件
+- 基础能力: 卡片展示、状态显示
+- 业务能力: 订单数据展示、操作按钮
+结论: 基于 UCard 开发 OrderCard
 ```
 
-#### 步骤2: 开发基础组件
+#### 步骤 2: 基于基础组件开发页面级组件
 ```vue
-<!-- src/components/BaseCalendar/index.vue -->
-<!-- 纯UI日历组件,不包含任何业务逻辑 -->
+<!-- src/pages-sub/order/list/components/OrderCard.vue -->
 <template>
-  <div class="base-calendar">
-    <!-- 通用日历UI实现 -->
-  </div>
+  <view class="order-card">
+    <view class="order-header">
+      <text class="order-no">订单号: {{ order.orderNo }}</text>
+      <text class="order-status">{{ statusText }}</text>
+    </view>
+    <view class="order-content">
+      <!-- 订单商品列表 -->
+    </view>
+    <view class="order-footer">
+      <text class="order-amount">¥{{ order.amount }}</text>
+      <button class="order-btn" @click="handleAction">
+        {{ actionText }}
+      </button>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
-// 只包含日历展示和选择的通用逻辑
-// 不涉及功能名称等业务逻辑
+interface OrderCardProps {
+  order: Order;
+}
+
+const props = defineProps<OrderCardProps>();
+const emit = defineEmits<{
+  action: [order: Order];
+}>();
 </script>
 ```
 
-#### 步骤3: 基于基础组件开发页面级组件
+#### 步骤 3: 在页面中使用业务组件
 ```vue
-<!-- src/views/labreservation/components/LabReservationCalendar/index.vue -->
-<!-- 基于BaseCalendar封装的功能日历 -->
+<!-- src/pages-sub/order/list/index.vue -->
 <template>
-  <div class="lab-reservation-calendar">
-    <BaseCalendar
-      v-model="selectedDate"
-      :marked-dates="reservedDates"
-      @date-select="handleDateSelect"
+  <view class="order-list-page">
+    <OrderCard
+      v-for="order in orders"
+      :key="order.id"
+      :order="order"
+      @action="handleOrderAction"
     />
-    <!-- 添加业务相关的预约信息展示 -->
-  </div>
+  </view>
 </template>
 
 <script setup lang="ts">
-import BaseCalendar from '@/components/BaseCalendar/index.vue';
-// 添加功能名称的业务逻辑
+import OrderCard from './components/OrderCard.vue';
 </script>
-```
-
-#### 步骤4: 在页面中使用业务组件
-```vue
-<!-- src/views/labreservation/index.vue -->
-<template>
-  <div class="lab-reservation-page">
-    <LabReservationCalendar @reserve="handleReserve" />
-  </div>
-</template>
 ```
 
 ### 组件层级关系图
@@ -198,548 +425,278 @@ import BaseCalendar from '@/components/BaseCalendar/index.vue';
     ↓ 使用
 业务组件 (Business)
     ↓ 基于
-基础组件 (Base)
+基础组件 (Base/U前缀)
 ```
 
-### 错误示例 ❌
+---
+
+## 组件开发最佳实践
+
+### 1. Props 定义规范
+
+```typescript
+// ✅ 正确：完整的类型定义
+interface UserCardProps {
+  /** 用户信息 */
+  user: User;
+  /** 是否显示操作按钮 */
+  showAction?: boolean;
+  /** 卡片尺寸 */
+  size?: 'small' | 'medium' | 'large';
+}
+
+const props = withDefaults(defineProps<UserCardProps>(), {
+  showAction: true,
+  size: 'medium',
+});
+```
+
+### 2. Emits 定义规范
+
+```typescript
+// ✅ 正确：类型化的 emits
+const emit = defineEmits<{
+  /** 点击事件 */
+  click: [user: User];
+  /** 关注事件 */
+  follow: [userId: string];
+  /** 更新事件 */
+  'update:modelValue': [value: string];
+}>();
+```
+
+### 3. 数据驱动原则
+
 ```vue
-<!-- 错误: 直接在业务组件中实现所有功能,没有抽象基础组件 -->
 <template>
-  <div class="lab-reservation-calendar">
-    <!-- 直接实现日历UI + 业务逻辑 -->
-    <!-- 导致组件难以复用,逻辑耦合 -->
-  </div>
+  <!-- ✅ 正确：数据驱动 -->
+  <view class="menu-list">
+    <view
+      v-for="item in menuItems"
+      :key="item.id"
+      class="menu-item"
+      @click="handleClick(item)"
+    >
+      <uni-icons :type="item.icon" size="24" />
+      <text>{{ item.label }}</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+interface MenuItem {
+  id: string;
+  icon: string;
+  label: string;
+  path: string;
+}
+
+const props = defineProps<{
+  menuItems: MenuItem[];
+}>();
+</script>
+
+<!-- ❌ 错误：硬编码 -->
+<template>
+  <view class="menu-list">
+    <view class="menu-item">
+      <uni-icons type="home" />
+      <text>首页</text>
+    </view>
+    <view class="menu-item">
+      <uni-icons type="person" />
+      <text>我的</text>
+    </view>
+  </view>
 </template>
 ```
 
-### 正确示例 ✅
-```vue
-<!-- 1. 先开发 BaseCalendar (基础组件) -->
-<!-- 2. 再开发 LabReservationCalendar (业务组件,基于BaseCalendar) -->
-<!-- 3. 页面中使用 LabReservationCalendar -->
-```
-
-## 🎨 设计稿还原规范
-
-### 1. 获取设计数据和资源
-
-使用 Figma MCP 提取设计稿信息并下载资源。
-
-**详细指导**: [figma-extraction-guide.md#完整提取流程总结](figma-extraction-guide.md#完整提取流程总结)
-
-完成以下步骤后，进入组件实现阶段：
-
-- [ ] 提取 fileKey 和 nodeId（从 Figma URL）
-- [ ] 使用 `mcp__figma__get_figma_data` 获取设计数据
-- [ ] 提取设计 Token（间距、颜色、字体、特效）
-- [ ] 下载 SVG 图标到 `src/assets/icons/[project-name]/`（使用小写短横线格式 kebab-case）
-- [ ] 下载 PNG 图片到 `src/assets/images/[project-name]/`（使用小写短横线格式 kebab-case）
-
-### 2. SVG 使用规范 ⚠️ **重要 - 禁止内联 SVG**
-
-**核心原则**: 所有 SVG 必须下载为文件，使用 `<img>` 标签引用，严禁 `<svg>` 标签或 `v-html`
+### 4. 避免冗余 DOM 结构
 
 ```vue
-<!-- ✅ 正确 -->
-<img src="@/assets/icons/home/icon-name.svg" alt="Icon" class="w-6 h-6" />
+<!-- ✅ 正确：简洁的 DOM 结构 -->
+<template>
+  <view class="user-card">
+    <image :src="user.avatar" class="avatar" />
+    <text class="name">{{ user.name }}</text>
+  </view>
+</template>
 
-<!-- ❌ 错误 -->
-<svg><path d="M..." /></svg>
-<div v-html="svgContent"></div>
+<!-- ❌ 错误：冗余的 DOM 层级 -->
+<template>
+  <view class="user-card-container">
+    <view class="user-card-wrapper">
+      <view class="user-card-inner">
+        <view class="avatar-wrapper">
+          <image :src="user.avatar" class="avatar" />
+        </view>
+        <view class="name-wrapper">
+          <text class="name">{{ user.name }}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
 ```
 
-**资源目录**:
-```
-src/assets/
-├── icons/[project-name]/  # SVG 图标（kebab-case）
-└── images/[project-name]/ # PNG/JPG 图片（kebab-case）
-```
-
-**颜色控制**: 准备多个颜色版本（如 `icon-user-primary.svg`, `icon-user-disabled.svg`），通过动态路径切换
-
-### 3. 移动端设计稿规范
-
-#### 设计稿尺寸约定
-- **设计稿宽度**: 移动端设计稿一般为 375px (iPhone 标准)
-- **视口适配**: 使用 `postcss-px-to-viewport-8-plugin` 自动将 px 转换为 vw
-- **直接使用设计稿 px 值**: 组件开发时直接使用设计稿标注的 px 值，postcss 会自动转换
-- **Vant 组件排除**: Vant 组件已在 `selectorBlackList` 中配置，不会被转换
-
-### 4. 视觉还原规范
-
-#### 尺寸规范（重要）
-- ✅ **组件宽度精确匹配**: 组件的宽度尽量与设计稿保持一致
-- ✅ **高度自适应**: 组件高度一般使用自适应，让内容撑开高度
-- ✅ **像素级精确**: 使用设计稿中的具体数值，不能随意调整宽度
+### 5. 样式规范
 
 ```scss
-// ✅ 正确：宽度匹配设计稿，高度自适应
-.login-container {
-  width: 440px;        // 设计稿标注的精确宽度
-  // height: auto;     // 高度自适应，让内容撑开
-}
-
+// ✅ 正确：简洁的样式
 .user-card {
-  width: 320px;        // 精确匹配设计稿
-  // height: auto;     // 高度自适应
-  padding: 24px;       // 设计稿标注的内边距
-}
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: var(--color-white);
+  border-radius: 16rpx;
 
-.button {
-  width: 120px;        // 按钮精确宽度
-  height: 48px;        // 按钮等交互元素可以固定高度
-  border-radius: 6px;  // 精确圆角值
-}
-
-// ✅ 正确：容器类组件使用自适应高度
-.content-wrapper {
-  width: 100%;         // 容器宽度
-  min-height: 0;       // 高度由内容决定
-  padding: 20px;
-}
-
-// ❌ 错误：随意调整宽度
-.login-container {
-  width: 400px;        // 偏离设计稿的440px
-}
-
-.user-card {
-  width: 100%;         // 应该使用设计稿的320px
-}
-```
-
-#### 其他还原要求
-- ✅ **精确还原**: 严格按照设计稿的尺寸、颜色、间距
-- ✅ **无冗余**: 不添加设计稿中没有的元素或层级
-- ✅ **图片管理**: 检查已存在图片，避免重复下载
-- ✅ **路径规范**: 图片按页面/功能分类存放在 images 目录
-- ✅ **性能优化**: 图片压缩、懒加载
-- ✅ **完整还原**: 参考完整设计稿，不遗漏任何设计元素和交互
-- ✅ **使用合适组件**: 使用设计系统中对应的组件进行还原，保持一致性
-- ❌ **避免过度封装**: 不要为了组件化而增加不必要的层级
-
-> **注意**: 移动端使用 `postcss-px-to-viewport-8-plugin` 自动将 px 转换为 vw 单位，设计稿基准宽度为 375px
-
-## 📖 组件开发最佳实践
-
-### 1. 组件参数使用原则（核心规范）
-
-> **详细规范**: 完整的 Props/Emits 定义规范详见 [common-patterns.md#props-定义规范](common-patterns.md#props-定义规范)
-
-#### 核心原则
-- 所有定义的 Props 都必须在模板中使用
-- 避免硬编码数据,通过 Props 传入
-- Props 类型必须明确,不使用 `any`
-
-### 2. 数据驱动原则（核心规范）
-
-> **详细规范**: 完整的数据驱动模式详见 [common-patterns.md#数据驱动模式](common-patterns.md#数据驱动模式)
-
-#### 核心原则
-- 列表内容使用 `v-for` + 数据数组
-- 业务数据通过 Props 传入
-- 避免在模板中硬编码内容
-
-### 3. 组件间距和布局规范（重要）
-
-#### 4.1 组件间距还原规范
-```scss
-// ✅ 正确：严格按照设计稿的组件间距
-.home-content {
-  // 参考完整设计稿中的布局间距
-  .welcome-section {
-    margin-bottom: 32px;      // 设计稿标注的精确间距
+  .avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    margin-right: 24rpx;
   }
 
-  .stats-section {
-    margin-bottom: 24px;      // 与设计稿保持一致
-  }
-
-  .cards-grid {
-    gap: 16px;                // 卡片之间的精确间距
-    margin-top: 20px;         // 顶部间距
+  .name {
+    font-size: 28rpx;
+    color: var(--color-text);
   }
 }
 
-// 页面级别的组件布局
-.page-layout {
-  .header {
-    height: 46px;             // 移动端 Header 高度
-    padding: 0 16px;          // 移动端标准水平内边距
-  }
-
-  .main-content {
-    padding: 12px 16px;       // 移动端内容区域边距
-  }
-
-  .tabbar {
-    height: 50px;             // 底部导航栏高度
-    padding-bottom: env(safe-area-inset-bottom); // 安全区域适配
-  }
-}
-
-// ❌ 错误：随意设置间距，未参考设计稿
-.content {
-  margin: 20px;              // 应该根据设计稿具体标注
-  padding: 15px;             // 应该使用设计稿的精确值
-}
-
-.card-list {
-  gap: 10px;                 // 应该使用设计稿标注的间距
-}
-```
-
-#### 4.2 完整布局还原原则
-```vue
-<!-- ✅ 正确：基于完整设计稿的布局还原 -->
-<template>
-  <div class="home-page">
-    <!-- 顶部欢迎区域 -->
-    <section class="welcome-section">
-      <WelcomeCard />
-    </section>
-
-    <!-- 统计卡片区域 -->
-    <section class="stats-section">
-      <div class="stats-grid">
-        <StatsCard v-for="item in statsData" :key="item.id" v-bind="item" />
-      </div>
-    </section>
-
-    <!-- 功能卡片区域 -->
-    <section class="features-section">
-      <div class="features-grid">
-        <CompetitionCard />
-        <InternshipCard />
-        <LabReservationCard />
-      </div>
-    </section>
-  </div>
-</template>
-
-<style scoped lang="scss">
-// 严格按照完整设计稿的布局和间距
-.home-page {
-  padding: 24px;             // 页面内边距
-
-  .welcome-section {
-    margin-bottom: 32px;     // 与下一部分的间距
-  }
-
-  .stats-section {
-    margin-bottom: 40px;     // 统计区域与功能区域的间距
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;             // 统计卡片间距
-    }
-  }
-
-  .features-section {
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;             // 功能卡片间距
-    }
-  }
-}
-</style>
-
-<!-- ❌ 错误：未参考完整设计稿，随意组织布局 -->
-<template>
-  <div class="home">
-    <div class="content">
-      <WelcomeCard />
-      <StatsCard />
-      <CompetitionCard />
-    </div>
-  </div>
-</template>
-```
-
-### 4. 组件嵌套深度规范 ⚠️ **重要**
-
-**核心原则：**
-1. **避免组件层层嵌套**（优先拆分为平级组件）
-2. **避免 DOM 过深嵌套**
-3. **避免 SCSS 选择器过深嵌套**
-4. **使用 Flex/Grid 替代不必要的包装层**
-5. **删除无意义的包装元素**
-
-### 5. 样式规范（重要）
-
-> **详细规范**:
-> - [CSS变量使用规范](common-patterns.md#css-变量使用规范) - 必须使用 `public/theme.css` 中的 CSS 变量
-> - [样式选择器规范](common-patterns.md#样式选择器规范) - 禁止直接使用标签选择器
-> - [RGB颜色函数规范](common-patterns.md#rgb-颜色函数规范) - 使用新语法 `rgb(r g b / alpha)`
-> - [CSS数值精度规范](common-patterns.md#css-数值精度规范) - 小数保留3位精度
-
-#### 核心原则
-- 使用 BEM 命名规范
-- 避免深层嵌套(≤3层)
-- 所有颜色使用 CSS 变量
-
-### 6. 避免冗余DOM和样式（重点）
-
-#### DOM结构优化原则
-```vue
-<!-- ✅ 正确：简洁的DOM结构 -->
-<template>
-  <div class="base-input">
-    <label v-if="label" class="input-label">{{ label }}</label>
-    <van-field v-model="inputValue" />
-  </div>
-</template>
-
-<!-- ❌ 错误：冗余的DOM层级 -->
-<template>
-  <div class="base-input-container">
-    <div class="base-input-wrapper">
-      <div class="base-input-inner">
-        <div class="label-wrapper">
-          <label>{{ label }}</label>
-        </div>
-        <div class="input-wrapper">
-          <van-field v-model="inputValue" />
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-```
-
-#### 样式优化原则
-```scss
-// ✅ 正确：简洁的样式，避免冗余
-.base-input {
-  width: 100%;
-
-  .input-label {
-    margin-bottom: 12px;
-    color: var(--colorTextHeading);
-    font-size: 14.375px;
-  }
-
-  :deep(.van-field) {
-    .van-field__control {
-      height: 48px;
-    }
-  }
-}
-
-// ❌ 错误：过度嵌套和冗余样式
-.base-input-container {
-  .base-input-wrapper {
-    .base-input-inner {
-      .label-wrapper {
-        label {
-          display: block;
-          margin-bottom: 12px;
-          padding: 0;
-          border: none;
-          background: none;
-          color: var(--colorTextHeading);
+// ❌ 错误：过度嵌套
+.user-card-container {
+  .user-card-wrapper {
+    .user-card-inner {
+      .avatar-wrapper {
+        .avatar {
+          // ...
         }
       }
-      .input-wrapper {
-        position: relative;
-        display: block;
-        width: 100%;
-        // ... 更多冗余样式
-      }
     }
   }
 }
 ```
 
-#### 代码优化检查清单
-- [ ] **只在必要时添加包装div**
-- [ ] **能用单个元素不用多个**
-- [ ] **避免超过3层的DOM嵌套**
-- [ ] **避免超过3层的样式嵌套**
-- [ ] **不添加没有实际作用的div**
-- [ ] **使用Flex/Grid减少嵌套**
-- [ ] **删除未使用的CSS代码**
+---
 
-## 📂 组件目录结构
+## 平台兼容性
 
-### 文件夹组织原则 ⚠️ **重要**
+### 条件编译
 
-**核心原则：**
-1. **避免目录层级过深**
-2. **按功能模块分组**（避免所有文件扁平化在一起）
-3. **跨模块共享组件放 `shared/` 目录**
+当需要处理平台差异时，使用条件编译：
 
-**模块命名规范：**
-- 使用小写单词，多个单词用短横线连接
-- 语义清晰，体现业务功能
+```vue
+<template>
+  <!-- #ifdef MP-WEIXIN -->
+  <button open-type="share">分享</button>
+  <!-- #endif -->
 
-## 📋 组件开发快速检查清单
+  <!-- #ifdef H5 -->
+  <button @click="shareToH5">分享</button>
+  <!-- #endif -->
+</template>
 
-### 文件夹组织检查 ⚠️ **重要**
-- [ ] 避免文件夹层级过深
-- [ ] 组件已按功能模块分组（避免所有文件扁平化在一起）
-- [ ] 模块划分清晰，语义明确
-- [ ] 跨模块共享组件已放入 `shared/` 目录
-- [ ] 导入路径已更新为模块化路径
+<script setup lang="ts">
+// #ifdef MP-WEIXIN
+const onShareAppMessage = () => ({
+  title: '分享标题',
+  path: '/pages/index/index',
+});
+// #endif
+</script>
 
-### SVG 图标使用检查 ⚠️ **重要 - 必须遵守**
-- [ ] 严格禁止在组件中使用 `<svg>` 标签（内联 SVG）
-- [ ] 严格禁止使用 `v-html` 插入 SVG 内容
-- [ ] 所有 SVG 图标必须通过 Figma MCP 下载为文件
-- [ ] SVG 图标使用 `<img src="@/assets/icons/[project]/xxx.svg" />` 引用
-- [ ] SVG 文件已按项目分类存放在 `src/assets/icons/[project-name]/` 目录
-- [ ] 项目目录名使用小写短横线格式（kebab-case）
-- [ ] 图标文件名语义化（如 `icon-chat.svg`，而非 `icon-123.svg`）
+<style lang="scss" scoped>
+/* #ifdef MP-WEIXIN */
+.weixin-only {
+  /* 微信小程序专属样式 */
+}
+/* #endif */
+</style>
+```
 
-### 图片资源检查
-- [ ] PNG/JPG 图片已按页面/功能分类存放在 `src/assets/images/[project-name]/` 目录
-- [ ] 下载前已检查本地是否存在同名图片
-- [ ] 图片路径使用导入方式而非硬编码
-- [ ] 图片文件命名语义化（如 `background.png`，而非 `image-123.png`）
-- [ ] 大图片已按用途分类到子目录（logos/、backgrounds/、avatars/ 等）
+### 常用平台标识
 
-### 参数使用检查
-- [ ] 组件定义的所有Props都在模板中使用
-- [ ] 没有定义但未使用的Props参数
-- [ ] 硬编码的数据已改为通过Props传入
-- [ ] Props类型定义完整且准确（参考 [common-patterns.md#props-定义规范](common-patterns.md#props-定义规范)）
-- [ ] 模板中的数据绑定与Props一致
+| 标识 | 平台 |
+|------|------|
+| `H5` | H5 网页 |
+| `MP-WEIXIN` | 微信小程序 |
+| `MP-ALIPAY` | 支付宝小程序 |
+| `APP-PLUS` | App (iOS/Android) |
+| `APP-ANDROID` | Android App |
+| `APP-IOS` | iOS App |
 
-### 数据驱动检查
-- [ ] 列表、菜单等重复内容使用 `v-for` + 数据数组
-- [ ] 避免在模板中硬编码内容
-- [ ] 业务类的静态文本和数字应通过props传入，便于数据对接
-- [ ] 统计数字、状态文本等业务数据应作为props传入，不应硬编码
-- [ ] 定义了完整的数据接口类型
-- [ ] 数据结构便于后续接口对接
-- [ ] 使用计算属性处理派生数据
+---
 
-### 尺寸和间距检查
-- [ ] 组件宽度严格按照设计稿标注
-- [ ] 组件高度使用自适应，让内容撑开高度
-- [ ] 按钮等交互元素可使用固定高度
-- [ ] 内边距（padding）与设计稿保持一致
-- [ ] 外边距（margin）与设计稿保持一致
-- [ ] 组件间距与完整设计稿布局一致
-- [ ] 边框圆角值精确匹配设计稿
-- [ ] 字体大小和行高符合设计稿
-- [ ] 避免随意调整设计稿中的尺寸值
-- [ ] 参考完整设计稿确定组件在页面中的位置和间距
-- [ ] 专注移动端设计稿还原，使用 375px 基准适配
+## 组件开发检查清单
 
-### 组件嵌套检查 ⚠️ **重要**
-- [ ] 避免组件层层嵌套
-- [ ] 避免 DOM 过深嵌套
-- [ ] 避免 SCSS 选择器过深嵌套
-- [ ] 能用单个元素不用多个
-- [ ] 优先拆分为平级组件，而不是嵌套更深
+### 基础检查
+- [ ] 使用 `<view>` 代替 `<div>`
+- [ ] 使用 `<text>` 代替 `<span>`
+- [ ] 使用 `<image>` 代替 `<img>`
+- [ ] 使用 rpx 单位
+- [ ] 使用 CSS 变量定义颜色
+- [ ] Props 有完整的 TypeScript 类型定义
+- [ ] Emits 有完整的类型定义
+
+### 样式检查
+- [ ] 所有颜色使用 `var(--color-xxx)` 变量
+- [ ] 使用 rpx 单位（非 px）
+- [ ] 避免样式嵌套超过 3 层
+- [ ] 使用 scoped 样式避免污染
+
+### 结构检查
+- [ ] 避免 DOM 嵌套超过 3 层
+- [ ] 每个元素都有明确的作用
 - [ ] 使用 Flex/Grid 替代不必要的包装层
-- [ ] 每个 div 都有明确的布局或样式目的
-- [ ] 删除所有无意义的包装元素
+- [ ] 删除无意义的包装元素
 
-### 样式规范检查
-- [ ] 使用 `public/theme.css` 中定义的CSS变量（参考 [common-patterns.md#css-变量使用规范](common-patterns.md#css-变量使用规范)）
-- [ ] 所有颜色使用 `var(--colorXxx)` 而非硬编码
-- [ ] 不直接使用标签名选择器（如 `h1`, `p`, `div`）
-- [ ] 每个元素都添加了语义化的 class 名称
-- [ ] 遵循 BEM 命名规范或项目统一规范
-- [ ] 避免样式选择器过深嵌套
-- [ ] 避免冗余样式
+### 图标图片检查
+- [ ] 优先使用 uni-icons
+- [ ] 自定义图标使用 `<image>` 标签
+- [ ] 禁止内联 SVG
+- [ ] 图片使用 lazy-load 属性
 
-### 基础组件检查
-- [ ] 无业务逻辑，纯UI组件
-- [ ] Props和Emits有完整的TypeScript接口定义（参考 [common-patterns.md#props-定义规范](common-patterns.md#props-定义规范)）
-- [ ] DOM结构简洁，无冗余层级
-- [ ] 样式使用scoped避免污染
-- [ ] 支持v-model（如适用）
+### 平台兼容检查
+- [ ] 检查是否有平台特定代码
+- [ ] 使用条件编译处理平台差异
+- [ ] 测试主要目标平台（H5、微信小程序）
 
-### 业务组件检查
-- [ ] 业务逻辑清晰
-- [ ] 使用基础组件而不是重复造轮子
-- [ ] Props和Emits有完整的类型定义
-- [ ] 错误处理完善（参考 [common-patterns.md#错误处理模式](common-patterns.md#错误处理模式)）
-- [ ] 加载状态处理
-- [ ] 与Store集成（如需要）
+---
 
-## ❓ 常见问题
+## 组件质量标准
+
+| 指标 | 标准 |
+|------|------|
+| DOM 层级 | ≤ 3 层嵌套 |
+| 样式嵌套 | ≤ 3 层 |
+| 组件文件大小 | ≤ 300 行 |
+| Props 数量 | ≤ 10 个 |
+| 设计稿还原度 | ≥ 95% |
+
+---
+
+## 常见问题
 
 ### Q: 全局公用组件和页面级组件如何区分？
 **A**:
-- **全局公用组件**: 不包含业务逻辑或包含通用业务逻辑，可在多个页面复用，放在`src/components/`
-- **页面级组件**: 特定页面的专属组件，包含特定业务逻辑，仅在所属页面使用，放在`src/views/[page]/components/`
+- **全局公用组件 (U前缀)**: 不包含业务逻辑，可在多个页面复用，放在 `src/components/`，通过 easycom 自动导入
+- **页面级组件**: 特定页面的专属组件，包含业务逻辑，放在 `src/pages[-sub]/[page]/components/`，需手动 import
 
 ### Q: 什么时候应该拆分组件？
 **A**: 符合以下条件之一就应该拆分：
-- 组件代码超过200行
+- 组件代码超过 200 行
 - 组件职责超过一个
 - 有独立的业务逻辑
 - 需要在多处复用
 
-### Q: 如何避免冗余的DOM结构？
-**A**:
-```vue
-<!-- 评估每个div是否必要 -->
-<!-- ✅ 必要的div：用于布局或样式容器 -->
-<div class="form-actions">
-  <van-checkbox v-model="agreed">同意协议</van-checkbox>
-  <van-button @click="submit">提交</van-button>
-</div>
+### Q: 如何处理 H5 和小程序的样式差异？
+**A**: 使用条件编译处理平台差异：
+```scss
+/* #ifdef H5 */
+.h5-only { /* H5 专属样式 */ }
+/* #endif */
 
-<!-- ❌ 不必要的div：仅用于包装单个元素 -->
-<div class="button-wrapper">
-  <van-button @click="submit">提交</van-button>
-</div>
-
-<!-- ✅ 直接使用：单个元素不需要包装 -->
-<van-button @click="submit">提交</van-button>
+/* #ifdef MP-WEIXIN */
+.mp-only { /* 小程序专属样式 */ }
+/* #endif */
 ```
-
-**原则**：
-- 只在确实需要时才添加包装div
-- 能用单个元素实现的不要用多个
-- 使用Flex/Grid布局减少嵌套
-- 避免为了样式而添加无意义的div
-- 参考Figma设计稿的实际层级结构
-
-## 🚀 组件开发工作流程
-
-### 1. 从Figma设计稿开始
-```
-1. 获取Figma设计稿链接
-2. 使用Figma MCP获取设计数据
-3. 下载图片资源到src/assets/images/或icons/
-4. 分析组件结构和样式
-```
-
-### 2. 组件开发步骤
-```
-1. 确定组件类型（基础/业务/页面）
-2. 创建组件目录和文件
-3. 定义Props和Emits类型（参考 common-patterns.md）
-4. 实现组件逻辑（无冗余代码）
-5. 精确还原设计稿样式
-6. 测试组件功能
-```
-
-### 3. 代码质量检查
-```
-- [ ] 符合编码规范
-- [ ] 无冗余DOM层级（≤3层）
-- [ ] 无冗余样式代码
-- [ ] 类型定义完整
-- [ ] 使用CSS变量
-- [ ] 图片资源已分类存放
-```
-
-## 📊 组件质量标准
-
-### 可接受的质量指标
-- **DOM层级**: ≤ 3层嵌套
-- **样式嵌套**: ≤ 3层
-- **组件文件大小**: ≤ 300行
-- **Props数量**: ≤ 10个
-- **设计稿还原度**: ≥ 95%
-
-通过遵循这些组件开发规范，可以创建出高质量、简洁、可复用、易维护的Vue组件。

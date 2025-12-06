@@ -259,7 +259,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
 阶段 1: 基础设施 (1-2h)
   ☐ 运行 pnpm api:gen 同步 API
   ☐ 生成 User Store: /store-generator UserStore --smart
-  ☐ 创建目录结构: src/views/user-management/
+  ☐ 创建目录结构: src/pages-sub/user/management/
 
 阶段 2: 页面开发 (2-3h)
   ☐ 生成列表页: /component-generator UserManagement --type page --smart --with-router
@@ -347,10 +347,10 @@ PRD 来源: docs/prd/user-management.md
 **执行内容:**
 ```bash
 # 自动创建以下目录和文件
-mkdir -p src/views/user-management/components
-touch src/views/user-management/index.vue
-touch src/views/user-management/detail.vue
-touch src/views/user-management/components/.gitkeep
+mkdir -p src/pages-sub/user/management/components
+touch src/pages-sub/user/management/index.vue
+touch src/pages-sub/user/detail/index.vue
+touch src/pages-sub/user/management/components/.gitkeep
 ```
 
 ---
@@ -525,9 +525,9 @@ pnpm commit
    ✓ 页面结构分析完成 (2 个页面)
 
 📁 目录结构设计完成
-   ✓ src/views/user-management/
+   ✓ src/pages-sub/user/management/
    ✓ src/store/modules/user.ts
-   ✓ src/router/routes/async.ts (需要更新)
+   ✓ pages.json (需要更新分包配置)
 
 🚦 路由配置设计完成
    ✓ /user-management (列表页)

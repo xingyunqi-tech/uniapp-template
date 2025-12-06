@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="欢迎回来" card-title="登录账号" :class="themeClass">
+  <AuthLayout title="欢迎回来" card-title="登录账号" :class="globalStore.themeClass">
     <!-- 登录方式切换 -->
     <UTabs v-model="loginType" :tabs="loginTabs" class="login-tabs" />
 
@@ -78,14 +78,14 @@
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms, useTheme } from '@/composables';
-import { isPhone } from '@/utils/validator';
-import { PHONE_LENGTH, SMS_CODE_LENGTH, DELAY_TIMES } from '@/constants';
+import { useRouter, useSendSms } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
+import { PHONE_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import UTabs from '@/components/UTabs/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 const router = useRouter();
 const userStore = useUserStore();
 

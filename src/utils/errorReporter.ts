@@ -11,6 +11,22 @@ export type ErrorLevel = 'error' | 'warn' | 'info';
 /** 错误类型 */
 export type ErrorType = 'js' | 'api' | 'resource' | 'promise' | 'vue' | 'custom';
 
+/** 错误上报用设备信息 (简化版) */
+export interface ErrorDeviceInfo {
+  /** 平台 */
+  platform: string;
+  /** 系统版本 */
+  system: string;
+  /** 应用版本 */
+  appVersion: string;
+  /** 品牌 */
+  brand?: string;
+  /** 型号 */
+  model?: string;
+  /** 网络类型 */
+  networkType?: string;
+}
+
 /** 错误信息接口 */
 export interface ErrorInfo {
   /** 错误类型 */
@@ -30,23 +46,7 @@ export interface ErrorInfo {
   /** 用户 ID */
   userId?: string | number;
   /** 设备信息 */
-  deviceInfo?: DeviceInfo;
-}
-
-/** 设备信息 */
-export interface DeviceInfo {
-  /** 平台 */
-  platform: string;
-  /** 系统版本 */
-  system: string;
-  /** 应用版本 */
-  appVersion: string;
-  /** 品牌 */
-  brand?: string;
-  /** 型号 */
-  model?: string;
-  /** 网络类型 */
-  networkType?: string;
+  deviceInfo?: ErrorDeviceInfo;
 }
 
 /** 错误上报配置 */
@@ -93,14 +93,14 @@ let globalOptions: Required<ErrorReporterOptions> = {
 let reportTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** 设备信息缓存 */
-let cachedDeviceInfo: DeviceInfo | null = null;
+let cachedDeviceInfo: ErrorDeviceInfo | null = null;
 
 // ==================== 内部方法 ====================
 
 /**
- * 获取设备信息
+ * 获取错误上报用设备信息
  */
-function getDeviceInfo(): DeviceInfo {
+function getErrorDeviceInfo(): ErrorDeviceInfo {
   if (cachedDeviceInfo) {
     return cachedDeviceInfo;
   }
@@ -166,7 +166,7 @@ function formatError(
     page: getCurrentPage(),
     extra,
     userId: globalOptions.getUserId?.(),
-    deviceInfo: getDeviceInfo(),
+    deviceInfo: getErrorDeviceInfo(),
   };
 }
 
@@ -371,7 +371,7 @@ export function reportPromiseError(reason: unknown): void {
     timestamp: Date.now(),
     page: getCurrentPage(),
     userId: globalOptions.getUserId?.(),
-    deviceInfo: getDeviceInfo(),
+    deviceInfo: getErrorDeviceInfo(),
   };
 
   addToQueue(errorInfo);

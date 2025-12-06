@@ -30,11 +30,11 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 - [ ] 参考 `@component-development`
 
 #### CSS 规范
-- [ ] **所有颜色使用 CSS 变量**（`public/theme.css`）
+- [ ] **所有颜色使用 CSS 变量**（`src/styles/theme.scss`）
 - [ ] 无硬编码颜色值（#fff、rgb()、rgba()）
-- [ ] 运行 `pnpm checkCssVars` 检查 CSS 变量使用
 - [ ] 使用语义化 class 名称
-- [ ] 无直接标签选择器（h1、p、div）
+- [ ] 无直接标签选择器（h1、p、view、text）
+- [ ] 使用 rpx 单位（750rpx = 设计稿宽度）
 - [ ] 参考 `@common-patterns`
 
 ---
@@ -48,10 +48,10 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 - [ ] 错误情况处理（try-catch）
 
 #### 用户体验
-- [ ] 加载状态提示（Loading/Toast）
-- [ ] 错误提示友好（showToast/showFailToast）
+- [ ] 加载状态提示（ULoading/Toast）
+- [ ] 错误提示友好（uni.showToast）
 - [ ] 交互反馈及时
-- [ ] 移动端适配（375px 设计稿，postcss-px-to-viewport）
+- [ ] 多端适配（使用 rpx 单位，750rpx = 设计稿宽度）
 
 #### API 调用
 - [ ] 使用 Orval 生成的 API（从 `@/api` 导入）
@@ -121,8 +121,8 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 - [ ] **轮子检测**: 是否重复实现了项目已有的工具函数？
   - 日期格式化 → `@/utils` (`formatDateShort`, `formatDateTime`, `formatRelativeTime`)
   - HTML 净化 → `@/utils/sanitize` (`sanitizeHtml`, `sanitizeHtmlStrict`, `sanitizeText`)
-  - 角色检查 → `@/utils/auth` (`checkRole`, `getRoleLabel`)
-  - 存储操作 → `@/plugins/storage` (`storage('localStorage').set/get/remove`)
+  - Toast 提示 → `@/utils/toast` (`showToast`, `showSuccess`, `showError`)
+  - 存储操作 → `uni.setStorageSync/uni.getStorageSync`
 - [ ] **命名一致**: 命名风格是否与现有代码统一？
 - [ ] **注释同步**: 注释是否与代码逻辑匹配（AI 常忘记更新注释）？
 

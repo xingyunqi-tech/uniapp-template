@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="feedback-page" :class="themeClass">
+  <view class="feedback-page" :class="globalStore.themeClass">
     <!-- 反馈类型 -->
     <view class="form-section">
       <view class="section-title">反馈类型</view>
@@ -75,7 +75,8 @@
 
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
-import { useAsyncAction, useTheme } from '@/composables';
+import { useAsyncAction } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import {
   FEEDBACK_TYPES,
@@ -85,12 +86,20 @@ import {
 } from '@/constants';
 import UFixedButton from '@/components/UFixedButton/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
-const formData = reactive({
+/** 反馈类型 */
+type FeedbackType = (typeof FEEDBACK_TYPES)[number]['value'];
+
+const formData = reactive<{
+  type: FeedbackType;
+  content: string;
+  images: string[];
+  contact: string;
+}>({
   type: FEEDBACK_TYPES[0].value,
   content: '',
-  images: [] as string[],
+  images: [],
   contact: '',
 });
 

@@ -1,6 +1,7 @@
 /**
  * 用户相关类型定义
  */
+import type { ROLE } from '@/constants/permission';
 
 /**
  * 用户信息接口
@@ -22,6 +23,10 @@ export interface UserInfo {
   gender?: 0 | 1 | 2;
   /** 生日 */
   birthday?: string;
+  /** 用户角色 */
+  role?: ROLE;
+  /** 用户权限列表（细粒度权限控制） */
+  permissions?: string[];
   /** 创建时间 */
   createdAt?: string;
   /** 更新时间 */

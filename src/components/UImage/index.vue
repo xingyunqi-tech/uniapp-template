@@ -1,23 +1,44 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    UImage - 图片组件
+    封装懒加载、错误处理、重试等功能
+  -->
   <view class="u-image" :class="{ 'u-image--round': round }" :style="imageStyle">
     <!-- 加载中状态 -->
     <view v-if="loading" class="u-image__loading">
       <slot name="loading">
-        <text class="i-carbon-image u-image__icon" />
+        <!-- 有占位图时显示占位图 -->
+        <image v-if="placeholder" class="u-image__placeholder" :src="placeholder" :mode="mode" />
+        <!-- 无占位图时显示图标 -->
+        <text v-else class="i-carbon-image u-image__icon" />
       </slot>
     </view>
 
     <!-- 加载失败状态 -->
     <view v-else-if="error" class="u-image__error" @click="handleRetry">
       <slot name="error">
-        <text class="i-carbon-warning-alt u-image__icon" />
-        <text class="u-image__error-text">加载失败</text>
+        <!-- 有错误图时显示错误图 -->
+        <image v-if="errorImage" class="u-image__error-img" :src="errorImage" :mode="mode" />
+        <!-- 无错误图时显示图标 -->
+        <template v-else>
+          <text class="i-carbon-warning-alt u-image__icon" />
+          <text class="u-image__error-text">加载失败</text>
+        </template>
       </slot>
     </view>
 
     <!-- 图片 -->
     <image
       v-show="!loading && !error"
+      :key="retryKey"
       class="u-image__img"
       :src="src"
       :mode="mode"
@@ -33,6 +54,23 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 
+defineOptions({
+  name: 'UImage',
+});
+
+/** 图片裁剪模式类型 */
+export type ImageMode =
+  | 'scaleToFill'
+  | 'aspectFit'
+  | 'aspectFill'
+  | 'widthFix'
+  | 'heightFix'
+  | 'top'
+  | 'bottom'
+  | 'center'
+  | 'left'
+  | 'right';
+
 export interface Props {
   /** 图片地址 */
   src: string;
@@ -41,17 +79,7 @@ export interface Props {
   /** 图片高度 */
   height?: string | number;
   /** 图片裁剪模式 */
-  mode?:
-    | 'scaleToFill'
-    | 'aspectFit'
-    | 'aspectFill'
-    | 'widthFix'
-    | 'heightFix'
-    | 'top'
-    | 'bottom'
-    | 'center'
-    | 'left'
-    | 'right';
+  mode?: ImageMode;
   /** 是否圆形 */
   round?: boolean;
   /** 圆角大小 */
@@ -66,6 +94,10 @@ export interface Props {
   showLoading?: boolean;
   /** 是否显示加载失败状态 */
   showError?: boolean;
+  /** 占位图地址 */
+  placeholder?: string;
+  /** 错误时显示的图片地址 */
+  errorImage?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -79,6 +111,8 @@ const props = withDefaults(defineProps<Props>(), {
   webp: true,
   showLoading: true,
   showError: true,
+  placeholder: '',
+  errorImage: '',
 });
 
 const emit = defineEmits<{
@@ -89,6 +123,7 @@ const emit = defineEmits<{
 // 状态
 const loading = ref(props.showLoading);
 const error = ref(false);
+const retryKey = ref(0); // 用于强制重新加载图片
 
 // 计算样式
 const imageStyle = computed(() => {
@@ -106,8 +141,9 @@ const imageStyle = computed(() => {
 // 监听 src 变化重新加载
 watch(
   () => props.src,
-  () => {
-    if (props.src) {
+  (newSrc, oldSrc) => {
+    // 仅当 src 实际变化时重置状态（排除初始化时 undefined -> value 的情况由 image 组件自行处理）
+    if (newSrc && newSrc !== oldSrc) {
       loading.value = props.showLoading;
       error.value = false;
     }
@@ -135,6 +171,7 @@ function handleRetry() {
   if (props.src) {
     loading.value = props.showLoading;
     error.value = false;
+    retryKey.value++; // 强制重新渲染图片组件
   }
 }
 </script>
@@ -165,6 +202,12 @@ function handleRetry() {
     background: var(--color-bg-grey);
     inset: 0;
     gap: 8rpx;
+  }
+
+  &__placeholder,
+  &__error-img {
+    width: 100%;
+    height: 100%;
   }
 
   &__icon {

@@ -1,362 +1,452 @@
 ---
 name: project-structure
-description: 项目目录结构分析、文件组织规范和架构设计指导
+description: Uni-app 项目目录结构分析、文件组织规范和架构设计指导
 ---
 
-# 项目结构解析 Agent
+# Uni-app 项目结构解析
 
 ## 职责
-负责项目目录结构分析、文件组织规范和架构设计指导，帮助AI理解项目布局和各目录的作用。
+负责 Uni-app 项目目录结构分析、文件组织规范和架构设计指导，帮助 AI 理解项目布局和各目录的作用。
 
-## 🏗️ 项目整体架构
+## 技术栈
 
-### 技术栈
-- **前端框架**: Vue 3 (Composition API)
-- **构建工具**: Vite
+- **框架**: Uni-app 3.x + Vue 3 (Composition API)
+- **构建**: Vite
 - **语言**: TypeScript
-- **状态管理**: Pinia
-- **路由**: Vue Router
-- **UI库**: Vant (移动端)
-- **样式**: TailwindCSS v4 + SCSS
-- **HTTP客户端**: Axios
+- **状态**: Pinia (持久化)
+- **路由**: pages.json + useRouter composable
+- **UI**: uni-ui + 自定义 U 前缀组件
+- **HTTP**: luch-request + Orval
+- **样式**: SCSS + CSS 变量
 
-### 架构模式
-- **分层架构**: 视图层 → 业务层 → 数据层
-- **模块化设计**: 按功能模块组织代码
-- **组件化开发**: 可复用的UI组件
-- **类型驱动**: TypeScript严格类型检查
-
-## 📁 目录结构详解
+## 目录结构详解
 
 ```
-vite-vue3-temp/
+uniapp-template/
 ├── .claude/                    # Claude AI 配置和文档
 │   ├── agents/                 # AI Agent 配置文件
-│   │   ├── project-structure.md    # 项目结构解析
-│   │   ├── coding-standards.md     # 编码规范
-│   │   ├── code-review.md          # 代码审查
-│   │   ├── component-development.md # 组件开发
-│   │   ├── api-development.md      # API开发
-│   │   ├── testing.md              # 测试指导
-│   │   └── deployment.md           # 部署指导
-│   └── settings.local.json     # Claude 本地设置
-├── .husky/                     # Git hooks 配置
-├── config/                     # 项目配置文件
-│   ├── devServer.ts           # 开发服务器配置
-│   ├── host.ts                # 主机配置
-│   └── proxy.ts               # 代理配置
-├── docs/                       # 项目文档
-│   └── api.md                 # API接口文档
-├── public/                     # 静态资源
-│   ├── favicon.ico            # 网站图标
-│   ├── loading.css            # 加载样式
-│   └── theme.css              # 主题样式
-├── scripts/                    # 构建和工具脚本
-│   ├── i18n/                  # 国际化自动化脚本
-│   │   ├── utils/             # 国际化工具函数
-│   │   ├── generate.ts        # 生成国际化代码
-│   │   ├── translate.ts       # AI翻译脚本
-│   │   └── merge.ts           # 合并语言包
-│   ├── husky/                 # Git hooks配置
-│   │   ├── commit-msg.ts      # 提交信息检查
-│   │   ├── pre-commit.ts      # 提交前检查
-│   │   └── pre-push.ts        # 推送前检查
-├── src/                       # 源代码目录
-│   ├── api/                   # API 接口层
-│   ├── assets/                # 静态资源
-│   ├── components/            # 全局公用组件
-│   ├── constants/             # 常量定义
-│   ├── interface/             # TypeScript 接口定义
-│   ├── layout/                # 布局组件
-│   ├── router/                # 路由配置
-│   ├── store/                 # 状态管理 (Pinia)
-│   ├── utils/                 # 工具函数
-│   ├── views/                 # 页面组件
-│   ├── App.vue                # 根组件
-│   └── main.ts                # 应用入口
+│   ├── commands/               # 快捷命令
+│   ├── skills/                 # 技能模板
+│   └── settings.json           # Claude 设置
+├── src/                        # 源代码目录
+│   ├── api/                    # API 接口层
+│   │   ├── core/               # HTTP 客户端核心
+│   │   ├── generated/          # Orval 自动生成（禁止修改）
+│   │   ├── custom/             # 自定义扩展
+│   │   └── index.ts            # 统一导出
+│   ├── assets/                 # 静态资源
+│   │   ├── icons/              # SVG 图标
+│   │   └── images/             # 图片资源
+│   ├── components/             # 全局公用组件（U 前缀）
+│   │   ├── UNavBar/            # 导航栏
+│   │   ├── ULoading/           # 加载指示器
+│   │   ├── UEmpty/             # 空状态
+│   │   ├── USkeleton/          # 骨架屏
+│   │   └── ...                 # 其他组件
+│   ├── composables/            # 组合式函数
+│   │   ├── useRouter.ts        # 路由导航
+│   │   ├── useLoading.ts       # 加载状态
+│   │   └── ...                 # 其他 composables
+│   ├── constants/              # 常量定义
+│   │   ├── pages.ts            # 页面路径常量
+│   │   ├── permission.ts       # 权限常量
+│   │   └── system.ts           # 系统常量
+│   ├── interface/              # TypeScript 接口定义
+│   ├── pages/                  # 主包页面
+│   │   ├── index/              # 首页 (TabBar)
+│   │   ├── mine/               # 我的 (TabBar)
+│   │   ├── login/              # 登录
+│   │   └── ...                 # 其他页面
+│   ├── pages-sub/              # 分包页面
+│   │   ├── order/              # 订单分包
+│   │   ├── user/               # 用户分包
+│   │   └── other/              # 其他分包
+│   ├── store/                  # Pinia 状态管理
+│   │   ├── modules/            # Store 模块
+│   │   └── plugins/            # Store 插件
+│   ├── styles/                 # 全局样式
+│   │   ├── theme.scss          # 主题变量
+│   │   └── index.scss          # 全局样式
+│   ├── utils/                  # 工具函数
+│   ├── App.vue                 # 根组件
+│   ├── main.ts                 # 应用入口
+│   ├── pages.json              # 页面路由配置
+│   ├── manifest.json           # 应用配置
+│   └── uni.scss                # Uni-app 样式变量
 ├── typings/                    # TypeScript 类型声明
-├── tests/                      # 测试文件
-└── 配置文件                    # 各种配置文件
+├── package.json                # 项目配置
+└── vite.config.ts              # Vite 配置
 ```
 
-## 📂 核心目录详解
+## 核心目录详解
 
-### `.claude/` - AI配置目录
-```
-.claude/
-├── agents/                     # AI Agent配置文件
-│   ├── project-structure.md    # 项目结构解析（当前文件）
-│   ├── coding-standards.md     # 编码规范和最佳实践
-│   ├── code-review.md          # 代码审查清单和规范
-│   ├── component-development.md # Vue组件开发指导
-│   ├── api-development.md      # API接口开发规范
-│   ├── testing.md              # 测试策略和规范
-│   └── deployment.md           # 部署和运维指导
-└── settings.local.json         # Claude本地配置
-```
+### `src/pages/` - 主包页面
 
-**作用**:
-- 存储AI编程助手的配置和指导文档
-- 不同的AI任务读取对应的agent文档
-- 提供项目特定的编程规范和最佳实践
+主包页面直接加载，包含 TabBar 页面和高频页面：
 
-### `config/` - 项目配置目录
 ```
-config/
-├── devServer.ts               # 开发服务器配置
-├── host.ts                    # 主机和端口配置
-└── proxy.ts                   # API代理配置
+src/pages/
+├── index/                  # 首页 (TabBar)
+│   └── index.vue
+├── mine/                   # 我的 (TabBar)
+│   └── index.vue
+├── login/                  # 登录
+│   └── index.vue
+├── register/               # 注册
+│   └── index.vue
+├── forgot-password/        # 忘记密码
+│   └── index.vue
+├── error/                  # 错误页
+│   └── index.vue
+└── agreement/              # 协议
+    └── index.vue
 ```
 
-**作用**:
-- 集中管理项目配置
-- 开发环境和生产环境配置分离
-- 便于维护和修改配置项
+**注意**：主包不宜过大，影响小程序启动速度。
 
-### `scripts/` - 自动化脚本目录
+### `src/pages-sub/` - 分包页面
+
+分包用于优化小程序加载性能，按业务模块划分：
+
 ```
-scripts/
-├── i18n/                      # 国际化自动化工具
-│   ├── utils/                 # 工具函数
-│   │   ├── DifyClient.ts      # AI翻译客户端
-│   │   ├── TextExtractor.ts   # 文本提取器
-│   │   └── ...                # 其他工具
-│   ├── generate.ts            # 生成国际化代码
-│   ├── translate.ts           # AI自动翻译
-│   └── merge.ts               # 合并语言包
-├── husky/                     # Git hooks脚本
-│   ├── commit-msg.ts          # Git提交信息检查  
-│   ├── pre-commit.ts          # 提交前代码检查
-│   └── pre-push.ts            # 推送前完整检查
+src/pages-sub/
+├── order/                  # 订单分包
+│   └── list/               # 订单列表
+│       └── index.vue
+├── user/                   # 用户分包
+│   ├── address/            # 地址管理
+│   ├── address-edit/       # 编辑地址
+│   ├── profile/            # 编辑资料
+│   ├── password/           # 修改密码
+│   ├── settings/           # 设置
+│   └── favorite/           # 收藏
+└── other/                  # 其他分包
+    ├── about/              # 关于我们
+    ├── contact/            # 联系客服
+    ├── feedback/           # 意见反馈
+    └── webview/            # 网页容器
 ```
 
-**作用**:
-- 自动化开发流程
-- 国际化处理自动化
-- Git hooks集成
-- 代码质量保证
+### `src/components/` - 全局组件
 
-### `src/api/` - API接口层（Orval自动生成）
+使用 `U` 前缀，通过 easycom 自动导入：
 
-**重要**: 详细的Orval架构说明参考 [@api-development.md](api-development.md)
+```
+src/components/
+├── UNavBar/                # 导航栏
+│   └── index.vue
+├── ULoading/               # 加载指示器
+│   └── index.vue
+├── UEmpty/                 # 空状态
+│   └── index.vue
+├── USkeleton/              # 骨架屏
+│   └── index.vue
+├── UImage/                 # 图片组件
+│   └── index.vue
+├── UImageUpload/           # 图片上传
+│   └── index.vue
+├── UTabs/                  # 标签页
+│   └── index.vue
+├── UBanner/                # 轮播图
+│   └── index.vue
+├── UPopup/                 # 弹出层
+│   └── index.vue
+├── UActionSheet/           # 动作面板
+│   └── index.vue
+├── UNoticeBar/             # 通知栏
+│   └── index.vue
+├── UMenuItem/              # 菜单项
+│   └── index.vue
+├── UMenuGroup/             # 菜单组
+│   └── index.vue
+├── UFormItem/              # 表单项
+│   └── index.vue
+├── UFixedButton/           # 固定按钮
+│   └── index.vue
+├── URichText/              # 富文本
+│   └── index.vue
+├── USmsInput/              # 短信验证码
+│   └── index.vue
+└── UPasswordStrength/      # 密码强度
+    └── index.vue
+```
 
-**目录结构**:
+**使用方式**：
+```vue
+<template>
+  <!-- 无需 import，easycom 自动导入 -->
+  <UNavBar title="页面标题" />
+  <ULoading :visible="loading" />
+</template>
+```
+
+### `src/composables/` - 组合式函数
+
+封装可复用的业务逻辑：
+
+| Composable | 说明 |
+|------------|------|
+| `useRouter` | 路由导航封装 |
+| `useLoading` | 加载状态管理 |
+| `useForm` | 表单处理 |
+| `useList` | 列表加载（分页、刷新） |
+| `useSendSms` | 发送短信验证码 |
+| `useAsyncAction` | 异步操作封装 |
+| `useDebounce` | 防抖 |
+| `useThrottle` | 节流 |
+| `useClipboard` | 剪贴板 |
+| `useLocation` | 位置服务 |
+| `useScanCode` | 扫码 |
+| `useShare` | 分享 |
+| `usePermission` | 权限检查 |
+| `usePasswordStrength` | 密码强度 |
+
+### `src/api/` - API 接口层
+
+基于 Orval 自动生成：
+
 ```
 src/api/
-├── core/          # 基础设施（手动维护）
-├── generated/     # 自动生成（🚫 禁止修改）
-├── custom/        # 自定义扩展（手动维护）
-└── index.ts       # 统一导出
+├── core/                   # HTTP 客户端核心
+│   └── request.ts          # luch-request 封装
+├── generated/              # Orval 自动生成（🚫 禁止修改）
+│   ├── auth/               # 认证模块
+│   └── model/              # 类型定义
+├── custom/                 # 自定义扩展
+│   └── upload.ts           # 文件上传等
+└── index.ts                # 统一导出
 ```
 
-**核心原则**:
+**核心原则**：
 - 🚫 **绝不修改** `generated/` 目录
 - ✅ 从 `@/api` 统一导入
 - ✅ 扩展在 `custom/` 目录
-- ✅ 导出优先级: custom > generated
 
-**详细架构**: 参考 [@api-development.md#核心架构决策](api-development.md#核心架构决策)
+### `src/store/` - 状态管理
 
-### `src/components/` - 通用组件目录
-```
-src/components/
-├── BaseInput/                # 基础输入组件
-│   ├── index.vue             # 组件主文件
-│   └── types.ts              # 组件类型定义（可选）
-└── ...                       # 其他通用组件
-```
-
-**组件命名规范**:
-- 目录名: PascalCase (如 `BaseInput`)
-- 文件名: `index.vue` (主文件)
-- 类型文件: `types.ts` (可选)
-- 文档文件: `README.md` (可选)
-
-**作用**:
-- 可复用的UI组件
-- 业务无关的通用功能
-- 提高开发效率
-- 保持UI一致性
-
-### `src/views/` - 页面组件目录
-```
-src/views/
-├── home/                      # 首页
-│   ├── index.vue             # 页面主文件
-│   └── components/           # 页面私有组件（可选）
-├── login/                     # 登录页
-│   ├── index.vue             # 页面主文件
-│   └── components/           # 页面私有组件（可选）
-├── 404.vue                   # 404页面
-└── ...                       # 其他页面
-```
-
-**页面组织原则**:
-- 每个页面一个目录
-- 复杂页面可包含私有组件
-- 页面间不能直接引用
-- 通过路由进行页面跳转
-
-### `src/store/` - 状态管理目录
 ```
 src/store/
-├── index.ts                   # Store入口文件
-└── modules/                   # 按业务模块组织
-    ├── user.ts               # 用户状态管理
-    ├── app.ts                # 应用状态管理
-    └── ...                   # 其他状态模块
+├── index.ts                # Store 入口
+├── modules/                # Store 模块
+│   ├── user.ts             # 用户状态
+│   └── global.ts           # 全局状态
+└── plugins/                # Store 插件
+    └── persist.ts          # 持久化配置
 ```
 
-**状态管理原则**:
-- 使用Pinia进行状态管理
-- 按业务模块拆分Store
-- 组合式API风格
-- 类型安全的状态定义
+### `src/constants/` - 常量定义
 
-### `src/utils/` - 工具函数目录
 ```
-src/utils/
-├── index.ts                   # 工具函数统一导出
-├── date.ts                   # 日期处理工具
-├── request.ts                # 请求工具（可选）
-├── storage.ts                # 本地存储工具
-└── ...                       # 其他工具函数
+src/constants/
+├── pages.ts                # 页面路径常量
+├── permission.ts           # 权限角色常量
+├── system.ts               # 系统配置常量
+└── index.ts                # 统一导出
 ```
 
-**工具函数原则**:
-- 纯函数，无副作用
-- 单一职责
-- 完整的类型定义
-- 详细的JSDoc注释
+**页面路径常量示例**：
+```typescript
+export const PAGES = {
+  HOME: '/pages/index/index',
+  MINE: '/pages/mine/index',
+  LOGIN: '/pages/login/index',
+  ORDER: '/pages-sub/order/list/index',
+  // ...
+} as const;
 
-### `typings/` - 类型声明目录
+export const WHITE_LIST = [
+  PAGES.LOGIN,
+  PAGES.REGISTER,
+  PAGES.HOME,
+  // ...
+] as const;
 ```
-typings/
-├── global.d.ts               # 全局类型声明
-├── env.d.ts                  # 环境变量类型
-├── asset.d.ts                # 资源文件类型
-├── utils.d.ts                # 工具类型
-└── ...                       # 其他类型声明
+
+### `src/styles/` - 全局样式
+
+```
+src/styles/
+├── theme.scss              # 主题变量（颜色、间距）
+└── index.scss              # 全局样式
 ```
 
-**类型声明原则**:
-- 全局类型统一管理
-- 第三方库类型补充
-- 环境变量类型定义
-- 资源文件类型声明
+**主题变量示例**：
+```scss
+// src/styles/theme.scss
+:root {
+  // 主题色
+  --color-primary: #1989fa;
+  --color-success: #07c160;
+  --color-warning: #ff976a;
+  --color-danger: #ee0a24;
 
-## 🔄 文件引用规范
+  // 文本色
+  --color-text: #323233;
+  --color-text-secondary: #969799;
+  --color-text-placeholder: #c8c9cc;
 
-> **详细的 API 导入规范**: 详见 [api-development.md#api-使用规范](api-development.md#api-使用规范)
-> **完整的代码风格规范**: 详见 [coding-standards.md#api-导入规范](coding-standards.md#api-导入规范)
+  // 背景色
+  --color-bg-grey: #f7f8fa;
+  --color-white: #ffffff;
+
+  // 边框色
+  --color-border: #ebedf0;
+}
+```
+
+## 文件引用规范
 
 ### 导入路径规范
 
 ```typescript
-// ✅ 正确：使用路径别名导入
-import { postAuthLogin, getAuthUserInfo } from '@/api';  // API 从 @/api 统一导入
-import type { LoginRequest, UserInfo } from '@/api';      // 类型也从 @/api 导入
+// ✅ 正确：使用路径别名
+import { useRouter } from '@/composables';
+import { PAGES } from '@/constants';
 import { useUserStore } from '@/store/modules/user';
-import BaseInput from '@/components/BaseInput/index.vue';
-
-// ❌ 错误：直接从 generated 导入（破坏 Orval 架构）
-import { postAuthLogin } from '@/api/generated/auth/auth';
+import { postAuthLogin } from '@/api';
 
 // ❌ 错误：相对路径过长
-import { postAuthLogin } from '../../../api';
+import { useRouter } from '../../../composables';
 ```
-
-> **完整的导入顺序规范**: 详见 [coding-standards.md#导入顺序规范](coding-standards.md#导入顺序规范)
 
 ### 组件引用规范
+
 ```typescript
-// ✅ 正确：页面组件引用通用组件
-import BaseInput from '@/components/BaseInput/index.vue';
+// ✅ 正确：全局组件无需 import（easycom）
+<template>
+  <UNavBar title="标题" />
+</template>
 
-// ✅ 正确：页面组件引用自己的私有组件
-import UserForm from './components/UserForm.vue';
-
-// ❌ 错误：页面间直接引用
-import UserList from '@/views/User/components/UserList.vue';
+// ✅ 正确：页面级组件手动 import
+<script setup lang="ts">
+import OrderCard from './components/OrderCard.vue';
+</script>
 ```
 
-## 📋 目录创建指导
+## 目录创建指导
 
-### 新增页面
-```bash
-# 1. 在views目录下创建页面目录
-mkdir src/views/NewPage
-
-# 2. 创建页面主文件
-touch src/views/NewPage/index.vue
-
-# 3. 如需私有组件，创建components目录
-mkdir src/views/NewPage/components
-```
-
-### 新增组件
-```bash
-# 1. 在components目录下创建组件目录
-mkdir src/components/NewComponent
-
-# 2. 创建组件主文件
-touch src/components/NewComponent/index.vue
-
-# 3. 可选：创建类型定义文件
-touch src/components/NewComponent/types.ts
-
-# 4. 可选：创建组件文档
-touch src/components/NewComponent/README.md
-```
-
-### 新增/扩展API
-
-**Orval架构下有三种方式**:
+### 新增主包页面
 
 ```bash
-# 方式1: 直接使用自动生成的API（推荐80%场景）
-# 无需任何操作，执行 pnpm api:gen 即可获得最新API
+# 1. 创建页面目录
+mkdir src/pages/new-page
 
-# 方式2: 覆盖/扩展自动生成的API（15%场景）
-# 在 src/api/custom/ 目录下创建同名文件
+# 2. 创建页面文件
+touch src/pages/new-page/index.vue
 
-# 方式3: 完全自定义API（5%场景）
-# 在 src/api/custom/ 目录中添加自定义接口文件
-# 适用于：文件上传、WebSocket、第三方API等
+# 3. 在 pages.json 中注册
+# {
+#   "path": "pages/new-page/index",
+#   "style": { "navigationBarTitleText": "新页面" }
+# }
+
+# 4. 在 constants/pages.ts 添加常量
+# NEW_PAGE: '/pages/new-page/index',
 ```
 
-**注意**:
-- ✅ 类型定义从 `@/api` 导入，由Orval自动生成
-- ❌ 不要在 `interface/` 目录创建重复的API类型
-- ❌ 绝对不要修改 `src/api/generated/` 目录
+### 新增分包页面
 
-## 🎯 AI编程指导原则
+```bash
+# 1. 创建分包页面目录
+mkdir -p src/pages-sub/[module]/new-page
+
+# 2. 创建页面文件
+touch src/pages-sub/[module]/new-page/index.vue
+
+# 3. 在 pages.json 的 subPackages 中注册
+# {
+#   "root": "pages-sub/[module]",
+#   "pages": [
+#     { "path": "new-page/index", "style": {...} }
+#   ]
+# }
+```
+
+### 新增全局组件
+
+```bash
+# 1. 创建组件目录（U 前缀）
+mkdir src/components/UNewComponent
+
+# 2. 创建组件文件
+touch src/components/UNewComponent/index.vue
+
+# 3. 无需注册，easycom 自动导入
+# 在模板中直接使用 <UNewComponent />
+```
+
+### 新增 Composable
+
+```bash
+# 1. 创建文件（use 前缀）
+touch src/composables/useNewFeature.ts
+
+# 2. 在 src/composables/index.ts 导出
+# export * from './useNewFeature';
+```
+
+## AI 编程指导原则
 
 ### 1. 目录选择原则
-- **通用组件** → `src/components/`
-- **页面组件** → `src/views/`
-- **API接口** → `src/api/custom/` (自定义扩展)
-- **API类型** → 从 `@/api` 导入（自动生成）
-- **其他类型** → `src/interface/` 或 `typings/`
-- **工具函数** → `src/utils/`
-- **状态管理** → `src/store/modules/`
+
+| 类型 | 目录 |
+|------|------|
+| 主包页面 | `src/pages/` |
+| 分包页面 | `src/pages-sub/[module]/` |
+| 全局组件 | `src/components/` (U 前缀) |
+| 页面级组件 | `src/pages[-sub]/[page]/components/` |
+| Composables | `src/composables/` |
+| 工具函数 | `src/utils/` |
+| 常量定义 | `src/constants/` |
+| 类型定义 | `src/interface/` |
+| Store | `src/store/modules/` |
+| API 扩展 | `src/api/custom/` |
 
 ### 2. 文件命名原则
-- **组件文件**: PascalCase目录 + index.vue
-- **工具文件**: camelCase.ts
-- **类型文件**: camelCase.ts 或 .d.ts
-- **配置文件**: camelCase.ts
+
+| 类型 | 命名规范 | 示例 |
+|------|---------|------|
+| 页面目录 | kebab-case | `forgot-password/` |
+| 组件目录 | PascalCase + U前缀 | `UNavBar/` |
+| 组件文件 | index.vue | `index.vue` |
+| Composable | camelCase + use前缀 | `useRouter.ts` |
+| 工具函数 | camelCase | `storage.ts` |
+| 常量文件 | camelCase | `pages.ts` |
 
 ### 3. 代码组织原则
+
 - **单一职责**: 每个文件只负责一个功能
 - **模块化**: 按业务功能组织代码
 - **类型安全**: 所有代码都要有类型定义
-- **文档化**: 复杂逻辑要有注释说明
+- **平台兼容**: 使用条件编译处理平台差异
 
 ### 4. 引用关系原则
+
 - **向上引用**: 可以引用上层或同层模块
 - **禁止循环引用**: 避免模块间循环依赖
-- **页面隔离**: 页面间不能直接引用
-- **组件复用**: 通用组件可被任意引用
+- **页面隔离**: 页面间不能直接引用组件
+- **组件复用**: 全局组件可被任意引用
 
-通过遵循这些目录结构和组织原则，可以确保项目的可维护性和可扩展性，同时为AI编程提供清晰的指导。
+## 平台兼容性
+
+### 主要目标平台
+
+| 平台 | 编译命令 | 说明 |
+|------|---------|------|
+| H5 | `pnpm build:h5` | 网页版 |
+| 微信小程序 | `pnpm build:mp-weixin` | 主要平台 |
+| 支付宝小程序 | `pnpm build:mp-alipay` | 次要平台 |
+
+### 条件编译
+
+```typescript
+// #ifdef MP-WEIXIN
+// 微信小程序专属代码
+// #endif
+
+// #ifdef H5
+// H5 专属代码
+// #endif
+```
+
+通过遵循这些目录结构和组织原则，可以确保 Uni-app 项目的可维护性和可扩展性。

@@ -84,10 +84,9 @@ console.log('用户登录:', { userId, token, password }); // 生产环境泄露
 // ✅ 正确：使用环境变量
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// ✅ 正确：使用项目的 storage 工具
-import storage from '@/plugins/storage';
-storage('localStorage').set('token', tokenValue);  // 统一管理
-storage('localStorage').remove('token');            // 统一清理
+// ✅ 正确：使用 Uni-app 的存储 API
+uni.setStorageSync('token', tokenValue);  // 同步存储
+uni.removeStorageSync('token');            // 同步删除
 
 // ✅ 正确：日志脱敏
 console.log('用户登录:', { userId, token: '***' });
@@ -206,23 +205,28 @@ if (element instanceof HTMLElement) {
 ```vue
 <!-- ✅ 检查点：模板结构清晰 -->
 <template>
-  <div class="user-profile">
+  <view class="user-profile">
     <!-- 条件渲染使用v-if -->
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else class="content">
+    <view v-if="loading" class="loading">
+      <text>加载中...</text>
+    </view>
+    <view v-else-if="error" class="error">
+      <text>{{ error }}</text>
+    </view>
+    <view v-else class="content">
       <!-- 列表渲染使用key -->
-      <div v-for="user in userList" :key="user.id" class="user-item">
-        {{ user.username }}
-      </div>
-    </div>
-  </div>
+      <view v-for="user in userList" :key="user.id" class="user-item">
+        <text>{{ user.username }}</text>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script setup lang="ts">
 // ✅ 检查点：导入顺序规范
-import { ref, computed, onMounted, watch } from 'vue';
-import { showToast } from 'vant';
+import { ref, computed, watch } from 'vue';
+import { onLoad } from '@dcloudio/uni-app';
+import { showToast } from '@/utils/toast';
 import { getAuthUserInfo } from '@/api';
 import type { UserInfo } from '@/api';
 
@@ -282,8 +286,8 @@ const fetchUser = async (): Promise<void> => {
   }
 };
 
-// ✅ 检查点：生命周期使用合理
-onMounted(() => {
+// ✅ 检查点：生命周期使用合理 (Uni-app 使用 onLoad)
+onLoad(() => {
   fetchUser();
 });
 
@@ -299,24 +303,24 @@ watch(
 </script>
 
 <style scoped lang="scss">
-// ✅ 检查点：样式组织规范
+// ✅ 检查点：样式组织规范 (使用 rpx 单位)
 .user-profile {
-  padding: 20px;
+  padding: 40rpx;
 
   .loading,
   .error {
     text-align: center;
-    padding: 40px;
+    padding: 80rpx;
   }
 
   .error {
-    color: #f56c6c;
+    color: var(--colorError);
   }
 
   .content {
     .user-item {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
+      padding: 24rpx;
+      border-bottom: 1rpx solid var(--colorBorder);
 
       &:last-child {
         border-bottom: none;
@@ -364,7 +368,7 @@ export const postAuthLogin = async (data: LoginRequest) => {
 
   // 调用生成的API + 添加业务逻辑
   const response = await generatedLogin(data);
-  if (response.token) storage('localStorage').set('token', response.token);
+  if (response.token) uni.setStorageSync('token', response.token);
 
   return response;
 };
@@ -402,7 +406,7 @@ export const useUserStore = defineStore('user', () => {
       userInfo.value = response.userInfo;
 
       // 持久化存储
-      localStorage.setItem('token', token.value);
+      uni.setStorageSync('token', token.value);
     } catch (error) {
       console.error('登录失败:', error);
       throw error;
@@ -419,7 +423,7 @@ export const useUserStore = defineStore('user', () => {
       // 确保状态被清理
       token.value = '';
       userInfo.value = null;
-      localStorage.removeItem('token');
+      uni.removeStorageSync('token');
     }
   };
 

@@ -174,7 +174,7 @@ Object.values(globalVars.styles).forEach(style => {
   }
 });
 
-// 映射到项目 CSS 变量，参考 public/theme.css
+// 映射到项目 CSS 变量，参考 src/styles/theme.scss
 ```
 
 ### 3.3 字体系统
@@ -526,8 +526,8 @@ Figma 提取完成
    ↓
 1. 确定组件类型
    ├─ 基础组件 → src/components/
-   ├─ 页面级组件 → src/views/[page]/components/
-   └─ 页面组件 → src/views/
+   ├─ 页面级组件 → src/pages/[page]/components/ 或 src/pages-sub/[module]/[page]/components/
+   └─ 页面组件 → src/pages/ 或 src/pages-sub/
    详见：@component-development.md#组件分类体系
    ↓
 2. 还原视觉规范
@@ -630,7 +630,7 @@ Figma 提取完成
 ### 项目资源
 
 **CSS 主题系统**:
-- `public/theme.css` - CSS 变量定义（颜色、字体、间距等）
+- `src/styles/theme.scss` - CSS 变量定义（颜色、字体、间距等）
 
 **资源目录**:
 - `src/assets/icons/[project-name]/` - SVG 图标存放目录（使用小写短横线格式 kebab-case）
@@ -638,8 +638,8 @@ Figma 提取完成
 
 **组件目录**:
 - `src/components/` - 全局公用组件（基础组件）
-- `src/views/[page]/components/` - 页面级组件（业务组件）
-- `src/views/` - 页面组件（路由对应）
+- `src/pages/[page]/components/` 或 `src/pages-sub/[module]/[page]/components/` - 页面级组件（业务组件）
+- `src/pages/` 或 `src/pages-sub/` - 页面组件（pages.json 路由对应）
 
 ### 外部资源
 

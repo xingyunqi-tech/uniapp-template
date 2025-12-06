@@ -20,7 +20,14 @@
 // 认证页面布局 (登录、注册、忘记密码等)
 export { default as AuthLayout } from './AuthLayout/index.vue';
 
+// 自定义导航栏 (用于 navigationStyle: custom 页面)
+export { default as UNavBar } from './UNavBar/index.vue';
+
 // ==================== 基础组件 ====================
+// 操作菜单组件 (底部弹出选项列表)
+export { default as UActionSheet } from './UActionSheet/index.vue';
+export type { ActionItem } from './UActionSheet/index.vue';
+
 // 横幅/通知组件
 export { default as UBanner } from './UBanner/index.vue';
 
@@ -32,15 +39,30 @@ export { default as UFixedButton } from './UFixedButton/index.vue';
 
 // 图片组件 (封装懒加载、错误处理、重试)
 export { default as UImage } from './UImage/index.vue';
+export type { Props as UImageProps, ImageMode } from './UImage/index.vue';
 
-// 加载动画组件
+// 加载动画组件 (支持命令式 API: showLoading/hideLoading)
 export { default as ULoading } from './ULoading/index.vue';
+export type { ULoadingProps, LoadingType, SpinnerType } from './ULoading/index.vue';
+
+// 通知公告栏 (基于 uni-notice-bar 封装)
+export { default as UNoticeBar } from './UNoticeBar/index.vue';
+export type { NoticeBarType } from './UNoticeBar/index.vue';
+
+// 弹出层组件 (基于 uni-popup 封装)
+export { default as UPopup } from './UPopup/index.vue';
+export type { PopupType, DialogType, DialogMode } from './UPopup/index.vue';
 
 // 富文本渲染组件
 export { default as URichText } from './URichText/index.vue';
 
-// 标签页组件
+// 骨架屏组件
+export { default as USkeleton } from './USkeleton/index.vue';
+export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';
+
+// 标签页组件 (支持 line/card 两种类型)
 export { default as UTabs } from './UTabs/index.vue';
+export type { TabItem, TabValue, TabType } from './UTabs/index.vue';
 
 // ==================== 表单组件 ====================
 // 表单项包装组件
@@ -49,11 +71,12 @@ export { default as UFormItem } from './UFormItem/index.vue';
 // 密码强度指示器
 export { default as UPasswordStrength } from './UPasswordStrength/index.vue';
 
-// 短信验证码输入组件
+// 短信验证码输入组件 (内置倒计时)
 export { default as USmsInput } from './USmsInput/index.vue';
 
-// 图片上传组件 (支持多选、压缩、自动上传)
+// 图片上传组件 (基于 uni-file-picker 封装)
 export { default as UImageUpload } from './UImageUpload/index.vue';
+export type { FileItem, FileUploadStatus, UploadMode, MediaType, SelectResult } from './UImageUpload/index.vue';
 
 // ==================== 菜单组件 ====================
 // 菜单组容器

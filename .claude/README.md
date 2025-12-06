@@ -1,6 +1,8 @@
 # Claude Code 配置指南
 
-> 本项目的 Claude Code 完整配置，包括 Agents、Skills、Commands 和 Hooks
+> Uni-app 项目的 Claude Code 完整配置，包括 Agents、Skills、Commands 和 Hooks
+
+**重要**: 本项目是 Uni-app 多端项目，使用 pages.json 配置路由（非 Vue Router），使用 uni-ui 组件库。
 
 ---
 
@@ -40,7 +42,7 @@ Skills 是命令式工具，用于快速完成重复性开发任务，效率提�
 | `/architecture-designer` | PRD → 架构设计，生成完整开发计划和 Todo 清单 | `/architecture-designer docs/prd/user.md --create-todos` |
 | `/component-generator` | 智能组件生成，支持基础/业务/页面组件 | `/component-generator UserList --type page --smart` |
 | `/store-generator` | 智能 Pinia Store 生成，自动集成 API | `/store-generator UserStore --smart` |
-| `/page-assembler` | 页面拼装器，组装组件为完整页面 | `/page-assembler src/views/user/index.vue` |
+| `/page-assembler` | 页面拼装器，组装组件为完整页面 | `/page-assembler src/pages-sub/user/profile/index.vue` |
 | `/api-generator` | 自定义 API 生成 (Orval 无法覆盖的 20% 场景) | `/api-generator uploadFile --type upload` |
 | `/figma-to-component` | 从 Figma 设计稿生成 Vue 组件 | `/figma-to-component <figma-url>` |
 
@@ -49,8 +51,8 @@ Skills 是命令式工具，用于快速完成重复性开发任务，效率提�
 | Skill | 功能 | 常用命令 |
 |-------|------|----------|
 | `/test-coverage-checker` | 测试覆盖率检查，自动生成测试模板 | `/test-coverage-checker --auto-generate` |
-| `/implementation-validator` | 代码实现一致性校验 (API + PRD) | `/implementation-validator --all docs/prd/feature.md src/views/feature/` |
-| `/code-optimizer` | 6 维度代码优化 (常量/函数/Composables/组件/指令/类型) | `/code-optimizer src/views/user/ --full` |
+| `/implementation-validator` | 代码实现一致性校验 (API + PRD) | `/implementation-validator --all docs/prd/feature.md src/pages-sub/feature/` |
+| `/code-optimizer` | 6 维度代码优化 (常量/函数/Composables/组件/指令/类型) | `/code-optimizer src/pages-sub/user/ --full` |
 
 ### 命名规范
 
@@ -74,7 +76,7 @@ Skills 根据任务自动匹配，也可以通过描述任务来触发：
 "创建用户管理的 Store"  → 自动使用 /store-generator
 
 # 示例 3: 代码优化
-"优化 src/views/user/ 目录的代码"  → 自动使用 /code-optimizer
+"优化 src/pages-sub/user/ 目录的代码"  → 自动使用 /code-optimizer
 
 # 示例 4: 从 PRD 开始设计
 "根据 docs/prd/user.md 设计架构"  → 自动使用 /architecture-designer
@@ -101,8 +103,8 @@ Skills 根据任务自动匹配，也可以通过描述任务来触发：
 pnpm api:gen                                             # 2. API 同步
 /store-generator UserStore --smart                       # 3. 生成 Store
 /component-generator UserManagement --type page --smart  # 4. 生成页面
-/page-assembler src/views/user/index.vue                 # 5. 页面拼装
-/code-optimizer src/views/user/ --full                   # 6. 代码优化
+/page-assembler src/pages/user/index.vue                 # 5. 页面拼装
+/code-optimizer src/pages/user/ --full                   # 6. 代码优化
 /test-coverage-checker --auto-generate                   # 7. 质量检查
 pnpm commit                                              # 8. 提交代码
 ```
@@ -146,10 +148,10 @@ Agents 提供专业领域的深度指导，Claude 根据任务内容自动选择
 
 | Agent | 文件 | 职责 | 适用场景 |
 |-------|------|------|----------|
-| `common-patterns` | `common-patterns.md` | 通用开发模式 (SSoT)，Props/Emits/CSS变量/盒模型/骨架屏 | 查询通用模式和规范 |
+| `common-patterns` | `common-patterns.md` | 通用开发模式 (SSoT)，Props/Emits/CSS变量/盒模型 | 查询通用模式和规范 |
 | `api-development` | `api-development.md` | Orval API 开发，四层架构/自定义扩展/工作流 | API 使用和扩展 |
 | `component-development` | `component-development.md` | 组件开发规范，设计原则/Figma 还原/样式规范 | 组件设计和开发 |
-| `router-development` | `router-development.md` | 路由配置，三层路由体系/权限控制/路由守卫 | 路由和权限配置 |
+| `router-development` | `router-development.md` | **Uni-app 路由**，pages.json 配置/分包/导航 | 路由和页面配置 |
 
 #### 专业 Agents (按需使用)
 
@@ -290,7 +292,6 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 | `context7` | `@upstash/context7-mcp` | 第三方库文档查询 | 获取最新库文档和 API 参考 |
 | `eslint` | `@eslint/mcp@latest` | ESLint 代码检查 | 文件级别的 lint 检查 |
 | `chrome-devtools` | `chrome-devtools-mcp@latest` | Chrome 开发者工具 | 浏览器调试和性能分析 |
-| `sentry` | `@sentry/mcp-server@latest` | 错误监控 | 查看生产环境错误日志 |
 | `vue-mcp` | (本地服务) | Vue 组件调试 | 组件状态查看 (仅 Cursor) |
 
 ### 完整 MCP 配置 (.mcp.json)
@@ -313,14 +314,6 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
     "chrome-devtools": {
       "command": "npx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
-    },
-    "sentry": {
-      "command": "npx",
-      "args": ["-y", "@sentry/mcp-server@latest", "stdio"],
-      "env": {
-        "SENTRY_AUTH_TOKEN": "<YOUR_SENTRY_AUTH_TOKEN>",
-        "SENTRY_HOST": "https://sentry.io"
-      }
     }
   }
 }
@@ -330,7 +323,7 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 
 ```json
 {
-  "enabledMcpjsonServers": ["figma", "context7", "eslint", "chrome-devtools", "sentry"]
+  "enabledMcpjsonServers": ["figma", "context7", "eslint", "chrome-devtools"]
 }
 ```
 
@@ -356,7 +349,6 @@ mcp__eslint__lint-files  # 检查指定文件
 | 变量 | 服务器 | 获取方式 |
 |------|--------|----------|
 | `FIGMA_API_KEY` | figma | [Figma 开发者设置](https://www.figma.com/developers/api#access-tokens) |
-| `SENTRY_AUTH_TOKEN` | sentry | [Sentry 设置](https://sentry.io/settings/account/api/auth-tokens/) |
 
 > **安全提醒**: 不要将真实的 API Key 提交到代码仓库，使用环境变量或 `.env` 文件管理。
 
@@ -372,8 +364,8 @@ Permissions 控制 Claude 可以自动执行哪些命令（无需确认），配
 |------|------|------|
 | **开发脚本** | `pnpm start:*`, `pnpm build:*` | 启动和构建 |
 | **代码生成** | `pnpm api:gen:*` | Orval API 生成 |
-| **代码质量** | `pnpm lint:*`, `pnpm type-check:*` | ESLint 和 TypeScript 检查 |
-| **测试** | `pnpm test:*`, `pnpm test:e2e:*` | 单元测试和 E2E 测试 |
+| **代码质量** | `pnpm lint:*`, `pnpm lint:fix:*`, `pnpm lint:script:*`, `pnpm type-check:*` | ESLint 和 TypeScript 检查 |
+| **测试** | `pnpm test:*` | 单元测试 |
 | **Git 操作** | `git status`, `git diff`, `git log` 等 | 常用 Git 命令 |
 | **提交** | `git add`, `git commit`, `pnpm commit:*` | 代码提交 |
 

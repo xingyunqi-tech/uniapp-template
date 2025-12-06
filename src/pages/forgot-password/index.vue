@@ -8,7 +8,7 @@
 </route>
 
 <template>
-  <AuthLayout title="找回密码" card-title="重置密码" :class="themeClass">
+  <AuthLayout title="找回密码" card-title="重置密码" :class="globalStore.themeClass">
     <!-- 步骤指示器 -->
     <view class="steps">
       <view :class="['step', { active: step >= 1, done: step > 1 }]">
@@ -89,14 +89,15 @@
 <script setup lang="ts">
 import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms, usePasswordStrength, useTheme } from '@/composables';
+import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import USmsInput from '@/components/USmsInput/index.vue';
 import UPasswordStrength from '@/components/UPasswordStrength/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 const router = useRouter();
 const userStore = useUserStore();

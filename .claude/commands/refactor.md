@@ -38,20 +38,20 @@ description: 重构代码时的最佳实践提示，确保安全、高效、符�
 const handleUserLogin = async () => {
   try {
     const response = await postAuthLogin(data);
-    storage('localStorage').set('token', response.token);
-    router.push('/home');
+    uni.setStorageSync('token', response.token);
+    uni.navigateTo({ url: '/pages/index/index' });
   } catch (error) {
-    showToast('登录失败');
+    uni.showToast({ title: '登录失败', icon: 'none' });
   }
 };
 
 const handleAdminLogin = async () => {
   try {
     const response = await postAuthLogin(data);
-    storage('localStorage').set('token', response.token);
-    router.push('/admin');
+    uni.setStorageSync('token', response.token);
+    uni.navigateTo({ url: '/pages-sub/admin/index/index' });
   } catch (error) {
-    showToast('登录失败');
+    uni.showToast({ title: '登录失败', icon: 'none' });
   }
 };
 
@@ -59,15 +59,15 @@ const handleAdminLogin = async () => {
 const login = async (redirectPath: string) => {
   try {
     const response = await postAuthLogin(data);
-    storage('localStorage').set('token', response.token);
-    router.push(redirectPath);
+    uni.setStorageSync('token', response.token);
+    uni.navigateTo({ url: redirectPath });
   } catch (error) {
-    showToast('登录失败');
+    uni.showToast({ title: '登录失败', icon: 'none' });
   }
 };
 
-const handleUserLogin = () => login('/home');
-const handleAdminLogin = () => login('/admin');
+const handleUserLogin = () => login('/pages/index/index');
+const handleAdminLogin = () => login('/pages-sub/admin/index/index');
 ```
 
 #### 简化复杂逻辑
@@ -141,9 +141,9 @@ setTimeout(() => { }, TOAST_DURATION);
 - [ ] 参考 `@component-development`
 
 #### CSS 变量
-- [ ] **所有颜色使用 CSS 变量**（`public/theme.css`）
+- [ ] **所有颜色使用 CSS 变量**（`src/styles/theme.scss`）
 - [ ] 无硬编码颜色值
-- [ ] 运行 `/css-vars-check --fix` 检查
+- [ ] 使用 rpx 单位
 - [ ] 参考 `@common-patterns`
 
 #### 数据驱动模式
@@ -193,23 +193,23 @@ pnpm build
 ```typescript
 // ❌ 大组件
 <template>
-  <div class="user-page">
+  <view class="user-page">
     <!-- 用户信息 -->
-    <div class="user-info">...</div>
+    <view class="user-info">...</view>
     <!-- 用户列表 -->
-    <div class="user-list">...</div>
+    <view class="user-list">...</view>
     <!-- 用户统计 -->
-    <div class="user-stats">...</div>
-  </div>
+    <view class="user-stats">...</view>
+  </view>
 </template>
 
 // ✅ 拆分为多个小组件
 <template>
-  <div class="user-page">
+  <view class="user-page">
     <UserInfo :user="user" />
     <UserList :users="users" @select="handleSelect" />
     <UserStats :stats="stats" />
-  </div>
+  </view>
 </template>
 ```
 
@@ -290,9 +290,10 @@ const { loading, error, data, execute } = useAsync(() => getUserInfo());
 
 // 2. 在组件中使用
 import { useUserStore } from '@/store/modules/user';
+import { storeToRefs } from 'pinia';
 
 const userStore = useUserStore();
-const user = computed(() => userStore.userInfo);
+const { userInfo } = storeToRefs(userStore);
 ```
 
 ---
@@ -304,7 +305,7 @@ const user = computed(() => userStore.userInfo);
 ```typescript
 // ❌ 每次都重新计算
 <template>
-  <div>{{ expensiveComputation() }}</div>
+  <view>{{ expensiveComputation() }}</view>
 </template>
 
 <script setup lang="ts">
@@ -316,7 +317,7 @@ const expensiveComputation = () => {
 
 // ✅ 使用 computed 缓存
 <template>
-  <div>{{ computedValue }}</div>
+  <view>{{ computedValue }}</view>
 </template>
 
 <script setup lang="ts">

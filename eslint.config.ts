@@ -29,6 +29,8 @@ export default [
         // UniApp 全局变量
         uni: 'readonly',
         UniApp: 'readonly',
+        UniHelper: 'readonly',
+        Page: 'readonly',
         getCurrentPages: 'readonly',
         getApp: 'readonly',
         plus: 'readonly',

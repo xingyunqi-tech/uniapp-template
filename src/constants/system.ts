@@ -33,6 +33,16 @@ export enum THEME_TYPE {
 }
 
 /**
+ * 语言类型
+ */
+export type LocaleType = `${LOCALE_TYPE}`;
+
+/**
+ * 主题类型
+ */
+export type ThemeType = `${THEME_TYPE}`;
+
+/**
  * 应用名称
  */
 export const APP_NAME = 'UniApp Template';

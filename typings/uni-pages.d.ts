@@ -20,7 +20,8 @@ interface NavigateToOptions {
        "/pages-sub/user/settings/index" |
        "/pages-sub/other/about/index" |
        "/pages-sub/other/contact/index" |
-       "/pages-sub/other/feedback/index";
+       "/pages-sub/other/feedback/index" |
+       "/pages-sub/other/webview/index";
 }
 interface RedirectToOptions extends NavigateToOptions {}
 

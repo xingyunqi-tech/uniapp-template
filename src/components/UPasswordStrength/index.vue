@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    UPasswordStrength - 密码强度指示器组件
+    显示密码强度条和规则验证状态
+  -->
   <view class="u-password-strength">
     <!-- 强度条 -->
     <view v-if="showStrengthBar" class="strength-bar-section">

@@ -1,12 +1,14 @@
 ---
 name: store-development
-description: Pinia状态管理开发指导，包括Store设计原则、状态组织和最佳实践
+description: Uni-app Pinia状态管理开发指导，包括Store设计原则、状态组织和最佳实践
 ---
 
-# Store状态管理规范
+# Uni-app Store 状态管理规范
 
 ## 职责
-专门负责Pinia状态管理开发指导，包括Store设计原则、状态组织、最佳实践和性能优化。
+专门负责 Uni-app 项目的 Pinia 状态管理开发指导，包括 Store 设计原则、状态组织、最佳实践和性能优化。
+
+> **重要**: Uni-app 项目使用 `uni.setStorageSync` / `uni.getStorageSync` 进行存储，而非 `localStorage`。
 
 > **通用模式参考**: 本文档中使用的通用开发模式详见 [common-patterns.md](common-patterns.md)，包括:
 > - [Props 定义规范](common-patterns.md#props-定义规范) - TypeScript 类型定义模式
@@ -37,10 +39,11 @@ description: Pinia状态管理开发指导，包括Store设计原则、状态组
 ```
 src/store/
 ├── index.ts                    # Store统一导出
+├── plugins/                    # Store 插件
+│   └── persist.ts             # 持久化插件配置
 └── modules/                    # Store模块
-    ├── user.ts                # 用户状态
-    ├── global.ts              # 全局状态
-    └── app.ts                 # 应用状态
+    ├── user.ts                # 用户状态 (登录、权限)
+    └── global.ts              # 全局状态 (主题、语言)
 ```
 
 ## 🛠️ Store开发模板
@@ -135,6 +138,8 @@ export const useUserStore = defineStore(
           return Promise.reject(new Error('登录失败：未获取到token'));
         }
         setTokenValue(tokenStr);
+        // ✅ Uni-app: 使用 uni.setStorageSync 保存 token
+        uni.setStorageSync('token', tokenStr);
         return Promise.resolve(tokenStr);
       } catch (error) {
         return Promise.reject(error);
@@ -182,6 +187,8 @@ export const useUserStore = defineStore(
         setEmail('');
         setAvatar('');
         setRoles([]);
+        // ✅ Uni-app: 使用 uni.removeStorageSync 清除 token
+        uni.removeStorageSync('token');
         return Promise.resolve();
       } catch {
         // 即使接口调用失败，也要清除本地状态
@@ -191,6 +198,7 @@ export const useUserStore = defineStore(
         setEmail('');
         setAvatar('');
         setRoles([]);
+        uni.removeStorageSync('token');
         return Promise.resolve();
       }
     };

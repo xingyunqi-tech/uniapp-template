@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="about-page" :class="themeClass">
+  <view class="about-page" :class="globalStore.themeClass">
     <!-- Logo 和应用信息 -->
     <view class="app-info">
       <image class="app-logo" src="/static/images/logo.png" mode="aspectFit" />
@@ -44,12 +44,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useRouter, useTheme } from '@/composables';
+import { useRouter } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 import { PAGES } from '@/constants';
 import { APP_NAME, COPYRIGHT } from '@/constants/system';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 const router = useRouter();
 
 const version = ref('1.0.0');

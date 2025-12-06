@@ -40,7 +40,7 @@ TodoWrite([
 **第二步：识别目录结构**
 
 - PRD 目录: `docs/prd/[模块名]/`
-- 实现代码: `src/views/[模块名]/`
+- 实现代码: `src/pages-sub/[模块名]/` 或 `src/pages/[页面名]/`
 - API 规范: `src/api/generated/[模块名]/` (可能多个)
 - **Store 模块: `src/store/modules/*.ts`** ⭐ 关键
   - 使用 `ls src/store/modules/` 列出所有 Store
@@ -60,7 +60,7 @@ TodoWrite([
 **命令 1 - 检查 Views 层合规导入**:
 ```bash
 pattern: "from ['\"]\@/api['\"]"
-glob: "src/views/[模块名]/**/*.{vue,ts}"
+glob: "src/pages-sub/[模块名]/**/*.{vue,ts}"
 output_mode: "content"
 -n: true
 ```
@@ -68,7 +68,7 @@ output_mode: "content"
 **命令 2 - 检查 Views 层违规导入**:
 ```bash
 pattern: "from ['\"]\.\./generated|from ['\"]\.\.\/\.\.\/api\/generated"
-glob: "src/views/[模块名]/**/*.{vue,ts}"
+glob: "src/pages-sub/[模块名]/**/*.{vue,ts}"
 output_mode: "content"
 -n: true
 ```
@@ -132,7 +132,7 @@ Read: src/store/modules/[识别出的相关文件].ts
 1. **搜索类型导入**:
 ```bash
 pattern: "import type.*from ['\"]\@/api['\"]"
-glob: "src/views/[模块名]/**/*.{vue,ts}"
+glob: "src/pages-sub/[模块名]/**/*.{vue,ts}"
 output_mode: "content"
 -n: true
 ```
@@ -229,7 +229,7 @@ await competitionStore.fetchCompetitionList({
 **命令**:
 ```bash
 pattern: "try\\s*\\{"
-glob: "src/views/[模块名]/**/*.{vue,ts}"
+glob: "src/pages-sub/[模块名]/**/*.{vue,ts}"
 output_mode: "count"
 ```
 
@@ -457,7 +457,7 @@ file: "docs/prd/[模块名]/## 功能组1：XX管理.md"
 
 **命令**:
 ```bash
-pattern: "src/views/[模块名]/**/*.vue"
+pattern: "src/pages-sub/[模块名]/**/*.vue"
 ```
 
 **输出示例**:
@@ -498,7 +498,7 @@ pattern: "src/views/[模块名]/**/*.vue"
 
 1. **读取组件完整代码**:
 ```bash
-file: "src/views/competitions/components/competition/CompetitionFormDialog.vue"
+file: "src/pages-sub/competitions/management/components/CompetitionFormDialog.vue"
 # ⚠️ 不设置 limit，读取完整文件！
 ```
 
@@ -506,7 +506,7 @@ file: "src/views/competitions/components/competition/CompetitionFormDialog.vue"
 
 | PRD 需求 | 验证方法 | 代码证据 |
 |---------|---------|---------|
-| 上传竞赛封面图 | 搜索 `<van-uploader>` 或 `uploadFile` | CompetitionFormDialog.vue:12-33 |
+| 上传竞赛封面图 | 搜索 `<UImageUpload>` 或 `uploadFile` | CompetitionFormDialog.vue:12-33 |
 | 富文本编辑器 | 搜索 `RichTextEditor` 组件导入 | CompetitionFormDialog.vue:247 (import) + 153 (使用) |
 | 草稿恢复 | 搜索 `LocalStorage` 或 `DRAFT_KEY` | CompetitionFormDialog.vue:293 (常量) + 580 (恢复逻辑) |
 
@@ -745,7 +745,7 @@ TodoWrite([
 - **PRD**: `docs/prd/[模块名]/` (可能包含多个 PRD 文件)
 - **API**: `src/api/generated/[模块名]/` ⭐ 可能多个 (如 competition-management、award-management、news-management、registration-management)
 - **Store**: `src/store/modules/*.ts` ⭐ 可能多个 (如 competition.ts、award.ts、news.ts、registration.ts)
-- **代码**: `src/views/[模块名]/` (包含所有页面和组件)
+- **代码**: `src/pages-sub/[模块名]/` (包含所有页面和组件)
 ```
 
 ---

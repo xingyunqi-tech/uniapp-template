@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="favorite-page" :class="themeClass">
+  <view class="favorite-page" :class="globalStore.themeClass">
     <!-- 空状态 -->
     <view v-if="!loading && list.length === 0" class="empty-state">
       <text class="i-carbon-star empty-icon" />
@@ -42,9 +42,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useTheme } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 interface FavoriteItem {
   id: string;

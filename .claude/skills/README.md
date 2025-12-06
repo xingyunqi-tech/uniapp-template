@@ -49,10 +49,10 @@ Skills 是 Claude Code 的命令式工具，可以快速完成重复性开发任
 | Skill | 一句话介绍 | 常用命令 |
 |-------|----------|----------|
 | **store-generator** | 🆕 智能 Store 生成,自动集成 API | `/store-generator UserStore --smart` |
-| **page-assembler** | 🆕 页面拼装器,自动集成组件和 Store | `/page-assembler src/views/user/index.vue` |
+| **page-assembler** | 🆕 页面拼装器,自动集成组件和 Store | `/page-assembler src/pages-sub/user/index.vue` |
 | **api-generator** | 🆕 自定义 API 生成 (20% 场景) | `/api-generator uploadFile --type upload` |
 | **test-coverage-checker** | 测试覆盖率检查 + 🆕 自动生成测试 | `/test-coverage-checker --auto-generate` |
-| **implementation-validator** | 🆕 代码实现一致性校验 | `/implementation-validator --all docs/prd/feature.md src/views/feature/` |
+| **implementation-validator** | 🆕 代码实现一致性校验 | `/implementation-validator --all docs/prd/feature.md src/pages-sub/feature/` |
 
 #### 🎯 特殊场景
 
@@ -106,7 +106,7 @@ Skills 是 Claude Code 的命令式工具，可以快速完成重复性开发任
 │ /component-generator UserManagement     │
 │   --type page --smart --with-router     │
 │                                         │
-│ /page-assembler src/views/user/index   │
+│ /page-assembler src/pages-sub/user/index   │
 │   --components UserList,UserForm        │
 │   --store user                          │
 └────────────┬────────────────────────────┘
@@ -157,7 +157,7 @@ pnpm api:gen
 /component-generator UserList --type business
 /component-generator UserForm --type business --with-form
 
-/page-assembler src/views/user-management/index.vue \
+/page-assembler src/pages-sub/user/management/index.vue \
   --components UserList,UserForm \
   --store user \
   --with-infinite-scroll
@@ -262,10 +262,10 @@ pnpm commit
 
 ```bash
 # 智能拼装 - 自动分析依赖
-/page-assembler src/views/user-management/index.vue
+/page-assembler src/pages-sub/user/management/index.vue
 
 # 指定组件和 Store
-/page-assembler src/views/user/index.vue \
+/page-assembler src/pages-sub/user/list/index.vue \
   --components UserList,UserForm \
   --store user \
   --with-infinite-scroll
@@ -369,16 +369,16 @@ pnpm commit
 
 ```bash
 # 校验 API 接口一致性
-/implementation-validator --api src/views/user-management/
+/implementation-validator --api src/pages-sub/user/management/
 
 # 校验 PRD 需求覆盖
-/implementation-validator --prd docs/prd/user-management.md src/views/user-management/
+/implementation-validator --prd docs/prd/user-management.md src/pages-sub/user/management/
 
 # 综合校验（API + PRD）
-/implementation-validator --all docs/prd/user-management.md src/views/user-management/
+/implementation-validator --all docs/prd/user-management.md src/pages-sub/user/management/
 
 # 生成详细报告
-/implementation-validator --all --output validation-report.md docs/prd/feature.md src/views/feature/
+/implementation-validator --all --output validation-report.md docs/prd/feature.md src/pages-sub/feature/
 ```
 
 **功能:**
@@ -411,7 +411,7 @@ pnpm commit
 
 ```bash
 # 分析指定目录
-/code-optimizer src/views/user-management/
+/code-optimizer src/pages-sub/user/management/
 
 # 完整优化 (所有 6 个维度)
 /code-optimizer --full

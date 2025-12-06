@@ -36,8 +36,8 @@ git status --short || true
 
 **输出示例:**
 ```bash
-M  src/components/UserCard/index.vue
-A  src/views/Dashboard/index.vue
+M  src/components/UUserCard/index.vue
+A  src/pages/index/index.vue
 ?? src/api/custom/user.ts
 ```
 
@@ -56,7 +56,7 @@ A  src/views/Dashboard/index.vue
 
 **命令:**
 ```bash
-printf '🚀 Vue Admin Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\n' "$(git branch --show-current 2>/dev/null || echo 'unknown')" "$(git status --short 2>/dev/null | wc -l | tr -d ' ')"
+printf '🚀 Uni-app Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\n' "$(git branch --show-current 2>/dev/null || echo 'unknown')" "$(git status --short 2>/dev/null | wc -l | tr -d ' ')"
 ```
 
 **为什么使用 `printf` 而不是 `echo`？**
@@ -88,8 +88,8 @@ printf '👋 会话结束！\n\n📊 Git 状态：\n' && git status --short 2>/d
 👋 会话结束！
 
 📊 Git 状态：
-M  src/components/UserCard/index.vue
-A  src/views/Dashboard/index.vue
+M  src/components/UUserCard/index.vue
+A  src/pages/index/index.vue
 ?? src/api/custom/user.ts
 ```
 
@@ -195,7 +195,7 @@ A  src/views/Dashboard/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Vue Admin Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }
@@ -389,7 +389,7 @@ A  src/views/Dashboard/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Vue Admin Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }
@@ -461,7 +461,7 @@ A  src/views/Dashboard/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Vue Admin Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }

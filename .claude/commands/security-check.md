@@ -53,7 +53,7 @@ setTimeout(userInput, 1000);
 ```typescript
 // ✅ 安全：转义 URL 参数
 const searchQuery = encodeURIComponent(userInput);
-router.push(`/search?q=${searchQuery}`);
+uni.navigateTo({ url: `/pages/search/index?q=${searchQuery}` });
 ```
 
 #### SQL 注入
@@ -73,10 +73,11 @@ router.push(`/search?q=${searchQuery}`);
 - [ ] 密码不在前端明文传输（使用 HTTPS）
 
 ```typescript
-// ❌ 危险：Token 存储在 localStorage
-localStorage.setItem('token', token);
+// ❌ 危险：Token 存储在不安全的位置
+// H5 端使用 uni.setStorageSync 存储在 localStorage
+// 小程序端可以使用 uni.setStorageSync（相对安全）
 
-// ✅ 安全：Token 存储在 HttpOnly Cookie（后端设置）
+// ✅ 安全：Token 存储在 HttpOnly Cookie（后端设置，H5 端推荐）
 // Set-Cookie: token=xxx; HttpOnly; Secure; SameSite=Strict
 ```
 
@@ -92,7 +93,7 @@ localStorage.setItem('token', token);
 
 ```typescript
 // ❌ 危险：敏感数据存储
-localStorage.setItem('password', password);
+uni.setStorageSync('password', password);
 console.log('User password:', password);
 
 // ✅ 安全：不存储敏感数据
@@ -437,15 +438,16 @@ userComment = '<img src=x onerror="alert(document.cookie)">';
 
 ```typescript
 // ❌ 危险代码
-localStorage.setItem('token', token);
+uni.setStorageSync('token', token);
 console.log('User token:', token);
 
-// 攻击示例
-// 任何脚本都可以读取 localStorage
-const stolenToken = localStorage.getItem('token');
+// 攻击示例 (H5 端)
+// 任何脚本都可以读取存储
+const stolenToken = uni.getStorageSync('token');
 
 // ✅ 修复
-// 使用 HttpOnly Cookie（后端设置）
+// H5 端：使用 HttpOnly Cookie（后端设置）
+// 小程序端：uni.setStorageSync 相对安全
 // 不在日志中输出 Token
 ```
 

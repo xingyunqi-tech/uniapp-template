@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
+import { ROLE, ROLE_LEVEL } from '@/constants/permission';
+import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 // 重新导出类型，保持向后兼容
 export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams };
@@ -13,14 +15,23 @@ export const useUserStore = defineStore(
   'user',
   () => {
     // ==================== State ====================
-    /** 用户 Token */
-    const token = ref<string>('');
-    /** 用户信息 */
+    /** 用户 Token - 从 storage 初始化 */
+    const token = ref<string>(storage.get<string>(STORAGE_KEYS.TOKEN) || '');
+    /** 用户信息 - 由 Pinia persist 管理 */
     const userInfo = ref<UserInfo | null>(null);
 
     // ==================== Getters ====================
     /** 是否已登录 */
     const isLoggedIn = computed(() => !!token.value);
+
+    /** 当前用户角色 */
+    const role = computed(() => userInfo.value?.role || ROLE.GUEST);
+
+    /** 是否为管理员 */
+    const isAdmin = computed(() => role.value === ROLE.ADMIN);
+
+    /** 当前角色层级 */
+    const roleLevel = computed(() => ROLE_LEVEL[role.value] || 0);
 
     // ==================== Actions ====================
     /**
@@ -29,6 +40,12 @@ export const useUserStore = defineStore(
      */
     function setToken(tokenValue: string) {
       token.value = tokenValue;
+      // 同步到 storage
+      if (tokenValue) {
+        storage.set(STORAGE_KEYS.TOKEN, tokenValue);
+      } else {
+        storage.remove(STORAGE_KEYS.TOKEN);
+      }
     }
 
     /**
@@ -197,7 +214,55 @@ export const useUserStore = defineStore(
       } finally {
         token.value = '';
         userInfo.value = null;
+        // 清除 storage 中的 token
+        storage.remove(STORAGE_KEYS.TOKEN);
       }
+    }
+
+    // ==================== 权限检查方法 ====================
+    /**
+     * 检查是否拥有指定角色
+     * @param requiredRole 要求的角色
+     */
+    function hasRole(requiredRole: ROLE): boolean {
+      return role.value === requiredRole;
+    }
+
+    /**
+     * 检查是否拥有指定角色或更高权限
+     * @param requiredRole 要求的最低角色
+     */
+    function hasRoleOrAbove(requiredRole: ROLE): boolean {
+      const requiredLevel = ROLE_LEVEL[requiredRole] || 0;
+      return roleLevel.value >= requiredLevel;
+    }
+
+    /**
+     * 检查是否拥有指定权限
+     * @param permission 权限标识
+     */
+    function hasPermission(permission: string): boolean {
+      // 管理员拥有所有权限
+      if (isAdmin.value) return true;
+      return userInfo.value?.permissions?.includes(permission) ?? false;
+    }
+
+    /**
+     * 检查是否拥有任一权限
+     * @param permissions 权限标识数组
+     */
+    function hasAnyPermission(permissions: string[]): boolean {
+      if (isAdmin.value) return true;
+      return permissions.some(p => hasPermission(p));
+    }
+
+    /**
+     * 检查是否拥有所有权限
+     * @param permissions 权限标识数组
+     */
+    function hasAllPermissions(permissions: string[]): boolean {
+      if (isAdmin.value) return true;
+      return permissions.every(p => hasPermission(p));
     }
 
     return {
@@ -206,6 +271,9 @@ export const useUserStore = defineStore(
       userInfo,
       // Getters
       isLoggedIn,
+      role,
+      isAdmin,
+      roleLevel,
       // Actions
       setToken,
       setUserInfo,
@@ -216,15 +284,18 @@ export const useUserStore = defineStore(
       wechatLogin,
       getUserInfo,
       logout,
+      // 权限检查
+      hasRole,
+      hasRoleOrAbove,
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
     };
   },
   {
     persist: {
-      pick: ['token', 'userInfo'],
-      storage: {
-        getItem: (key: string) => uni.getStorageSync(key),
-        setItem: (key: string, value: string) => uni.setStorageSync(key, value),
-      },
+      // Token 使用 storage 独立存储，只持久化 userInfo
+      pick: ['userInfo'],
     },
   },
 );

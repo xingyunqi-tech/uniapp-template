@@ -1,12 +1,14 @@
 ---
 name: api-development
-description: API接口开发指导，基于Orval自动生成，聚焦API模块使用、自定义扩展和最佳实践
+description: Uni-app API接口开发指导，基于Orval自动生成，聚焦API模块使用、自定义扩展和最佳实践
 ---
 
-# API开发规范 (基于Orval自动生成)
+# Uni-app API 开发规范 (基于 Orval 自动生成)
 
 ## 职责
-专门负责API接口开发指导，基于Orval自动生成机制，指导如何正确使用自动生成的API、进行自定义扩展和遵循最佳实践。
+专门负责 Uni-app 项目的 API 接口开发指导，基于 Orval 自动生成机制，指导如何正确使用自动生成的 API、进行自定义扩展和遵循最佳实践。
+
+> **重要**: Uni-app 项目使用 `luch-request` 作为 HTTP 客户端（而非 Axios），以确保跨平台兼容性。
 
 ## ⚠️ 重要警告
 
@@ -19,18 +21,14 @@ description: API接口开发指导，基于Orval自动生成，聚焦API模块�
 
 ## 🎯 核心架构理解
 
-### 四层架构设计
+### 三层架构设计
 
-项目API模块采用四层架构，实现了**自动生成 + 灵活扩展**的完美结合：
+项目 API 模块采用三层架构，实现了**自动生成 + 灵活扩展**的完美结合：
 
 ```
 src/api/
 ├── core/                      # 1️⃣ 核心基础设施层
-│   ├── http.ts               # HttpClient 类（Axios增强）
-│   ├── mutator.ts            # Orval适配器（请求去重、实例切换）
-│   ├── interceptors/         # 拦截器（request/response）
-│   ├── instances/            # 多实例管理（default/download）
-│   └── utils/                # 工具函数
+│   └── request.ts            # luch-request 封装（跨平台 HTTP 客户端）
 │
 ├── generated/                 # 2️⃣ 代码生成层（Orval自动生成）
 │   ├── auth/                 # 认证模块API
@@ -139,11 +137,9 @@ const getUserInfo = async () => {
 ```typescript
 import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
 import type { LoginRequest, LoginResponse } from '../generated/model';
-import storage from '@/plugins/storage';
-
 /**
  * 登录接口（覆盖版本）
- * 自动保存token到localStorage
+ * 自动保存token到 uni storage
  */
 export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> => {
   // 1. 调用原始生成的函数
@@ -151,7 +147,7 @@ export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> 
 
   // 2. 额外业务逻辑：自动保存token
   if (response.token) {
-    storage('localStorage').set('token', response.token);
+    uni.setStorageSync('token', response.token);
   }
 
   // 3. 记录登录日志（可选）
@@ -266,39 +262,77 @@ export const batchDelete = async (ids: string[]): Promise<ApiResponse<void>> => 
 
 ---
 
-## 🔌 HTTP实例使用
+## 🔌 HTTP 客户端使用
 
-### 多实例管理
+### luch-request 封装
 
-项目提供不同配置的HTTP实例：
+项目使用 `luch-request` 作为 HTTP 客户端，已在 `src/api/core/request.ts` 中封装：
 
-| 实例 | 用途 | 配置特点 |
-|------|------|----------|
-| **defaultHttp** | 普通API请求 + 文件上传 | 超时6s，可自定义 |
-| **downloadHttp** | 文件下载 | 超时120s，responseType: blob |
+```typescript
+// src/api/core/request.ts
+import Request from 'luch-request';
+
+const http = new Request({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000,
+  header: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 请求拦截器
+http.interceptors.request.use((config) => {
+  const token = uni.getStorageSync('token');
+  if (token) {
+    config.header = {
+      ...config.header,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  return config;
+});
+
+// 响应拦截器
+http.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    if (error.statusCode === 401) {
+      uni.removeStorageSync('token');
+      uni.reLaunch({ url: '/pages/login/index' });
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default http;
+```
 
 ### 使用示例
 
 ```typescript
-import { defaultHttp, downloadHttp } from '@/api/core/instances';
+import http from '@/api/core/request';
 
 // 1. 普通请求（通常使用生成的API，不直接用实例）
-const userInfo = await defaultHttp.get('/users/123');
+const userInfo = await http.get('/users/123');
 
-// 2. 文件上传（使用自定义函数，见场景3）
-import { uploadWithProgress } from '@/api';
-await uploadWithProgress(file, (progress) => {
-  console.log(`上传进度: ${progress}%`);
-});
+// 2. 文件上传
+const uploadFile = async (filePath: string) => {
+  const res = await uni.uploadFile({
+    url: `${import.meta.env.VITE_API_BASE_URL}/upload`,
+    filePath,
+    name: 'file',
+    header: {
+      Authorization: `Bearer ${uni.getStorageSync('token')}`,
+    },
+  });
+  return JSON.parse(res.data);
+};
 
-// 3. 文件下载（使用自定义函数）
-import { downloadFile } from '@/api';
-await downloadFile('/files/report.pdf', 'report.pdf');
-
-// 4. 外部API调用
-const weather = await defaultHttp.get('/weather/beijing', {
-  baseURL: 'https://api.weather.com',
-});
+// 3. 文件下载
+const downloadFile = async (url: string) => {
+  const res = await uni.downloadFile({ url });
+  return res.tempFilePath;
+};
 ```
 
 ## 🎨 Pinia Store 状态管理（推荐）

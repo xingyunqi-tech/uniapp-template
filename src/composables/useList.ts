@@ -84,7 +84,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
 
   // 刷新数据
   async function refresh() {
-    if (refreshing.value) return;
+    if (refreshing.value || loading.value) return;
 
     refreshing.value = true;
     page.value = 1;

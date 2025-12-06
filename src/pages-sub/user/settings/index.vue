@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="settings-page" :class="themeClass">
+  <view class="settings-page" :class="globalStore.themeClass">
     <!-- 设置菜单 -->
     <view class="settings-section">
       <UMenuGroup title="账号设置">
@@ -66,13 +66,11 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useRouter, useTheme } from '@/composables';
+import { useRouter } from '@/composables';
 
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import UMenuGroup from '@/components/UMenuGroup/index.vue';
 import UMenuItem from '@/components/UMenuItem/index.vue';
-
-const { themeClass } = useTheme();
 
 const router = useRouter();
 const userStore = useUserStore();

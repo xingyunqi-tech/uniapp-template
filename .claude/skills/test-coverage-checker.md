@@ -77,7 +77,7 @@ description: 自动检查测试覆盖率是否达标,列出覆盖率不足的文
          - Lines: 36.8%
          📝 缺少测试: Props 验证、事件触发、快照测试
 
-      src/views/order/detail.vue
+      src/pages-sub/order/detail/index.vue
          - Statements: 42.1%
          - Branches: 38.9%
          - Functions: 45.2%
@@ -123,7 +123,7 @@ description: 自动检查测试覆盖率是否达标,列出覆盖率不足的文
          - 快照测试
          - 条件渲染测试 (v-if, v-show)
 
-      2. src/views/order/detail.vue
+      2. src/pages-sub/order/detail/index.vue
          建议添加:
          - 页面初始化测试
          - API 调用 Mock 测试
@@ -390,7 +390,7 @@ describe('useProductStore', () => {
    | 模块 | 覆盖率 | 状态 |
    |------|--------|------|
    | src/components/ | 75.2% | ⚠️ 需改进 |
-   | src/views/ | 72.8% | ⚠️ 需改进 |
+   | src/pages/ + src/pages-sub/ | 72.8% | ⚠️ 需改进 |
    | src/store/ | 85.3% | ✅ 达标 |
    | src/utils/ | 92.1% | ✅ 优秀 |
    | src/api/ | 88.5% | ✅ 达标 |

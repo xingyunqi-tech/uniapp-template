@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { isPhone } from '@/utils/validator';
 import { useCountdown } from './useCountdown';
 import { SMS_CODE_LENGTH, SMS_COUNTDOWN_SECONDS } from '@/constants/form';
@@ -50,6 +50,9 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
   });
 
   const sending = ref(false);
+
+  // 标记组件是否已卸载，防止异步操作完成后更新状态
+  let isUnmounted = false;
 
   /**
    * 验证手机号格式
@@ -107,18 +110,31 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
         await sendApi(phone);
       }
 
+      // 组件已卸载，不执行后续操作
+      if (isUnmounted) return false;
+
       // 开始倒计时
       start();
 
       return true;
     } catch (error) {
+      // 组件已卸载，不显示 toast
+      if (isUnmounted) return false;
+
       console.error('发送验证码失败:', error);
       uni.showToast({ title: '发送失败，请重试', icon: 'none' });
       return false;
     } finally {
-      sending.value = false;
+      if (!isUnmounted) {
+        sending.value = false;
+      }
     }
   }
+
+  // 组件卸载时标记
+  onUnmounted(() => {
+    isUnmounted = true;
+  });
 
   return {
     countdown,

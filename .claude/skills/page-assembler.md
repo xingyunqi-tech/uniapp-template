@@ -1,13 +1,13 @@
 ---
 name: page-assembler
-description: 将UI组件、Store、API自动集成到页面中,完成完整的功能拼装
+description: 将UI组件、Store、API自动集成到Uni-app页面中,完成完整的功能拼装
 ---
 
 # 页面拼装器 Skill
 
 ## 功能概述
 
-将已经开发好的 UI 组件、Store、API 自动集成到页面中，完成完整的功能拼装，节省手动集成的时间。
+将已经开发好的 UI 组件、Store、API 自动集成到 Uni-app 页面中，完成完整的功能拼装，节省手动集成的时间。
 
 ## 使用方式
 
@@ -15,36 +15,36 @@ description: 将UI组件、Store、API自动集成到页面中,完成完整的�
 
 ```bash
 # 方式 1: 智能拼装 - 自动分析页面需要的依赖
-/page-assembler src/views/user-management/index.vue
+/page-assembler src/pages/user-management/index.vue
 
 # 方式 2: 指定组件和 Store
-/page-assembler src/views/user-management/index.vue \
+/page-assembler src/pages-sub/user/management/index.vue \
   --components UserList,UserForm \
   --store user
 
 # 方式 3: 完整指定所有依赖
-/page-assembler src/views/product/index.vue \
-  --components ProductList,ProductFilter \
-  --store product,cart \
-  --api getProductList,createProduct
+/page-assembler src/pages-sub/order/list/index.vue \
+  --components OrderList,OrderFilter \
+  --store order,cart \
+  --api getOrderList,createOrder
 ```
 
 ### 高级用法
 
 ```bash
 # 拼装 + 添加骨架屏
-/page-assembler src/views/dashboard/index.vue --with-skeleton
+/page-assembler src/pages/index/index.vue --with-skeleton
 
 # 拼装 + 添加错误处理
-/page-assembler src/views/order/index.vue --with-error-handling
+/page-assembler src/pages-sub/order/list/index.vue --with-error-handling
 
-# 拼装 + 添加无限滚动加载
-/page-assembler src/views/user/index.vue --with-infinite-scroll
+# 拼装 + 添加下拉刷新和加载更多
+/page-assembler src/pages-sub/user/list/index.vue --with-infinite-scroll
 
 # 完整功能拼装
-/page-assembler src/views/product/index.vue \
-  --components ProductList,ProductFilter,ProductForm \
-  --store product \
+/page-assembler src/pages-sub/order/list/index.vue \
+  --components OrderList,OrderFilter,OrderForm \
+  --store order \
   --with-skeleton \
   --with-infinite-scroll \
   --with-error-handling
@@ -63,7 +63,7 @@ description: 将UI组件、Store、API自动集成到页面中,完成完整的�
 
 **输出示例:**
 ```
-🔍 分析页面: src/views/user-management/index.vue
+🔍 分析页面: src/pages-sub/user/management/index.vue
 
 📊 当前状态:
    ✓ 已导入组件: 无
@@ -74,10 +74,10 @@ description: 将UI组件、Store、API自动集成到页面中,完成完整的�
 📋 待拼装内容:
    ☐ 导入组件: UserList, UserForm
    ☐ 使用 Store: useUserStore
-   ☐ 集成 API: useUserList, useUserCreate, useUserDelete
+   ☐ 集成 API: getUserList, createUser, deleteUser
    ☐ 添加 Loading 状态
    ☐ 添加错误处理
-   ☐ 添加无限滚动加载
+   ☐ 添加下拉刷新和加载更多
 ```
 
 ---
@@ -87,8 +87,8 @@ description: 将UI组件、Store、API自动集成到页面中,完成完整的�
 **检查组件:**
 ```bash
 # 检查组件文件是否存在
-src/views/user-management/components/UserList.vue   # ✓ 存在
-src/views/user-management/components/UserForm.vue   # ✓ 存在
+src/pages-sub/user/management/components/UserList.vue   # ✓ 存在
+src/pages-sub/user/management/components/UserForm.vue   # ✓ 存在
 ```
 
 **检查 Store:**
@@ -101,7 +101,6 @@ src/store/modules/user.ts  # ✓ 存在
 ```bash
 # 检查 API 函数是否存在
 src/api/generated/user/user.ts  # ✓ 存在
-src/api/hooks/user.ts           # ✓ 存在
 ```
 
 **如果依赖不存在:**
@@ -134,8 +133,8 @@ import { getUserList, createUser, deleteUser } from '@/api';
 // ========== 类型导入 ==========
 import type { UserDTO, UserCreateRequest } from '@/api';
 
-// ========== Vant 组件 ==========
-import { showToast, showConfirmDialog } from 'vant';
+// ========== 工具函数 ==========
+import { showToast, showModal } from '@/utils/modal';
 ```
 
 ---
@@ -148,31 +147,21 @@ const userStore = useUserStore();
 
 // ========== 状态管理 ==========
 const popupVisible = ref(false);
-const currentUser = ref<User | null>(null);
+const currentUser = ref<UserDTO | null>(null);
+const refreshing = ref(false);
+
 const listState = ref({
-  list: [] as User[],
+  list: [] as UserDTO[],
   loading: false,
   finished: false,
   page: 1,
   pageSize: 20,
 });
 
-// ========== API Hooks ==========
-const {
-  data: userListData,
-  isLoading,
-  error,
-  refetch
-} = useUserList({
-  page: listState.value.page,
-  pageSize: listState.value.pageSize,
+// ========== 生命周期 ==========
+onLoad(() => {
+  handleRefresh();
 });
-
-const createMutation = useUserCreate();
-const deleteMutation = useUserDelete();
-
-// ========== 计算属性 ==========
-const userList = computed(() => userListData.value?.list || []);
 
 // ========== 事件处理 ==========
 const handleAdd = () => {
@@ -180,31 +169,31 @@ const handleAdd = () => {
   popupVisible.value = true;
 };
 
-const handleEdit = (user: User) => {
+const handleEdit = (user: UserDTO) => {
   currentUser.value = user;
   popupVisible.value = true;
 };
 
 const handleDelete = async (id: string) => {
-  try {
-    await showConfirmDialog({
-      title: '提示',
-      message: '确定要删除吗？',
-    });
+  const { confirm } = await showModal({
+    title: '提示',
+    content: '确定要删除吗？',
+  });
 
-    await deleteMutation.mutateAsync(id);
+  if (!confirm) return;
+
+  try {
+    await deleteUser(id);
     showToast('删除成功');
-    refetch();
+    handleRefresh();
   } catch (error: any) {
-    if (error !== 'cancel') {
-      showToast(error.message || '删除失败');
-    }
+    showToast(error.message || '删除失败');
   }
 };
 
 const handleSubmit = async (data: UserCreateRequest) => {
   try {
-    await createMutation.mutateAsync(data);
+    await createUser(data);
     showToast('操作成功');
     popupVisible.value = false;
     handleRefresh();
@@ -213,11 +202,16 @@ const handleSubmit = async (data: UserCreateRequest) => {
   }
 };
 
-// 加载更多 (van-list @load)
+// 加载更多 (scroll-view @scrolltolower)
 const handleLoadMore = async () => {
+  if (listState.value.loading || listState.value.finished) return;
+
   listState.value.loading = true;
   try {
-    const res = await refetch();
+    const res = await getUserList({
+      page: listState.value.page,
+      pageSize: listState.value.pageSize,
+    });
     const newList = res.data?.list || [];
     listState.value.list.push(...newList);
     listState.value.page++;
@@ -227,12 +221,14 @@ const handleLoadMore = async () => {
   }
 };
 
-// 下拉刷新 (van-pull-refresh @refresh)
+// 下拉刷新 (scroll-view @refresherrefresh)
 const handleRefresh = async () => {
+  refreshing.value = true;
   listState.value.page = 1;
   listState.value.list = [];
   listState.value.finished = false;
   await handleLoadMore();
+  refreshing.value = false;
 };
 ```
 
@@ -242,70 +238,62 @@ const handleRefresh = async () => {
 
 ```vue
 <template>
-  <div class="user-management">
+  <view class="user-management">
+    <!-- 导航栏 -->
+    <UNavBar title="用户管理" />
+
     <!-- 页面头部 -->
-    <div class="user-management__header">
-      <h1 class="user-management__title">用户管理</h1>
-      <div class="user-management__actions">
-        <van-button type="primary" @click="handleAdd">
-          添加用户
-        </van-button>
-      </div>
-    </div>
+    <view class="user-management__header">
+      <button class="btn-primary" @tap="handleAdd">
+        添加用户
+      </button>
+    </view>
 
     <!-- Loading 状态 -->
-    <div v-if="isLoading" class="user-management__loading">
-      <van-skeleton :row="5" animated />
-    </div>
+    <USkeleton v-if="!listState.list.length && listState.loading" type="list" :rows="5" />
 
     <!-- 错误状态 -->
-    <div v-else-if="error" class="user-management__error">
-      <van-empty :description="error.message">
-        <van-button type="primary" @click="refetch">
-          重新加载
-        </van-button>
-      </van-empty>
-    </div>
+    <UEmpty v-else-if="error" :description="error.message">
+      <button class="btn-primary" @tap="handleRefresh">
+        重新加载
+      </button>
+    </UEmpty>
 
     <!-- 内容区域 -->
-    <div v-else class="user-management__content">
-      <!-- 下拉刷新 + 无限滚动 -->
-      <van-pull-refresh v-model="refreshing" @refresh="handleRefresh">
-        <van-list
-          v-model:loading="listState.loading"
-          :finished="listState.finished"
-          finished-text="没有更多了"
-          @load="handleLoadMore"
-        >
-          <!-- 用户列表 -->
-          <van-cell-group inset>
-            <van-cell
-              v-for="user in listState.list"
-              :key="user.id"
-              :title="user.username"
-              :label="user.email"
-              is-link
-              @click="handleEdit(user)"
-            />
-          </van-cell-group>
-        </van-list>
-      </van-pull-refresh>
-    </div>
+    <scroll-view
+      v-else
+      class="user-management__list"
+      scroll-y
+      refresher-enabled
+      :refresher-triggered="refreshing"
+      @refresherrefresh="handleRefresh"
+      @scrolltolower="handleLoadMore"
+    >
+      <!-- 用户列表 -->
+      <view
+        v-for="user in listState.list"
+        :key="user.id"
+        class="user-card"
+        @tap="handleEdit(user)"
+      >
+        <text class="user-card__name">{{ user.username }}</text>
+        <text class="user-card__email">{{ user.email }}</text>
+      </view>
+
+      <!-- 加载更多 -->
+      <ULoading v-if="listState.loading" />
+      <view v-if="listState.finished" class="no-more">没有更多了</view>
+    </scroll-view>
 
     <!-- 表单弹出层 -->
-    <van-popup
-      v-model:show="popupVisible"
-      position="bottom"
-      round
-    >
+    <UPopup v-model:show="popupVisible" position="bottom" round>
       <UserForm
         :data="currentUser"
-        :loading="createMutation.isLoading"
         @submit="handleSubmit"
         @cancel="popupVisible = false"
       />
-    </van-popup>
-  </div>
+    </UPopup>
+  </view>
 </template>
 ```
 
@@ -317,8 +305,8 @@ const handleRefresh = async () => {
 
 1. **添加导入语句** (在 `<script setup>` 开始处)
 2. **添加状态管理** (在导入后)
-3. **添加 API Hooks** (在状态管理后)
-4. **添加事件处理** (在 API Hooks 后)
+3. **添加生命周期** (onLoad, onShow)
+4. **添加事件处理** (在生命周期后)
 5. **更新模板** (替换或扩展现有模板)
 
 ---
@@ -329,7 +317,7 @@ const handleRefresh = async () => {
 ✅ 页面拼装完成!
 ─────────────────────────────────────────
 
-📄 页面: src/views/user-management/index.vue
+📄 页面: src/pages-sub/user/management/index.vue
 
 📦 已集成内容:
 
@@ -341,15 +329,15 @@ const handleRefresh = async () => {
       - useUserStore
 
    ✅ API 集成 (3 个):
-      - useUserList (查询)
-      - useUserCreate (创建)
-      - useUserDelete (删除)
+      - getUserList (查询)
+      - createUser (创建)
+      - deleteUser (删除)
 
    ✅ 功能增强:
-      - Loading 状态处理
-      - 错误状态处理
-      - 下拉刷新 + 无限滚动
-      - 底部弹出层表单
+      - Loading 状态处理 (USkeleton)
+      - 错误状态处理 (UEmpty)
+      - 下拉刷新 + 加载更多 (scroll-view)
+      - 底部弹出层表单 (UPopup)
 
 📊 代码统计:
    - 新增导入: 8 个
@@ -359,7 +347,7 @@ const handleRefresh = async () => {
 💡 下一步:
    1. 查看生成的代码? (y/n)
    2. 运行类型检查? (pnpm type-check)
-   3. 启动开发服务器测试? (pnpm start)
+   3. 启动开发服务器测试? (pnpm start:h5)
 ```
 
 ---
@@ -370,9 +358,7 @@ const handleRefresh = async () => {
 
 ```vue
 <!-- 添加骨架屏 Loading 状态 -->
-<div v-if="isLoading" class="user-management__skeleton">
-  <van-skeleton :row="5" animated />
-</div>
+<USkeleton v-if="loading" type="list" :rows="5" />
 ```
 
 ---
@@ -380,81 +366,91 @@ const handleRefresh = async () => {
 ### 选项 2: 添加错误处理 (--with-error-handling)
 
 ```typescript
-// 添加全局错误处理
-const { error, clearError } = useErrorHandler();
+// 添加错误状态
+const error = ref<Error | null>(null);
 
-watch(error, (newError) => {
-  if (newError) {
-    showToast(newError.message);
-  }
-});
-
-// 添加重试逻辑
-const handleRetry = () => {
-  clearError();
-  refetch();
-};
+// 在 API 调用中捕获错误
+try {
+  const data = await fetchData();
+} catch (err: any) {
+  error.value = err;
+  showToast(err.message || '请求失败');
+}
 ```
 
 ```vue
 <!-- 添加错误状态展示 -->
-<div v-else-if="error" class="user-management__error">
-  <van-empty :description="error.message">
-    <van-button type="primary" @click="handleRetry">
-      重新加载
-    </van-button>
-  </van-empty>
-</div>
+<UEmpty v-if="error" :description="error.message">
+  <button class="btn-primary" @tap="handleRetry">
+    重新加载
+  </button>
+</UEmpty>
 ```
 
 ---
 
-### 选项 3: 添加无限滚动 (--with-infinite-scroll)
+### 选项 3: 添加下拉刷新和加载更多 (--with-infinite-scroll)
 
 ```typescript
 // 添加列表状态
 const listState = ref({
-  list: [] as User[],
+  list: [] as UserDTO[],
   loading: false,
   finished: false,
   page: 1,
   pageSize: 20,
 });
+const refreshing = ref(false);
 
-// 加载更多 (van-list @load)
+// 加载更多 (scroll-view @scrolltolower)
 const handleLoadMore = async () => {
+  if (listState.value.loading || listState.value.finished) return;
+
   listState.value.loading = true;
   try {
-    const res = await fetchList({ page: listState.value.page, pageSize: listState.value.pageSize });
-    listState.value.list.push(...res.list);
+    const res = await fetchList({
+      page: listState.value.page,
+      pageSize: listState.value.pageSize,
+    });
+    const newList = res.data?.list || [];
+    listState.value.list.push(...newList);
     listState.value.page++;
-    listState.value.finished = res.list.length < listState.value.pageSize;
+    listState.value.finished = newList.length < listState.value.pageSize;
   } finally {
     listState.value.loading = false;
   }
 };
 
-// 下拉刷新 (van-pull-refresh @refresh)
+// 下拉刷新 (scroll-view @refresherrefresh)
 const handleRefresh = async () => {
+  refreshing.value = true;
   listState.value.page = 1;
   listState.value.list = [];
   listState.value.finished = false;
   await handleLoadMore();
+  refreshing.value = false;
 };
 ```
 
 ```vue
-<!-- 移动端下拉刷新 + 无限滚动 -->
-<van-pull-refresh v-model="refreshing" @refresh="handleRefresh">
-  <van-list
-    v-model:loading="listState.loading"
-    :finished="listState.finished"
-    finished-text="没有更多了"
-    @load="handleLoadMore"
-  >
-    <!-- 列表内容 -->
-  </van-list>
-</van-pull-refresh>
+<!-- Uni-app 下拉刷新 + 加载更多 -->
+<scroll-view
+  class="list-container"
+  scroll-y
+  refresher-enabled
+  :refresher-triggered="refreshing"
+  @refresherrefresh="handleRefresh"
+  @scrolltolower="handleLoadMore"
+>
+  <!-- 列表内容 -->
+  <view v-for="item in listState.list" :key="item.id" class="list-item">
+    <!-- 内容 -->
+  </view>
+
+  <!-- 加载更多 -->
+  <ULoading v-if="listState.loading" />
+  <view v-if="listState.finished" class="no-more">没有更多了</view>
+</scroll-view>
 ```
 
 ---
@@ -466,7 +462,7 @@ const handleRefresh = async () => {
 ### 分析逻辑
 
 1. **根据页面路径推断**:
-   - `src/views/user-management/` → 查找 `src/views/user-management/components/`
+   - `src/pages-sub/user/management/` → 查找 `components/` 子目录
    - 自动导入该目录下的所有组件
 
 2. **根据页面名称推断 Store**:
@@ -474,8 +470,8 @@ const handleRefresh = async () => {
    - `ProductList` → `useProductStore`
 
 3. **根据 Store 推断 API**:
-   - `useUserStore` → `useUserList`, `useUserCreate`, `useUserUpdate`, `useUserDelete`
-   - `useProductStore` → `useProductList`, `useProductById`, `useProductCreate`
+   - `useUserStore` → `getUserList`, `createUser`, `updateUser`, `deleteUser`
+   - `useProductStore` → `getProductList`, `getProductById`, `createProduct`
 
 ---
 
@@ -484,14 +480,14 @@ const handleRefresh = async () => {
 ### 模式 1: 列表页拼装
 
 **特点:**
-- 列表组件 + 下拉刷新 + 无限滚动
+- 列表组件 + 下拉刷新 + 加载更多
 - 搜索筛选组件
 - 添加/编辑表单弹出层
 - 删除确认
 
 **示例:**
 ```bash
-/page-assembler src/views/user/index.vue \
+/page-assembler src/pages-sub/user/list/index.vue \
   --components UserList,UserFilter,UserForm \
   --store user \
   --with-infinite-scroll \
@@ -509,7 +505,7 @@ const handleRefresh = async () => {
 
 **示例:**
 ```bash
-/page-assembler src/views/user/detail.vue \
+/page-assembler src/pages-sub/user/detail/index.vue \
   --components UserDetail,UserEdit \
   --store user \
   --api getUserById,updateUser
@@ -526,7 +522,7 @@ const handleRefresh = async () => {
 
 **示例:**
 ```bash
-/page-assembler src/views/user/create.vue \
+/page-assembler src/pages-sub/user/create/index.vue \
   --components UserForm \
   --api createUser \
   --with-error-handling
@@ -544,7 +540,7 @@ const handleRefresh = async () => {
 /component-generator UserForm --type business --with-form
 
 # 步骤 2: 拼装页面
-/page-assembler src/views/user/index.vue \
+/page-assembler src/pages-sub/user/list/index.vue \
   --components UserList,UserForm \
   --store user
 ```
@@ -555,13 +551,13 @@ const handleRefresh = async () => {
 
 ```bash
 # 第一次: 基础拼装
-/page-assembler src/views/user/index.vue --components UserList
+/page-assembler src/pages-sub/user/list/index.vue --components UserList
 
 # 第二次: 添加表单
-/page-assembler src/views/user/index.vue --components UserForm
+/page-assembler src/pages-sub/user/list/index.vue --components UserForm
 
-# 第三次: 添加无限滚动
-/page-assembler src/views/user/index.vue --with-infinite-scroll
+# 第三次: 添加下拉刷新
+/page-assembler src/pages-sub/user/list/index.vue --with-infinite-scroll
 ```
 
 ---
@@ -570,16 +566,15 @@ const handleRefresh = async () => {
 
 ```bash
 # 拼装完成
-/page-assembler src/views/user/index.vue --components UserList,UserForm
+/page-assembler src/pages-sub/user/list/index.vue --components UserList,UserForm
 
 # 类型检查
 pnpm type-check
 
 # 启动开发服务器
-pnpm start
+pnpm start:h5
 
 # 访问页面测试
-http://localhost:5173/user
 ```
 
 ---
@@ -599,21 +594,20 @@ pnpm api:gen
 /store-generator UserStore --smart
 
 # 步骤 4: 生成页面骨架
-/component-generator UserManagement --type page --with-router
+/component-generator UserManagement --type page --with-router --subpackage user
 
 # 步骤 5: 生成组件
 /component-generator UserList --type business
 /component-generator UserForm --type business --with-form
 
 # 步骤 6: 拼装页面 (重要!)
-/page-assembler src/views/user-management/index.vue \
+/page-assembler src/pages-sub/user/management/index.vue \
   --components UserList,UserForm \
   --store user \
   --with-infinite-scroll \
   --with-error-handling
 
 # 步骤 7: 质量检查
-/test-coverage-checker --auto-generate
 pnpm lint
 pnpm type-check
 ```
@@ -625,6 +619,7 @@ pnpm type-check
 - [component-development.md](../../agents/component-development.md) - 组件开发规范
 - [store-development.md](../../agents/store-development.md) - Store 开发规范
 - [api-development.md](../../agents/api-development.md) - API 开发规范
+- [project-structure.md](../../agents/project-structure.md) - 项目结构
 
 ---
 
@@ -646,10 +641,10 @@ pnpm type-check
 **A:** 分步拼装：
 ```bash
 # 第一步: 基础拼装
-/page-assembler src/views/user/index.vue --components UserList
+/page-assembler src/pages-sub/user/list/index.vue --components UserList
 
 # 第二步: 添加表单
-/page-assembler src/views/user/index.vue --components UserForm
+/page-assembler src/pages-sub/user/list/index.vue --components UserForm
 
 # 手动调整代码...
 ```
@@ -659,7 +654,7 @@ pnpm type-check
 **A:**
 1. 检查依赖是否存在
 2. 检查文件路径是否正确
-3. 使用 Git 回滚: `git restore src/views/user/index.vue`
+3. 使用 Git 回滚: `git restore src/pages-sub/user/list/index.vue`
 4. 手动集成
 
 ---
@@ -670,29 +665,29 @@ pnpm type-check
 
 ```bash
 # 步骤 1: 查看页面现状
-cat src/views/user-management/index.vue
+cat src/pages-sub/user/management/index.vue
 
 # 步骤 2: 拼装页面
-/page-assembler src/views/user-management/index.vue \
+/page-assembler src/pages-sub/user/management/index.vue \
   --components UserList,UserForm,UserFilter \
   --store user \
   --with-infinite-scroll \
   --with-error-handling
 
 # 步骤 3: 查看拼装结果
-cat src/views/user-management/index.vue
+cat src/pages-sub/user/management/index.vue
 
 # 步骤 4: 类型检查
 pnpm type-check
 
 # 步骤 5: 启动开发服务器测试
-pnpm start
+pnpm start:h5
 
 # 步骤 6: 如果有问题，调整代码
-# 编辑 src/views/user-management/index.vue
+# 编辑 src/pages-sub/user/management/index.vue
 
 # 步骤 7: 提交代码
-git add src/views/user-management/
+git add src/pages-sub/user/management/
 git commit -m "feat: assemble user management page"
 ```
 

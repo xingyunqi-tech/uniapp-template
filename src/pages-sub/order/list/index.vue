@@ -7,7 +7,7 @@
 </route>
 
 <template>
-  <view class="order-page" :class="themeClass">
+  <view class="order-page" :class="globalStore.themeClass">
     <!-- 订单状态标签栏 -->
     <UTabs v-model="currentTab" :tabs="tabs" scrollable @change="handleTabChange" />
 
@@ -108,12 +108,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useConfirmModal, useTheme } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
+import { confirm } from '@/utils';
 
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
 import UTabs, { type TabItem } from '@/components/UTabs/index.vue';
 
-const { themeClass } = useTheme();
+const globalStore = useGlobalStore();
 
 interface GoodsItem {
   id: string;
@@ -155,7 +156,7 @@ onShow(() => {
 });
 
 // 切换标签
-function handleTabChange(tab: TabItem) {
+function handleTabChange(_tab: TabItem) {
   page.value = 1;
   noMore.value = false;
   orderList.value = [];
@@ -248,17 +249,15 @@ function handleOrderDetail(id: string) {
   });
 }
 
-const { confirm } = useConfirmModal();
-
 // 取消订单
-async function handleCancel(id: string) {
+async function handleCancel(_id: string) {
   const confirmed = await confirm({
     title: '提示',
     content: '确定要取消该订单吗？',
   });
 
   if (confirmed) {
-    // TODO: 调用取消订单 API
+    // TODO: 调用取消订单 API，使用 _id
     uni.showToast({
       title: '订单已取消',
       icon: 'success',
@@ -276,14 +275,14 @@ function handlePay(id: string) {
 }
 
 // 确认收货
-async function handleConfirm(id: string) {
+async function handleConfirm(_id: string) {
   const confirmed = await confirm({
     title: '提示',
     content: '确认已收到商品？',
   });
 
   if (confirmed) {
-    // TODO: 调用确认收货 API
+    // TODO: 调用确认收货 API，使用 _id
     uni.showToast({
       title: '收货成功',
       icon: 'success',

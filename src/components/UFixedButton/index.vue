@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    UFixedButton - 固定底部按钮组件
+    用于表单提交、确认操作等场景
+  -->
   <view class="u-fixed-button">
     <button :class="['u-fixed-btn', type]" :disabled="disabled || loading" @click="handleClick">
       <slot>
@@ -13,7 +25,7 @@ defineOptions({
   name: 'UFixedButton',
 });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     /** 按钮文字 */
     text?: string;
@@ -40,6 +52,7 @@ const emit = defineEmits<{
 }>();
 
 function handleClick() {
+  if (props.disabled || props.loading) return;
   emit('click');
 }
 </script>

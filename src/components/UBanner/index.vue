@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    UBanner - 轮播横幅组件
+    封装 swiper，提供简化 API 和统一样式
+  -->
   <swiper
     class="u-banner"
     :style="bannerStyle"
@@ -14,7 +26,7 @@
   >
     <swiper-item v-for="(item, index) in list" :key="item[keyField] ?? index" @click="handleClick(item, index)">
       <view class="u-banner__item">
-        <image class="u-banner__image" :src="item[imageField]" :mode="imageMode" />
+        <image class="u-banner__image" :src="item[imageField] ?? ''" :mode="imageMode" />
         <!-- 自定义内容插槽 -->
         <slot name="content" :item="item" :index="index" />
       </view>
@@ -24,6 +36,10 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+
+defineOptions({
+  name: 'UBanner',
+});
 
 export interface Props {
   /** Banner 数据列表 */
@@ -84,6 +100,7 @@ watch(
   val => {
     current.value = val;
   },
+  { immediate: true },
 );
 
 // 计算样式
@@ -92,8 +109,16 @@ const bannerStyle = computed(() => {
   return { height };
 });
 
+/** swiper change 事件类型 */
+interface SwiperChangeEvent {
+  detail: {
+    current: number;
+    source: string;
+  };
+}
+
 // 切换事件
-function handleChange(e: any) {
+function handleChange(e: SwiperChangeEvent) {
   const index = e.detail.current;
   current.value = index;
   emit('update:modelValue', index);

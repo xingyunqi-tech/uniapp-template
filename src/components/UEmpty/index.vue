@@ -1,4 +1,16 @@
+<route lang="json5">
+{
+  meta: {
+    isComponent: true,
+  },
+}
+</route>
+
 <template>
+  <!--
+    UEmpty - 空状态组件
+    用于列表、搜索无结果等场景的空状态展示
+  -->
   <view class="u-empty">
     <view class="u-empty__icon">
       <slot name="icon">
@@ -16,6 +28,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+
+defineOptions({
+  name: 'UEmpty',
+});
 
 export interface Props {
   /** 类型 */

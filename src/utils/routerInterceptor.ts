@@ -1,10 +1,36 @@
 /**
  * UniApp 路由拦截器
  * 用于实现路由守卫功能，替代 vue-router 的 beforeEach
+ *
+ * 功能：
+ * 1. 白名单检查：无需登录即可访问的页面
+ * 2. 登录检查：未登录用户重定向到登录页
+ * 3. 角色权限检查：检查用户是否有权访问特定页面
  */
 import { useUserStore } from '@/store/modules/user';
-import { PAGES, WHITE_LIST } from '@/constants';
-import { isInWhiteList } from '@/utils/router';
+import { PAGES, WHITE_LIST, PAGE_ROLES } from '@/constants';
+import { isInWhiteList, getPathFromUrl } from '@/utils/router';
+
+/**
+ * 检查页面角色权限
+ * @param url 页面路径
+ * @returns 是否有权限访问
+ */
+function checkPageRole(url: string): boolean {
+  const userStore = useUserStore();
+  const path = getPathFromUrl(url);
+
+  // 获取页面所需角色
+  const requiredRoles = PAGE_ROLES[path];
+
+  // 未配置角色要求，允许访问
+  if (!requiredRoles || requiredRoles.length === 0) {
+    return true;
+  }
+
+  // 检查用户是否拥有所需角色
+  return requiredRoles.some(role => userStore.hasRole(role));
+}
 
 /**
  * 路由拦截处理
@@ -15,12 +41,12 @@ function handleRouteIntercept(args: { url: string }): boolean | { url: string } 
   const userStore = useUserStore();
   const url = args.url;
 
-  // 白名单路由直接放行
+  // 1. 白名单路由直接放行
   if (isInWhiteList(url, WHITE_LIST)) {
     return true;
   }
 
-  // 未登录跳转登录页
+  // 2. 未登录跳转登录页
   if (!userStore.isLoggedIn) {
     // 保存原始路径，登录后跳转
     const redirectUrl = encodeURIComponent(url);
@@ -29,6 +55,22 @@ function handleRouteIntercept(args: { url: string }): boolean | { url: string } 
     setTimeout(() => {
       uni.redirectTo({
         url: `${PAGES.LOGIN}?redirect=${redirectUrl}`,
+      });
+    }, 0);
+
+    return false;
+  }
+
+  // 3. 检查角色权限
+  if (!checkPageRole(url)) {
+    uni.showToast({
+      title: '暂无权限访问',
+      icon: 'none',
+    });
+
+    setTimeout(() => {
+      uni.redirectTo({
+        url: `${PAGES.FORBIDDEN}?type=403`,
       });
     }, 0);
 
