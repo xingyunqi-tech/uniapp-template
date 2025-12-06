@@ -18,8 +18,10 @@ unpackage
 # UniApp auto-generated files (by @uni-helper/vite-plugin-uni-pages)
 src/pages.json
 
-# env
-*.local
+# env (保留 .env.development 和 .env.production 用于远程打包)
+.env
+.env.local
+.env.*.local
 
 # Playwright
 playwright-report/

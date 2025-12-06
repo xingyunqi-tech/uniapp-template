@@ -28,8 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue';
+import { computed } from 'vue';
 import { SMS_CODE_LENGTH } from '@/constants/form';
+import { useCountdown } from '@/composables';
 
 defineOptions({
   name: 'USmsInput',
@@ -67,10 +68,16 @@ const emit = defineEmits<{
   send: [];
 }>();
 
-// 内部倒计时状态
-const countdown = ref(0);
-const isCounting = ref(false);
-let timer: ReturnType<typeof setInterval> | null = null;
+// 使用 useCountdown composable 管理倒计时
+const {
+  countdown,
+  isCounting,
+  start: startCountdown,
+  stop: stopCountdown,
+  reset: resetCountdown,
+} = useCountdown({
+  seconds: props.countdownSeconds,
+});
 
 // 按钮是否禁用
 const isButtonDisabled = computed(() => props.disabled || isCounting.value);
@@ -83,29 +90,6 @@ const buttonText = computed(() => {
   return props.defaultText;
 });
 
-// 开始倒计时
-function startCountdown() {
-  countdown.value = props.countdownSeconds;
-  isCounting.value = true;
-
-  timer = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0) {
-      stopCountdown();
-    }
-  }, 1000);
-}
-
-// 停止倒计时
-function stopCountdown() {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
-  isCounting.value = false;
-  countdown.value = 0;
-}
-
 // 点击发送
 function handleClick() {
   if (isButtonDisabled.value) return;
@@ -113,21 +97,18 @@ function handleClick() {
   // 如果配置了 autoStart，则立即开始倒计时
   // 否则需要外部在发送成功后调用 startCountdown()
   if (props.autoStart) {
-    startCountdown();
+    startCountdown(props.countdownSeconds);
   }
 }
-
-// 组件销毁时清理定时器
-onUnmounted(() => {
-  stopCountdown();
-});
 
 // 暴露方法供外部调用
 defineExpose({
   /** 手动开始倒计时 */
-  startCountdown,
+  startCountdown: (seconds?: number) => startCountdown(seconds ?? props.countdownSeconds),
   /** 手动停止倒计时 */
   stopCountdown,
+  /** 重置倒计时 */
+  resetCountdown,
   /** 当前是否在倒计时 */
   isCounting,
   /** 当前倒计时秒数 */

@@ -292,7 +292,6 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 | `context7` | `@upstash/context7-mcp` | 第三方库文档查询 | 获取最新库文档和 API 参考 |
 | `eslint` | `@eslint/mcp@latest` | ESLint 代码检查 | 文件级别的 lint 检查 |
 | `chrome-devtools` | `chrome-devtools-mcp@latest` | Chrome 开发者工具 | 浏览器调试和性能分析 |
-| `vue-mcp` | (本地服务) | Vue 组件调试 | 组件状态查看 (仅 Cursor) |
 
 ### 完整 MCP 配置 (.mcp.json)
 
@@ -301,7 +300,10 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
   "mcpServers": {
     "figma": {
       "command": "npx",
-      "args": ["-y", "figma-developer-mcp", "--figma-api-key=<YOUR_FIGMA_API_KEY>", "--stdio"]
+      "args": ["-y", "figma-developer-mcp", "--stdio"],
+      "env": {
+        "FIGMA_API_KEY": "${FIGMA_API_KEY}"
+      }
     },
     "context7": {
       "command": "npx",
@@ -344,13 +346,23 @@ mcp__eslint__lint-files  # 检查指定文件
 
 ### 环境变量配置
 
-需要配置以下环境变量（或直接写入配置文件）：
+需要配置以下环境变量：
 
 | 变量 | 服务器 | 获取方式 |
 |------|--------|----------|
 | `FIGMA_API_KEY` | figma | [Figma 开发者设置](https://www.figma.com/developers/api#access-tokens) |
 
-> **安全提醒**: 不要将真实的 API Key 提交到代码仓库，使用环境变量或 `.env` 文件管理。
+**配置方式**:
+
+1. **系统环境变量** (推荐): 在系统或 shell 配置中设置
+2. **项目 .env 文件**: 创建 `.env` 文件并添加到 `.gitignore`
+
+```bash
+# .env (添加到 .gitignore)
+FIGMA_API_KEY=figd_xxxxxxxxxxxxxxxxxxxxxxx
+```
+
+> **安全提醒**: 绝对不要将真实的 API Key 提交到代码仓库！
 
 ---
 

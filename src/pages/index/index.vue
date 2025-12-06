@@ -10,7 +10,7 @@
 <template>
   <view class="home-page" :class="globalStore.themeClass">
     <!-- Banner 轮播 -->
-    <u-banner :list="bannerList" :height="300" @click="handleBannerClick" />
+    <UBanner :list="bannerList" :height="300" @click="handleBannerClick" />
 
     <!-- 分类标签 -->
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">

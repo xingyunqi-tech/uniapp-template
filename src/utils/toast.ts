@@ -100,37 +100,31 @@ export function showInfo(title: string, duration = 1500): void {
 }
 
 /**
- * 显示 Loading 提示
- * @param title 提示文本，默认 "加载中..."
- * @param mask 是否显示遮罩层
- *
- * @example
- * ```ts
- * showLoadingToast();
- * // 或
- * showLoadingToast('正在提交...');
- *
- * // 完成后隐藏
- * hideLoading();
- * ```
- */
-export function showLoadingToast(title = '加载中...', mask = true): void {
-  uni.showLoading({
-    title,
-    mask,
-  });
-}
-
-/**
- * 隐藏 Loading
- */
-export function hideLoading(): void {
-  uni.hideLoading();
-}
-
-/**
  * 隐藏 Toast
  */
 export function hideToast(): void {
   uni.hideToast();
 }
+
+// ==================== Loading 相关 ====================
+// 说明：Loading 功能已统一到 useLoading composable
+// 推荐使用 useLoading 或直接导入 showLoading/hideLoading
+//
+// @example
+// ```ts
+// // 方式 1：使用 composable
+// import { useLoading } from '@/composables';
+// const { showLoading, hideLoading, withLoading } = useLoading();
+//
+// // 方式 2：直接导入单例方法
+// import { showLoading, hideLoading, withLoading } from '@/composables';
+//
+// // 显示加载
+// showLoading('加载中...');
+// hideLoading();
+//
+// // 或使用 withLoading 包装异步操作
+// await withLoading(async () => {
+//   await fetchData();
+// }, '数据加载中...');
+// ```

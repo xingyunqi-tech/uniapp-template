@@ -5,6 +5,8 @@ export interface LoadingOptions {
   text?: string;
   /** 是否显示遮罩 */
   mask?: boolean;
+  /** 是否使用原生 Loading（uni.showLoading），默认 true */
+  useNative?: boolean;
 }
 
 export interface UseLoadingReturn {
@@ -35,22 +37,40 @@ const _mask = ref(true);
 /** 引用计数，用于处理并发调用 */
 let _refCount = 0;
 
+/** 是否使用原生 Loading */
+let _useNative = true;
+
 /**
  * 显示 Loading
+ * @param options 配置选项或提示文字
  */
 function showLoading(options?: string | LoadingOptions): void {
   _refCount++;
 
+  let title = '加载中...';
+  let mask = true;
+  let useNative = true;
+
   if (typeof options === 'string') {
-    _text.value = options;
+    title = options;
   } else if (options) {
-    _text.value = options.text ?? '';
-    _mask.value = options.mask ?? true;
-  } else {
-    _text.value = '';
-    _mask.value = true;
+    title = options.text ?? '加载中...';
+    mask = options.mask ?? true;
+    useNative = options.useNative ?? true;
   }
+
+  _text.value = title;
+  _mask.value = mask;
+  _useNative = useNative;
   _visible.value = true;
+
+  // 使用原生 Loading
+  if (_useNative) {
+    uni.showLoading({
+      title,
+      mask,
+    });
+  }
 }
 
 /**
@@ -63,6 +83,11 @@ function hideLoading(): void {
   if (_refCount === 0) {
     _visible.value = false;
     _text.value = '';
+
+    // 隐藏原生 Loading
+    if (_useNative) {
+      uni.hideLoading();
+    }
   }
 }
 
@@ -73,6 +98,9 @@ function forceHideLoading(): void {
   _refCount = 0;
   _visible.value = false;
   _text.value = '';
+
+  // 强制隐藏原生 Loading
+  uni.hideLoading();
 }
 
 /**
