@@ -112,17 +112,17 @@ function handleClick() {
     display: flex;
     flex: 1;
     align-items: center;
-    min-height: 48rpx;
+    min-height: var(--spacing-xl);
   }
 
   &__placeholder {
     color: var(--color-text-placeholder);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   &__value {
     color: var(--color-text);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   &--arrow {
@@ -135,7 +135,7 @@ function handleClick() {
 // 覆盖 uni-forms-item 默认样式
 :deep(.uni-forms-item__label) {
   color: var(--color-text);
-  font-size: 30rpx;
+  font-size: var(--font-size-base);
 }
 
 :deep(.uni-forms-item__content) {
@@ -149,7 +149,7 @@ function handleClick() {
 
 :deep(.uni-forms-item__error) {
   color: var(--color-error);
-  font-size: 24rpx;
+  font-size: var(--font-size-sm);
 }
 
 // 输入框样式统一
@@ -160,7 +160,7 @@ function handleClick() {
   }
 
   .uni-easyinput__content-input {
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 }
 </style>

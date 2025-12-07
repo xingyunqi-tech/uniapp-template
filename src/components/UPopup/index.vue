@@ -229,12 +229,12 @@ defineExpose({
     align-items: center;
     justify-content: center;
     height: 100rpx;
-    border-bottom: 1rpx solid var(--color-border);
+    border-bottom: var(--border-width-base) solid var(--color-border);
   }
 
   &__title {
     color: var(--color-text);
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
     font-weight: 500;
   }
 
@@ -242,24 +242,24 @@ defineExpose({
     display: flex;
     position: absolute;
     top: 50%;
-    right: 24rpx;
+    right: var(--spacing-base);
     align-items: center;
     justify-content: center;
     width: 60rpx;
     height: 60rpx;
     transform: translateY(-50%);
     color: var(--color-text-secondary);
-    font-size: 40rpx;
+    font-size: var(--font-size-xl);
     cursor: pointer;
 
     &:active {
-      opacity: 0.7;
+      opacity: var(--opacity-hover);
     }
   }
 
   &__body {
     flex: 1;
-    padding: 24rpx;
+    padding: var(--spacing-base);
     overflow-y: auto;
   }
 
@@ -268,40 +268,40 @@ defineExpose({
 
     &--center {
       min-width: 500rpx;
-      padding: 32rpx;
-      border-radius: 16rpx;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
     }
 
     &--top,
     &--left,
     &--right {
-      padding: 24rpx;
+      padding: var(--spacing-base);
     }
   }
 }
 
 // 覆盖 uni-popup-dialog 样式
 :deep(.uni-popup-dialog) {
-  border-radius: 16rpx;
+  border-radius: var(--radius-lg);
 }
 
 :deep(.uni-dialog-title) {
   color: var(--color-text);
-  font-size: 34rpx;
+  font-size: var(--font-size-xl);
 }
 
 :deep(.uni-dialog-content) {
   color: var(--color-text-secondary);
-  font-size: 28rpx;
+  font-size: var(--font-size-base);
 }
 
 :deep(.uni-dialog-button-group) {
-  border-top: 1rpx solid var(--color-border);
+  border-top: var(--border-width-base) solid var(--color-border);
 }
 
 :deep(.uni-dialog-button) {
   color: var(--color-text-secondary);
-  font-size: 32rpx;
+  font-size: var(--font-size-lg);
 
   &:last-child {
     color: var(--color-primary);

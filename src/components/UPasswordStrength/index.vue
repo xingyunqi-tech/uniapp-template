@@ -109,29 +109,29 @@ withDefaults(
 .u-password-strength {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: var(--spacing-sm);
 }
 
 // 强度条
 .strength-bar-section {
   display: flex;
-  gap: 12rpx;
+  gap: var(--spacing-sm);
   align-items: center;
 
   .strength-label {
     color: var(--color-text-secondary);
-    font-size: 24rpx;
+    font-size: var(--font-size-sm);
   }
 
   .strength-bars {
     display: flex;
-    gap: 8rpx;
+    gap: var(--spacing-xs);
 
     .strength-bar {
-      width: 48rpx;
+      width: var(--spacing-xl);
       height: 6rpx;
-      transition: background 0.3s;
-      border-radius: 3rpx;
+      transition: background var(--duration-base);
+      border-radius: var(--radius-sm);
       background: var(--color-border);
 
       &.active {
@@ -141,7 +141,7 @@ withDefaults(
   }
 
   .strength-text {
-    font-size: 24rpx;
+    font-size: var(--font-size-sm);
 
     &.weak {
       color: var(--color-error);
@@ -161,27 +161,27 @@ withDefaults(
 .rules-section {
   .rules-title {
     display: block;
-    margin-bottom: 12rpx;
+    margin-bottom: var(--spacing-sm);
     color: var(--color-text-secondary);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   .rules-list {
     display: flex;
     flex-direction: column;
-    gap: 12rpx;
+    gap: var(--spacing-sm);
 
     &.horizontal {
       flex-flow: row wrap;
-      gap: 16rpx;
+      gap: var(--spacing-sm);
     }
 
     .rule-item {
       display: flex;
-      gap: 4rpx;
+      gap: var(--spacing-xs);
       align-items: center;
       color: var(--color-text-placeholder);
-      font-size: 24rpx;
+      font-size: var(--font-size-sm);
 
       &.valid {
         color: var(--color-success);

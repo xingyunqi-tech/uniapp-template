@@ -141,14 +141,14 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
   :deep(.u-rt-h4),
   :deep(.u-rt-h5),
   :deep(.u-rt-h6) {
-    margin: 32rpx 0 16rpx;
+    margin: var(--spacing-lg) 0 var(--spacing-sm);
     color: var(--color-text);
     font-weight: 600;
     line-height: 1.4;
   }
 
   :deep(.u-rt-h1) {
-    font-size: 44rpx;
+    font-size: var(--font-size-xxl);
   }
 
   :deep(.u-rt-h2) {
@@ -156,15 +156,15 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
   }
 
   :deep(.u-rt-h3) {
-    font-size: 36rpx;
+    font-size: var(--font-size-xl);
   }
 
   :deep(.u-rt-h4) {
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
   }
 
   :deep(.u-rt-p) {
-    margin: 16rpx 0;
+    margin: var(--spacing-sm) 0;
     text-align: justify;
   }
 
@@ -185,17 +185,17 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
 
   :deep(.u-rt-ul),
   :deep(.u-rt-ol) {
-    margin: 16rpx 0;
-    padding-left: 40rpx;
+    margin: var(--spacing-sm) 0;
+    padding-left: var(--spacing-xl);
   }
 
   :deep(.u-rt-li) {
-    margin: 8rpx 0;
+    margin: var(--spacing-xs) 0;
   }
 
   :deep(.u-rt-blockquote) {
-    margin: 16rpx 0;
-    padding: 16rpx 24rpx;
+    margin: var(--spacing-sm) 0;
+    padding: var(--spacing-sm) var(--spacing-base);
     border-left: 6rpx solid var(--color-primary);
     background: var(--color-bg-grey);
     color: var(--color-text-secondary);
@@ -203,13 +203,13 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
 
   :deep(.u-rt-table) {
     width: 100%;
-    margin: 16rpx 0;
+    margin: var(--spacing-sm) 0;
     border-collapse: collapse;
   }
 
   :deep(.u-rt-th),
   :deep(.u-rt-td) {
-    padding: 12rpx 16rpx;
+    padding: var(--spacing-sm) var(--spacing-sm);
     border: 1px solid var(--color-border);
     text-align: left;
   }
@@ -222,27 +222,27 @@ function handleItemClick(e: { detail: { node: RichTextNode } }) {
   :deep(.u-rt-img) {
     max-width: 100%;
     height: auto;
-    margin: 16rpx 0;
+    margin: var(--spacing-sm) 0;
     border-radius: var(--radius-base);
   }
 
   :deep(.u-rt-hr) {
-    margin: 32rpx 0;
+    margin: var(--spacing-lg) 0;
     border: none;
     border-top: 1px solid var(--color-border);
   }
 
   :deep(.u-rt-code) {
-    padding: 4rpx 12rpx;
+    padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
     background: var(--color-bg-grey);
     font-family: monospace;
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   :deep(.u-rt-pre) {
-    margin: 16rpx 0;
-    padding: 24rpx;
+    margin: var(--spacing-sm) 0;
+    padding: var(--spacing-base);
     overflow-x: auto;
     border-radius: var(--radius-base);
     background: var(--color-bg-grey);

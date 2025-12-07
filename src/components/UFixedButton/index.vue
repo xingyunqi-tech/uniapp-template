@@ -63,8 +63,8 @@ function handleClick() {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 24rpx;
-  padding-bottom: calc(24rpx + var(--safe-area-inset-bottom));
+  padding: var(--spacing-base);
+  padding-bottom: calc(var(--spacing-base) + var(--safe-area-inset-bottom));
   background: var(--color-bg);
   box-shadow: var(--shadow-light);
 
@@ -74,7 +74,7 @@ function handleClick() {
     border: none;
     border-radius: var(--radius-lg);
     color: var(--color-text-inverse);
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
     line-height: 96rpx;
 
     &::after {
@@ -90,17 +90,17 @@ function handleClick() {
     }
 
     &.default {
-      border: 1px solid var(--color-border);
+      border: var(--border-width-base) solid var(--color-border);
       background: var(--color-bg);
       color: var(--color-text);
     }
 
     &[disabled] {
-      opacity: 0.6;
+      opacity: var(--opacity-disabled);
     }
 
     &:active:not([disabled]) {
-      opacity: 0.8;
+      opacity: var(--opacity-hover);
     }
   }
 }

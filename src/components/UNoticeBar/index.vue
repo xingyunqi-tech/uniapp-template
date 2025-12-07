@@ -165,11 +165,11 @@ defineExpose({
   }
 
   :deep(.uni-noticebar-icon) {
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
   }
 
   :deep(.uni-noticebar__content-text) {
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   // 类型变体样式

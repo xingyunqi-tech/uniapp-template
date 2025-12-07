@@ -146,8 +146,8 @@ function handleMaskClick() {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 32rpx;
-    border-radius: 16rpx;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
     background-color: var(--color-bg-mask);
   }
 
@@ -191,9 +191,9 @@ function handleMaskClick() {
   }
 
   &__text {
-    margin-top: 16rpx;
+    margin-top: var(--spacing-sm);
     color: var(--color-text-inverse);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   // 主色调

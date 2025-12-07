@@ -122,48 +122,48 @@ function handleClose() {
 <style scoped lang="scss">
 .u-tag {
   display: inline-flex;
-  gap: 4rpx;
+  gap: var(--spacing-xs);
   align-items: center;
-  border-radius: 4rpx;
+  border-radius: var(--radius-sm);
 
   // ==================== 尺寸 ====================
 
   &--small {
-    padding: 2rpx 8rpx;
+    padding: 2rpx var(--spacing-xs);
 
     .u-tag__text {
-      font-size: 20rpx;
+      font-size: var(--font-size-xs);
     }
 
     .u-tag__icon,
     .u-tag__close {
-      font-size: 20rpx;
+      font-size: var(--font-size-xs);
     }
   }
 
   &--medium {
-    padding: 4rpx 12rpx;
+    padding: 4rpx var(--spacing-sm);
 
     .u-tag__text {
-      font-size: 24rpx;
+      font-size: var(--font-size-sm);
     }
 
     .u-tag__icon,
     .u-tag__close {
-      font-size: 24rpx;
+      font-size: var(--font-size-sm);
     }
   }
 
   &--large {
-    padding: 8rpx 16rpx;
+    padding: var(--spacing-xs) var(--spacing-sm);
 
     .u-tag__text {
-      font-size: 28rpx;
+      font-size: var(--font-size-base);
     }
 
     .u-tag__icon,
     .u-tag__close {
-      font-size: 28rpx;
+      font-size: var(--font-size-base);
     }
   }
 
@@ -174,7 +174,7 @@ function handleClose() {
     color: var(--color-text-secondary);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-border);
+      border: var(--border-width-base) solid var(--color-border);
       background: transparent;
     }
   }
@@ -184,7 +184,7 @@ function handleClose() {
     color: var(--color-text-inverse);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-primary);
+      border: var(--border-width-base) solid var(--color-primary);
       background: var(--color-primary-bg);
       color: var(--color-primary);
     }
@@ -195,7 +195,7 @@ function handleClose() {
     color: var(--color-text-inverse);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-success);
+      border: var(--border-width-base) solid var(--color-success);
       background: var(--color-success-bg);
       color: var(--color-success);
     }
@@ -206,7 +206,7 @@ function handleClose() {
     color: var(--color-text-inverse);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-warning);
+      border: var(--border-width-base) solid var(--color-warning);
       background: var(--color-warning-bg);
       color: var(--color-warning);
     }
@@ -217,7 +217,7 @@ function handleClose() {
     color: var(--color-text-inverse);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-error);
+      border: var(--border-width-base) solid var(--color-error);
       background: var(--color-error-bg);
       color: var(--color-error);
     }
@@ -228,7 +228,7 @@ function handleClose() {
     color: var(--color-text-inverse);
 
     &.u-tag--plain {
-      border: 1rpx solid var(--color-info);
+      border: var(--border-width-base) solid var(--color-info);
       background: var(--color-info-bg);
       color: var(--color-info);
     }
@@ -237,16 +237,16 @@ function handleClose() {
   // ==================== 变体 ====================
 
   &--round {
-    border-radius: 999rpx;
+    border-radius: var(--radius-full);
   }
 
   &--closeable {
     .u-tag__close {
-      margin-left: 4rpx;
+      margin-left: var(--spacing-xs);
       cursor: pointer;
 
       &:active {
-        opacity: 0.7;
+        opacity: var(--opacity-hover);
       }
     }
   }

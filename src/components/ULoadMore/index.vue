@@ -68,35 +68,35 @@ withDefaults(defineProps<Props>(), {
 <style scoped lang="scss">
 .u-load-more {
   display: flex;
-  gap: 16rpx;
+  gap: var(--spacing-sm);
   align-items: center;
   justify-content: center;
-  padding: 32rpx;
+  padding: var(--spacing-lg);
 
   &__spinner {
     width: 32rpx;
     height: 32rpx;
     animation: u-load-more-rotate 0.8s linear infinite;
     border: 3rpx solid var(--color-border);
-    border-radius: 50%;
+    border-radius: var(--radius-circle);
     border-top-color: var(--color-primary);
   }
 
   &__text {
     color: var(--color-text-placeholder);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   &__line {
     flex: 1;
     max-width: 100rpx;
-    height: 1rpx;
+    height: var(--border-width-base);
     background: var(--color-border);
   }
 
   &--line {
     .u-load-more__text {
-      padding: 0 16rpx;
+      padding: 0 var(--spacing-sm);
     }
   }
 }

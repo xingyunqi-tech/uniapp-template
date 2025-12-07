@@ -119,7 +119,7 @@ defineExpose({
 <style scoped lang="scss">
 .u-sms-input {
   display: flex;
-  gap: 20rpx;
+  gap: var(--spacing-base);
   align-items: center;
 
   :deep(.uni-easyinput) {
@@ -135,7 +135,7 @@ defineExpose({
     border-radius: var(--radius-base);
     background: var(--color-primary);
     color: var(--color-text-inverse);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
     line-height: 72rpx;
 
     &::after {
@@ -143,7 +143,7 @@ defineExpose({
     }
 
     &:active {
-      opacity: 0.8;
+      opacity: var(--opacity-hover);
     }
 
     &[disabled] {

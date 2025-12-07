@@ -69,23 +69,23 @@ const iconClass = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64rpx 32rpx;
+  padding: var(--spacing-xxl) var(--spacing-lg);
 
   &__icon {
-    margin-bottom: 24rpx;
+    margin-bottom: var(--spacing-base);
     color: var(--color-text-placeholder);
     font-size: 128rpx;
   }
 
   &__text {
     color: var(--color-text-secondary);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
     line-height: 1.5;
     text-align: center;
   }
 
   &__action {
-    margin-top: 32rpx;
+    margin-top: var(--spacing-lg);
   }
 }
 </style>

@@ -58,9 +58,9 @@ withDefaults(defineProps<Props>(), {
   box-sizing: border-box;
   width: 100%;
   min-height: 100vh;
-  padding: 40rpx;
-  padding-top: calc(var(--safe-area-inset-top) + 40rpx);
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 40rpx);
+  padding: var(--spacing-xl);
+  padding-top: calc(var(--safe-area-inset-top) + var(--spacing-xl));
+  padding-bottom: calc(var(--safe-area-inset-bottom) + var(--spacing-xl));
   overflow-y: auto;
   background: linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-success-bg) 100%);
 }
@@ -68,34 +68,34 @@ withDefaults(defineProps<Props>(), {
 // Logo 头部
 .auth-header {
   display: flex;
-  gap: 32rpx;
+  gap: var(--spacing-lg);
   align-items: center;
   margin-bottom: 80rpx;
-  padding-top: 40rpx;
+  padding-top: var(--spacing-xl);
 
   .logo-icon {
     flex-shrink: 0;
     width: 128rpx;
     height: 128rpx;
-    border-radius: 24rpx;
+    border-radius: var(--radius-xl);
     box-shadow: var(--shadow-base);
   }
 
   .logo-text {
     display: flex;
     flex-direction: column;
-    gap: 8rpx;
+    gap: var(--spacing-xs);
 
     .logo-title {
       color: var(--color-text);
-      font-size: 48rpx;
+      font-size: var(--font-size-xxl);
       font-weight: 600;
       line-height: 1.3;
     }
 
     .logo-subtitle {
       color: var(--color-text-secondary);
-      font-size: 28rpx;
+      font-size: var(--font-size-base);
       line-height: 1.4;
     }
   }
@@ -105,16 +105,16 @@ withDefaults(defineProps<Props>(), {
 .auth-card {
   box-sizing: border-box;
   width: 100%;
-  padding: 64rpx 48rpx;
-  border-radius: 32rpx;
-  background: var(--color-bg);
+  padding: var(--spacing-xxl) var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-card);
   box-shadow: var(--shadow-lg);
 
   .card-title {
     display: block;
-    margin-bottom: 32rpx;
+    margin-bottom: var(--spacing-lg);
     color: var(--color-text);
-    font-size: 44rpx;
+    font-size: var(--font-size-xxl);
     font-weight: 600;
     line-height: 1.3;
     text-align: center;

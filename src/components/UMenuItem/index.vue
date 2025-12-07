@@ -158,7 +158,7 @@ const customIconStyle = computed(() => ({
 
 // 自定义样式
 const customStyle = computed(() => ({
-  backgroundColor: 'var(--color-bg)',
+  backgroundColor: 'var(--color-bg-card)',
 }));
 
 // 处理点击
@@ -176,7 +176,7 @@ function handleSwitchChange(e: { value: boolean }) {
 .u-menu-item__icon-slot {
   display: flex;
   align-items: center;
-  margin-right: 24rpx;
+  margin-right: var(--spacing-base);
 }
 
 .u-menu-item__custom-icon {

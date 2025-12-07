@@ -172,35 +172,35 @@ defineExpose({
   }
 
   &__header {
-    padding: 32rpx 32rpx 16rpx;
+    padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-sm);
     text-align: center;
   }
 
   &__title {
     display: block;
     color: var(--color-text);
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
     font-weight: 500;
   }
 
   &__description {
     display: block;
-    margin-top: 8rpx;
+    margin-top: var(--spacing-xs);
     color: var(--color-text-secondary);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   &__actions {
-    padding: 8rpx 0;
+    padding: var(--spacing-xs) 0;
   }
 
   &__item {
     display: flex;
-    gap: 16rpx;
+    gap: var(--spacing-sm);
     align-items: center;
     justify-content: center;
     height: 112rpx;
-    transition: background-color 0.2s;
+    transition: background-color var(--duration-fast);
     cursor: pointer;
 
     &:active {
@@ -215,7 +215,7 @@ defineExpose({
     }
 
     &--disabled {
-      opacity: 0.5;
+      opacity: var(--opacity-disabled);
       cursor: not-allowed;
 
       &:active {
@@ -226,17 +226,17 @@ defineExpose({
 
   &__icon {
     color: var(--color-text);
-    font-size: 40rpx;
+    font-size: var(--font-size-xl);
   }
 
   &__text {
     color: var(--color-text);
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
   }
 
   &__sub-text {
     color: var(--color-text-secondary);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   &__cancel {
@@ -244,8 +244,8 @@ defineExpose({
     align-items: center;
     justify-content: center;
     height: 112rpx;
-    margin-top: 16rpx;
-    border-top: 16rpx solid var(--color-bg-grey);
+    margin-top: var(--spacing-sm);
+    border-top: var(--spacing-sm) solid var(--color-bg-grey);
     cursor: pointer;
 
     &:active {
@@ -255,7 +255,7 @@ defineExpose({
 
   &__cancel-text {
     color: var(--color-text);
-    font-size: 32rpx;
+    font-size: var(--font-size-lg);
   }
 }
 </style>

@@ -201,7 +201,7 @@ function handleRetry() {
     justify-content: center;
     background: var(--color-bg-grey);
     inset: 0;
-    gap: 8rpx;
+    gap: var(--spacing-xs);
   }
 
   &__placeholder,
@@ -212,12 +212,12 @@ function handleRetry() {
 
   &__icon {
     color: var(--color-text-placeholder);
-    font-size: 48rpx;
+    font-size: var(--font-size-xl);
   }
 
   &__error-text {
     color: var(--color-text-secondary);
-    font-size: 24rpx;
+    font-size: var(--font-size-sm);
   }
 }
 </style>

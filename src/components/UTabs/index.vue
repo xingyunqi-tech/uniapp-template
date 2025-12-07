@@ -132,7 +132,7 @@ function handleTabClick(tab: TabItem) {
 
   &__list {
     display: inline-flex;
-    padding: 0 16rpx;
+    padding: 0 var(--spacing-sm);
 
     &--flex {
       display: flex;
@@ -148,7 +148,7 @@ function handleTabClick(tab: TabItem) {
     align-items: center;
     justify-content: center;
     height: 96rpx;
-    padding: 0 32rpx;
+    padding: 0 var(--spacing-lg);
     transition: all var(--duration-fast);
     cursor: pointer;
 
@@ -161,11 +161,11 @@ function handleTabClick(tab: TabItem) {
       &::after {
         content: '';
         position: absolute;
-        right: 32rpx;
+        right: var(--spacing-lg);
         bottom: 0;
-        left: 32rpx;
-        height: 4rpx;
-        border-radius: 2rpx;
+        left: var(--spacing-lg);
+        height: var(--border-width-bold);
+        border-radius: var(--radius-sm);
         background: var(--color-primary);
       }
     }
@@ -183,20 +183,20 @@ function handleTabClick(tab: TabItem) {
   &__text {
     transition: color var(--duration-fast);
     color: var(--color-text-secondary);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   &__badge {
     position: absolute;
-    top: 16rpx;
-    right: 8rpx;
+    top: var(--spacing-sm);
+    right: var(--spacing-xs);
     min-width: 32rpx;
     height: 32rpx;
-    padding: 0 8rpx;
-    border-radius: 16rpx;
+    padding: 0 var(--spacing-xs);
+    border-radius: var(--radius-full);
     background: var(--color-error);
     color: var(--color-text-inverse);
-    font-size: 20rpx;
+    font-size: var(--font-size-xs);
     line-height: 32rpx;
     text-align: center;
   }
@@ -210,19 +210,19 @@ function handleTabClick(tab: TabItem) {
 
   // 卡片类型样式
   &--card {
-    padding: 8rpx;
+    padding: var(--spacing-xs);
     border-radius: var(--radius-lg);
     background: var(--color-bg-grey);
     box-shadow: none;
 
     .u-tabs__list {
-      gap: 8rpx;
+      gap: var(--spacing-xs);
       padding: 0;
     }
 
     .u-tabs__item {
       height: 72rpx;
-      padding: 0 24rpx;
+      padding: 0 var(--spacing-base);
       border-radius: var(--radius-base);
       background: transparent;
 

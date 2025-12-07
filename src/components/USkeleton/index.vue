@@ -150,16 +150,16 @@ $skeleton-highlight: var(--color-bg);
     flex-shrink: 0;
     width: 80rpx;
     height: 80rpx;
-    margin-right: 24rpx;
-    border-radius: 8rpx;
+    margin-right: var(--spacing-base);
+    border-radius: var(--radius-base);
     background: $skeleton-color;
 
     &--circle {
-      border-radius: 50%;
+      border-radius: var(--radius-circle);
     }
 
     &--square {
-      border-radius: 8rpx;
+      border-radius: var(--radius-base);
     }
 
     &--large {
@@ -177,9 +177,9 @@ $skeleton-highlight: var(--color-bg);
   // 标题
   &__title {
     width: 40%;
-    height: 32rpx;
-    margin-bottom: 24rpx;
-    border-radius: 4rpx;
+    height: var(--font-size-lg);
+    margin-bottom: var(--spacing-base);
+    border-radius: var(--radius-sm);
     background: $skeleton-color;
   }
 
@@ -187,22 +187,22 @@ $skeleton-highlight: var(--color-bg);
   &__paragraph {
     display: flex;
     flex-direction: column;
-    gap: 16rpx;
+    gap: var(--spacing-sm);
   }
 
   // 行
   &__row {
     width: 100%;
-    height: 28rpx;
-    border-radius: 4rpx;
+    height: var(--font-size-base);
+    border-radius: var(--radius-sm);
     background: $skeleton-color;
   }
 
   // 列表项
   &__list-item {
     display: flex;
-    padding: 24rpx 0;
-    border-bottom: 1rpx solid var(--color-border);
+    padding: var(--spacing-base) 0;
+    border-bottom: var(--border-width-base) solid var(--color-border);
 
     &:last-child {
       border-bottom: none;
@@ -211,10 +211,10 @@ $skeleton-highlight: var(--color-bg);
 
   // 卡片
   &__card {
-    margin-bottom: 24rpx;
+    margin-bottom: var(--spacing-base);
     overflow: hidden;
-    border-radius: 16rpx;
-    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-card);
     box-shadow: var(--shadow-sm);
 
     &:last-child {
@@ -229,15 +229,15 @@ $skeleton-highlight: var(--color-bg);
   }
 
   &__card-content {
-    padding: 24rpx;
+    padding: var(--spacing-base);
   }
 
   // 表单项
   &__form-item {
     display: flex;
     align-items: center;
-    padding: 24rpx 0;
-    border-bottom: 1rpx solid var(--color-border);
+    padding: var(--spacing-base) 0;
+    border-bottom: var(--border-width-base) solid var(--color-border);
 
     &:last-child {
       border-bottom: none;
@@ -247,28 +247,28 @@ $skeleton-highlight: var(--color-bg);
   &__label {
     flex-shrink: 0;
     width: 160rpx;
-    height: 32rpx;
-    margin-right: 24rpx;
-    border-radius: 4rpx;
+    height: var(--font-size-lg);
+    margin-right: var(--spacing-base);
+    border-radius: var(--radius-sm);
     background: $skeleton-color;
   }
 
   &__input {
     flex: 1;
-    height: 64rpx;
-    border-radius: 8rpx;
+    height: var(--spacing-xxl);
+    border-radius: var(--radius-base);
     background: $skeleton-color;
   }
 
   // 详情
   &__detail {
-    padding: 24rpx;
+    padding: var(--spacing-base);
   }
 
   &__detail-header {
     display: flex;
     align-items: center;
-    margin-bottom: 32rpx;
+    margin-bottom: var(--spacing-lg);
   }
 
   &__detail-info {

@@ -183,7 +183,7 @@ function handleRightClick() {
   }
 
   &--border {
-    border-bottom: 1rpx solid var(--color-border);
+    border-bottom: var(--border-width-base) solid var(--color-border);
   }
 
   &--light {
@@ -203,7 +203,7 @@ function handleRightClick() {
     position: relative;
     align-items: center;
     justify-content: center;
-    padding: 0 16rpx;
+    padding: 0 var(--spacing-sm);
   }
 
   &__left,
@@ -219,34 +219,34 @@ function handleRightClick() {
   }
 
   &__left {
-    left: 16rpx;
+    left: var(--spacing-sm);
   }
 
   &__right {
-    right: 16rpx;
+    right: var(--spacing-sm);
     justify-content: flex-end;
   }
 
   &__back {
     display: flex;
     align-items: center;
-    padding: 8rpx;
+    padding: var(--spacing-xs);
     cursor: pointer;
 
     &:active {
-      opacity: 0.7;
+      opacity: var(--opacity-hover);
     }
   }
 
   &__back-icon {
     color: var(--color-text);
-    font-size: 44rpx;
+    font-size: var(--font-size-xxl);
   }
 
   &__back-text {
-    margin-left: 4rpx;
+    margin-left: var(--spacing-xs);
     color: var(--color-text);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   &__title {
@@ -260,7 +260,7 @@ function handleRightClick() {
   &__title-text {
     overflow: hidden;
     color: var(--color-text);
-    font-size: 34rpx;
+    font-size: var(--font-size-xl);
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;

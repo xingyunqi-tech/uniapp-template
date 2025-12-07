@@ -40,16 +40,16 @@ withDefaults(defineProps<Props>(), {
 <style scoped lang="scss">
 .u-menu-group {
   &__title {
-    margin-bottom: 16rpx;
-    padding-left: 8rpx;
+    margin-bottom: var(--spacing-sm);
+    padding-left: var(--spacing-xs);
     color: var(--color-text-secondary);
-    font-size: 26rpx;
+    font-size: var(--font-size-sm);
   }
 
   &__list {
     overflow: hidden;
     border-radius: var(--radius-lg);
-    background: var(--color-bg);
+    background: var(--color-bg-card);
     box-shadow: var(--shadow-sm);
   }
 }

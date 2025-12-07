@@ -245,12 +245,12 @@ defineExpose({
   }
 
   &__add-icon {
-    font-size: 48rpx;
+    font-size: var(--font-size-xl);
   }
 
   &__add-text {
-    margin-top: 8rpx;
-    font-size: 24rpx;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
   }
 }
 
@@ -258,7 +258,7 @@ defineExpose({
 :deep(.uni-file-picker__container) {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
+  gap: var(--spacing-sm);
 }
 
 :deep(.file-picker__box) {
