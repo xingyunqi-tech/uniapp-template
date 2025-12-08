@@ -110,7 +110,8 @@ import { confirm } from '@/utils';
 import type { LoadMoreStatus } from '@/components';
 
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
-import UTabs, { type TabItem } from '@/components/UTabs/index.vue';
+import { UTabs } from '@/components';
+import type { TabItem } from '@/components';
 
 const globalStore = useGlobalStore();
 

@@ -53,6 +53,7 @@ import { ref, computed } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { UBanner, ULoadMore } from '@/components';
 import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
@@ -158,8 +159,8 @@ const loadMoreStatus = computed<LoadMoreStatus>(() => {
 });
 
 // Banner 点击
-function handleBannerClick(item: BannerItem) {
-  console.log('点击 Banner:', item);
+function handleBannerClick(item: Record<string, any>, index: number) {
+  console.log('点击 Banner:', item, index);
   uni.showToast({ title: `点击 Banner ${item.id}`, icon: 'none' });
 }
 

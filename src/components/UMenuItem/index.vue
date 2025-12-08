@@ -8,52 +8,49 @@
 
 <template>
   <!--
-    UMenuItem - 基于 uni-list-item 的菜单项组件
-    封装常用功能，简化 API，保持项目风格一致性
+    UMenuItem - 菜单项组件
+    自定义实现，不依赖 uni-list-item，确保小程序兼容性
   -->
-  <uni-list-item
-    :title="title"
-    :note="label"
-    :right-text="rightText"
-    :show-arrow="showArrow || !!to"
-    :clickable="clickable || !!to"
-    :disabled="disabled"
-    :show-extra-icon="isUniIcon"
-    :extra-icon="extraIconConfig"
-    :show-badge="!!badge"
-    :badge-text="badge"
-    :badge-type="badgeType"
-    :show-switch="showSwitch"
-    :switch-checked="switchChecked"
-    :thumb="thumb"
-    :thumb-size="thumbSize"
-    :link="linkType"
-    :to="to"
-    :border="border"
-    :custom-style="customStyle"
-    :class="{ 'u-menu-item--danger': danger }"
+  <view
+    class="u-menu-item"
+    :class="{
+      'u-menu-item--disabled': disabled,
+      'u-menu-item--danger': danger,
+      'u-menu-item--border': border,
+    }"
+    :hover-class="disabled ? '' : 'u-menu-item--hover'"
     @click="handleClick"
-    @switch-change="handleSwitchChange"
   >
-    <!-- 自定义左侧图标 (UnoCSS 图标或自定义 slot) -->
-    <template v-if="$slots.icon || isCustomIcon" #header>
-      <view class="u-menu-item__icon-slot">
-        <slot name="icon">
-          <text v-if="isCustomIcon" :class="[icon, 'u-menu-item__custom-icon']" :style="customIconStyle" />
-        </slot>
-      </view>
-    </template>
+    <!-- 左侧图标 -->
+    <view v-if="icon" class="u-menu-item__icon">
+      <text :class="icon" :style="iconStyle" />
+    </view>
 
-    <!-- 自定义内容 -->
-    <template v-if="$slots.default" #body>
-      <slot />
-    </template>
+    <!-- 内容区域 -->
+    <view class="u-menu-item__content">
+      <text class="u-menu-item__title">{{ title }}</text>
+      <text v-if="label" class="u-menu-item__label">{{ label }}</text>
+    </view>
 
-    <!-- 自定义右侧内容 -->
-    <template v-if="$slots.footer" #footer>
-      <slot name="footer" />
-    </template>
-  </uni-list-item>
+    <!-- 右侧区域 -->
+    <view class="u-menu-item__right">
+      <text v-if="rightText" class="u-menu-item__right-text">{{ rightText }}</text>
+      <text v-if="badge" class="u-menu-item__badge">{{ badge }}</text>
+      <switch
+        v-if="showSwitch"
+        :checked="switchChecked"
+        :disabled="disabled"
+        class="u-menu-item__switch"
+        @change="handleSwitchChange"
+      />
+      <text v-if="showArrow && !showSwitch" class="u-menu-item__arrow i-carbon-chevron-right" />
+    </view>
+
+    <!-- 微信客服按钮 (仅微信小程序) -->
+    <!-- #ifdef MP-WEIXIN -->
+    <button v-if="isContact" class="u-menu-item__contact-btn" open-type="contact" />
+    <!-- #endif -->
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -63,8 +60,6 @@ defineOptions({
   name: 'UMenuItem',
 });
 
-// ==================== Props ====================
-
 interface Props {
   /** 标题 */
   title: string;
@@ -72,38 +67,28 @@ interface Props {
   label?: string;
   /** 右侧文字 */
   rightText?: string;
-  /** 左侧图标 (uni-icons 类型或 UnoCSS 图标类名，如 i-carbon-*) */
+  /** 左侧图标 (UnoCSS 图标类名，如 i-carbon-*) */
   icon?: string;
   /** 图标颜色 */
   iconColor?: string;
-  /** 图标大小 */
+  /** 图标大小 (rpx) */
   iconSize?: number;
-  /** 左侧缩略图 */
-  thumb?: string;
-  /** 缩略图大小 */
-  thumbSize?: 'sm' | 'base' | 'lg';
   /** 是否显示右侧箭头 */
   showArrow?: boolean;
-  /** 是否可点击 */
-  clickable?: boolean;
   /** 是否禁用 */
   disabled?: boolean;
   /** 是否显示下边框 */
   border?: boolean;
-  /** 跳转链接 */
-  to?: string;
-  /** 跳转方式 */
-  linkType?: 'navigateTo' | 'redirectTo' | 'reLaunch' | 'switchTab';
   /** 右侧角标文字 */
   badge?: string;
-  /** 角标类型 */
-  badgeType?: UniHelper.UniBadgeType;
   /** 是否显示开关 */
   showSwitch?: boolean;
   /** 开关状态 */
   switchChecked?: boolean;
   /** 是否为危险操作 */
   danger?: boolean;
+  /** 是否为微信客服按钮 */
+  isContact?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,82 +96,152 @@ const props = withDefaults(defineProps<Props>(), {
   rightText: '',
   icon: undefined,
   iconColor: '',
-  iconSize: 24,
-  thumb: '',
-  thumbSize: 'base',
-  showArrow: false,
-  clickable: false,
+  iconSize: 40,
+  showArrow: true,
   disabled: false,
   border: true,
-  to: '',
-  linkType: 'navigateTo',
   badge: '',
-  badgeType: 'error',
   showSwitch: false,
   switchChecked: false,
   danger: false,
+  isContact: false,
 });
 
-/** uni-list-item 点击事件数据 */
-interface ListItemClickData {
-  data: Record<string, unknown>;
-}
-
 const emit = defineEmits<{
-  click: [event: ListItemClickData];
+  click: [];
   switchChange: [checked: boolean];
 }>();
 
-/** 是否是自定义图标 (UnoCSS 图标类名，如 i-carbon-*) */
-const isCustomIcon = computed(() => props.icon?.startsWith('i-') || false);
-
-/** 是否是 uni-icons 图标 */
-const isUniIcon = computed(() => !!props.icon && !isCustomIcon.value);
-
-// uni-icons 图标配置
-const extraIconConfig = computed(() => ({
-  type: props.icon as UniHelper.UniIconsType,
+// 图标样式
+const iconStyle = computed(() => ({
   color: props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
-  size: props.iconSize,
-}));
-
-// 自定义图标样式
-const customIconStyle = computed(() => ({
-  color: props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
-  fontSize: `${props.iconSize}px`,
-}));
-
-// 自定义样式
-const customStyle = computed(() => ({
-  backgroundColor: 'var(--color-bg-card)',
+  fontSize: `${props.iconSize}rpx`,
 }));
 
 // 处理点击
-function handleClick(e: ListItemClickData) {
-  emit('click', e);
+function handleClick() {
+  if (props.disabled) return;
+  emit('click');
 }
 
 // 处理开关变化
-function handleSwitchChange(e: { value: boolean }) {
-  emit('switchChange', e.value);
+function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
+  emit('switchChange', e.detail.value);
 }
 </script>
 
 <style scoped lang="scss">
-.u-menu-item__icon-slot {
+.u-menu-item {
   display: flex;
+  position: relative;
   align-items: center;
-  margin-right: var(--spacing-base);
-}
+  padding: 28rpx 32rpx;
+  background: var(--color-bg-card);
+  gap: 24rpx;
 
-.u-menu-item__custom-icon {
-  display: block;
-}
+  &--border {
+    &::after {
+      content: '';
+      position: absolute;
+      right: 32rpx;
+      bottom: 0;
+      left: 88rpx;
+      height: 1rpx;
+      background: var(--color-border);
+    }
+  }
 
-// 危险操作样式覆盖
-.u-menu-item--danger {
-  :deep(.uni-list-item__content-title) {
-    color: var(--color-error);
+  &--hover {
+    background: var(--color-bg-hover);
+  }
+
+  &--disabled {
+    opacity: 0.5;
+  }
+
+  &--danger {
+    .u-menu-item__title {
+      color: var(--color-error);
+    }
+
+    .u-menu-item__icon text {
+      color: var(--color-error);
+    }
+  }
+
+  &__icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 48rpx;
+    height: 48rpx;
+
+    text {
+      font-size: 40rpx;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    gap: 4rpx;
+  }
+
+  &__title {
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: 30rpx;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__label {
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__right {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 12rpx;
+  }
+
+  &__right-text {
+    color: var(--color-text-secondary);
+    font-size: 28rpx;
+  }
+
+  &__badge {
+    padding: 4rpx 12rpx;
+    border-radius: 20rpx;
+    background: var(--color-error);
+    color: #fff;
+    font-size: 22rpx;
+  }
+
+  &__arrow {
+    color: var(--color-text-placeholder);
+    font-size: 32rpx;
+  }
+
+  &__switch {
+    transform: scale(0.8);
+  }
+
+  &__contact-btn {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    opacity: 0;
   }
 }
 </style>

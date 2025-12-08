@@ -81,9 +81,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PHONE_LENGTH, DELAY_TIMES } from '@/constants';
-import AuthLayout from '@/components/AuthLayout/index.vue';
-import UTabs from '@/components/UTabs/index.vue';
-import USmsInput from '@/components/USmsInput/index.vue';
+import { AuthLayout, UTabs, USmsInput } from '@/components';
 
 const globalStore = useGlobalStore();
 const router = useRouter();

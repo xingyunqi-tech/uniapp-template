@@ -64,11 +64,8 @@ import { useGlobalStore } from '@/store/modules/global';
 
 import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
-import UMenuGroup from '@/components/UMenuGroup/index.vue';
-import UFormItem from '@/components/UFormItem/index.vue';
-import UFixedButton from '@/components/UFixedButton/index.vue';
-import UImageUpload from '@/components/UImageUpload/index.vue';
-import type { FileItem } from '@/components/UImageUpload/index.vue';
+import { UMenuGroup, UFormItem, UFixedButton, UImageUpload } from '@/components';
+import type { FileItem } from '@/components';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();

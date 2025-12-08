@@ -18,7 +18,7 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
-import URichText from '@/components/URichText/index.vue';
+import { URichText } from '@/components';
 
 const globalStore = useGlobalStore();
 

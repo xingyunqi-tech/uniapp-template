@@ -84,7 +84,7 @@ import {
   FEEDBACK_IMAGE_MAX_COUNT,
   FEEDBACK_CONTENT_MAX_LENGTH,
 } from '@/constants';
-import UFixedButton from '@/components/UFixedButton/index.vue';
+import { UFixedButton } from '@/components';
 
 const globalStore = useGlobalStore();
 

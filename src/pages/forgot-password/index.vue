@@ -93,9 +93,7 @@ import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 
 import { PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
-import AuthLayout from '@/components/AuthLayout/index.vue';
-import USmsInput from '@/components/USmsInput/index.vue';
-import UPasswordStrength from '@/components/UPasswordStrength/index.vue';
+import { AuthLayout, USmsInput, UPasswordStrength } from '@/components';
 
 const globalStore = useGlobalStore();
 

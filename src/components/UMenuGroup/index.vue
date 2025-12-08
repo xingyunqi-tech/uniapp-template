@@ -8,14 +8,14 @@
 
 <template>
   <!--
-    UMenuGroup - 基于 uni-list 的菜单分组组件
-    封装 uni-list，提供分组标题和统一样式
+    UMenuGroup - 菜单分组组件
+    提供分组标题和统一样式容器
   -->
   <view class="u-menu-group">
     <view v-if="title" class="u-menu-group__title">{{ title }}</view>
-    <uni-list :border="border" class="u-menu-group__list">
+    <view class="u-menu-group__list">
       <slot />
-    </uni-list>
+    </view>
   </view>
 </template>
 
@@ -27,13 +27,10 @@ defineOptions({
 interface Props {
   /** 分组标题 */
   title?: string;
-  /** 是否显示边框 */
-  border?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
   title: '',
-  border: true,
 });
 </script>
 

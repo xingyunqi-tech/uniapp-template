@@ -53,8 +53,7 @@ import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 
 import { PAGES } from '@/constants';
-import UMenuGroup from '@/components/UMenuGroup/index.vue';
-import UMenuItem from '@/components/UMenuItem/index.vue';
+import { UMenuGroup, UMenuItem } from '@/components';
 
 const globalStore = useGlobalStore();
 
