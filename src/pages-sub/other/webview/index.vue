@@ -18,13 +18,13 @@
 
     <!-- 加载失败状态 -->
     <view v-if="error" class="error-state">
-      <text class="i-carbon-warning-alt error-icon" />
-      <text class="error-text">页面加载失败</text>
+      <UEmpty type="error" text="页面加载失败">
+        <view class="error-actions">
+          <button class="retry-btn" @click="handleRetry">重新加载</button>
+          <button class="back-btn" @click="handleBack">返回上一页</button>
+        </view>
+      </UEmpty>
       <text class="error-desc">{{ errorMessage }}</text>
-      <view class="error-actions">
-        <button class="retry-btn" @click="handleRetry">重新加载</button>
-        <button class="back-btn" @click="handleBack">返回上一页</button>
-      </view>
     </view>
   </view>
 </template>
@@ -34,6 +34,7 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { UEmpty } from '@/components';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -246,25 +247,13 @@ function handleBack() {
   z-index: 998;
   inset: 0;
   flex-direction: column;
-  gap: 24rpx;
   align-items: center;
   justify-content: center;
   padding: 48rpx;
   background: var(--color-bg);
 
-  .error-icon {
-    margin-bottom: 16rpx;
-    color: var(--color-warning);
-    font-size: 120rpx;
-  }
-
-  .error-text {
-    color: var(--color-text);
-    font-size: 32rpx;
-    font-weight: 500;
-  }
-
   .error-desc {
+    margin-top: 16rpx;
     color: var(--color-text-secondary);
     font-size: 26rpx;
     text-align: center;
@@ -273,7 +262,6 @@ function handleBack() {
   .error-actions {
     display: flex;
     gap: 24rpx;
-    margin-top: 32rpx;
 
     .retry-btn,
     .back-btn {

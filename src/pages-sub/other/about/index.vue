@@ -17,21 +17,17 @@
 
     <!-- 功能菜单 -->
     <view class="menu-section">
-      <view class="menu-item" @click="handleMenuClick('agreement')">
-        <text class="menu-text">用户协议</text>
-        <text class="i-carbon-chevron-right menu-arrow" />
-      </view>
-      <view class="menu-item" @click="handleMenuClick('privacy')">
-        <text class="menu-text">隐私政策</text>
-        <text class="i-carbon-chevron-right menu-arrow" />
-      </view>
-      <view class="menu-item" @click="checkUpdate">
-        <text class="menu-text">检查更新</text>
-        <view class="menu-right">
-          <text v-if="hasUpdate" class="update-badge">有新版本</text>
-          <text class="i-carbon-chevron-right menu-arrow" />
-        </view>
-      </view>
+      <UMenuGroup>
+        <UMenuItem title="用户协议" show-arrow @click="handleMenuClick('agreement')" />
+        <UMenuItem title="隐私政策" show-arrow @click="handleMenuClick('privacy')" />
+        <UMenuItem
+          title="检查更新"
+          :right-text="hasUpdate ? '有新版本' : ''"
+          show-arrow
+          :border="false"
+          @click="checkUpdate"
+        />
+      </UMenuGroup>
     </view>
 
     <!-- 版权信息 -->
@@ -46,7 +42,7 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
+import { UMenuGroup, UMenuItem } from '@/components';
 import { PAGES } from '@/constants';
 import { APP_NAME, COPYRIGHT } from '@/constants/system';
 
@@ -148,49 +144,7 @@ function checkUpdate() {
 
 // 菜单
 .menu-section {
-  margin-top: 24rpx;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-
-  .menu-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 32rpx;
-
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--color-border-light);
-    }
-
-    &:active {
-      background: var(--color-bg-hover);
-    }
-
-    .menu-text {
-      color: var(--color-text);
-      font-size: 30rpx;
-    }
-
-    .menu-right {
-      display: flex;
-      gap: 12rpx;
-      align-items: center;
-    }
-
-    .update-badge {
-      padding: 4rpx 12rpx;
-      border-radius: 20rpx;
-      background: var(--color-error);
-      color: var(--color-text-inverse);
-      font-size: 22rpx;
-    }
-
-    .menu-arrow {
-      color: var(--color-text-secondary);
-      font-size: 28rpx;
-    }
-  }
+  padding: 0 24rpx;
 }
 
 // 版权信息

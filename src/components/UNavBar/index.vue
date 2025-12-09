@@ -12,7 +12,7 @@
     用于 navigationStyle: custom 的页面
     支持自定义标题、左右按钮、背景透明等
   -->
-  <view class="u-nav-bar" :class="navBarClasses" :style="navBarStyle">
+  <view class="u-nav-bar" :class="[navBarClasses, globalStore.themeClass]" :style="navBarStyle">
     <!-- 状态栏占位 -->
     <view class="u-nav-bar__status" :style="{ height: statusBarHeight }" />
 
@@ -22,7 +22,7 @@
       <view class="u-nav-bar__left" @click="handleLeftClick">
         <slot name="left">
           <view v-if="showBack" class="u-nav-bar__back">
-            <text class="i-carbon-chevron-left u-nav-bar__back-icon" />
+            <uni-icons type="left" size="22" :color="backIconColor" class="u-nav-bar__back-icon" />
             <text v-if="backText" class="u-nav-bar__back-text">{{ backText }}</text>
           </view>
         </slot>
@@ -48,10 +48,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useGlobalStore } from '@/store/modules/global';
 
 defineOptions({
   name: 'UNavBar',
 });
+
+const globalStore = useGlobalStore();
 
 // ==================== Props ====================
 
@@ -124,6 +127,15 @@ const navBarStyle = computed(() => {
 const placeholderStyle = computed(() => ({
   height: `calc(${statusBarHeight.value} + ${navBarHeight.value})`,
 }));
+
+// 返回按钮图标颜色 - 根据主题和 textColor prop 动态计算
+const backIconColor = computed(() => {
+  if (props.textColor === 'light') {
+    return '#ffffff';
+  }
+  // 暗黑模式下使用浅色文字
+  return globalStore.isDark ? '#e5eaf3' : '#323233';
+});
 
 // ==================== Lifecycle ====================
 
@@ -239,8 +251,8 @@ function handleRightClick() {
   }
 
   &__back-icon {
-    color: var(--color-text);
-    font-size: var(--font-size-xxl);
+    display: flex;
+    align-items: center;
   }
 
   &__back-text {

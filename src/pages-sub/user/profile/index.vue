@@ -176,27 +176,38 @@ function handleSave() {
   flex-direction: column;
   gap: 16rpx;
   align-items: center;
+  margin-bottom: 24rpx;
   padding: 48rpx 0;
+  border-radius: var(--radius-lg);
   background: var(--color-bg);
 
   .avatar-upload-wrapper {
-    // 覆盖 UImageUpload 样式，使其显示为圆形头像
-    :deep(.u-image-upload) {
-      .upload-item,
-      .upload-add {
-        width: 160rpx;
-        height: 160rpx;
-        border-radius: 50%;
+    // 覆盖 uni-file-picker 样式，使其显示为圆形头像
+    :deep(.uni-file-picker) {
+      .file-picker__box {
+        width: 160rpx !important;
+        height: 160rpx !important;
+        margin: 0 !important;
+        overflow: hidden;
+        border-radius: 50% !important;
       }
 
-      .upload-image {
-        border-radius: 50%;
+      .file-picker__box-content {
+        border-radius: 50% !important;
       }
 
-      .upload-delete {
-        top: 4rpx;
-        right: 4rpx;
-        border-radius: 50%;
+      .file-picker__box-content image {
+        border-radius: 50% !important;
+      }
+
+      .icon-del-box {
+        top: 0 !important;
+        right: 0 !important;
+        border-radius: 50% !important;
+      }
+
+      .is-add {
+        border-radius: 50% !important;
       }
     }
   }
@@ -209,12 +220,14 @@ function handleSave() {
 
 // 表单区域
 .form-section {
-  padding: 24rpx;
-
   .form-value {
     &.disabled {
       color: var(--color-text-secondary);
     }
+  }
+
+  :deep(.u-menu-group__list) {
+    padding: 0 24rpx;
   }
 }
 </style>

@@ -38,7 +38,6 @@
         <UMenuItem icon="i-carbon-headset" title="联系客服" @click="handleMenuClick('contact')" />
         <!-- #endif -->
 
-        <UMenuItem icon="i-carbon-chat" title="意见反馈" @click="handleMenuClick('feedback')" />
         <UMenuItem icon="i-carbon-settings" title="设置" :border="false" @click="handleMenuClick('settings')" />
       </UMenuGroup>
     </view>
@@ -106,9 +105,6 @@ function handleMenuClick(type: string) {
       break;
     case 'contact':
       router.push(PAGES.CONTACT);
-      break;
-    case 'feedback':
-      router.push(PAGES.FEEDBACK);
       break;
     case 'settings':
       router.push(PAGES.SETTINGS);

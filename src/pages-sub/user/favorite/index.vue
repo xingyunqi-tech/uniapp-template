@@ -9,11 +9,7 @@
 <template>
   <view class="favorite-page" :class="globalStore.themeClass">
     <!-- 空状态 -->
-    <view v-if="!loading && list.length === 0" class="empty-state">
-      <text class="i-carbon-star empty-icon" />
-      <text class="empty-text">暂无收藏内容</text>
-      <text class="empty-desc">快去收藏你喜欢的内容吧</text>
-    </view>
+    <UEmpty v-if="!loading && list.length === 0" icon="i-carbon-star" text="暂无收藏内容" />
 
     <!-- 收藏列表 -->
     <view v-else class="favorite-list">
@@ -43,6 +39,7 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
+import { UEmpty } from '@/components';
 
 const globalStore = useGlobalStore();
 
@@ -68,7 +65,36 @@ async function fetchList() {
     // TODO: 替换为实际 API 调用
     await new Promise(resolve => setTimeout(resolve, 500));
     // 模拟数据
-    list.value = [];
+    list.value = [
+      {
+        id: '1',
+        title: '深入学习贯彻党的二十大精神',
+        description: '全面学习领会党的二十大精神，深刻把握核心要义和精神实质',
+        cover: 'https://via.placeholder.com/200x200/1989fa/ffffff?text=1',
+        time: '2小时前',
+      },
+      {
+        id: '2',
+        title: '行政能力测试技巧总结',
+        description: '归纳总结常见题型解题方法，提升答题效率和准确率',
+        cover: 'https://via.placeholder.com/200x200/07c160/ffffff?text=2',
+        time: '昨天',
+      },
+      {
+        id: '3',
+        title: '申论写作高分模板',
+        description: '精选申论写作范文，掌握高分写作技巧和结构框架',
+        cover: 'https://via.placeholder.com/200x200/ff976a/ffffff?text=3',
+        time: '3天前',
+      },
+      {
+        id: '4',
+        title: '公共基础知识速记手册',
+        description: '涵盖政治、经济、法律、历史等核心知识点的速记整理',
+        cover: 'https://via.placeholder.com/200x200/ee0a24/ffffff?text=4',
+        time: '1周前',
+      },
+    ];
   } finally {
     loading.value = false;
   }
@@ -103,32 +129,6 @@ function handleRemove(item: FavoriteItem) {
   min-height: 100vh;
   padding: 24rpx;
   background: var(--color-bg-grey);
-}
-
-// 空状态
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 200rpx 0;
-
-  .empty-icon {
-    margin-bottom: 32rpx;
-    color: var(--color-text-disabled);
-    font-size: 120rpx;
-  }
-
-  .empty-text {
-    margin-bottom: 16rpx;
-    color: var(--color-text);
-    font-size: 32rpx;
-  }
-
-  .empty-desc {
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
-  }
 }
 
 // 收藏列表

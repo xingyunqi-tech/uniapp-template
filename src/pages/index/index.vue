@@ -1,7 +1,7 @@
 <route lang="json5" type="home">
 {
   style: {
-    navigationBarTitleText: '首页',
+    navigationStyle: 'custom',
     enablePullDownRefresh: true,
   },
 }
@@ -9,23 +9,29 @@
 
 <template>
   <view class="home-page" :class="globalStore.themeClass">
+    <!-- 自定义导航栏 -->
+    <UNavBar title="首页" :show-back="false">
+      <template #left>
+        <view class="nav-left-icon">
+          <uni-icons type="home" size="22" color="var(--color-text)" />
+        </view>
+      </template>
+    </UNavBar>
+
     <!-- Banner 轮播 -->
     <UBanner :list="bannerList" :height="300" @click="handleBannerClick" />
 
-    <!-- 分类标签 -->
-    <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
-      <view class="category-list">
-        <view
-          v-for="item in categoryList"
-          :key="item.id"
-          class="category-item"
-          :class="{ active: activeCategory === item.id }"
-          @click="handleCategoryClick(item)"
-        >
+    <!-- 分类网格 -->
+    <view class="category-section">
+      <view class="category-grid">
+        <view v-for="item in categoryList" :key="item.id" class="category-item" @click="handleCategoryClick(item)">
+          <view class="category-icon">
+            <uni-icons :type="item.icon" size="28" color="var(--color-primary)" />
+          </view>
           <text class="category-name">{{ item.name }}</text>
         </view>
       </view>
-    </scroll-view>
+    </view>
 
     <!-- 时政卡片列表 -->
     <view class="news-list">
@@ -53,7 +59,7 @@ import { ref, computed } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UBanner, ULoadMore } from '@/components';
+import { UBanner, ULoadMore, UNavBar } from '@/components';
 import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
@@ -69,6 +75,7 @@ interface BannerItem {
 interface CategoryItem {
   id: number;
   name: string;
+  icon: UniIconsType;
 }
 
 // 时政新闻数据类型
@@ -89,19 +96,19 @@ const bannerList = ref<BannerItem[]>([
   { id: 3, image: '/static/images/banner_3.png' },
 ]);
 
-// 试题分类数据
+// 试题分类数据 - 10个分类
 const categoryList = ref<CategoryItem[]>([
-  { id: 0, name: '全部' },
-  { id: 1, name: '时事政治' },
-  { id: 2, name: '行政能力' },
-  { id: 3, name: '申论写作' },
-  { id: 4, name: '公共基础' },
-  { id: 5, name: '法律常识' },
-  { id: 6, name: '经济金融' },
+  { id: 1, name: '时事政治', icon: 'flag' },
+  { id: 2, name: '行政能力', icon: 'staff' },
+  { id: 3, name: '申论写作', icon: 'compose' },
+  { id: 4, name: '公共基础', icon: 'calendar' },
+  { id: 5, name: '法律常识', icon: 'auth' },
+  { id: 6, name: '经济金融', icon: 'wallet' },
+  { id: 7, name: '历史文化', icon: 'paperclip' },
+  { id: 8, name: '科技常识', icon: 'gear' },
+  { id: 9, name: '判断推理', icon: 'help' },
+  { id: 10, name: '资料分析', icon: 'bars' },
 ]);
-
-// 当前选中分类
-const activeCategory = ref(0);
 
 // 模拟数据
 const mockTitles = [
@@ -166,9 +173,7 @@ function handleBannerClick(item: Record<string, any>, index: number) {
 
 // 分类点击
 function handleCategoryClick(item: CategoryItem) {
-  activeCategory.value = item.id;
-  // 切换分类时刷新数据
-  refresh();
+  uni.showToast({ title: item.name, icon: 'none' });
 }
 
 // 时政新闻点击
@@ -208,35 +213,51 @@ onReachBottom(() => {
   background: var(--color-bg-grey);
 }
 
-// 分类标签
-.category-scroll {
-  width: 100%;
-  background: var(--color-bg);
-  white-space: nowrap;
+// 导航栏左侧图标
+.nav-left-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx;
 
-  .category-list {
-    display: inline-flex;
-    gap: 8rpx;
-    padding: 24rpx 32rpx;
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+// 分类网格
+.category-section {
+  padding: 24rpx;
+  background: var(--color-bg);
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24rpx 0;
 
     .category-item {
-      flex-shrink: 0;
-      padding: 16rpx 32rpx;
-      transition: all var(--duration-fast);
-      border-radius: 32rpx;
-      background: var(--color-bg-grey);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12rpx;
 
-      &.active {
-        background: var(--color-primary);
+      &:active {
+        opacity: 0.7;
+      }
 
-        .category-name {
-          color: var(--color-text-inverse);
-        }
+      .category-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 96rpx;
+        height: 96rpx;
+        border-radius: 50%;
+        background: var(--color-primary-bg);
       }
 
       .category-name {
         color: var(--color-text);
-        font-size: 28rpx;
+        font-size: 24rpx;
       }
     }
   }

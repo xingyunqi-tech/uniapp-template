@@ -43,7 +43,13 @@
         class="u-menu-item__switch"
         @change="handleSwitchChange"
       />
-      <text v-if="showArrow && !showSwitch" class="u-menu-item__arrow i-carbon-chevron-right" />
+      <uni-icons
+        v-if="showArrow && !showSwitch"
+        type="right"
+        size="16"
+        color="var(--color-text-placeholder)"
+        class="u-menu-item__arrow"
+      />
     </view>
 
     <!-- 微信客服按钮 (仅微信小程序) -->
@@ -229,8 +235,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
   }
 
   &__arrow {
-    color: var(--color-text-placeholder);
-    font-size: 32rpx;
+    flex-shrink: 0;
   }
 
   &__switch {

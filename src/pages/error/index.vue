@@ -9,21 +9,18 @@
 <template>
   <view class="error-page" :class="globalStore.themeClass">
     <view class="error-content">
-      <!-- 错误图标 -->
-      <view class="error-icon">
-        <text class="i-carbon-warning-alt" />
-      </view>
-
-      <!-- 错误信息 -->
+      <!-- 错误码 -->
       <text class="error-code">{{ errorCode }}</text>
-      <text class="error-title">{{ errorTitle }}</text>
-      <text class="error-desc">{{ errorDesc }}</text>
 
-      <!-- 操作按钮 -->
-      <view class="error-actions">
-        <button class="action-btn primary" @click="goHome">返回首页</button>
-        <button v-if="canGoBack" class="action-btn" @click="goBack">返回上页</button>
-      </view>
+      <!-- 使用 UEmpty 显示错误状态 -->
+      <UEmpty type="error" :text="errorTitle" :icon="errorIcon">
+        <view class="error-actions">
+          <button class="action-btn primary" @click="goHome">返回首页</button>
+          <button v-if="canGoBack" class="action-btn" @click="goBack">返回上页</button>
+        </view>
+      </UEmpty>
+
+      <text class="error-desc">{{ errorDesc }}</text>
     </view>
   </view>
 </template>
@@ -33,7 +30,7 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
+import { UEmpty } from '@/components';
 import { canGoBack as checkCanGoBack } from '@/utils/router';
 
 const globalStore = useGlobalStore();
@@ -46,22 +43,26 @@ type ErrorType = '404' | '403' | '500' | 'network';
 const errorCode = ref('404');
 
 // 错误信息配置
-const errorConfig: Record<ErrorType, { title: string; desc: string }> = {
+const errorConfig: Record<ErrorType, { title: string; desc: string; icon: string }> = {
   '404': {
     title: '页面不存在',
     desc: '抱歉，您访问的页面不存在或已被移除',
+    icon: 'i-carbon-warning-alt',
   },
   '403': {
     title: '没有权限',
     desc: '抱歉，您没有权限访问此页面',
+    icon: 'i-carbon-locked',
   },
   '500': {
     title: '服务器错误',
     desc: '抱歉，服务器出现问题，请稍后重试',
+    icon: 'i-carbon-cloud-offline',
   },
   network: {
     title: '网络异常',
     desc: '请检查您的网络连接后重试',
+    icon: 'i-carbon-wifi-off',
   },
 };
 
@@ -72,6 +73,10 @@ const errorTitle = computed(() => {
 
 const errorDesc = computed(() => {
   return errorConfig[errorCode.value as ErrorType]?.desc || '页面发生未知错误';
+});
+
+const errorIcon = computed(() => {
+  return errorConfig[errorCode.value as ErrorType]?.icon || 'i-carbon-warning-alt';
 });
 
 const canGoBack = computed(() => checkCanGoBack());
@@ -117,22 +122,6 @@ function goBack() {
   text-align: center;
 }
 
-.error-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 160rpx;
-  height: 160rpx;
-  margin-bottom: 40rpx;
-  border-radius: 50%;
-  background: var(--color-warning-bg);
-
-  .i-carbon-warning-alt {
-    color: var(--color-warning);
-    font-size: 80rpx;
-  }
-}
-
 .error-code {
   margin-bottom: 16rpx;
   color: var(--color-text-disabled);
@@ -141,15 +130,8 @@ function goBack() {
   line-height: 1;
 }
 
-.error-title {
-  margin-bottom: 16rpx;
-  color: var(--color-text);
-  font-size: 36rpx;
-  font-weight: 600;
-}
-
 .error-desc {
-  margin-bottom: 48rpx;
+  margin-top: 16rpx;
   color: var(--color-text-secondary);
   font-size: 28rpx;
   line-height: 1.6;

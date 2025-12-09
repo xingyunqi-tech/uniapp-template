@@ -21,11 +21,9 @@
       @scrolltolower="handleLoadMore"
     >
       <!-- 空状态 -->
-      <view v-if="!loading && orderList.length === 0" class="empty-state">
-        <text class="i-carbon-shopping-cart empty-icon" />
-        <text class="empty-text">暂无订单</text>
+      <UEmpty v-if="!loading && orderList.length === 0" type="cart" text="暂无订单">
         <button class="empty-btn" @click="handleGoShopping">去逛逛</button>
-      </view>
+      </UEmpty>
 
       <!-- 订单卡片 -->
       <view v-for="order in orderList" :key="order.id" class="order-card" @click="handleOrderDetail(order.id)">
@@ -110,7 +108,7 @@ import { confirm } from '@/utils';
 import type { LoadMoreStatus } from '@/components';
 
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
-import { UTabs } from '@/components';
+import { UTabs, UEmpty } from '@/components';
 import type { TabItem } from '@/components';
 
 const globalStore = useGlobalStore();
@@ -331,42 +329,25 @@ function handleGoShopping() {
 
 // 订单列表
 .order-list {
+  box-sizing: border-box;
   flex: 1;
+  width: 100%;
   padding: 24rpx;
 }
 
-// 空状态
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-  align-items: center;
-  padding: 120rpx 0;
+// 空状态按钮
+.empty-btn {
+  width: 240rpx;
+  height: 72rpx;
+  border: none;
+  border-radius: var(--radius-base);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: 28rpx;
+  line-height: 72rpx;
 
-  .empty-icon {
-    color: var(--color-text-disabled);
-    font-size: 120rpx;
-  }
-
-  .empty-text {
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
-  }
-
-  .empty-btn {
-    width: 240rpx;
-    height: 72rpx;
-    margin-top: 16rpx;
-    border: none;
-    border-radius: var(--radius-base);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 28rpx;
-    line-height: 72rpx;
-
-    &::after {
-      display: none;
-    }
+  &::after {
+    display: none;
   }
 }
 

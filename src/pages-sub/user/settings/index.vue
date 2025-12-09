@@ -12,20 +12,26 @@
     <view class="settings-section">
       <UMenuGroup title="账号设置">
         <UMenuItem icon="i-carbon-user-avatar" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
-        <UMenuItem icon="i-carbon-locked" title="账号安全" show-arrow @click="handleMenuClick('security')" />
         <UMenuItem
-          icon="i-carbon-location"
-          title="收货地址"
+          icon="i-carbon-locked"
+          title="账号安全"
           show-arrow
           :border="false"
-          @click="handleMenuClick('address')"
+          @click="handleMenuClick('security')"
         />
       </UMenuGroup>
     </view>
 
     <view class="settings-section">
       <UMenuGroup title="通用设置">
-        <UMenuItem icon="i-carbon-clean" title="清除缓存" :right-text="cacheSize" @click="handleClearCache" />
+        <UMenuItem
+          icon="i-carbon-clean"
+          title="清除缓存"
+          :right-text="cacheSize"
+          :show-arrow="false"
+          @click="handleClearCache"
+        />
+        <UMenuItem icon="i-carbon-edit" title="意见反馈" show-arrow @click="handleMenuClick('feedback')" />
         <UMenuItem
           icon="i-carbon-information"
           title="关于我们"
@@ -60,7 +66,14 @@
     <!-- 账号注销 -->
     <view v-if="isLoggedIn" class="settings-section">
       <UMenuGroup title="账号管理">
-        <UMenuItem icon="i-carbon-trash-can" title="注销账号" danger :border="false" @click="handleDeleteAccount" />
+        <UMenuItem
+          icon="i-carbon-trash-can"
+          title="注销账号"
+          danger
+          :border="false"
+          :show-arrow="false"
+          @click="handleDeleteAccount"
+        />
       </UMenuGroup>
     </view>
 
@@ -134,16 +147,6 @@ function handleClearCache() {
 
 // 点击菜单项
 function handleMenuClick(type: string) {
-  // 部分功能需要登录
-  const needLogin = ['address'];
-  if (needLogin.includes(type) && !isLoggedIn.value) {
-    uni.showToast({
-      title: '请先登录',
-      icon: 'none',
-    });
-    return;
-  }
-
   switch (type) {
     case 'profile':
       router.push(PAGES.PROFILE);
@@ -151,8 +154,8 @@ function handleMenuClick(type: string) {
     case 'security':
       router.push(PAGES.PASSWORD);
       break;
-    case 'address':
-      router.push(PAGES.ADDRESS);
+    case 'feedback':
+      router.push(PAGES.FEEDBACK);
       break;
   }
 }

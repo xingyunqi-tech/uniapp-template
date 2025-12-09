@@ -72,7 +72,6 @@ export const FEEDBACK_IMAGE_MAX_COUNT = 3;
  * 性别选项
  */
 export const GENDER_OPTIONS = [
-  { label: '保密', value: 0 },
   { label: '男', value: 1 },
   { label: '女', value: 2 },
 ] as const;

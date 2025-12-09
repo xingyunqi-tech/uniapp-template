@@ -8,61 +8,46 @@
 
 <template>
   <view class="contact-page" :class="globalStore.themeClass">
-    <!-- 客服热线 -->
-    <view class="contact-section">
-      <view class="section-header">
-        <text class="i-carbon-phone section-icon" />
-        <text class="section-title">客服热线</text>
+    <!-- 顶部图标区域 -->
+    <view class="header-section">
+      <view class="header-icon">
+        <uni-icons type="headphones" size="48" color="var(--color-primary)" />
       </view>
-      <view class="contact-card">
-        <view class="contact-info">
-          <text class="contact-label">服务时间：{{ serviceTime }}</text>
-          <text class="contact-value">{{ phoneNumber }}</text>
-        </view>
-        <button class="call-btn" @click="handleCall">
-          <text class="i-carbon-phone-filled" />
-          <text>立即拨打</text>
-        </button>
-      </view>
+      <text class="header-title">我们随时为您服务</text>
+      <text class="header-desc">工作日 9:00-18:00</text>
     </view>
 
-    <!-- 在线咨询 -->
-    <view class="contact-section">
-      <view class="section-header">
-        <text class="i-carbon-chat section-icon" />
-        <text class="section-title">在线咨询</text>
-      </view>
-      <view class="contact-card">
-        <view class="contact-info">
-          <text class="contact-label">工作日 {{ onlineTime }}</text>
-          <text class="contact-desc">在线客服为您解答问题</text>
-        </view>
+    <!-- 联系方式卡片 -->
+    <view class="contact-list">
+      <UMenuGroup>
+        <!-- 客服热线 -->
+        <UMenuItem icon="i-carbon-phone" title="客服热线" :right-text="phoneNumber" show-arrow @click="handleCall" />
+
+        <!-- 在线咨询 -->
         <!-- #ifdef MP-WEIXIN -->
-        <button class="chat-btn" open-type="contact">
-          <text class="i-carbon-chat-bot" />
-          <text>在线咨询</text>
-        </button>
+        <UMenuItem icon="i-carbon-chat" title="在线咨询" :border="false" show-arrow is-contact />
         <!-- #endif -->
         <!-- #ifndef MP-WEIXIN -->
-        <button class="chat-btn" @click="handleOnlineChat">
-          <text class="i-carbon-chat-bot" />
-          <text>在线咨询</text>
-        </button>
+        <UMenuItem icon="i-carbon-chat" title="在线咨询" :border="false" show-arrow @click="handleOnlineChat" />
         <!-- #endif -->
-      </view>
+      </UMenuGroup>
+    </view>
+
+    <!-- 底部提示 -->
+    <view class="footer-tips">
+      <text class="tips-text">如遇紧急问题，请直接拨打客服热线</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { useGlobalStore } from '@/store/modules/global';
+import { UMenuGroup, UMenuItem } from '@/components';
 
 const globalStore = useGlobalStore();
 
 // 客服信息配置
 const phoneNumber = '400-123-4567';
-const serviceTime = '工作日 9:00-18:00';
-const onlineTime = '9:00-18:00';
 
 // 拨打电话
 function handleCall() {
@@ -89,84 +74,55 @@ function handleOnlineChat() {
 <style scoped lang="scss">
 .contact-page {
   min-height: 100vh;
-  padding: 24rpx;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
   background: var(--color-bg-grey);
 }
 
-.contact-section {
-  margin-bottom: 32rpx;
+// 顶部图标区域
+.header-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64rpx 32rpx 48rpx;
+  background: var(--color-bg);
 
-  .section-header {
+  .header-icon {
     display: flex;
-    gap: 12rpx;
     align-items: center;
-    margin-bottom: 20rpx;
-    padding-left: 8rpx;
+    justify-content: center;
+    width: 120rpx;
+    height: 120rpx;
+    margin-bottom: 24rpx;
+    border-radius: 50%;
+    background: var(--color-primary-bg);
+  }
 
-    .section-icon {
-      color: var(--color-primary);
-      font-size: 32rpx;
-    }
+  .header-title {
+    margin-bottom: 8rpx;
+    color: var(--color-text);
+    font-size: 32rpx;
+    font-weight: 500;
+  }
 
-    .section-title {
-      color: var(--color-text);
-      font-size: 30rpx;
-      font-weight: 500;
-    }
+  .header-desc {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
   }
 }
 
-.contact-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+// 联系方式列表
+.contact-list {
+  padding: 0 24rpx;
+}
+
+// 底部提示
+.footer-tips {
   padding: 32rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
+  text-align: center;
 
-  .contact-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8rpx;
-
-    .contact-label {
-      color: var(--color-text-secondary);
-      font-size: 24rpx;
-    }
-
-    .contact-value {
-      color: var(--color-text);
-      font-size: 36rpx;
-      font-weight: 600;
-    }
-
-    .contact-desc {
-      color: var(--color-text-secondary);
-      font-size: 26rpx;
-    }
-  }
-
-  .call-btn,
-  .chat-btn {
-    display: flex;
-    gap: 8rpx;
-    align-items: center;
-    padding: 20rpx 32rpx;
-    border: none;
-    border-radius: var(--radius-base);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 28rpx;
-
-    &::after {
-      display: none;
-    }
-
-    &:active {
-      opacity: 0.8;
-    }
+  .tips-text {
+    color: var(--color-text-placeholder);
+    font-size: 24rpx;
   }
 }
 </style>

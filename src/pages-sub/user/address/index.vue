@@ -33,11 +33,7 @@
     </view>
 
     <!-- 空状态 -->
-    <view v-else class="empty-state">
-      <text class="i-carbon-location empty-icon" />
-      <text class="empty-text">暂无收货地址</text>
-      <text class="empty-desc">添加收货地址，方便快速下单</text>
-    </view>
+    <UEmpty v-else icon="i-carbon-location" text="暂无收货地址" />
 
     <!-- 添加地址按钮 -->
     <view class="add-btn-wrapper">
@@ -54,7 +50,7 @@ import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UTag } from '@/components';
+import { UTag, UEmpty } from '@/components';
 import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
@@ -221,31 +217,6 @@ function handleDelete(item: AddressItem) {
         }
       }
     }
-  }
-}
-
-// 空状态
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-  align-items: center;
-  padding: 120rpx 48rpx;
-
-  .empty-icon {
-    margin-bottom: 16rpx;
-    color: var(--color-text-placeholder);
-    font-size: 120rpx;
-  }
-
-  .empty-text {
-    color: var(--color-text);
-    font-size: 32rpx;
-  }
-
-  .empty-desc {
-    color: var(--color-text-secondary);
-    font-size: 26rpx;
   }
 }
 

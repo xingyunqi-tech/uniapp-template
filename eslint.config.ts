@@ -36,6 +36,9 @@ export default [
         plus: 'readonly',
         wx: 'readonly',
         my: 'readonly',
+        // 自定义全局类型 (定义在 typings/uni.d.ts)
+        UniIconsType: 'readonly',
+        UniDataPickerValueArray: 'readonly',
       },
       // 指定 ECMAScript 版本为最新
       ecmaVersion: 'latest',

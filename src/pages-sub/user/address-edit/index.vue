@@ -10,29 +10,34 @@
   <view class="address-edit-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
-      <view class="form-group">
-        <view class="form-item">
-          <text class="form-label required">收货人</text>
-          <input v-model="formData.name" class="form-input" placeholder="请输入收货人姓名" :maxlength="20" />
-        </view>
+      <UMenuGroup>
+        <UFormItem label="收货人" required>
+          <input v-model="formData.name" placeholder="请输入收货人姓名" :maxlength="20" />
+        </UFormItem>
 
-        <view class="form-item">
-          <text class="form-label required">手机号</text>
-          <input v-model="formData.phone" class="form-input" type="number" placeholder="请输入手机号" :maxlength="11" />
-        </view>
+        <UFormItem label="手机号" required>
+          <input v-model="formData.phone" type="number" placeholder="请输入手机号" :maxlength="11" />
+        </UFormItem>
 
+        <!-- #ifdef MP-WEIXIN || MP-ALIPAY || APP -->
         <picker mode="region" :value="regionValue" @change="handleRegionChange">
-          <view class="form-item">
-            <text class="form-label required">所在地区</text>
-            <view class="form-value">
-              <text :class="{ placeholder: !regionText }">{{ regionText || '请选择省市区' }}</text>
-              <text class="i-carbon-chevron-right" />
-            </view>
-          </view>
+          <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
         </picker>
+        <!-- #endif -->
 
-        <view class="form-item form-item-textarea">
-          <text class="form-label required">详细地址</text>
+        <!-- #ifdef H5 -->
+        <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
+        <uni-data-picker
+          :localdata="regionData"
+          popup-title="请选择所在地区"
+          :value="regionPickerValue"
+          @change="handleDataPickerChange"
+        >
+          <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
+        </uni-data-picker>
+        <!-- #endif -->
+
+        <UFormItem label="详细地址" required :border="false">
           <textarea
             v-model="formData.detail"
             class="form-textarea"
@@ -40,25 +45,30 @@
             :maxlength="100"
             :auto-height="true"
           />
-        </view>
-      </view>
+        </UFormItem>
+      </UMenuGroup>
     </view>
 
     <!-- 设为默认 -->
     <view class="default-section">
-      <view class="default-item">
-        <text class="default-label">设为默认地址</text>
-        <switch :checked="formData.isDefault" color="#07c160" @change="handleDefaultChange" />
-      </view>
+      <UMenuGroup>
+        <UMenuItem
+          title="设为默认地址"
+          :border="false"
+          show-switch
+          :switch-checked="formData.isDefault"
+          @switch-change="handleDefaultChange"
+        />
+      </UMenuGroup>
+    </view>
+
+    <!-- 删除地址按钮 -->
+    <view v-if="isEdit" class="delete-section">
+      <button class="delete-btn" @click="handleDelete">删除地址</button>
     </view>
 
     <!-- 保存按钮 -->
-    <view class="btn-section">
-      <button class="save-btn" :disabled="saving" @click="handleSave">
-        {{ saving ? '保存中...' : '保存' }}
-      </button>
-      <button v-if="isEdit" class="delete-btn" @click="handleDelete">删除地址</button>
-    </view>
+    <UFixedButton text="保存" loading-text="保存中..." :loading="saving" @click="handleSave" />
   </view>
 </template>
 
@@ -66,6 +76,10 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
+import { UMenuGroup, UMenuItem, UFormItem, UFixedButton } from '@/components';
+// #ifdef H5
+import { regionData } from '@/constants';
+// #endif
 
 const globalStore = useGlobalStore();
 
@@ -95,13 +109,23 @@ const regionText = computed(() => {
   return '';
 });
 
-// 地区选择器值
+// 地区选择器值 (小程序用)
 const regionValue = computed(() => {
   if (formData.province && formData.city && formData.district) {
     return [formData.province, formData.city, formData.district];
   }
   return [];
 });
+
+// #ifdef H5
+// 地区选择器值 (H5 用 uni-data-picker)
+const regionPickerValue = computed((): UniDataPickerValueArray => {
+  if (formData.province && formData.city && formData.district) {
+    return [formData.province, formData.city, formData.district];
+  }
+  return [];
+});
+// #endif
 
 onLoad(options => {
   if (options?.id) {
@@ -159,7 +183,7 @@ function loadAddressDetail(id: number) {
   }
 }
 
-// 地区选择变更
+// 地区选择变更 (小程序用)
 function handleRegionChange(e: { detail: { value: string[] } }) {
   const [province, city, district] = e.detail.value;
   formData.province = province;
@@ -167,9 +191,26 @@ function handleRegionChange(e: { detail: { value: string[] } }) {
   formData.district = district;
 }
 
+// #ifdef H5
+// 地区选择变更 (H5 用 uni-data-picker)
+interface DataPickerChangeEvent {
+  detail: {
+    value: Array<{ value: string; text: string }>;
+  };
+}
+function handleDataPickerChange(e: DataPickerChangeEvent) {
+  const values = e.detail.value;
+  if (values && values.length >= 3) {
+    formData.province = values[0].text;
+    formData.city = values[1].text;
+    formData.district = values[2].text;
+  }
+}
+// #endif
+
 // 设置默认
-function handleDefaultChange(e: { detail: { value: boolean } }) {
-  formData.isDefault = e.detail.value;
+function handleDefaultChange(checked: boolean) {
+  formData.isDefault = checked;
 }
 
 // 验证表单
@@ -269,7 +310,7 @@ function handleDelete() {
 <style scoped lang="scss">
 .address-edit-page {
   min-height: 100vh;
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 200rpx);
+  padding-bottom: calc(var(--safe-area-inset-bottom) + 160rpx);
   background: var(--color-bg-grey);
 }
 
@@ -277,145 +318,41 @@ function handleDelete() {
 .form-section {
   padding: 24rpx;
 
-  .form-group {
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-sm);
-
-    .form-item {
-      display: flex;
-      align-items: center;
-      padding: 32rpx;
-
-      &:not(:last-child) {
-        border-bottom: 1px solid var(--color-border-light);
-      }
-
-      .form-label {
-        flex-shrink: 0;
-        width: 160rpx;
-        color: var(--color-text);
-        font-size: 30rpx;
-
-        &.required::before {
-          content: '*';
-          margin-right: 4rpx;
-          color: var(--color-error);
-        }
-      }
-
-      .form-input {
-        flex: 1;
-        color: var(--color-text);
-        font-size: 30rpx;
-      }
-
-      .form-value {
-        display: flex;
-        flex: 1;
-        gap: 8rpx;
-        align-items: center;
-        justify-content: flex-end;
-        color: var(--color-text);
-        font-size: 30rpx;
-
-        .placeholder {
-          color: var(--color-text-placeholder);
-        }
-
-        .i-carbon-chevron-right {
-          color: var(--color-text-secondary);
-          font-size: 28rpx;
-        }
-      }
-
-      &.form-item-textarea {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16rpx;
-
-        .form-label {
-          width: auto;
-        }
-
-        .form-textarea {
-          width: 100%;
-          min-height: 120rpx;
-          color: var(--color-text);
-          font-size: 30rpx;
-          line-height: 1.5;
-        }
-      }
-    }
+  .form-textarea {
+    width: 100%;
+    min-height: 120rpx;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
   }
 }
 
 // 默认地址
 .default-section {
   padding: 0 24rpx;
-
-  .default-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 32rpx;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-sm);
-
-    .default-label {
-      color: var(--color-text);
-      font-size: 30rpx;
-    }
-  }
 }
 
-// 按钮区域
-.btn-section {
-  display: flex;
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  flex-direction: column;
-  padding: 24rpx;
-  padding-bottom: calc(24rpx + var(--safe-area-inset-bottom));
-  background: var(--color-bg);
-  box-shadow: var(--shadow-light);
-  gap: 16rpx;
-
-  .save-btn {
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-    line-height: 96rpx;
-
-    &[disabled] {
-      opacity: 0.6;
-    }
-
-    &::after {
-      display: none;
-    }
-  }
+// 删除按钮区域
+.delete-section {
+  padding: 48rpx 24rpx;
 
   .delete-btn {
     width: 100%;
     height: 96rpx;
     border: none;
     border-radius: var(--radius-lg);
-    background: var(--color-bg-grey);
+    background: var(--color-bg);
+    box-shadow: var(--shadow-sm);
     color: var(--color-error);
     font-size: 32rpx;
     line-height: 96rpx;
 
     &::after {
       display: none;
+    }
+
+    &:active {
+      opacity: 0.8;
     }
   }
 }
