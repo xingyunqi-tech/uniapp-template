@@ -77,8 +77,12 @@ const errorQueue: ErrorInfo[] = [];
 /** 是否已初始化 */
 let isInitialized = false;
 
-/** 全局配置 */
-let globalOptions: Required<ErrorReporterOptions> = {
+/** 全局配置 (customReport 可选) */
+type GlobalOptions = Omit<Required<ErrorReporterOptions>, 'customReport'> & {
+  customReport?: (errors: ErrorInfo[]) => Promise<void>;
+};
+
+let globalOptions: GlobalOptions = {
   reportUrl: '',
   enabled: import.meta.env.PROD, // 生产环境默认启用
   consoleLog: import.meta.env.DEV, // 开发环境默认打印
@@ -86,14 +90,59 @@ let globalOptions: Required<ErrorReporterOptions> = {
   maxCacheSize: 50,
   reportInterval: 5000,
   getUserId: () => undefined,
-  customReport: async () => {},
+  customReport: undefined, // 默认不使用自定义上报
 };
 
 /** 上报定时器 */
-let reportTimer: ReturnType<typeof setTimeout> | null = null;
+let reportTimer: NodeJS.Timeout | null = null;
 
 /** 设备信息缓存 */
 let cachedDeviceInfo: ErrorDeviceInfo | null = null;
+
+/** 上报失败计数器 */
+let reportFailureCount = 0;
+
+/** 最大上报失败次数 */
+const MAX_REPORT_FAILURES = 3;
+
+// ==================== 错误去重机制 ====================
+
+/** 错误去重窗口 (ms) */
+const DEDUPE_WINDOW = 5000;
+
+/** 最近上报的错误指纹 Map<fingerprint, timestamp> */
+const recentErrors = new Map<string, number>();
+
+/**
+ * 生成错误指纹
+ */
+function generateErrorFingerprint(errorInfo: ErrorInfo): string {
+  return `${errorInfo.type}:${errorInfo.message}:${errorInfo.page || ''}`;
+}
+
+/**
+ * 检查错误是否重复 (5 秒内相同错误只上报一次)
+ */
+function isDuplicateError(fingerprint: string): boolean {
+  const now = Date.now();
+  const lastTime = recentErrors.get(fingerprint);
+
+  if (lastTime && now - lastTime < DEDUPE_WINDOW) {
+    return true;
+  }
+
+  // 记录当前错误
+  recentErrors.set(fingerprint, now);
+
+  // 清理过期的指纹
+  for (const [key, time] of recentErrors.entries()) {
+    if (now - time > DEDUPE_WINDOW) {
+      recentErrors.delete(key);
+    }
+  }
+
+  return false;
+}
 
 // ==================== 内部方法 ====================
 
@@ -179,6 +228,15 @@ function addToQueue(errorInfo: ErrorInfo): void {
     return;
   }
 
+  // 错误去重检查 (5 秒内相同错误只上报一次)
+  const fingerprint = generateErrorFingerprint(errorInfo);
+  if (isDuplicateError(fingerprint)) {
+    if (globalOptions.consoleLog) {
+      console.log(`[ErrorReporter] 重复错误已忽略:`, errorInfo.message);
+    }
+    return;
+  }
+
   // 队列满时移除最早的错误
   if (errorQueue.length >= globalOptions.maxCacheSize) {
     errorQueue.shift();
@@ -202,17 +260,29 @@ async function doReport(): Promise<void> {
     return;
   }
 
+  // 检查是否已达到最大失败次数
+  if (reportFailureCount >= MAX_REPORT_FAILURES) {
+    if (globalOptions.consoleLog) {
+      console.warn(`[ErrorReporter] 上报失败次数过多 (${reportFailureCount}次)，本次跳过上报，队列已清空`);
+    }
+    // 清空队列，防止内存泄漏
+    errorQueue.length = 0;
+    return;
+  }
+
   // 取出待上报的错误
   const errors = errorQueue.splice(0, errorQueue.length);
 
   try {
-    // 优先使用自定义上报
-    if (globalOptions.customReport) {
+    // 优先使用自定义上报 (必须是函数才执行)
+    if (typeof globalOptions.customReport === 'function') {
       await globalOptions.customReport(errors);
+      // 上报成功，重置失败计数
+      reportFailureCount = 0;
       return;
     }
 
-    // 使用默认 HTTP 上报
+    // 使用默认 HTTP 上报 (需要配置 reportUrl)
     if (globalOptions.reportUrl) {
       await uni.request({
         url: globalOptions.reportUrl,
@@ -222,12 +292,28 @@ async function doReport(): Promise<void> {
           'Content-Type': 'application/json',
         },
       });
+      // 上报成功，重置失败计数
+      reportFailureCount = 0;
     }
   } catch (err) {
-    // 上报失败，将错误放回队列
-    errorQueue.unshift(...errors);
-    console.error('[ErrorReporter] 上报失败:', err);
+    reportFailureCount++;
+
+    if (reportFailureCount < MAX_REPORT_FAILURES) {
+      // 上报失败但未达到最大次数，将错误放回队列
+      errorQueue.unshift(...errors);
+      console.error(`[ErrorReporter] 上报失败 (${reportFailureCount}/${MAX_REPORT_FAILURES}):`, err);
+    } else {
+      // 达到最大失败次数，丢弃错误
+      console.error(`[ErrorReporter] 上报失败次数达到上限 (${MAX_REPORT_FAILURES})，错误已丢弃:`, err);
+    }
   }
+}
+
+/**
+ * 重置上报失败计数 (用于网络恢复后)
+ */
+export function resetReportFailureCount(): void {
+  reportFailureCount = 0;
 }
 
 /**
@@ -440,4 +526,176 @@ export function updateErrorReporterOptions(options: Partial<ErrorReporterOptions
  */
 export function getErrorQueueSize(): number {
   return errorQueue.length;
+}
+
+// ==================== 全局错误监听 ====================
+
+/** 是否已设置全局监听 */
+let isGlobalListenersSetup = false;
+
+/**
+ * 设置 H5 环境的全局错误监听
+ * - window.onerror: 捕获同步 JS 错误
+ * - unhandledrejection: 捕获未处理的 Promise 拒绝
+ * - error (捕获阶段): 捕获资源加载错误
+ */
+function setupH5GlobalListeners(): void {
+  // #ifdef H5
+  // 全局 JS 错误监听
+  window.onerror = (message, source, lineno, colno, error) => {
+    if (globalOptions.consoleLog) {
+      console.error('[H5 GlobalError]', { message, source, lineno, colno, error });
+    }
+    reportError(error || String(message), 'js', 'error', {
+      source: 'window.onerror',
+      file: source,
+      line: lineno,
+      column: colno,
+    });
+    // 返回 true 阻止默认错误处理
+    return true;
+  };
+
+  // 未处理的 Promise 拒绝
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    if (globalOptions.consoleLog) {
+      console.error('[H5 UnhandledRejection]', event.reason);
+    }
+    reportPromiseError(event.reason);
+    // 阻止默认处理（控制台报错）
+    event.preventDefault();
+  });
+
+  // 资源加载错误（图片、脚本等）
+  window.addEventListener(
+    'error',
+    (event: ErrorEvent) => {
+      const target = event.target as HTMLElement;
+      // 判断是否是资源加载错误
+      if (target && (target.tagName === 'IMG' || target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+        const resourceUrl = (target as HTMLImageElement).src || (target as HTMLLinkElement).href;
+        if (globalOptions.consoleLog) {
+          console.error('[H5 ResourceError]', resourceUrl);
+        }
+        reportError(`资源加载失败: ${resourceUrl}`, 'resource', 'error', {
+          source: 'window.error',
+          tagName: target.tagName,
+          resourceUrl,
+        });
+      }
+    },
+    true, // 使用捕获阶段
+  );
+
+  if (globalOptions.consoleLog) {
+    console.log('[ErrorReporter] H5 全局错误监听已启用');
+  }
+  // #endif
+}
+
+/**
+ * 创建 Uni-app 生命周期错误处理器
+ * 用于 onError 和 onUnhandledRejection
+ */
+export interface GlobalErrorHandlers {
+  /** onError 处理函数 */
+  onError: (error: string) => void;
+  /** onUnhandledRejection 处理函数 */
+  onUnhandledRejection: (event: { reason: unknown; promise: Promise<unknown> }) => void;
+  /** onHide 处理函数 (应用切后台时立即上报) */
+  onHide: () => void;
+}
+
+/**
+ * 获取全局错误处理器
+ * 返回用于 Uni-app 生命周期钩子的处理函数
+ *
+ * @example
+ * ```ts
+ * // App.vue
+ * import { onError, onUnhandledRejection, onHide } from '@dcloudio/uni-app';
+ * import { getGlobalErrorHandlers } from '@/utils/errorReporter';
+ *
+ * const handlers = getGlobalErrorHandlers();
+ * onError(handlers.onError);
+ * onUnhandledRejection(handlers.onUnhandledRejection);
+ * onHide(handlers.onHide);
+ * ```
+ */
+export function getGlobalErrorHandlers(): GlobalErrorHandlers {
+  return {
+    onError: (error: string) => {
+      if (globalOptions.consoleLog) {
+        console.error('[App Error]', error);
+      }
+      reportError(error, 'js', 'error', { source: 'onError' });
+    },
+    onUnhandledRejection: (event: { reason: unknown; promise: Promise<unknown> }) => {
+      if (globalOptions.consoleLog) {
+        console.error('[Unhandled Promise Rejection]', event.reason);
+      }
+      reportPromiseError(event.reason);
+    },
+    onHide: () => {
+      // 应用切到后台时，立即上报缓存的错误
+      flushErrors();
+    },
+  };
+}
+
+/**
+ * 设置全局错误监听
+ * 自动设置 H5 环境的 window 级别错误监听
+ * 注意: Uni-app 的 onError/onUnhandledRejection 需要在 App.vue 中手动调用
+ *
+ * @example
+ * ```ts
+ * // 在 setupErrorReporter 之后调用
+ * setupGlobalErrorListeners();
+ * ```
+ */
+export function setupGlobalErrorListeners(): void {
+  if (isGlobalListenersSetup) {
+    console.warn('[ErrorReporter] 全局监听已设置，请勿重复调用');
+    return;
+  }
+
+  isGlobalListenersSetup = true;
+
+  // 设置 H5 特有的全局监听
+  setupH5GlobalListeners();
+}
+
+/**
+ * 一站式初始化错误上报系统
+ * 包含：配置初始化 + 全局监听设置
+ *
+ * @example
+ * ```ts
+ * // App.vue - 简化用法
+ * import { onError, onUnhandledRejection, onHide } from '@dcloudio/uni-app';
+ * import { initErrorReporter } from '@/utils/errorReporter';
+ *
+ * onLaunch(() => {
+ *   const handlers = initErrorReporter({
+ *     reportUrl: 'https://api.example.com/error/report',
+ *     getUserId: () => useUserStore().userInfo?.id,
+ *   });
+ *
+ *   // 绑定 Uni-app 生命周期 (必须在 App.vue 中调用)
+ *   onError(handlers.onError);
+ *   onUnhandledRejection(handlers.onUnhandledRejection);
+ *   onHide(handlers.onHide);
+ * });
+ * ```
+ */
+export function initErrorReporter(options: ErrorReporterOptions = {}): GlobalErrorHandlers {
+  // 初始化配置
+  setupErrorReporter(options);
+
+  // 设置全局监听 (H5)
+  setupGlobalErrorListeners();
+
+  // 返回 Uni-app 生命周期处理器
+  return getGlobalErrorHandlers();
 }

@@ -2,7 +2,14 @@ node_modules
 dist
 deploy
 coverage
+unpackage
+
+# Auto-generated files (by @uni-helper plugins)
 auto-imports.d.ts
 components.d.ts
+src/pages.json
+src/manifest.json
+typings/uni-pages.d.ts
+
+# Documentation
 *.md
-.cursor

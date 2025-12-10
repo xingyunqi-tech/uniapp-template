@@ -5,10 +5,19 @@
 </template>
 
 <script setup lang="ts">
-import { onLaunch, onShow, onHide, onError } from '@dcloudio/uni-app';
+import { onLaunch, onShow, onHide, onError, onUnhandledRejection } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
-import { checkUpdate, setupNetworkListener, setupErrorReporter, reportError, flushErrors } from '@/utils';
+import {
+  checkUpdate,
+  setupNetworkListener,
+  onNetworkChange,
+  initErrorReporter,
+  resetReportFailureCount,
+} from '@/utils';
+
+// 错误处理器 (在 onLaunch 中初始化后使用)
+let errorHandlers: ReturnType<typeof initErrorReporter>;
 
 // 应用启动
 onLaunch(options => {
@@ -25,8 +34,15 @@ onLaunch(options => {
     showToast: true,
   });
 
-  // 初始化错误上报
-  setupErrorReporter({
+  // 网络恢复时重置错误上报失败计数
+  onNetworkChange(isConnected => {
+    if (isConnected) {
+      resetReportFailureCount();
+    }
+  });
+
+  // 一站式初始化错误上报 (包含配置 + H5 全局监听)
+  errorHandlers = initErrorReporter({
     // 上报地址 (生产环境配置)
     reportUrl: import.meta.env.VITE_ERROR_REPORT_URL || '',
     // 生产环境启用
@@ -64,15 +80,19 @@ onShow(options => {
 // 应用隐藏 (从前台进入后台)
 onHide(() => {
   console.log('App Hide');
-  // 应用切到后台时，立即上报缓存的错误
-  flushErrors();
+  errorHandlers?.onHide();
 });
 
-// 应用错误
+// 应用错误 (同步 JS 错误)
+// 文档: https://uniapp.dcloud.net.cn/collocation/App.html#onerror
 onError(error => {
-  console.error('App Error:', error);
-  // 上报错误到监控平台
-  reportError(error, 'js', 'error', { source: 'onError' });
+  errorHandlers?.onError(error);
+});
+
+// 未处理的 Promise 拒绝 (Uni-app 官方 API，支持全平台)
+// 文档: https://uniapp.dcloud.net.cn/collocation/App.html#onunhandledrejection
+onUnhandledRejection(event => {
+  errorHandlers?.onUnhandledRejection(event);
 });
 </script>
 
