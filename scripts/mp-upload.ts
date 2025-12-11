@@ -19,7 +19,6 @@
  *   支付宝: 开放平台 -> 开发设置 -> 开发工具密钥
  */
 
-import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
@@ -83,17 +82,6 @@ function log(message: string, type: 'info' | 'success' | 'error' | 'warn' = 'inf
     warn: '⚠',
   };
   console.log(`${colors[type]}${prefix[type]} ${message}${reset}`);
-}
-
-/**
- * 执行命令
- */
-function exec(command: string, options: { silent?: boolean } = {}) {
-  return execSync(command, {
-    cwd: ROOT_DIR,
-    stdio: options.silent ? 'pipe' : 'inherit',
-    encoding: 'utf-8',
-  });
 }
 
 /**
@@ -300,8 +288,8 @@ function getAlipayConfig(): AlipayConfig {
 
 /**
  * 上传支付宝小程序
- * 使用 minidev 工具 (支付宝官方 CLI)
- * 文档: https://opendocs.alipay.com/mini/miniu/intro
+ * 使用 minidev Node.js API (支付宝官方 CI 工具)
+ * 文档: https://opendocs.alipay.com/mini/miniu/api
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
   const { action, version, description } = config;
@@ -316,48 +304,56 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     throw new Error(`构建产物不存在: ${alipayConfig.projectPath}\n请先执行: pnpm build:mp-alipay`);
   }
 
-  // 检查是否安装了 minidev (支付宝小程序官方 CI 工具)
-  try {
-    exec('npx minidev --version', { silent: true });
-  } catch {
-    log('正在安装 minidev...', 'info');
-    exec('pnpm add -D minidev');
-  }
+  // 动态导入 minidev
+  const minidev = await import('minidev');
 
-  // 将私钥写入临时文件 (minidev 需要密钥文件路径)
-  ensureTempDir();
-  const privateKeyPath = resolve(TEMP_DIR, 'alipay-private.key');
-  writeFileSync(privateKeyPath, alipayConfig.privateKey);
+  // 配置 minidev
+  // 文档: https://opendocs.alipay.com/mini/miniu/api
+  minidev.setConfig({
+    toolId: alipayConfig.toolId,
+    privateKey: alipayConfig.privateKey,
+  });
 
-  try {
-    // 构建上传命令
-    // minidev upload 文档: https://opendocs.alipay.com/mini/miniu/intro
-    const command = [
-      'npx minidev',
-      action === 'upload' ? 'upload' : 'preview',
-      `-a ${alipayConfig.appid}`,
-      `--tool-id ${alipayConfig.toolId}`,
-      `--private-key ${privateKeyPath}`,
-      `-p ${alipayConfig.projectPath}`,
-      `-v ${version}`,
-      action === 'upload' ? '-e' : '', // -e: 设为体验版
-    ]
-      .filter(Boolean)
-      .join(' ');
+  if (action === 'upload') {
+    // 上传代码
+    log('正在上传...', 'info');
+    const uploadResult = await minidev.miniUpload({
+      appId: alipayConfig.appid,
+      clientType: 'alipay',
+      project: alipayConfig.projectPath,
+      version: version,
+      experience: true, // 自动设为体验版
+      onProgressUpdate: (info: { status: string; data: any }) => {
+        if (info.status === 'upload') {
+          log(`上传进度: ${JSON.stringify(info.data)}`, 'info');
+        }
+      },
+    });
 
-    log(`执行命令: ${command.replace(privateKeyPath, '[PRIVATE_KEY_PATH]')}`, 'info');
-
-    const result = exec(command, { silent: false });
-
-    if (result) {
-      log(`命令输出: ${result}`, 'info');
+    log(`支付宝小程序上传成功!`, 'success');
+    log(`版本: ${version}`, 'success');
+    if (uploadResult) {
+      console.log('上传结果:', uploadResult);
     }
+  } else {
+    // 预览
+    log('正在生成预览...', 'info');
+    const previewResult = await minidev.miniPreview({
+      appId: alipayConfig.appid,
+      clientType: 'alipay',
+      project: alipayConfig.projectPath,
+      qrcodeFormat: 'terminal',
+      onProgressUpdate: (info: { status: string; data: any }) => {
+        if (info.status === 'preview') {
+          log(`预览进度: ${JSON.stringify(info.data)}`, 'info');
+        }
+      },
+    });
 
-    log(`支付宝小程序${action === 'upload' ? '上传' : '预览'}成功!`, 'success');
-  } finally {
-    // 清理私钥临时文件
-    if (existsSync(privateKeyPath)) {
-      rmSync(privateKeyPath);
+    log(`支付宝小程序预览成功!`, 'success');
+    log(`请扫描二维码预览`, 'success');
+    if (previewResult) {
+      console.log('预览结果:', previewResult);
     }
   }
 }
