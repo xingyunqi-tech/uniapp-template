@@ -317,12 +317,31 @@ function handleDelete() {
 .form-section {
   padding: 24rpx;
 
+  // 输入框样式
+  input {
+    flex: 1;
+    height: 48rpx;
+    padding: 0;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    line-height: 48rpx;
+
+    &::placeholder {
+      color: var(--color-text-placeholder);
+    }
+  }
+
   .form-textarea {
     width: 100%;
     min-height: 120rpx;
+    padding: 0;
     color: var(--color-text);
     font-size: var(--font-size-base);
     line-height: 1.5;
+
+    &::placeholder {
+      color: var(--color-text-placeholder);
+    }
   }
 }
 

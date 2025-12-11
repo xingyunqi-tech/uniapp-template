@@ -44,6 +44,7 @@ withDefaults(defineProps<Props>(), {
   }
 
   &__list {
+    padding: 0 var(--spacing-base);
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: var(--color-bg-card);

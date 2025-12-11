@@ -10,7 +10,7 @@
 <template>
   <view class="user-page" :class="globalStore.themeClass">
     <!-- 用户信息卡片 -->
-    <view class="user-card" :style="{ paddingTop: statusBarHeight + 20 + 'px' }">
+    <view class="user-card" :style="{ paddingTop: totalHeight + 10 + 'px' }">
       <view class="user-info" @click="handleUserClick">
         <image class="avatar" :src="userInfo?.avatar || '/static/images/default-avatar.png'" mode="aspectFill" />
         <view class="info">
@@ -54,8 +54,8 @@ import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 
-// 状态栏高度
-const { statusBarHeight } = useStatusBar();
+// 状态栏 + 导航栏高度（避开胶囊按钮）
+const { totalHeight } = useStatusBar();
 
 const router = useRouter();
 const userStore = useUserStore();

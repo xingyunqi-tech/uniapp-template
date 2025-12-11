@@ -264,6 +264,8 @@ function goToForgotPassword() {
   margin-bottom: 48rpx;
   overflow: hidden;
   border-radius: var(--radius-base);
+  background: var(--color-bg-grey);
+  box-shadow: none;
 
   :deep(.u-tabs__list) {
     background: var(--color-bg-grey);
