@@ -11,10 +11,9 @@
  */
 
 // ============================================
-// 浅色主题 (默认)
+// 浅色主题变量 Mixin
 // ============================================
-page,
-:root {
+@mixin theme-light {
   // 主题色
   --color-primary: #1989fa;
   --color-primary-light: #66b1ff;
@@ -78,15 +77,9 @@ page,
 }
 
 // ============================================
-// 深色主题
-// 支持多种触发方式：
-// 1. page.dark-theme - 小程序 page 元素有 dark-theme 类
-// 2. html.dark-theme - H5 根元素有 dark-theme 类
-// 3. .dark-theme - 任意元素有 dark-theme 类（用于页面根 view）
+// 深色主题变量 Mixin
 // ============================================
-page.dark-theme,
-:root.dark-theme,
-.dark-theme {
+@mixin theme-dark {
   // 主题色 (深色模式下稍微调亮)
   --color-primary: #409eff;
   --color-primary-light: #66b1ff;
@@ -147,4 +140,40 @@ page.dark-theme,
   --color-tabbar-bg: #1d1d1d;
   --color-tabbar-text: #a3a6ad;
   --color-tabbar-text-active: var(--color-primary);
+}
+
+// ============================================
+// 平台条件编译 - 应用主题
+// ============================================
+
+/* #ifndef H5 */
+// 小程序 & App: 使用 page 选择器
+page {
+  @include theme-light;
+}
+
+page.dark-theme {
+  @include theme-dark;
+}
+
+/* #endif */
+
+/* #ifdef H5 */
+// H5: 使用 :root 选择器
+:root {
+  @include theme-light;
+}
+
+:root.dark-theme {
+  @include theme-dark;
+}
+
+/* #endif */
+
+// ============================================
+// 通用深色主题类 (用于组件内部)
+// 支持页面根 view 添加 dark-theme 类
+// ============================================
+.dark-theme {
+  @include theme-dark;
 }

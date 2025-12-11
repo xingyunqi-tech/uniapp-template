@@ -90,9 +90,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
 import { useRouter } from '@/composables';
-
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
-import { UMenuGroup, UMenuItem } from '@/components';
 
 const router = useRouter();
 const userStore = useUserStore();

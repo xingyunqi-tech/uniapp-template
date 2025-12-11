@@ -1,19 +1,5 @@
 /**
  * 组件统一导出
- *
- * 注意：
- * 1. uni-ui 组件已通过 easycom 自动注册，无需手动导入
- * 2. 本项目自定义组件 (U* 前缀) 也已通过 easycom 注册，可直接在模板中使用
- * 3. 本文件提供显式导出，便于 IDE 类型提示和按需导入
- *
- * 以下 uni-ui 组件可直接使用（无需导入）：
- * - uni-card: 卡片组件
- * - uni-list / uni-list-item: 列表组件
- * - uni-popup: 弹出层（支持 dialog/share/bottom 等模式）
- * - uni-nav-bar: 导航栏
- * - uni-notice-bar: 通知栏
- * - uni-load-more: 加载更多
- * - uni-swipe-action: 滑动操作
  */
 
 // ==================== 布局组件 ====================
@@ -85,6 +71,9 @@ export { default as USmsInput } from './USmsInput/index.vue';
 // 图片上传组件 (基于 uni-file-picker 封装)
 export { default as UImageUpload } from './UImageUpload/index.vue';
 export type { FileItem, FileUploadStatus, UploadMode, MediaType, SelectResult } from './UImageUpload/index.vue';
+
+// 搜索栏组件 (支持搜索历史、热门搜索)
+export { default as USearchBar } from './USearchBar/index.vue';
 
 // ==================== 菜单组件 ====================
 // 菜单组容器

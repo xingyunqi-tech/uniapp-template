@@ -30,7 +30,6 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UEmpty } from '@/components';
 import { canGoBack as checkCanGoBack } from '@/utils/router';
 
 const globalStore = useGlobalStore();

@@ -61,10 +61,8 @@ import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
 import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
-import { UMenuGroup, UFormItem, UFixedButton, UImageUpload } from '@/components';
 import type { FileItem } from '@/components';
 
 const globalStore = useGlobalStore();

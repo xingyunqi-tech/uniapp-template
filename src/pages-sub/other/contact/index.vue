@@ -42,7 +42,6 @@
 
 <script setup lang="ts">
 import { useGlobalStore } from '@/store/modules/global';
-import { UMenuGroup, UMenuItem } from '@/components';
 
 const globalStore = useGlobalStore();
 

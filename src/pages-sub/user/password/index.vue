@@ -91,9 +91,7 @@ import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
-import { UPasswordStrength, UFixedButton } from '@/components';
 
 const globalStore = useGlobalStore();
 

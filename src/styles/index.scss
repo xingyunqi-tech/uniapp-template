@@ -10,20 +10,9 @@
 @use './theme';
 
 // ============================================
-// 安全区域工具类
+// 页面基础样式 Mixin
 // ============================================
-.safe-area-top {
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-area-bottom {
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* 页面基础样式 */
-page {
+@mixin page-base {
   box-sizing: border-box;
   transition:
     background-color 0.3s,
@@ -36,6 +25,20 @@ page {
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
 }
+
+/* #ifndef H5 */
+page {
+  @include page-base;
+}
+
+/* #endif */
+
+/* #ifdef H5 */
+:root {
+  @include page-base;
+}
+
+/* #endif */
 
 // ============================================
 // H5 导航栏和 TabBar 主题适配

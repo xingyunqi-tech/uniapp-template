@@ -13,6 +13,10 @@
     "build:mp-weixin": "uni build -p mp-weixin",
     "build:mp-alipay": "uni build -p mp-alipay",
     "build:app": "uni build -p app",
+    "mp:upload:weixin": "pnpm build:mp-weixin && pnpm tsx scripts/mp-upload.ts weixin upload",
+    "mp:upload:alipay": "pnpm build:mp-alipay && pnpm tsx scripts/mp-upload.ts alipay upload",
+    "mp:preview:weixin": "pnpm build:mp-weixin && pnpm tsx scripts/mp-upload.ts weixin preview",
+    "mp:preview:alipay": "pnpm build:mp-alipay && pnpm tsx scripts/mp-upload.ts alipay preview",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json",
     "lint": "pnpm lint:script && pnpm lint:style",
     "lint:script": "eslint . --fix",
@@ -24,8 +28,8 @@
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
     "clean": "rimraf dist unpackage",
-    "prepare": "husky",
-    "commit": "czg"
+    "commit": "czg",
+    "prepare": "husky"
   },
   "config": {
     "commitizen": {
@@ -95,6 +99,7 @@
     "jsdom": "^26.1.0",
     "lint-staged": "^16.1.0",
     "miniprogram-api-typings": "^3.12.3",
+    "miniprogram-ci": "^2.1.26",
     "openapi3-ts": "^4.4.0",
     "orval": "^7.9.0",
     "prettier": "^3.5.3",

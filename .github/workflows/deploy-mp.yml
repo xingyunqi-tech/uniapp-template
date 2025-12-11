@@ -1,0 +1,331 @@
+# 小程序自动部署工作流
+# 支持微信小程序和支付宝小程序的自动构建和上传
+#
+# 触发条件:
+#   1. 推送 tag (v*.*.*)   - 自动上传到体验版
+#   2. 手动触发            - 可选择平台和操作类型
+#
+# 配置步骤:
+#   1. 在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中添加以下 secrets:
+#      - WEIXIN_APPID: 微信小程序 AppID
+#      - WEIXIN_PRIVATE_KEY: 微信小程序上传密钥 (base64 编码)
+#      - ALIPAY_APPID: 支付宝小程序 AppID (可选)
+#      - ALIPAY_PRIVATE_KEY: 支付宝小程序私钥 (可选)
+#      - ALIPAY_TOOL_ID: 支付宝小程序工具 ID (可选)
+#
+# 密钥编码方式 (微信):
+#   macOS/Linux: base64 -i private.wx.key | tr -d '\n'
+#   Windows: certutil -encode private.wx.key tmp.b64 && type tmp.b64
+
+name: Deploy MiniProgram
+
+on:
+  # 推送 tag 时触发 (例如 v1.0.0)
+  push:
+    tags:
+      - 'v*.*.*'
+
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: '目标平台'
+        required: true
+        default: 'weixin'
+        type: choice
+        options:
+          - weixin
+          - alipay
+          - all
+      action:
+        description: '操作类型'
+        required: true
+        default: 'upload'
+        type: choice
+        options:
+          - upload
+          - preview
+      version:
+        description: '版本号 (留空则使用 package.json 版本)'
+        required: false
+        type: string
+      description:
+        description: '版本描述'
+        required: false
+        type: string
+
+# 并发控制: 同一分支只运行一个部署任务
+concurrency:
+  group: deploy-mp-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '9'
+
+jobs:
+  # ==================== 构建任务 ====================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      description: ${{ steps.version.outputs.description }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get version info
+        id: version
+        run: |
+          # 从 tag 或输入获取版本
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            DESC="Release $VERSION - $(date '+%Y-%m-%d %H:%M')"
+          else
+            VERSION="${{ github.event.inputs.version }}"
+            if [[ -z "$VERSION" ]]; then
+              VERSION=$(node -p "require('./package.json').version")
+            fi
+            DESC="${{ github.event.inputs.description }}"
+            if [[ -z "$DESC" ]]; then
+              DESC="v$VERSION - $(date '+%Y-%m-%d %H:%M')"
+            fi
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "description=$DESC" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+          echo "📝 Description: $DESC"
+
+      - name: Run type check
+        run: pnpm type-check
+
+      - name: Run linter
+        run: pnpm lint
+
+      # 构建微信小程序
+      - name: Build WeChat MiniProgram
+        if: |
+          github.event_name == 'push' ||
+          github.event.inputs.platform == 'weixin' ||
+          github.event.inputs.platform == 'all'
+        run: pnpm build:mp-weixin
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      # 构建支付宝小程序
+      - name: Build Alipay MiniProgram
+        if: |
+          github.event_name == 'push' ||
+          github.event.inputs.platform == 'alipay' ||
+          github.event.inputs.platform == 'all'
+        run: pnpm build:mp-alipay
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      # 上传构建产物
+      - name: Upload WeChat build artifact
+        if: |
+          github.event_name == 'push' ||
+          github.event.inputs.platform == 'weixin' ||
+          github.event.inputs.platform == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp-weixin-build
+          path: dist/build/mp-weixin
+          retention-days: 1
+
+      - name: Upload Alipay build artifact
+        if: |
+          github.event_name == 'push' ||
+          github.event.inputs.platform == 'alipay' ||
+          github.event.inputs.platform == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp-alipay-build
+          path: dist/build/mp-alipay
+          retention-days: 1
+
+  # ==================== 微信小程序上传 ====================
+  deploy-weixin:
+    name: Deploy WeChat
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'weixin' ||
+      github.event.inputs.platform == 'all'
+
+    steps:
+      - name: Check secrets
+        run: |
+          if [[ -z "${{ secrets.WEIXIN_APPID }}" ]]; then
+            echo "::error::缺少 WEIXIN_APPID secret，请在仓库 Settings -> Secrets 中配置"
+            exit 1
+          fi
+          if [[ -z "${{ secrets.WEIXIN_PRIVATE_KEY }}" ]]; then
+            echo "::error::缺少 WEIXIN_PRIVATE_KEY secret，请在仓库 Settings -> Secrets 中配置"
+            exit 1
+          fi
+          echo "✅ 微信小程序 secrets 配置正确"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mp-weixin-build
+          path: dist/build/mp-weixin
+
+      - name: Upload to WeChat
+        env:
+          WEIXIN_APPID: ${{ secrets.WEIXIN_APPID }}
+          WEIXIN_PRIVATE_KEY: ${{ secrets.WEIXIN_PRIVATE_KEY }}
+          MP_VERSION: ${{ needs.build.outputs.version }}
+          MP_DESC: ${{ needs.build.outputs.description }}
+        run: |
+          ACTION="${{ github.event.inputs.action || 'upload' }}"
+          pnpm tsx scripts/mp-upload.ts weixin $ACTION
+
+      - name: Upload result notification
+        if: success()
+        run: |
+          echo "✅ 微信小程序上传成功!"
+          echo "📦 版本: ${{ needs.build.outputs.version }}"
+          echo "📝 描述: ${{ needs.build.outputs.description }}"
+          echo ""
+          echo "下一步操作:"
+          echo "1. 登录微信小程序后台: https://mp.weixin.qq.com"
+          echo "2. 进入「管理」->「版本管理」"
+          echo "3. 将体验版提交审核或设置为正式版"
+
+  # ==================== 支付宝小程序上传 ====================
+  deploy-alipay:
+    name: Deploy Alipay
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'alipay' ||
+      github.event.inputs.platform == 'all'
+
+    steps:
+      - name: Check secrets
+        run: |
+          if [[ -z "${{ secrets.ALIPAY_APPID }}" ]]; then
+            echo "::error::缺少 ALIPAY_APPID secret，请在仓库 Settings -> Secrets 中配置"
+            exit 1
+          fi
+          if [[ -z "${{ secrets.ALIPAY_PRIVATE_KEY }}" ]]; then
+            echo "::error::缺少 ALIPAY_PRIVATE_KEY secret，请在仓库 Settings -> Secrets 中配置"
+            exit 1
+          fi
+          if [[ -z "${{ secrets.ALIPAY_TOOL_ID }}" ]]; then
+            echo "::error::缺少 ALIPAY_TOOL_ID secret，请在仓库 Settings -> Secrets 中配置"
+            exit 1
+          fi
+          echo "✅ 支付宝小程序 secrets 配置正确"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mp-alipay-build
+          path: dist/build/mp-alipay
+
+      - name: Upload to Alipay
+        env:
+          ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
+          ALIPAY_PRIVATE_KEY: ${{ secrets.ALIPAY_PRIVATE_KEY }}
+          ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
+          MP_VERSION: ${{ needs.build.outputs.version }}
+          MP_DESC: ${{ needs.build.outputs.description }}
+        run: |
+          ACTION="${{ github.event.inputs.action || 'upload' }}"
+          pnpm tsx scripts/mp-upload.ts alipay $ACTION
+
+      - name: Upload result notification
+        if: success()
+        run: |
+          echo "✅ 支付宝小程序上传成功!"
+          echo "📦 版本: ${{ needs.build.outputs.version }}"
+          echo "📝 描述: ${{ needs.build.outputs.description }}"
+          echo ""
+          echo "下一步操作:"
+          echo "1. 登录支付宝开放平台: https://open.alipay.com"
+          echo "2. 进入小程序详情页"
+          echo "3. 将体验版提交审核"
+
+  # ==================== 通知任务 ====================
+  notify:
+    name: Notify
+    needs: [build, deploy-weixin, deploy-alipay]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Summary
+        run: |
+          echo "# 小程序部署结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 版本 | ${{ needs.build.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 描述 | ${{ needs.build.outputs.description }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 构建 | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 微信 | ${{ needs.deploy-weixin.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 支付宝 | ${{ needs.deploy-alipay.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+
+      # 可选: 发送通知到钉钉/企业微信/飞书
+      # - name: Send notification
+      #   if: failure()
+      #   run: |
+      #     curl -X POST "${{ secrets.WEBHOOK_URL }}" \
+      #       -H 'Content-Type: application/json' \
+      #       -d '{"msgtype": "text", "text": {"content": "小程序部署失败: ${{ github.repository }}"}}'

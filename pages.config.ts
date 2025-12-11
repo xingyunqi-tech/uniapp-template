@@ -6,10 +6,12 @@ export default defineUniPages({
     custom: {
       // uni-ui 组件
       '^uni-(.*)': '@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue',
-      // 自定义组件 - PascalCase (UBanner -> @/components/UBanner/index.vue)
-      '^(U[A-Z][a-zA-Z]*)$': '@/components/$1/index.vue',
-      // AuthLayout 组件
-      '^(AuthLayout)$': '@/components/$1/index.vue',
+      // 自定义组件 (U 前缀)
+      '^U(.*)': '@/components/U$1/index.vue',
+      // 自定义组件 (kebab-case: u-xxx)
+      '^u-(.*)': '@/components/U$1/index.vue',
+      // 布局组件
+      '^AuthLayout$': '@/components/AuthLayout/index.vue',
     },
   },
   pages: [],

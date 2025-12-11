@@ -50,9 +50,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
 import { PAGES } from '@/constants';
-import { UMenuGroup, UMenuItem } from '@/components';
 
 const globalStore = useGlobalStore();
 

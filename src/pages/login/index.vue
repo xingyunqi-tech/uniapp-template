@@ -81,7 +81,6 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PHONE_LENGTH, DELAY_TIMES } from '@/constants';
-import { AuthLayout, UTabs, USmsInput } from '@/components';
 
 const globalStore = useGlobalStore();
 const router = useRouter();

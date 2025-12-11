@@ -128,13 +128,14 @@ const placeholderStyle = computed(() => ({
   height: `calc(${statusBarHeight.value} + ${navBarHeight.value})`,
 }));
 
-// 返回按钮图标颜色 - 根据主题和 textColor prop 动态计算
+// 返回按钮图标颜色 - 使用 CSS 变量，自动适配主题
 const backIconColor = computed(() => {
+  // textColor === 'light' 时 (透明背景、深色背景场景)，使用反色文字
   if (props.textColor === 'light') {
-    return '#ffffff';
+    return 'var(--color-text-inverse)';
   }
-  // 暗黑模式下使用浅色文字
-  return globalStore.isDark ? '#e5eaf3' : '#323233';
+  // 默认使用正常文字颜色 (自动适配深色/浅色主题)
+  return 'var(--color-text)';
 });
 
 // ==================== Lifecycle ====================

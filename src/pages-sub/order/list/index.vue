@@ -105,11 +105,8 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { confirm } from '@/utils';
-import type { LoadMoreStatus } from '@/components';
-
+import type { LoadMoreStatus, TabItem } from '@/components';
 import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
-import { UTabs, UEmpty } from '@/components';
-import type { TabItem } from '@/components';
 
 const globalStore = useGlobalStore();
 

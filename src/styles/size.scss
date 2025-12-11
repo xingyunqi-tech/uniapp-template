@@ -5,8 +5,10 @@
  * 使用方式：组件中使用 var(--font-size-base) 等变量
  */
 
-page,
-:root {
+// ============================================
+// 尺寸变量 Mixin (固定值，不随主题变化)
+// ============================================
+@mixin size-variables {
   // ============================================
   // 字体大小
   // ============================================
@@ -90,3 +92,23 @@ page,
   --safe-area-inset-bottom: env(safe-area-inset-bottom);
   --safe-area-inset-left: env(safe-area-inset-left);
 }
+
+// ============================================
+// 平台条件编译 - 应用尺寸变量
+// ============================================
+
+/* #ifndef H5 */
+// 小程序 & App: 使用 page 选择器
+page {
+  @include size-variables;
+}
+
+/* #endif */
+
+/* #ifdef H5 */
+// H5: 使用 :root 选择器
+:root {
+  @include size-variables;
+}
+
+/* #endif */

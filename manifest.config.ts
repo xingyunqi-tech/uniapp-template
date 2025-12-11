@@ -1,16 +1,16 @@
 import { defineManifestConfig } from '@uni-helper/vite-plugin-uni-manifest';
 
 export default defineManifestConfig({
-  name: '',
-  appid: '',
-  description: '',
+  name: 'UniApp Template',
+  appid: '__UNI__XXXXXXX',
+  description: 'Uni-app 多端应用模板，支持 H5、微信小程序、支付宝小程序、App',
   versionName: '1.0.0',
   versionCode: '100',
   transformPx: false,
 
   /* 微信小程序配置 */
   'mp-weixin': {
-    appid: '',
+    appid: 'wx0000000000000000',
     setting: {
       urlCheck: false,
       es6: true,
@@ -45,7 +45,7 @@ export default defineManifestConfig({
 
   /* H5 配置 */
   h5: {
-    title: '',
+    title: 'UniApp Template',
     router: {
       mode: 'history',
       base: '/',

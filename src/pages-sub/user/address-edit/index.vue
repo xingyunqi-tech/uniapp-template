@@ -76,7 +76,6 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
-import { UMenuGroup, UMenuItem, UFormItem, UFixedButton } from '@/components';
 // #ifdef H5
 import { regionData } from '@/constants';
 // #endif

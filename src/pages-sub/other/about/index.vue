@@ -42,7 +42,6 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UMenuGroup, UMenuItem } from '@/components';
 import { PAGES } from '@/constants';
 import { APP_NAME, COPYRIGHT } from '@/constants/system';
 

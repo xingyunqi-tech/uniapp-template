@@ -77,14 +77,12 @@
 import { reactive, computed } from 'vue';
 import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
 import {
   FEEDBACK_TYPES,
   FEEDBACK_CONTENT_MIN_LENGTH,
   FEEDBACK_IMAGE_MAX_COUNT,
   FEEDBACK_CONTENT_MAX_LENGTH,
 } from '@/constants';
-import { UFixedButton } from '@/components';
 
 const globalStore = useGlobalStore();
 

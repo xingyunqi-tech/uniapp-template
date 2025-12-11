@@ -16,3 +16,4 @@ export * from './useScanCode';
 export * from './useLocation';
 export * from './useLoading';
 export * from './usePermission';
+export * from './useSearchHistory';

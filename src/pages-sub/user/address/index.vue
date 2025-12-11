@@ -50,7 +50,6 @@ import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UTag, UEmpty } from '@/components';
 import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();

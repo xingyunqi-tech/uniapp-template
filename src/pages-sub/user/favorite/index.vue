@@ -39,7 +39,6 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
-import { UEmpty } from '@/components';
 
 const globalStore = useGlobalStore();
 
@@ -70,28 +69,28 @@ async function fetchList() {
         id: '1',
         title: '深入学习贯彻党的二十大精神',
         description: '全面学习领会党的二十大精神，深刻把握核心要义和精神实质',
-        cover: 'https://via.placeholder.com/200x200/1989fa/ffffff?text=1',
+        cover: 'https://picsum.photos/200/200?random=1',
         time: '2小时前',
       },
       {
         id: '2',
         title: '行政能力测试技巧总结',
         description: '归纳总结常见题型解题方法，提升答题效率和准确率',
-        cover: 'https://via.placeholder.com/200x200/07c160/ffffff?text=2',
+        cover: 'https://picsum.photos/200/200?random=2',
         time: '昨天',
       },
       {
         id: '3',
         title: '申论写作高分模板',
         description: '精选申论写作范文，掌握高分写作技巧和结构框架',
-        cover: 'https://via.placeholder.com/200x200/ff976a/ffffff?text=3',
+        cover: 'https://picsum.photos/200/200?random=3',
         time: '3天前',
       },
       {
         id: '4',
         title: '公共基础知识速记手册',
         description: '涵盖政治、经济、法律、历史等核心知识点的速记整理',
-        cover: 'https://via.placeholder.com/200x200/ee0a24/ffffff?text=4',
+        cover: 'https://picsum.photos/200/200?random=4',
         time: '1周前',
       },
     ];

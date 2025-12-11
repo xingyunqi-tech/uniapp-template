@@ -59,7 +59,6 @@ import { ref, computed } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UBanner, ULoadMore, UNavBar } from '@/components';
 import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
@@ -89,11 +88,11 @@ interface NewsItem {
   questionCount?: number;
 }
 
-// Banner 数据
+// Banner 数据 - 使用 mock 网络图片
 const bannerList = ref<BannerItem[]>([
-  { id: 1, image: '/static/images/banner_1.png' },
-  { id: 2, image: '/static/images/banner_2.png' },
-  { id: 3, image: '/static/images/banner_3.png' },
+  { id: 1, image: 'https://picsum.photos/750/500?random=1' },
+  { id: 2, image: 'https://picsum.photos/750/500?random=2' },
+  { id: 3, image: 'https://picsum.photos/750/500?random=3' },
 ]);
 
 // 试题分类数据 - 10个分类
@@ -148,10 +147,7 @@ const {
       summary: '这是一段时政新闻摘要，概述了新闻的主要内容和核心观点，帮助用户快速了解时政动态...',
       source: mockSources[index % mockSources.length],
       time: `${Math.floor(Math.random() * 24)}小时前`,
-      image:
-        index % 3 === 0
-          ? `https://via.placeholder.com/200x150/${['1989fa', '07c160', 'ff976a'][index % 3]}/ffffff?text=时政${baseId + index + 1}`
-          : undefined,
+      image: index % 3 === 0 ? `https://picsum.photos/200/150?random=${baseId + index + 1}` : undefined,
       questionCount: Math.random() > 0.5 ? Math.floor(Math.random() * 20) + 5 : undefined,
     }));
   },

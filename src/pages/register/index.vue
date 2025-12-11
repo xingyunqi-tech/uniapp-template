@@ -89,9 +89,7 @@ import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
-import { AuthLayout, USmsInput } from '@/components';
 
 const globalStore = useGlobalStore();
 

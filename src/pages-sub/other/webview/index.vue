@@ -34,7 +34,6 @@ import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { UEmpty } from '@/components';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
