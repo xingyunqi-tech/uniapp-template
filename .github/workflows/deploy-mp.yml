@@ -97,11 +97,18 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          # 从 tag 或输入获取版本
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          # 判断触发类型获取版本
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            # tag 触发: 从 tag 提取版本号
             VERSION="${GITHUB_REF#refs/tags/v}"
             DESC="Release $VERSION - $(date '+%Y-%m-%d %H:%M')"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # 分支 push 触发: 从 package.json 读取版本
+            VERSION=$(node -p "require('./package.json').version")
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            DESC="$BRANCH - $(date '+%Y-%m-%d %H:%M') - ${GITHUB_SHA:0:7}"
           else
+            # 手动触发
             VERSION="${{ github.event.inputs.version }}"
             if [[ -z "$VERSION" ]]; then
               VERSION=$(node -p "require('./package.json').version")
