@@ -10,7 +10,7 @@ export default defineManifestConfig({
 
   /* 微信小程序配置 */
   'mp-weixin': {
-    appid: 'wx0000000000000000',
+    appid: 'wx527069a3e01ad680',
     setting: {
       urlCheck: false,
       es6: true,
