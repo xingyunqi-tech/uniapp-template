@@ -1,8 +1,8 @@
 /**
  * Orval 自定义 Mutator
- * 让 Orval 生成的代码使用 luch-request 实例
+ * 让 Orval 生成的代码使用 http 实例
  */
-import { request, type ApiResponse } from './request';
+import { http, type ApiResponse } from './alova';
 
 /**
  * 请求配置
@@ -10,9 +10,7 @@ import { request, type ApiResponse } from './request';
 export interface CustomRequestConfig {
   url: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-
   data?: any;
-
   params?: Record<string, any>;
   headers?: Record<string, string>;
   /** 是否显示 loading */
@@ -35,41 +33,41 @@ export type ExtractResult<T> = T extends ApiResponse<infer R> ? R : T extends { 
  * 1. 让 Orval 生成的代码使用我们自定义的 http 实例
  * 2. 确保所有请求都经过拦截器
  * 3. 统一响应格式，自动提取 data 字段
- *
- * @example
- * // Orval 生成的函数会自动调用此 mutator
- * customMutator<PostAuthLogin200>({ method: 'post', url: '/auth/login', data: loginData })
  */
 export const customMutator = async <T>(config: CustomRequestConfig): Promise<ExtractResult<T>> => {
   const { method = 'GET', url, data, params, headers, showLoading, loadingText, showError } = config;
 
-  const requestConfig = {
-    header: headers,
-    showLoading,
-    loadingText,
-    showError,
-  };
+  // 构建 meta 配置
+  const meta = { showLoading, loadingText, showError };
 
-  let response: ApiResponse<any>;
+  // 构建请求配置
+  const options = { headers, params, meta };
 
-  switch (method.toUpperCase()) {
+  let response: ApiResponse;
+
+  switch (method) {
     case 'GET':
-      response = await request.get(url, params, requestConfig);
+      response = await http.Get(url, options);
       break;
     case 'POST':
-      response = await request.post(url, data, requestConfig);
+      response = await http.Post(url, data, { ...options, cacheFor: 0 });
       break;
     case 'PUT':
-      response = await request.put(url, data, requestConfig);
+      response = await http.Put(url, data, { ...options, cacheFor: 0 });
       break;
     case 'DELETE':
-      response = await request.delete(url, requestConfig);
+      response = await http.Delete(url, { ...options, cacheFor: 0 });
       break;
     case 'PATCH':
-      response = await request.patch(url, data, requestConfig);
+      // Alova 没有原生 PATCH，用 Post + header 模拟
+      response = await http.Post(url, data, {
+        ...options,
+        headers: { ...headers, 'X-HTTP-Method-Override': 'PATCH' },
+        cacheFor: 0,
+      });
       break;
     default:
-      response = await request.get(url, params, requestConfig);
+      response = await http.Get(url, options);
   }
 
   // 返回 data 字段（适配 ApiResponse<T> 格式）

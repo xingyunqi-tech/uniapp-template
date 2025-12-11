@@ -10,7 +10,12 @@
 <template>
   <AuthLayout title="欢迎回来" card-title="登录账号" :class="globalStore.themeClass">
     <!-- 登录方式切换 -->
-    <UTabs v-model="loginType" :tabs="loginTabs" class="login-tabs" />
+    <view class="login-tabs">
+      <view class="tab-item" :class="{ active: loginType === 'password' }" @click="loginType = 'password'">
+        密码登录
+      </view>
+      <view class="tab-item" :class="{ active: loginType === 'sms' }" @click="loginType = 'sms'"> 验证码登录 </view>
+    </view>
 
     <!-- 登录表单 -->
     <view class="auth-form">
@@ -88,10 +93,6 @@ const userStore = useUserStore();
 
 // 登录方式: password | sms
 const loginType = ref<'password' | 'sms'>('password');
-const loginTabs = [
-  { label: '密码登录', value: 'password' },
-  { label: '验证码登录', value: 'sms' },
-];
 
 // 表单数据
 const formData = reactive({
@@ -261,31 +262,26 @@ function goToForgotPassword() {
 <style scoped lang="scss">
 // 登录方式切换
 .login-tabs {
+  display: flex;
+  gap: 0;
+  justify-content: center;
   margin-bottom: 48rpx;
-  overflow: hidden;
   border-radius: var(--radius-base);
   background: var(--color-bg-grey);
-  box-shadow: none;
 
-  :deep(.u-tabs__list) {
-    background: var(--color-bg-grey);
-  }
-
-  :deep(.u-tabs__item) {
-    height: 80rpx;
-    padding: 0 24rpx;
-  }
-
-  :deep(.u-tabs__item--active) {
+  .tab-item {
+    flex: 1;
+    padding: 20rpx 0;
+    transition: all var(--duration-fast);
     border-radius: var(--radius-base);
-    background: var(--color-primary);
+    color: var(--color-text-secondary);
+    font-size: 28rpx;
+    text-align: center;
 
-    .u-tabs__text {
+    &.active {
+      background: var(--color-primary);
       color: var(--color-text-inverse);
-    }
-
-    &::after {
-      display: none;
+      font-weight: 500;
     }
   }
 }

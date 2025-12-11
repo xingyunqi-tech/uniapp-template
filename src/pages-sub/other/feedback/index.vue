@@ -59,7 +59,13 @@
     <!-- 联系方式 -->
     <view class="form-section">
       <view class="section-title">联系方式（可选）</view>
-      <input v-model="formData.contact" class="contact-input" placeholder="请输入手机号或邮箱，方便我们联系您" />
+      <input
+        v-model="formData.contact"
+        class="contact-input"
+        type="number"
+        :maxlength="11"
+        placeholder="请输入手机号，方便我们联系您"
+      />
     </view>
 
     <!-- 提交按钮 -->

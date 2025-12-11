@@ -16,7 +16,7 @@
           <input
             v-model="formData.oldPassword"
             class="form-input"
-            :type="showOldPassword ? 'text' : 'safe-password'"
+            :password="!showOldPassword"
             placeholder="请输入原密码"
             :maxlength="PASSWORD_MAX_LENGTH"
           />
@@ -32,7 +32,7 @@
           <input
             v-model="formData.newPassword"
             class="form-input"
-            :type="showNewPassword ? 'text' : 'safe-password'"
+            :password="!showNewPassword"
             :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
             :maxlength="PASSWORD_MAX_LENGTH"
           />
@@ -48,7 +48,7 @@
           <input
             v-model="formData.confirmPassword"
             class="form-input"
-            :type="showConfirmPassword ? 'text' : 'safe-password'"
+            :password="!showConfirmPassword"
             placeholder="请再次输入新密码"
             :maxlength="PASSWORD_MAX_LENGTH"
           />

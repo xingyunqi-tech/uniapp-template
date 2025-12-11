@@ -9,7 +9,7 @@
  * - 前端直接调用非本系统 API
  */
 
-import { request } from '../core/request';
+import { http, type ApiResponse } from '../core';
 
 /**
  * 天气 API 响应类型
@@ -37,11 +37,11 @@ export interface WeatherResponse {
  */
 export const getWeather = async (city: string): Promise<WeatherResponse> => {
   // 注意：这只是示例代码，实际使用时需要替换为真实的 API 地址
-  const response = await request.get<WeatherResponse>(`https://api.weather.example.com/weather/${city}`, undefined, {
-    timeout: 5000,
-    header: {
-      'X-API-Key': import.meta.env.VITE_WEATHER_API_KEY || '',
+  const response = await http.Get<ApiResponse<WeatherResponse>>(`https://api.weather.example.com/weather/${city}`, {
+    meta: {
+      showError: true,
     },
+    cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
   });
 
   return response.data as WeatherResponse;
