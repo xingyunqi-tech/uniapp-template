@@ -107,7 +107,6 @@
 #### Scenario: Navigation bar theme
 - **GIVEN** 任意平台
 - **WHEN** 主题切换
-- **THEN** 调用 `uni.setNavigationBarColor()` 更新导航栏颜色
 - **AND** 浅色主题：黑色文字 + 白色背景
 - **AND** 深色主题：白色文字 + 深色背景
 

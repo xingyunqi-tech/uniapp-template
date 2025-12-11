@@ -1,39 +1,20 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE, getThemeTokens } from '@/constants';
+import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE } from '@/constants';
 import type { LocaleType, ThemeType } from '@/constants';
 import { i18n } from '@/utils/locale';
 
 /**
  * 应用主题到页面
- * 设置导航栏、TabBar 样式
+ * 导航栏/TabBar 通过 theme.json 配置自动适配，此处仅处理 H5 的 CSS class
  */
 function applyTheme(theme: ThemeType) {
   const isDark = theme === THEME_TYPE.DARK;
-  const tokens = getThemeTokens(isDark);
 
   // #ifdef H5
-  // H5: 设置根元素 class，让导航栏/TabBar 通过 CSS 变量获取主题色
+  // H5: 设置根元素 class，让页面内容通过 CSS 变量获取主题色
   document.documentElement.classList.toggle('dark-theme', isDark);
   // #endif
-
-  // 更新导航栏颜色
-  uni.setNavigationBarColor({
-    frontColor: tokens.navFrontColor,
-    backgroundColor: tokens.navBackgroundColor,
-    animation: {
-      duration: 300,
-      timingFunc: 'easeInOut',
-    },
-  });
-
-  // 更新 TabBar 样式
-  uni.setTabBarStyle({
-    backgroundColor: tokens.tabBarBackgroundColor,
-    borderStyle: tokens.tabBarBorderStyle,
-    color: tokens.tabBarColor,
-    selectedColor: tokens.tabBarSelectedColor,
-  });
 }
 
 /**

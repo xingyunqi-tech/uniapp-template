@@ -11,6 +11,8 @@ export default defineManifestConfig({
   /* 微信小程序配置 */
   'mp-weixin': {
     appid: 'wx527069a3e01ad680',
+    darkmode: true,
+    themeLocation: 'theme.json',
     setting: {
       urlCheck: false,
       es6: true,
@@ -47,6 +49,8 @@ export default defineManifestConfig({
   /* H5 配置 */
   h5: {
     title: 'UniApp Template',
+    darkmode: true,
+    themeLocation: 'theme.json',
     router: {
       mode: 'history',
       base: '/',
@@ -63,6 +67,8 @@ export default defineManifestConfig({
     usingComponents: true,
     nvueStyleCompiler: 'uni-app',
     compilerVersion: 3,
+    darkmode: true,
+    themeLocation: 'theme.json',
     splashscreen: {
       alwaysShowBeforeRender: true,
       waiting: true,

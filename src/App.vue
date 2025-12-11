@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { onLaunch, onShow, onHide, onError, onUnhandledRejection } from '@dcloudio/uni-app';
+import { onLaunch, onShow, onHide, onError, onUnhandledRejection, onThemeChange } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
 import {
@@ -15,6 +15,7 @@ import {
   initErrorReporter,
   resetReportFailureCount,
 } from '@/utils';
+import type { ThemeType } from '@/constants';
 
 // 错误处理器 (在 onLaunch 中初始化后使用)
 let errorHandlers: ReturnType<typeof initErrorReporter>;
@@ -93,6 +94,14 @@ onError(error => {
 // 文档: https://uniapp.dcloud.net.cn/collocation/App.html#onunhandledrejection
 onUnhandledRejection(event => {
   errorHandlers?.onUnhandledRejection(event);
+});
+
+// 系统主题变化监听 (跟随系统自动切换)
+// 文档: https://uniapp.dcloud.net.cn/tutorial/darkmode.html
+onThemeChange(res => {
+  console.log('System theme changed:', res.theme);
+  const globalStore = useGlobalStore();
+  globalStore.setTheme(res.theme as ThemeType);
 });
 </script>
 

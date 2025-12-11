@@ -300,7 +300,8 @@ function getAlipayConfig(): AlipayConfig {
 
 /**
  * 上传支付宝小程序
- * 使用 alipay-dev 工具
+ * 使用 minidev 工具 (支付宝官方 CLI)
+ * 文档: https://opendocs.alipay.com/mini/miniu/intro
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
   const { action, version, description } = config;
@@ -315,32 +316,50 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     throw new Error(`构建产物不存在: ${alipayConfig.projectPath}\n请先执行: pnpm build:mp-alipay`);
   }
 
-  // 检查是否安装了 miniu (支付宝小程序 CI 工具)
+  // 检查是否安装了 minidev (支付宝小程序官方 CI 工具)
   try {
-    exec('npx miniu --version', { silent: true });
+    exec('npx minidev --version', { silent: true });
   } catch {
-    log('正在安装 miniu...', 'info');
-    exec('pnpm add -D miniu');
+    log('正在安装 minidev...', 'info');
+    exec('pnpm add -D minidev');
   }
 
-  // 构建上传命令
-  // 文档: https://opendocs.alipay.com/mini/02q17h
-  const command = [
-    'npx miniu mini',
-    action === 'upload' ? 'upload' : 'preview',
-    `--app-id ${alipayConfig.appid}`,
-    `--tool-id ${alipayConfig.toolId}`,
-    `--private-key "${alipayConfig.privateKey}"`,
-    `--project ${alipayConfig.projectPath}`,
-    `--version ${version}`,
-    action === 'upload' ? '--experience true' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+  // 将私钥写入临时文件 (minidev 需要密钥文件路径)
+  ensureTempDir();
+  const privateKeyPath = resolve(TEMP_DIR, 'alipay-private.key');
+  writeFileSync(privateKeyPath, alipayConfig.privateKey);
 
-  exec(command);
+  try {
+    // 构建上传命令
+    // minidev upload 文档: https://opendocs.alipay.com/mini/miniu/intro
+    const command = [
+      'npx minidev',
+      action === 'upload' ? 'upload' : 'preview',
+      `-a ${alipayConfig.appid}`,
+      `--tool-id ${alipayConfig.toolId}`,
+      `--private-key ${privateKeyPath}`,
+      `-p ${alipayConfig.projectPath}`,
+      `-v ${version}`,
+      action === 'upload' ? '-e' : '', // -e: 设为体验版
+    ]
+      .filter(Boolean)
+      .join(' ');
 
-  log(`支付宝小程序${action === 'upload' ? '上传' : '预览'}成功!`, 'success');
+    log(`执行命令: ${command.replace(privateKeyPath, '[PRIVATE_KEY_PATH]')}`, 'info');
+
+    const result = exec(command, { silent: false });
+
+    if (result) {
+      log(`命令输出: ${result}`, 'info');
+    }
+
+    log(`支付宝小程序${action === 'upload' ? '上传' : '预览'}成功!`, 'success');
+  } finally {
+    // 清理私钥临时文件
+    if (existsSync(privateKeyPath)) {
+      rmSync(privateKeyPath);
+    }
+  }
 }
 
 // ==================== 主函数 ====================
