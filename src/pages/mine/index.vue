@@ -10,7 +10,7 @@
 <template>
   <view class="user-page" :class="globalStore.themeClass">
     <!-- 用户信息卡片 -->
-    <view class="user-card">
+    <view class="user-card" :style="{ paddingTop: statusBarHeight + 20 + 'px' }">
       <view class="user-info" @click="handleUserClick">
         <image class="avatar" :src="userInfo?.avatar || '/static/images/default-avatar.png'" mode="aspectFill" />
         <view class="info">
@@ -48,11 +48,14 @@
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter } from '@/composables';
+import { useRouter, useStatusBar } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
+
+// 状态栏高度
+const { statusBarHeight } = useStatusBar();
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -120,7 +123,7 @@ function handleMenuClick(type: string) {
 
 // 用户信息卡片
 .user-card {
-  padding: 40rpx;
+  padding: 0 40rpx 40rpx;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-success) 100%);
 
   .user-info {

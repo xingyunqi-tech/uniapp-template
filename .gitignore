@@ -47,8 +47,3 @@ yarn.lock
 *.tar.gz
 node_build_info.sh
 version.html
-
-# MiniProgram CI
-.temp/
-*.key
-private.*.key

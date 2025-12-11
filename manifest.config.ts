@@ -28,6 +28,7 @@ export default defineManifestConfig({
 
   /* 支付宝小程序配置 */
   'mp-alipay': {
+    appid: '2021006117665527',
     usingComponents: true,
     // 启用 component2 编译模式
     component2: true,
