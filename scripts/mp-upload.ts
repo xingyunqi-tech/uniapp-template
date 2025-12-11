@@ -315,25 +315,28 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     throw new Error(`构建产物不存在: ${alipayConfig.projectPath}\n请先执行: pnpm build:mp-alipay`);
   }
 
-  // 检查是否安装了 alipay-dev
+  // 检查是否安装了 miniu (支付宝小程序 CI 工具)
   try {
-    exec('npx alipay-dev --version', { silent: true });
+    exec('npx miniu --version', { silent: true });
   } catch {
-    log('正在安装 alipay-dev...', 'info');
-    exec('pnpm add -D alipay-dev');
+    log('正在安装 miniu...', 'info');
+    exec('pnpm add -D miniu');
   }
 
   // 构建上传命令
+  // 文档: https://opendocs.alipay.com/mini/02q17h
   const command = [
-    'npx alipay-dev',
+    'npx miniu mini',
     action === 'upload' ? 'upload' : 'preview',
-    `--appId ${alipayConfig.appid}`,
-    `--toolId ${alipayConfig.toolId}`,
-    `--privateKey "${alipayConfig.privateKey}"`,
+    `--app-id ${alipayConfig.appid}`,
+    `--tool-id ${alipayConfig.toolId}`,
+    `--private-key "${alipayConfig.privateKey}"`,
     `--project ${alipayConfig.projectPath}`,
     `--version ${version}`,
-    `--desc "${description}"`,
-  ].join(' ');
+    action === 'upload' ? '--experience true' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   exec(command);
 
