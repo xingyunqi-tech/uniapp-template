@@ -305,7 +305,7 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
   }
 
   // 动态导入 minidev
-  const minidev = await import('minidev');
+  const { minidev } = await import('minidev');
 
   // 注入授权信息
   // 文档: https://opendocs.alipay.com/mini/02q3ap
