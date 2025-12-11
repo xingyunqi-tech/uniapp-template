@@ -24,6 +24,10 @@ on:
   push:
     tags:
       - 'v*.*.*'
+    branches:
+      - main
+      - master
+      - 'release/*'
 
   # 手动触发
   workflow_dispatch:
