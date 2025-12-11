@@ -289,7 +289,7 @@ function getAlipayConfig(): AlipayConfig {
 /**
  * 上传支付宝小程序
  * 使用 minidev Node.js API (支付宝官方 CI 工具)
- * 文档: https://opendocs.alipay.com/mini/miniu/api
+ * 文档: https://opendocs.alipay.com/mini/02q3an
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
   const { action, version, description } = config;
@@ -307,53 +307,50 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
   // 动态导入 minidev
   const minidev = await import('minidev');
 
-  // 配置 minidev
-  // 文档: https://opendocs.alipay.com/mini/miniu/api
-  minidev.setConfig({
-    toolId: alipayConfig.toolId,
-    privateKey: alipayConfig.privateKey,
+  // 注入授权信息
+  // 文档: https://opendocs.alipay.com/mini/02q3ap
+  await minidev.config.useRuntime({
+    'alipay.authentication.privateKey': alipayConfig.privateKey,
+    'alipay.authentication.toolId': alipayConfig.toolId,
   });
 
   if (action === 'upload') {
     // 上传代码
     log('正在上传...', 'info');
-    const uploadResult = await minidev.miniUpload({
-      appId: alipayConfig.appid,
-      clientType: 'alipay',
-      project: alipayConfig.projectPath,
-      version: version,
-      experience: true, // 自动设为体验版
-      onProgressUpdate: (info: { status: string; data: any }) => {
-        if (info.status === 'upload') {
-          log(`上传进度: ${JSON.stringify(info.data)}`, 'info');
-        }
+    const uploadResult = await minidev.upload(
+      {
+        appId: alipayConfig.appid,
+        project: alipayConfig.projectPath,
+        version: version,
+        experience: true, // 自动设为体验版
       },
-    });
+      {
+        onLog: (data: string) => {
+          log(data, 'info');
+        },
+      },
+    );
 
     log(`支付宝小程序上传成功!`, 'success');
-    log(`版本: ${version}`, 'success');
-    if (uploadResult) {
-      console.log('上传结果:', uploadResult);
-    }
+    log(`版本: ${uploadResult?.version || version}`, 'success');
   } else {
     // 预览
     log('正在生成预览...', 'info');
-    const previewResult = await minidev.miniPreview({
-      appId: alipayConfig.appid,
-      clientType: 'alipay',
-      project: alipayConfig.projectPath,
-      qrcodeFormat: 'terminal',
-      onProgressUpdate: (info: { status: string; data: any }) => {
-        if (info.status === 'preview') {
-          log(`预览进度: ${JSON.stringify(info.data)}`, 'info');
-        }
+    const previewResult = await minidev.preview(
+      {
+        appId: alipayConfig.appid,
+        project: alipayConfig.projectPath,
       },
-    });
+      {
+        onLog: (data: string) => {
+          log(data, 'info');
+        },
+      },
+    );
 
     log(`支付宝小程序预览成功!`, 'success');
-    log(`请扫描二维码预览`, 'success');
-    if (previewResult) {
-      console.log('预览结果:', previewResult);
+    if (previewResult?.qrcodeUrl) {
+      log(`预览二维码: ${previewResult.qrcodeUrl}`, 'success');
     }
   }
 }
