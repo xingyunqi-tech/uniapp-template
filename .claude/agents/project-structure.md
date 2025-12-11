@@ -16,7 +16,7 @@ description: Uni-app 项目目录结构分析、文件组织规范和架构设�
 - **状态**: Pinia (持久化)
 - **路由**: pages.json + useRouter composable
 - **UI**: uni-ui + 自定义 U 前缀组件
-- **HTTP**: luch-request + Orval
+- **HTTP**: Alova + Orval
 - **样式**: SCSS + CSS 变量
 
 ## 目录结构详解
@@ -207,7 +207,7 @@ src/components/
 ```
 src/api/
 ├── core/                   # HTTP 客户端核心
-│   └── request.ts          # luch-request 封装
+│   └── request.ts          # Alova 实例封装
 ├── generated/              # Orval 自动生成（🚫 禁止修改）
 │   ├── auth/               # 认证模块
 │   └── model/              # 类型定义

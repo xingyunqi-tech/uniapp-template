@@ -35,7 +35,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 | **状态** | Pinia | Composition API 风格 + 持久化 |
 | **路由** | pages.json | Uni-app 标准路由配置 (非 Vue Router) |
 | **UI** | @dcloudio/uni-ui | 官方 UI 组件库 |
-| **HTTP** | luch-request | 类 Axios 的 Uni-app 请求库 |
+| **HTTP** | Alova | 轻量级请求策略库 |
 | **API** | Orval | OpenAPI → 自动生成类型安全的 API |
 | **测试** | Vitest | 80% 覆盖率目标 |
 | **国际化** | vue-i18n | 多语言支持 |
@@ -129,7 +129,7 @@ import { useRouter } from 'vue-router';  // 禁止!
 src/api/
 ├── core/              # HTTP 客户端、请求封装 (手动维护)
 │   ├── index.ts       # 导出
-│   ├── request.ts     # luch-request 封装
+│   ├── request.ts     # Alova 实例封装
 │   └── mutator.ts     # Orval 适配器
 ├── generated/         # 🚫 Orval 自动生成 (禁止修改!)
 │   ├── auth/          # 认证 API

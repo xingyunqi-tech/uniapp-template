@@ -33,7 +33,7 @@
 | **状态** | Pinia | Composition API 风格 + 持久化 |
 | **路由** | pages.json | Uni-app 标准路由配置 (非 Vue Router) |
 | **UI** | @dcloudio/uni-ui | 官方 UI 组件库 |
-| **HTTP** | luch-request | 类 Axios 的 Uni-app 请求库 |
+| **HTTP** | Alova | 轻量级请求策略库 |
 | **API** | Orval | OpenAPI → 自动生成类型安全的 API |
 | **测试** | Vitest | 80% 覆盖率目标 |
 | **国际化** | vue-i18n | 多语言支持 |
@@ -62,7 +62,7 @@ uniapp-template/
 ├── src/
 │   ├── api/                   # API 接口层
 │   │   ├── core/              # HTTP 客户端 (手动维护)
-│   │   │   ├── request.ts     # luch-request 封装
+│   │   │   ├── request.ts     # Alova 实例封装
 │   │   │   └── mutator.ts     # Orval 适配器
 │   │   ├── generated/         # Orval 自动生成 (禁止修改!)
 │   │   │   ├── auth/          # 认证 API
@@ -521,7 +521,7 @@ pnpm build:h5  # 或其他平台
 - [TypeScript 官方文档](https://www.typescriptlang.org/)
 - [Pinia 官方文档](https://pinia.vuejs.org/)
 - [uni-ui 组件库](https://uniapp.dcloud.io/component/uniui/uni-ui.html)
-- [luch-request](https://www.quanzhan.co/luch-request/)
+- [Alova](https://alova.js.org/)
 - [Orval 官方文档](https://orval.dev/)
 - [Vitest 官方文档](https://vitest.dev/)
 

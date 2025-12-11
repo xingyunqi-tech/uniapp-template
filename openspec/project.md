@@ -20,7 +20,7 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 
 ### 状态 & 数据
 - **Pinia** - Composition API 风格状态管理 + 持久化
-- **luch-request** - HTTP 客户端 (类 Axios)
+- **Alova** - 轻量级请求策略库
 - **Orval** - OpenAPI → 类型安全 API 自动生成
 
 ### UI & 样式

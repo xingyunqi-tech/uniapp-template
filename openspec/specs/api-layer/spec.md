@@ -2,7 +2,7 @@
 
 ## Purpose
 
-基于 Orval 自动生成的类型安全 API 层，结合 luch-request HTTP 客户端，提供统一的 API 调用体验。
+基于 Orval 自动生成的类型安全 API 层，结合 Alova 请求策略库，提供统一的 API 调用体验。
 
 ## Requirements
 
@@ -39,7 +39,7 @@
 - **GIVEN** Orval 生成的 API 函数
 - **WHEN** 调用 API 函数（如 `postAuthLogin()`）
 - **THEN** 请求通过 `customMutator` 路由
-- **AND** 使用 luch-request 实例发送请求
+- **AND** 使用 Alova 实例发送请求
 - **AND** 经过统一的拦截器处理
 
 #### Scenario: Response extraction
@@ -103,7 +103,7 @@
 
 ### Requirement: HTTP Client Configuration
 
-系统 SHALL 使用 luch-request 作为 HTTP 客户端。
+系统 SHALL 使用 Alova 作为请求策略库。
 
 #### Scenario: Request interceptor
 - **GIVEN** 发送 API 请求
@@ -153,7 +153,7 @@
 src/api/
 ├── core/              # HTTP 客户端（手动维护）
 │   ├── index.ts       # 导出
-│   ├── request.ts     # luch-request 封装
+│   ├── request.ts     # Alova 实例封装
 │   └── mutator.ts     # Orval 适配器
 ├── generated/         # Orval 自动生成（禁止修改）
 │   ├── auth/          # 认证 API

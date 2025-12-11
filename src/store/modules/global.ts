@@ -36,6 +36,14 @@ export const useGlobalStore = defineStore(
     }
 
     /**
+     * 初始化语言 (应用启动时调用)
+     * 将持久化的语言设置同步到 i18n 实例
+     */
+    function initLocale() {
+      i18n.global.locale.value = currentLocale.value;
+    }
+
+    /**
      * 设置主题
      * @param theme 主题值
      */
@@ -88,6 +96,7 @@ export const useGlobalStore = defineStore(
       toggleTheme,
       // 语言相关
       currentLocale,
+      initLocale,
       toggleLocale,
       setLocale,
     };

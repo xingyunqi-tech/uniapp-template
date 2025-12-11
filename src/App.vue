@@ -24,9 +24,10 @@ let errorHandlers: ReturnType<typeof initErrorReporter>;
 onLaunch(options => {
   console.log('App Launch', options);
 
-  // 初始化全局状态和主题
+  // 初始化全局状态
   const globalStore = useGlobalStore();
   globalStore.initTheme();
+  globalStore.initLocale();
 
   // 初始化全局网络状态监听
   setupNetworkListener({
