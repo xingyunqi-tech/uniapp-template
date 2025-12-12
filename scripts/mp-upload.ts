@@ -278,9 +278,12 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
  * 获取支付宝小程序配置
  */
 function getAlipayConfig(): AlipayConfig {
+  // 处理私钥换行符: GitHub Secrets 中 \n 是字面字符串，需要转换为实际换行符
+  const privateKey = process.env.ALIPAY_PRIVATE_KEY!.replace(/\\n/g, '\n');
+
   return {
     appid: process.env.ALIPAY_APPID!,
-    privateKey: process.env.ALIPAY_PRIVATE_KEY!,
+    privateKey,
     toolId: process.env.ALIPAY_TOOL_ID!,
     projectPath: BUILD_PATHS.alipay,
   };
