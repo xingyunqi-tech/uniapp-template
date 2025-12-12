@@ -297,6 +297,8 @@ jobs:
           ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
           MP_VERSION: ${{ needs.build.outputs.version }}
           MP_DESC: ${{ needs.build.outputs.description }}
+          # Node.js 22 使用 OpenSSL 3.x，需要启用 legacy provider 以支持支付宝私钥签名
+          NODE_OPTIONS: --openssl-legacy-provider
         run: |
           ACTION="${{ github.event.inputs.action || 'upload' }}"
           pnpm tsx scripts/mp-upload.ts alipay $ACTION
