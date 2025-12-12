@@ -1,16 +1,24 @@
-name: CI
+# 代码质量检查工作流
+# 职责: lint、type-check、test
+#
+# 触发条件:
+#   1. push 到 master/main 分支
+#   2. Pull Request
+#   3. 被其他工作流调用 (workflow_call)
+
+name: Check
 
 on:
   push:
-    branches: [master, main, 'release/*']
-    tags:
-      - 'v*.*.*'
+    branches: [master, main]
   pull_request:
-    branches: [master, main, 'release/*']
+    branches: [master, main]
+  # 允许被其他工作流调用
+  workflow_call:
 
 jobs:
-  lint-and-test:
-    name: Lint & Test
+  check:
+    name: Lint & Type Check & Test
     runs-on: ubuntu-latest
 
     strategy:
@@ -44,8 +52,3 @@ jobs:
       - name: Run tests
         run: pnpm run test
         continue-on-error: true
-
-      - name: Build H5 project
-        run: pnpm run build:h5
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192

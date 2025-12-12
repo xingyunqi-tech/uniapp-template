@@ -20,15 +20,9 @@
 name: Deploy MiniProgram
 
 on:
-  # 推送 tag 时触发 (例如 v1.0.0)
   push:
     tags:
       - 'v*.*.*'
-    branches:
-      - main
-      - master
-    # 注意: 移除了 release/* 分支，避免频繁触发部署
-    # 如需部署 release 分支，请使用手动触发或打 tag
 
   # 手动触发
   workflow_dispatch:
@@ -69,9 +63,15 @@ env:
   PNPM_VERSION: '9'
 
 jobs:
+  # ==================== 代码质量检查 ====================
+  check:
+    name: Check
+    uses: ./.github/workflows/check.yml
+
   # ==================== 构建任务 ====================
   build:
     name: Build
+    needs: check
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -103,11 +103,6 @@ jobs:
             # tag 触发: 从 tag 提取版本号
             VERSION="${GITHUB_REF#refs/tags/v}"
             DESC="Release $VERSION - $(date '+%Y-%m-%d %H:%M')"
-          elif [[ "${{ github.event_name }}" == "push" ]]; then
-            # 分支 push 触发: 从 package.json 读取版本
-            VERSION=$(node -p "require('./package.json').version")
-            BRANCH="${GITHUB_REF#refs/heads/}"
-            DESC="$BRANCH - $(date '+%Y-%m-%d %H:%M') - ${GITHUB_SHA:0:7}"
           else
             # 手动触发
             VERSION="${{ github.event.inputs.version }}"
@@ -123,12 +118,6 @@ jobs:
           echo "description=$DESC" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
           echo "📝 Description: $DESC"
-
-      - name: Run type check
-        run: pnpm type-check
-
-      - name: Run linter
-        run: pnpm lint
 
       # 构建微信小程序
       - name: Build WeChat MiniProgram
