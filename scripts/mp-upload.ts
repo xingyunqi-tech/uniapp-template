@@ -191,6 +191,46 @@ async function withRetry<T>(fn: () => Promise<T>, retries: number = 3, delay: nu
   throw lastError;
 }
 
+/**
+ * 递增版本号 (patch 位 +1)
+ * @param version 当前版本号 (如 1.0.0)
+ * @returns 递增后的版本号 (如 1.0.1)
+ */
+function incrementVersion(version: string): string {
+  const parts = version.split('.');
+  if (parts.length !== 3) {
+    // 非标准版本号，追加 .1
+    return `${version}.1`;
+  }
+
+  const patch = parseInt(parts[2], 10) || 0;
+  parts[2] = String(patch + 1);
+  return parts.join('.');
+}
+
+/**
+ * 比较两个版本号
+ * @param v1 版本号 1
+ * @param v2 版本号 2
+ * @returns 1 (v1 > v2), -1 (v1 < v2), 0 (v1 == v2)
+ */
+function compareVersions(v1: string, v2: string): number {
+  const parts1 = v1.split('.').map(n => parseInt(n, 10) || 0);
+  const parts2 = v2.split('.').map(n => parseInt(n, 10) || 0);
+
+  const maxLength = Math.max(parts1.length, parts2.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const num1 = parts1[i] || 0;
+    const num2 = parts2[i] || 0;
+
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+
+  return 0;
+}
+
 // ==================== 微信小程序 ====================
 
 /**
@@ -327,11 +367,11 @@ function getAlipayConfig(): AlipayConfig {
  * 文档: https://opendocs.alipay.com/mini/02q3an
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
-  const { version, description } = config;
+  let { version } = config;
+  const { description } = config;
   const alipayConfig = getAlipayConfig();
 
   log(`开始上传支付宝小程序...`);
-  log(`版本: ${version}`);
   log(`描述: ${description}`);
 
   // 检查构建产物
@@ -349,22 +389,29 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     'alipay.authentication.toolId': alipayConfig.toolId,
   });
 
-  // 版本冲突检测
+  // 版本冲突检测和自动递增
   try {
     log('检查版本冲突...', 'info');
     const existingVersion = await minidev.app.getUploadedVersion({
       appId: alipayConfig.appid,
     });
 
-    if (existingVersion === version) {
-      log(`版本 ${version} 已存在，将覆盖上传`, 'warn');
-    } else if (existingVersion) {
+    if (existingVersion) {
       log(`当前最新上传版本: ${existingVersion}`, 'info');
+
+      // 如果版本号相同或小于等于现有版本，自动递增
+      if (existingVersion === version || compareVersions(version, existingVersion) <= 0) {
+        const newVersion = incrementVersion(existingVersion);
+        log(`版本 ${version} 已存在或过旧，自动递增为: ${newVersion}`, 'warn');
+        version = newVersion;
+      }
     }
   } catch {
     // 获取版本失败不影响上传流程
     log('无法获取现有版本信息，继续上传', 'warn');
   }
+
+  log(`上传版本: ${version}`, 'info');
 
   // 上传代码 (带重试机制)
   log('正在上传...', 'info');
