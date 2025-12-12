@@ -8,11 +8,22 @@
  *   pnpm mp:preview:weixin         # 预览微信小程序
  *
  * 环境变量:
+ *   MP_VERSION                     # 版本号 (可选，默认读取 package.json)
+ *   MP_DESC                        # 版本描述 (可选)
+ *   MP_ROBOT                       # 微信机器人编号 1-30 (可选，默认基于分支名计算)
+ *
  *   WEIXIN_APPID                   # 微信小程序 AppID
  *   WEIXIN_PRIVATE_KEY             # 微信小程序上传密钥 (base64 编码)
  *   ALIPAY_APPID                   # 支付宝小程序 AppID
  *   ALIPAY_PRIVATE_KEY             # 支付宝小程序私钥
  *   ALIPAY_TOOL_ID                 # 支付宝小程序工具 ID
+ *
+ * Robot 分配规则:
+ *   main/master: 1
+ *   develop/dev: 2
+ *   staging: 3
+ *   test: 4
+ *   其他分支: 5-30 (基于分支名哈希)
  *
  * 密钥获取:
  *   微信: 小程序后台 -> 开发管理 -> 开发设置 -> 小程序代码上传
@@ -111,8 +122,8 @@ function parseArgs(): UploadConfig {
     process.env.GITHUB_SHA?.slice(0, 7) ||
     `v${packageInfo.version} - ${new Date().toLocaleString('zh-CN')}`;
 
-  // 机器人编号 (CI 环境自动分配)
-  const robot = process.env.CI ? Math.floor(Math.random() * 30) + 1 : 1;
+  // 机器人编号 (基于分支名计算，确保同一分支使用相同 robot)
+  const robot = calculateRobot();
 
   return {
     platform,
@@ -229,6 +240,63 @@ function compareVersions(v1: string, v2: string): number {
   }
 
   return 0;
+}
+
+/**
+ * 基于字符串计算稳定的哈希值
+ * @param str 输入字符串
+ * @returns 哈希值
+ */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * 根据分支名计算 robot 编号 (1-30)
+ * 同一分支始终返回相同的 robot 编号
+ * @returns robot 编号
+ */
+function calculateRobot(): number {
+  // 优先使用环境变量指定的 robot
+  if (process.env.MP_ROBOT) {
+    const robot = parseInt(process.env.MP_ROBOT, 10);
+    if (robot >= 1 && robot <= 30) {
+      return robot;
+    }
+  }
+
+  // 获取分支名
+  const branch =
+    process.env.GITHUB_REF_NAME || // GitHub Actions
+    process.env.GITHUB_HEAD_REF || // GitHub PR
+    process.env.CI_COMMIT_REF_NAME || // GitLab CI
+    process.env.BRANCH_NAME || // Jenkins
+    'local';
+
+  // 特定分支使用固定 robot
+  const branchRobotMap: Record<string, number> = {
+    main: 1,
+    master: 1,
+    develop: 2,
+    dev: 2,
+    staging: 3,
+    test: 4,
+  };
+
+  if (branchRobotMap[branch]) {
+    return branchRobotMap[branch];
+  }
+
+  // 其他分支基于分支名哈希计算 (5-30)
+  // 保留 1-4 给主要分支
+  const hash = hashString(branch);
+  return (hash % 26) + 5;
 }
 
 // ==================== 微信小程序 ====================

@@ -27,7 +27,8 @@ on:
     branches:
       - main
       - master
-      - 'release/*'
+    # 注意: 移除了 release/* 分支，避免频繁触发部署
+    # 如需部署 release 分支，请使用手动触发或打 tag
 
   # 手动触发
   workflow_dispatch:
@@ -148,6 +149,82 @@ jobs:
         run: pnpm build:mp-alipay
         env:
           NODE_OPTIONS: --max-old-space-size=8192
+
+      # 检查构建产物大小
+      - name: Check build size
+        run: |
+          echo "📦 检查构建产物大小..."
+          echo ""
+
+          # 微信小程序大小限制: 主包 2MB, 总包 20MB
+          WEIXIN_MAIN_LIMIT=2097152    # 2MB in bytes
+          WEIXIN_TOTAL_LIMIT=20971520  # 20MB in bytes
+
+          # 支付宝小程序大小限制: 主包 2MB, 总包 8MB
+          ALIPAY_MAIN_LIMIT=2097152    # 2MB in bytes
+          ALIPAY_TOTAL_LIMIT=8388608   # 8MB in bytes
+
+          check_size() {
+            local platform=$1
+            local path=$2
+            local main_limit=$3
+            local total_limit=$4
+
+            if [[ -d "$path" ]]; then
+              # 计算总大小
+              total_size=$(du -sb "$path" | cut -f1)
+              total_size_mb=$(echo "scale=2; $total_size / 1048576" | bc)
+
+              echo "📱 $platform 小程序:"
+              echo "   总大小: ${total_size_mb}MB"
+
+              # 检查总包大小
+              if [[ $total_size -gt $total_limit ]]; then
+                total_limit_mb=$(echo "scale=0; $total_limit / 1048576" | bc)
+                echo "   ❌ 错误: 总包超出限制 (${total_limit_mb}MB)"
+                return 1
+              else
+                echo "   ✅ 总包大小正常"
+              fi
+
+              # 检查主包大小 (如果存在分包配置)
+              if [[ -d "$path/pages" ]]; then
+                # 简化检查：计算非分包目录的大小
+                main_size=0
+                for item in "$path"/*; do
+                  if [[ -f "$item" ]] || [[ "$(basename "$item")" != "pages-sub"* ]]; then
+                    if [[ -e "$item" ]]; then
+                      item_size=$(du -sb "$item" 2>/dev/null | cut -f1 || echo 0)
+                      main_size=$((main_size + item_size))
+                    fi
+                  fi
+                done
+                main_size_mb=$(echo "scale=2; $main_size / 1048576" | bc)
+                echo "   主包大小: ~${main_size_mb}MB (估算)"
+              fi
+              echo ""
+            fi
+            return 0
+          }
+
+          has_error=0
+
+          # 检查微信小程序
+          if ! check_size "微信" "dist/build/mp-weixin" $WEIXIN_MAIN_LIMIT $WEIXIN_TOTAL_LIMIT; then
+            has_error=1
+          fi
+
+          # 检查支付宝小程序
+          if ! check_size "支付宝" "dist/build/mp-alipay" $ALIPAY_MAIN_LIMIT $ALIPAY_TOTAL_LIMIT; then
+            has_error=1
+          fi
+
+          if [[ $has_error -eq 1 ]]; then
+            echo "::error::构建产物大小超出限制，请优化代码或使用分包"
+            exit 1
+          fi
+
+          echo "✅ 所有构建产物大小检查通过"
 
       # 上传构建产物
       - name: Upload WeChat build artifact
