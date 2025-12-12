@@ -295,12 +295,11 @@ function getAlipayConfig(): AlipayConfig {
  * 文档: https://opendocs.alipay.com/mini/02q3an
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
-  const { action, version, description } = config;
+  const { version } = config;
   const alipayConfig = getAlipayConfig();
 
-  log(`开始${action === 'upload' ? '上传' : '预览'}支付宝小程序...`);
+  log(`开始上传支付宝小程序...`);
   log(`版本: ${version}`);
-  log(`描述: ${description}`);
 
   // 检查构建产物
   if (!existsSync(alipayConfig.projectPath)) {
@@ -317,45 +316,24 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     'alipay.authentication.toolId': alipayConfig.toolId,
   });
 
-  if (action === 'upload') {
-    // 上传代码
-    log('正在上传...', 'info');
-    const uploadResult = await minidev.upload(
-      {
-        appId: alipayConfig.appid,
-        project: alipayConfig.projectPath,
-        version: version,
-        experience: true, // 自动设为体验版
+  // 上传代码
+  log('正在上传...', 'info');
+  const uploadResult = await minidev.upload(
+    {
+      appId: alipayConfig.appid,
+      project: alipayConfig.projectPath,
+      version: version,
+      experience: true, // 自动设为体验版
+    },
+    {
+      onLog: (data: string) => {
+        log(data, 'info');
       },
-      {
-        onLog: (data: string) => {
-          log(data, 'info');
-        },
-      },
-    );
+    },
+  );
 
-    log(`支付宝小程序上传成功!`, 'success');
-    log(`版本: ${uploadResult?.version || version}`, 'success');
-  } else {
-    // 预览
-    log('正在生成预览...', 'info');
-    const previewResult = await minidev.preview(
-      {
-        appId: alipayConfig.appid,
-        project: alipayConfig.projectPath,
-      },
-      {
-        onLog: (data: string) => {
-          log(data, 'info');
-        },
-      },
-    );
-
-    log(`支付宝小程序预览成功!`, 'success');
-    if (previewResult?.qrcodeUrl) {
-      log(`预览二维码: ${previewResult.qrcodeUrl}`, 'success');
-    }
-  }
+  log(`支付宝小程序上传成功!`, 'success');
+  log(`版本: ${uploadResult?.version || version}`, 'success');
 }
 
 // ==================== 主函数 ====================
