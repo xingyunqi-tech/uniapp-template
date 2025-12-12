@@ -166,6 +166,31 @@ function cleanupTempFiles(): void {
   }
 }
 
+/**
+ * 带重试机制的异步函数执行器
+ * @param fn 要执行的异步函数
+ * @param retries 最大重试次数
+ * @param delay 重试间隔 (毫秒)
+ */
+async function withRetry<T>(fn: () => Promise<T>, retries: number = 3, delay: number = 3000): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (attempt < retries) {
+        log(`操作失败，${delay / 1000}秒后重试 (${attempt}/${retries}): ${lastError.message}`, 'warn');
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 // ==================== 微信小程序 ====================
 
 /**
@@ -216,27 +241,34 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
   });
 
   if (action === 'upload') {
-    // 上传代码
-    const uploadResult = await ci.upload({
-      project,
-      version,
-      desc: description,
-      robot,
-      setting: {
-        es6: true,
-        es7: true,
-        minify: true,
-        autoPrefixWXSS: true,
-        minifyWXML: true,
-        minifyWXSS: true,
-        minifyJS: true,
-      },
-      onProgressUpdate: (progress: any) => {
-        if (progress._status === 'done') {
-          log(`上传进度: ${progress._msg}`, 'info');
-        }
-      },
-    });
+    // 上传代码 (带重试机制)
+    const uploadResult = await withRetry(
+      () =>
+        ci.upload({
+          project,
+          version,
+          desc: description,
+          robot,
+          threads: 4, // 多线程编译，提升上传速度
+          setting: {
+            es6: true,
+            es7: true,
+            minify: true,
+            autoPrefixWXSS: true,
+            minifyWXML: true,
+            minifyWXSS: true,
+            minifyJS: true,
+            codeProtect: true, // 启用代码保护
+          },
+          onProgressUpdate: (progress: any) => {
+            if (progress._status === 'done') {
+              log(`上传进度: ${progress._msg}`, 'info');
+            }
+          },
+        }),
+      3, // 最多重试 3 次
+      5000, // 重试间隔 5 秒
+    );
 
     log(`微信小程序上传成功!`, 'success');
     log(`版本: ${version}`, 'success');
@@ -295,11 +327,12 @@ function getAlipayConfig(): AlipayConfig {
  * 文档: https://opendocs.alipay.com/mini/02q3an
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
-  const { version } = config;
+  const { version, description } = config;
   const alipayConfig = getAlipayConfig();
 
   log(`开始上传支付宝小程序...`);
   log(`版本: ${version}`);
+  log(`描述: ${description}`);
 
   // 检查构建产物
   if (!existsSync(alipayConfig.projectPath)) {
@@ -316,24 +349,50 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     'alipay.authentication.toolId': alipayConfig.toolId,
   });
 
-  // 上传代码
-  log('正在上传...', 'info');
-  const uploadResult = await minidev.upload(
-    {
+  // 版本冲突检测
+  try {
+    log('检查版本冲突...', 'info');
+    const existingVersion = await minidev.app.getUploadedVersion({
       appId: alipayConfig.appid,
-      project: alipayConfig.projectPath,
-      version: version,
-      experience: true, // 自动设为体验版
-    },
-    {
-      onLog: (data: string) => {
-        log(data, 'info');
-      },
-    },
+    });
+
+    if (existingVersion === version) {
+      log(`版本 ${version} 已存在，将覆盖上传`, 'warn');
+    } else if (existingVersion) {
+      log(`当前最新上传版本: ${existingVersion}`, 'info');
+    }
+  } catch {
+    // 获取版本失败不影响上传流程
+    log('无法获取现有版本信息，继续上传', 'warn');
+  }
+
+  // 上传代码 (带重试机制)
+  log('正在上传...', 'info');
+  const uploadResult = await withRetry(
+    () =>
+      minidev.upload(
+        {
+          appId: alipayConfig.appid,
+          project: alipayConfig.projectPath,
+          version: version,
+          experience: true, // 自动设为体验版
+          versionDescription: description, // 版本描述
+        },
+        {
+          onLog: (data: string) => {
+            log(data, 'info');
+          },
+        },
+      ),
+    3, // 最多重试 3 次
+    5000, // 重试间隔 5 秒
   );
 
   log(`支付宝小程序上传成功!`, 'success');
   log(`版本: ${uploadResult?.version || version}`, 'success');
+  if (uploadResult?.experienceQrCodeUrl) {
+    log(`体验版二维码: ${uploadResult.experienceQrCodeUrl}`, 'success');
+  }
 }
 
 // ==================== 主函数 ====================
