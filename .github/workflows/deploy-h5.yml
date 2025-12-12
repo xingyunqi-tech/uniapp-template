@@ -98,11 +98,10 @@ jobs:
           ls -la dist/build/h5
 
       # 上传到 GitHub Pages artifact
+      # 注意: 需要先在仓库 Settings -> Pages -> Source 选择 "GitHub Actions"
       - name: Setup Pages
         if: github.event_name == 'push' || github.event.inputs.deploy == 'true'
         uses: actions/configure-pages@v4
-        with:
-          enablement: true
 
       - name: Upload Pages artifact
         if: github.event_name == 'push' || github.event.inputs.deploy == 'true'
