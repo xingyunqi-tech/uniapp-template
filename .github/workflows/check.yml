@@ -5,14 +5,14 @@
 #   1. push 到 master/main 分支
 #   2. Pull Request
 #   3. 被其他工作流调用 (workflow_call)
+#
+# 注意: 不在 tag 时独立触发，由 deploy 工作流调用以避免重复运行
 
 name: Check
 
 on:
   push:
     branches: [master, main]
-    tags:
-      - 'v*.*.*'
   pull_request:
     branches: [master, main]
   # 手动触发
