@@ -21,6 +21,7 @@ name: Deploy MiniProgram
 
 on:
   push:
+    branches: [master, main]
     tags:
       - 'v*.*.*'
 
