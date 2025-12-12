@@ -39,7 +39,7 @@
 
         <UFormItem label="详细地址" required :border="false">
           <textarea
-            v-model="formData.detail"
+            v-model="formData.address"
             class="form-textarea"
             placeholder="请输入详细地址，如街道、门牌号等"
             :maxlength="100"
@@ -76,21 +76,23 @@
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
+import { useAddressStore } from '@/store/modules/address';
 // #ifdef H5
 import { regionData } from '@/constants';
 // #endif
 
 const globalStore = useGlobalStore();
+const addressStore = useAddressStore();
 
 // 表单数据
 const formData = reactive({
-  id: 0,
+  id: '',
   name: '',
   phone: '',
   province: '',
   city: '',
   district: '',
-  detail: '',
+  address: '',
   isDefault: false,
 });
 
@@ -129,7 +131,7 @@ const regionPickerValue = computed((): UniDataPickerValueArray => {
 onLoad(options => {
   if (options?.id) {
     isEdit.value = true;
-    loadAddressDetail(Number(options.id));
+    loadAddressDetail(options.id);
     // 动态设置页面标题
     uni.setNavigationBarTitle({ title: '编辑地址' });
   } else {
@@ -138,47 +140,25 @@ onLoad(options => {
 });
 
 // 加载地址详情
-function loadAddressDetail(id: number) {
-  // TODO: 调用实际的 API 获取地址详情
-  // 模拟数据
-  const mockData: Record<
-    number,
-    {
-      id: number;
-      name: string;
-      phone: string;
-      province: string;
-      city: string;
-      district: string;
-      detail: string;
-      isDefault: boolean;
+async function loadAddressDetail(id: string) {
+  try {
+    const address = await addressStore.fetchAddress(id);
+    if (address) {
+      formData.id = address.id;
+      formData.name = address.name;
+      formData.phone = address.phone;
+      formData.province = address.province;
+      formData.city = address.city;
+      formData.district = address.district;
+      formData.address = address.address;
+      formData.isDefault = address.isDefault;
     }
-  > = {
-    1: {
-      id: 1,
-      name: '张三',
-      phone: '13888888888',
-      province: '广东省',
-      city: '深圳市',
-      district: '南山区',
-      detail: '科技园南路88号',
-      isDefault: true,
-    },
-    2: {
-      id: 2,
-      name: '李四',
-      phone: '13999999999',
-      province: '广东省',
-      city: '深圳市',
-      district: '福田区',
-      detail: '福田中心区68号',
-      isDefault: false,
-    },
-  };
-
-  const data = mockData[id];
-  if (data) {
-    Object.assign(formData, data);
+  } catch (error) {
+    console.error('加载地址详情失败:', error);
+    uni.showToast({
+      title: '加载失败',
+      icon: 'none',
+    });
   }
 }
 
@@ -200,6 +180,7 @@ interface DataPickerChangeEvent {
 function handleDataPickerChange(e: DataPickerChangeEvent) {
   const values = e.detail.value;
   if (values && values.length >= 3) {
+    // 正常三级：省/市/区
     formData.province = values[0].text;
     formData.city = values[1].text;
     formData.district = values[2].text;
@@ -230,7 +211,7 @@ function validateForm(): boolean {
     uni.showToast({ title: '请选择所在地区', icon: 'none' });
     return false;
   }
-  if (!formData.detail.trim()) {
+  if (!formData.address.trim()) {
     uni.showToast({ title: '请输入详细地址', icon: 'none' });
     return false;
   }
@@ -244,15 +225,21 @@ async function handleSave() {
   saving.value = true;
 
   try {
-    // TODO: 调用实际的 API 保存地址
-    // if (isEdit.value) {
-    //   await updateAddress(formData);
-    // } else {
-    //   await createAddress(formData);
-    // }
+    const addressData = {
+      name: formData.name,
+      phone: formData.phone,
+      province: formData.province,
+      city: formData.city,
+      district: formData.district,
+      address: formData.address,
+      isDefault: formData.isDefault,
+    };
 
-    // 模拟保存成功
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (isEdit.value) {
+      await addressStore.editAddress(formData.id, addressData);
+    } else {
+      await addressStore.addAddress(addressData);
+    }
 
     uni.showToast({
       title: '保存成功',
@@ -262,7 +249,8 @@ async function handleSave() {
     setTimeout(() => {
       uni.navigateBack();
     }, 1500);
-  } catch {
+  } catch (error) {
+    console.error('保存地址失败:', error);
     uni.showToast({
       title: '保存失败',
       icon: 'none',
@@ -280,11 +268,7 @@ function handleDelete() {
     success: async res => {
       if (res.confirm) {
         try {
-          // TODO: 调用实际的 API 删除地址
-          // await deleteAddress(formData.id);
-
-          // 模拟删除成功
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await addressStore.removeAddress(formData.id);
 
           uni.showToast({
             title: '删除成功',
@@ -294,7 +278,8 @@ function handleDelete() {
           setTimeout(() => {
             uni.navigateBack();
           }, 1500);
-        } catch {
+        } catch (error) {
+          console.error('删除地址失败:', error);
           uni.showToast({
             title: '删除失败',
             icon: 'none',

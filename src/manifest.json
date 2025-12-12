@@ -22,7 +22,9 @@
       },
       "ios": {},
       "sdkConfigs": {}
-    }
+    },
+    "darkmode": true,
+    "themeLocation": "theme.json"
   },
   "app-harmony": {
     "distribute": {}
@@ -40,6 +42,8 @@
       "minified": true
     },
     "usingComponents": true,
+    "darkmode": true,
+    "themeLocation": "theme.json",
     "lazyCodeLoading": "requiredComponents",
     "optimization": {
       "subPackages": true
@@ -62,6 +66,8 @@
   "vueVersion": "3",
   "h5": {
     "title": "UniApp Template",
+    "darkmode": true,
+    "themeLocation": "theme.json",
     "router": {
       "mode": "history",
       "base": "/"

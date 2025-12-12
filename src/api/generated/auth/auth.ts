@@ -7,36 +7,207 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { ApiResponse, GetAuthUserInfo200, LoginRequest, PostAuthLogin200 } from '.././model';
+import type {
+  AuthChangePasswordDto,
+  AuthConfirmEmailDto,
+  AuthEmailLoginDto,
+  AuthForgotPasswordDto,
+  AuthPhoneLoginDto,
+  AuthPhoneRegisterDto,
+  AuthPhoneSmsLoginDto,
+  AuthRegisterLoginDto,
+  AuthResetPasswordDto,
+  AuthSendCodeDto,
+  AuthUpdateDto,
+  AuthWechatLoginDto,
+  LoginResponseDto,
+  RefreshResponseDto,
+  User,
+} from '.././model';
 
 import { customMutator } from '../../core/mutator';
 
 /**
- * 管理员登录身份验证
- * @summary 用户登录
+ * @summary 邮箱登录
  */
-export const postAuthLogin = (loginRequest: LoginRequest) => {
-  return customMutator<PostAuthLogin200>({
-    url: `/auth/login`,
+export const loginWithEmail = (authEmailLoginDto: AuthEmailLoginDto) => {
+  return customMutator<LoginResponseDto>({
+    url: `/api/v1/auth/email/login`,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    data: loginRequest,
+    data: authEmailLoginDto,
   });
 };
 /**
- * 退出登录
- * @summary 用户登出
+ * @summary 邮箱注册
  */
-export const postAuthLogout = () => {
-  return customMutator<ApiResponse>({ url: `/auth/logout`, method: 'POST' });
+export const registerWithEmail = (authRegisterLoginDto: AuthRegisterLoginDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/email/register`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authRegisterLoginDto,
+  });
 };
 /**
- * 获取当前登录用户的信息
- * @summary 获取用户信息
+ * @summary 确认邮箱
  */
-export const getAuthUserInfo = () => {
-  return customMutator<GetAuthUserInfo200>({ url: `/auth/userinfo`, method: 'GET' });
+export const confirmEmail = (authConfirmEmailDto: AuthConfirmEmailDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/email/confirm`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authConfirmEmailDto,
+  });
 };
-export type PostAuthLoginResult = NonNullable<Awaited<ReturnType<typeof postAuthLogin>>>;
-export type PostAuthLogoutResult = NonNullable<Awaited<ReturnType<typeof postAuthLogout>>>;
-export type GetAuthUserInfoResult = NonNullable<Awaited<ReturnType<typeof getAuthUserInfo>>>;
+/**
+ * @summary 确认新邮箱
+ */
+export const confirmNewEmail = (authConfirmEmailDto: AuthConfirmEmailDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/email/confirm/new`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authConfirmEmailDto,
+  });
+};
+/**
+ * @summary 忘记密码
+ */
+export const forgotPassword = (authForgotPasswordDto: AuthForgotPasswordDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/forgot/password`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authForgotPasswordDto,
+  });
+};
+/**
+ * @summary 重置密码
+ */
+export const resetPassword = (authResetPasswordDto: AuthResetPasswordDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/reset/password`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authResetPasswordDto,
+  });
+};
+/**
+ * @summary 获取当前用户信息
+ */
+export const getCurrentUser = () => {
+  return customMutator<User>({ url: `/api/v1/auth/me`, method: 'GET' });
+};
+/**
+ * @summary 更新当前用户信息
+ */
+export const updateCurrentUser = (authUpdateDto: AuthUpdateDto) => {
+  return customMutator<User>({
+    url: `/api/v1/auth/me`,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    data: authUpdateDto,
+  });
+};
+/**
+ * @summary 删除当前用户账号
+ */
+export const deleteCurrentUser = () => {
+  return customMutator<void>({ url: `/api/v1/auth/me`, method: 'DELETE' });
+};
+/**
+ * @summary 刷新令牌
+ */
+export const refreshToken = () => {
+  return customMutator<RefreshResponseDto>({ url: `/api/v1/auth/refresh`, method: 'POST' });
+};
+/**
+ * @summary 退出登录
+ */
+export const logout = () => {
+  return customMutator<void>({ url: `/api/v1/auth/logout`, method: 'POST' });
+};
+/**
+ * @summary 发送短信验证码
+ */
+export const sendSmsCode = (authSendCodeDto: AuthSendCodeDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/phone/send-code`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authSendCodeDto,
+  });
+};
+/**
+ * @summary 手机号密码登录
+ */
+export const loginWithPhone = (authPhoneLoginDto: AuthPhoneLoginDto) => {
+  return customMutator<LoginResponseDto>({
+    url: `/api/v1/auth/phone/login`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authPhoneLoginDto,
+  });
+};
+/**
+ * @summary 短信验证码登录
+ */
+export const loginWithSms = (authPhoneSmsLoginDto: AuthPhoneSmsLoginDto) => {
+  return customMutator<LoginResponseDto>({
+    url: `/api/v1/auth/phone/sms-login`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authPhoneSmsLoginDto,
+  });
+};
+/**
+ * @summary 手机号注册
+ */
+export const registerWithPhone = (authPhoneRegisterDto: AuthPhoneRegisterDto) => {
+  return customMutator<LoginResponseDto>({
+    url: `/api/v1/auth/phone/register`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authPhoneRegisterDto,
+  });
+};
+/**
+ * @summary 修改密码
+ */
+export const changePassword = (authChangePasswordDto: AuthChangePasswordDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/password`,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    data: authChangePasswordDto,
+  });
+};
+/**
+ * @summary 微信登录
+ */
+export const loginWithWechat = (authWechatLoginDto: AuthWechatLoginDto) => {
+  return customMutator<LoginResponseDto>({
+    url: `/api/v1/auth/wechat/login`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authWechatLoginDto,
+  });
+};
+export type LoginWithEmailResult = NonNullable<Awaited<ReturnType<typeof loginWithEmail>>>;
+export type RegisterWithEmailResult = NonNullable<Awaited<ReturnType<typeof registerWithEmail>>>;
+export type ConfirmEmailResult = NonNullable<Awaited<ReturnType<typeof confirmEmail>>>;
+export type ConfirmNewEmailResult = NonNullable<Awaited<ReturnType<typeof confirmNewEmail>>>;
+export type ForgotPasswordResult = NonNullable<Awaited<ReturnType<typeof forgotPassword>>>;
+export type ResetPasswordResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>;
+export type GetCurrentUserResult = NonNullable<Awaited<ReturnType<typeof getCurrentUser>>>;
+export type UpdateCurrentUserResult = NonNullable<Awaited<ReturnType<typeof updateCurrentUser>>>;
+export type DeleteCurrentUserResult = NonNullable<Awaited<ReturnType<typeof deleteCurrentUser>>>;
+export type RefreshTokenResult = NonNullable<Awaited<ReturnType<typeof refreshToken>>>;
+export type LogoutResult = NonNullable<Awaited<ReturnType<typeof logout>>>;
+export type SendSmsCodeResult = NonNullable<Awaited<ReturnType<typeof sendSmsCode>>>;
+export type LoginWithPhoneResult = NonNullable<Awaited<ReturnType<typeof loginWithPhone>>>;
+export type LoginWithSmsResult = NonNullable<Awaited<ReturnType<typeof loginWithSms>>>;
+export type RegisterWithPhoneResult = NonNullable<Awaited<ReturnType<typeof registerWithPhone>>>;
+export type ChangePasswordResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>;
+export type LoginWithWechatResult = NonNullable<Awaited<ReturnType<typeof loginWithWechat>>>;

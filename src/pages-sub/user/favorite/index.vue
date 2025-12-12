@@ -14,12 +14,12 @@
     <!-- 收藏列表 -->
     <view v-else class="favorite-list">
       <view v-for="item in list" :key="item.id" class="favorite-item" @click="handleItemClick(item)">
-        <image class="item-cover" :src="item.cover" mode="aspectFill" />
+        <image class="item-cover" :src="item.image || '/static/images/default-cover.png'" mode="aspectFill" />
         <view class="item-info">
-          <text class="item-title">{{ item.title }}</text>
-          <text class="item-desc">{{ item.description }}</text>
+          <text class="item-title">{{ item.title || '未命名' }}</text>
+          <text class="item-desc">{{ item.targetType }}</text>
           <view class="item-meta">
-            <text class="item-time">{{ item.time }}</text>
+            <text class="item-time">{{ formatTime(item.createdAt) }}</text>
           </view>
         </view>
         <view class="item-action" @click.stop="handleRemove(item)">
@@ -36,22 +36,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
+import { useFavoriteStore } from '@/store/modules/favorite';
+import { formatRelativeTime } from '@/utils/datetime';
+import type { Favorite } from '@/api';
 
 const globalStore = useGlobalStore();
+const favoriteStore = useFavoriteStore();
 
-interface FavoriteItem {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
-  time: string;
+// 格式化时间
+function formatTime(dateStr: string): string {
+  return formatRelativeTime(new Date(dateStr));
 }
 
-const loading = ref(false);
-const list = ref<FavoriteItem[]>([]);
+// 使用 store 的状态
+const loading = computed(() => favoriteStore.loading);
+const list = computed(() => favoriteStore.favoriteList);
 
 onLoad(() => {
   fetchList();
@@ -59,64 +61,40 @@ onLoad(() => {
 
 // 获取收藏列表
 async function fetchList() {
-  loading.value = true;
   try {
-    // TODO: 替换为实际 API 调用
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // 模拟数据
-    list.value = [
-      {
-        id: '1',
-        title: '深入学习贯彻党的二十大精神',
-        description: '全面学习领会党的二十大精神，深刻把握核心要义和精神实质',
-        cover: 'https://picsum.photos/200/200?random=1',
-        time: '2小时前',
-      },
-      {
-        id: '2',
-        title: '行政能力测试技巧总结',
-        description: '归纳总结常见题型解题方法，提升答题效率和准确率',
-        cover: 'https://picsum.photos/200/200?random=2',
-        time: '昨天',
-      },
-      {
-        id: '3',
-        title: '申论写作高分模板',
-        description: '精选申论写作范文，掌握高分写作技巧和结构框架',
-        cover: 'https://picsum.photos/200/200?random=3',
-        time: '3天前',
-      },
-      {
-        id: '4',
-        title: '公共基础知识速记手册',
-        description: '涵盖政治、经济、法律、历史等核心知识点的速记整理',
-        cover: 'https://picsum.photos/200/200?random=4',
-        time: '1周前',
-      },
-    ];
-  } finally {
-    loading.value = false;
+    await favoriteStore.fetchFavoriteList(undefined, true);
+  } catch (error) {
+    console.error('获取收藏列表失败:', error);
   }
 }
 
 // 点击收藏项
-function handleItemClick(item: FavoriteItem) {
+function handleItemClick(item: Favorite) {
   console.log('点击收藏项:', item);
-  // TODO: 跳转到详情页
+  // 根据 targetType 跳转到对应的详情页
+  // 例如：router.push(`/pages/detail?id=${item.targetId}&type=${item.targetType}`)
 }
 
 // 移除收藏
-function handleRemove(item: FavoriteItem) {
+function handleRemove(item: Favorite) {
   uni.showModal({
     title: '提示',
     content: '确定要取消收藏吗？',
-    success: res => {
+    success: async res => {
       if (res.confirm) {
-        list.value = list.value.filter(i => i.id !== item.id);
-        uni.showToast({
-          title: '已取消收藏',
-          icon: 'success',
-        });
+        try {
+          await favoriteStore.removeFavorite(String(item.id));
+          uni.showToast({
+            title: '已取消收藏',
+            icon: 'success',
+          });
+        } catch (error) {
+          console.error('取消收藏失败:', error);
+          uni.showToast({
+            title: '操作失败',
+            icon: 'none',
+          });
+        }
       }
     },
   });

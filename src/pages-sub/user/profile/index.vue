@@ -51,7 +51,13 @@
     </view>
 
     <!-- 保存按钮 -->
-    <UFixedButton text="保存" loading-text="保存中..." :loading="saveAction.loading.value" @click="handleSave" />
+    <UFixedButton
+      text="保存"
+      loading-text="保存中..."
+      :loading="saveAction.loading.value"
+      :disabled="avatarUploading"
+      @click="handleSave"
+    />
   </view>
 </template>
 
@@ -63,10 +69,16 @@ import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { formatDateTime } from '@/utils/datetime';
 import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
+import { uploadFileByPath } from '@/api';
 import type { FileItem } from '@/components';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
+
+// 头像上传状态
+const avatarUploading = ref(false);
+// 上传后的文件 ID
+const uploadedPhotoId = ref<string | null>(null);
 
 // 性别选项
 const genderLabels = GENDER_OPTIONS.map(item => item.label);
@@ -90,48 +102,114 @@ const today = computed(() => formatDateTime(new Date(), 'YYYY-MM-DD'));
 // 保存操作
 const saveAction = useAsyncAction({
   action: async () => {
-    // TODO: 调用实际的更新用户信息 API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 构建更新参数
+    const updateParams: {
+      nickname?: string;
+      firstName?: string;
+      lastName?: string;
+      photo?: { id: string };
+      gender?: number;
+      birthday?: string;
+    } = {
+      nickname: formData.username,
+      gender: formData.gender,
+    };
 
-    // 更新本地状态
-    userStore.setUserInfo({
-      ...userStore.userInfo,
-      avatar: formData.avatar,
-      username: formData.username,
-    });
+    // 如果有新上传的头像，添加 photo 参数
+    if (uploadedPhotoId.value) {
+      updateParams.photo = { id: uploadedPhotoId.value };
+    }
+
+    // 如果有生日，添加 birthday 参数
+    if (formData.birthday) {
+      updateParams.birthday = formData.birthday;
+    }
+
+    // 调用更新用户信息 API
+    await userStore.updateUserInfo(updateParams);
+
+    // 清除已上传的头像 ID（避免重复提交）
+    uploadedPhotoId.value = null;
   },
   successText: '保存成功',
   errorText: '保存失败',
-  onSuccess: () => {
-    uni.navigateBack();
-  },
 });
 
-onLoad(() => {
-  // 初始化表单数据
+/**
+ * 初始化表单数据
+ */
+function initFormData() {
   if (userStore.userInfo) {
     formData.avatar = userStore.userInfo.avatar || '';
     formData.username = userStore.userInfo.username || '';
     formData.phone = userStore.userInfo.phone || '';
+    formData.gender = userStore.userInfo.gender ?? 0;
+    formData.birthday = userStore.userInfo.birthday || '';
+
+    // 初始化性别选择索引
+    const genderOptionIndex = GENDER_OPTIONS.findIndex(item => item.value === formData.gender);
+    genderIndex.value = genderOptionIndex >= 0 ? genderOptionIndex : 0;
 
     // 初始化头像列表
     if (formData.avatar) {
       avatarList.value = [{ name: 'avatar', extname: 'png', url: formData.avatar, status: 'success' }];
     }
   }
+}
+
+onLoad(async () => {
+  // 先用本地缓存数据初始化
+  initFormData();
+
+  // 从接口获取最新用户数据
+  try {
+    await userStore.getUserInfo();
+    // 更新表单数据
+    initFormData();
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+  }
 });
 
 // 头像变化
-function handleAvatarChange(files: FileItem[]) {
+async function handleAvatarChange(files: FileItem[]) {
   if (files.length > 0) {
-    // TODO: 上传头像到服务器
-    formData.avatar = files[0].url;
-    uni.showToast({
-      title: '头像已更换',
-      icon: 'success',
-    });
+    const file = files[0];
+
+    // 如果是新选择的图片（状态为 ready），需要上传
+    // FileItem.url 在选择时是临时路径
+    if (file.status === 'ready' && file.url) {
+      avatarUploading.value = true;
+      try {
+        const fileInfo = await uploadFileByPath(file.url);
+        uploadedPhotoId.value = fileInfo.id;
+        formData.avatar = fileInfo.path;
+
+        // 更新 avatarList 的状态
+        avatarList.value = [{ ...file, url: fileInfo.path, status: 'success' }];
+
+        uni.showToast({
+          title: '头像已上传',
+          icon: 'success',
+        });
+      } catch (error) {
+        console.error('头像上传失败:', error);
+        uni.showToast({
+          title: '头像上传失败',
+          icon: 'none',
+        });
+        // 重置
+        avatarList.value = [];
+      } finally {
+        avatarUploading.value = false;
+      }
+    } else {
+      // 已存在的头像
+      formData.avatar = file.url;
+    }
   } else {
     formData.avatar = '';
+    uploadedPhotoId.value = null;
   }
 }
 

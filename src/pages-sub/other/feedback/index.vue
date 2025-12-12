@@ -43,13 +43,17 @@
     <view class="form-section">
       <view class="section-title">上传图片（可选，最多{{ FEEDBACK_IMAGE_MAX_COUNT }}张）</view>
       <view class="image-upload">
-        <view v-for="(img, index) in formData.images" :key="index" class="image-item">
+        <view v-for="(img, index) in formData.tempImages" :key="index" class="image-item">
           <image :src="img" mode="aspectFill" />
           <view class="remove-btn" @click="removeImage(index)">
             <text class="i-carbon-close" />
           </view>
+          <!-- 上传中状态 -->
+          <view v-if="index >= formData.images.length" class="uploading-mask">
+            <text class="uploading-text">上传中...</text>
+          </view>
         </view>
-        <view v-if="formData.images.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
+        <view v-if="formData.tempImages.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
           <text class="i-carbon-add" />
           <text class="upload-text">添加图片</text>
         </view>
@@ -80,43 +84,53 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { useFeedbackStore } from '@/store/modules/feedback';
+import { uploadFileByPath } from '@/api';
 import {
   FEEDBACK_TYPES,
   FEEDBACK_CONTENT_MIN_LENGTH,
   FEEDBACK_IMAGE_MAX_COUNT,
   FEEDBACK_CONTENT_MAX_LENGTH,
 } from '@/constants';
+import type { CreateFeedbackDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
+const feedbackStore = useFeedbackStore();
 
-/** 反馈类型 */
-type FeedbackType = (typeof FEEDBACK_TYPES)[number]['value'];
+// 图片上传状态
+const uploading = ref(false);
 
 const formData = reactive<{
-  type: FeedbackType;
+  type: CreateFeedbackDtoType;
   content: string;
-  images: string[];
+  images: string[]; // 服务器返回的图片 URL
+  tempImages: string[]; // 本地临时图片路径（用于预览）
   contact: string;
 }>({
-  type: FEEDBACK_TYPES[0].value,
+  type: FEEDBACK_TYPES[0].value as CreateFeedbackDtoType,
   content: '',
   images: [],
+  tempImages: [],
   contact: '',
 });
 
-// 是否可提交
+// 是否可提交（内容长度足够且没有正在上传的图片）
 const canSubmit = computed(() => {
-  return formData.content.trim().length >= FEEDBACK_CONTENT_MIN_LENGTH;
+  return formData.content.trim().length >= FEEDBACK_CONTENT_MIN_LENGTH && !uploading.value;
 });
 
 // 提交操作
 const submitAction = useAsyncAction({
   action: async () => {
-    // TODO: 替换为实际 API 调用
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await feedbackStore.submitFeedback({
+      type: formData.type,
+      content: formData.content,
+      images: formData.images.length > 0 ? formData.images : undefined,
+      contact: formData.contact || undefined,
+    });
   },
   successText: '提交成功',
   errorText: '提交失败，请重试',
@@ -130,20 +144,43 @@ function handleInput(e: { detail: { value: string } }) {
   formData.content = e.detail.value;
 }
 
-// 选择图片
-function chooseImage() {
+// 选择并上传图片
+async function chooseImage() {
   uni.chooseImage({
-    count: FEEDBACK_IMAGE_MAX_COUNT - formData.images.length,
+    count: FEEDBACK_IMAGE_MAX_COUNT - formData.tempImages.length,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: res => {
-      formData.images.push(...res.tempFilePaths);
+    success: async res => {
+      const tempPaths = res.tempFilePaths;
+
+      // 先添加到临时预览
+      formData.tempImages.push(...tempPaths);
+
+      // 上传图片
+      uploading.value = true;
+      try {
+        for (const path of tempPaths) {
+          const fileInfo = await uploadFileByPath(path);
+          formData.images.push(fileInfo.path);
+        }
+      } catch (error) {
+        console.error('图片上传失败:', error);
+        uni.showToast({
+          title: '图片上传失败',
+          icon: 'none',
+        });
+        // 移除上传失败的临时图片
+        formData.tempImages = formData.tempImages.filter(p => !tempPaths.includes(p));
+      } finally {
+        uploading.value = false;
+      }
     },
   });
 }
 
 // 移除图片
 function removeImage(index: number) {
+  formData.tempImages.splice(index, 1);
   formData.images.splice(index, 1);
 }
 
@@ -267,6 +304,21 @@ function handleSubmit() {
       background: var(--color-error);
 
       .i-carbon-close {
+        color: var(--color-text-inverse);
+        font-size: 24rpx;
+      }
+    }
+
+    .uploading-mask {
+      display: flex;
+      position: absolute;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-base);
+      background: rgb(0 0 0 / 0.5);
+
+      .uploading-text {
         color: var(--color-text-inverse);
         font-size: 24rpx;
       }

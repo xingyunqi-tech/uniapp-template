@@ -49,7 +49,7 @@ export const NICKNAME_MAX_LENGTH = 20;
 export const FEEDBACK_TYPES = [
   { label: '功能建议', value: 'suggestion' },
   { label: 'BUG反馈', value: 'bug' },
-  { label: '体验问题', value: 'experience' },
+  { label: '投诉建议', value: 'complaint' },
   { label: '其他', value: 'other' },
 ] as const;
 

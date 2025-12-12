@@ -17,7 +17,7 @@
             <text class="phone">{{ item.phone }}</text>
             <UTag v-if="item.isDefault" type="primary" size="small" text="默认" />
           </view>
-          <view class="address-detail"> {{ item.province }}{{ item.city }}{{ item.district }}{{ item.detail }} </view>
+          <view class="address-detail"> {{ item.province }}{{ item.city }}{{ item.district }}{{ item.address }} </view>
         </view>
         <view class="address-actions">
           <view class="action-item" @click.stop="handleSetDefault(item)">
@@ -46,58 +46,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { useAddressStore } from '@/store/modules/address';
 import { PAGES } from '@/constants';
+import type { Address } from '@/api';
 
 const globalStore = useGlobalStore();
-
-export interface AddressItem {
-  id: number;
-  name: string;
-  phone: string;
-  province: string;
-  city: string;
-  district: string;
-  detail: string;
-  isDefault: boolean;
-}
-
+const addressStore = useAddressStore();
 const router = useRouter();
-const addressList = ref<AddressItem[]>([]);
+
+// 地址列表
+const addressList = computed(() => addressStore.addressList);
 
 onShow(() => {
   loadAddressList();
 });
 
 // 加载地址列表
-function loadAddressList() {
-  // TODO: 调用实际的 API 获取地址列表
-  // 模拟数据
-  addressList.value = [
-    {
-      id: 1,
-      name: '张三',
-      phone: '13888888888',
-      province: '广东省',
-      city: '深圳市',
-      district: '南山区',
-      detail: '科技园南路88号',
-      isDefault: true,
-    },
-    {
-      id: 2,
-      name: '李四',
-      phone: '13999999999',
-      province: '广东省',
-      city: '深圳市',
-      district: '福田区',
-      detail: '福田中心区68号',
-      isDefault: false,
-    },
-  ];
+async function loadAddressList() {
+  try {
+    await addressStore.fetchAddressList(true);
+  } catch (error) {
+    console.error('加载地址列表失败:', error);
+  }
 }
 
 // 添加地址
@@ -106,38 +80,49 @@ function handleAdd() {
 }
 
 // 编辑地址
-function handleEdit(item: AddressItem) {
+function handleEdit(item: Address) {
   router.push(`${PAGES.ADDRESS_EDIT}?id=${item.id}`);
 }
 
 // 设置默认地址
-function handleSetDefault(item: AddressItem) {
+async function handleSetDefault(item: Address) {
   if (item.isDefault) return;
 
-  // TODO: 调用实际的 API 设置默认地址
-  addressList.value.forEach(addr => {
-    addr.isDefault = addr.id === item.id;
-  });
-
-  uni.showToast({
-    title: '设置成功',
-    icon: 'success',
-  });
+  try {
+    await addressStore.setDefault(String(item.id));
+    uni.showToast({
+      title: '设置成功',
+      icon: 'success',
+    });
+  } catch (error) {
+    console.error('设置默认地址失败:', error);
+    uni.showToast({
+      title: '设置失败',
+      icon: 'none',
+    });
+  }
 }
 
 // 删除地址
-function handleDelete(item: AddressItem) {
+function handleDelete(item: Address) {
   uni.showModal({
     title: '提示',
     content: '确定要删除该地址吗？',
-    success: res => {
+    success: async res => {
       if (res.confirm) {
-        // TODO: 调用实际的 API 删除地址
-        addressList.value = addressList.value.filter(addr => addr.id !== item.id);
-        uni.showToast({
-          title: '删除成功',
-          icon: 'success',
-        });
+        try {
+          await addressStore.removeAddress(String(item.id));
+          uni.showToast({
+            title: '删除成功',
+            icon: 'success',
+          });
+        } catch (error) {
+          console.error('删除地址失败:', error);
+          uni.showToast({
+            title: '删除失败',
+            icon: 'none',
+          });
+        }
       }
     },
   });

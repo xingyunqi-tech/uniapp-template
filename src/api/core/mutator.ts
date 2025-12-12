@@ -23,8 +23,9 @@ export interface CustomRequestConfig {
 
 /**
  * 提取响应对象中的 data 字段类型
+ * 注意：只从 ApiResponse 中提取，不从业务对象中提取
  */
-export type ExtractResult<T> = T extends ApiResponse<infer R> ? R : T extends { data?: infer D } ? D : T;
+export type ExtractResult<T> = T extends ApiResponse<infer R> ? R : T;
 
 /**
  * Orval 自定义 Mutator

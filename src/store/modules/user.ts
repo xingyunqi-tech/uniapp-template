@@ -3,9 +3,42 @@ import { ref, computed } from 'vue';
 import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
 import { ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
+import {
+  loginWithPhone,
+  loginWithSms,
+  loginWithWechat,
+  registerWithPhone,
+  sendSmsCode as apiSendSmsCode,
+  getCurrentUser,
+  updateCurrentUser,
+  changePassword as apiChangePassword,
+  logout as apiLogout,
+  refreshToken as apiRefreshToken,
+  type User,
+  type AuthSendCodeDtoType,
+} from '@/api';
 
 // 重新导出类型，保持向后兼容
 export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams };
+
+/**
+ * 将后端 User 类型转换为前端 UserInfo 类型
+ */
+function mapUserToUserInfo(user: User): UserInfo {
+  return {
+    id: Number(user.id) || undefined, // User.id 是 string，UserInfo.id 是 number
+    username: user.nickname || user.firstName || user.phone,
+    avatar: user.photo?.path || '',
+    phone: user.phone,
+    email: user.email,
+    nickname: user.nickname,
+    gender: user.gender as 0 | 1 | 2,
+    birthday: user.birthday,
+    role: user.role?.name === 'admin' ? ROLE.ADMIN : ROLE.USER,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
 
 /**
  * 用户状态管理 Store
@@ -17,6 +50,10 @@ export const useUserStore = defineStore(
     // ==================== State ====================
     /** 用户 Token - 从 storage 初始化 */
     const token = ref<string>(storage.get<string>(STORAGE_KEYS.TOKEN) || '');
+    /** Refresh Token */
+    const refreshTokenValue = ref<string>(storage.get<string>('refreshToken') || '');
+    /** Token 过期时间 */
+    const tokenExpires = ref<number>(storage.get<number>('tokenExpires') || 0);
     /** 用户信息 - 由 Pinia persist 管理 */
     const userInfo = ref<UserInfo | null>(null);
 
@@ -49,6 +86,23 @@ export const useUserStore = defineStore(
     }
 
     /**
+     * 设置 Refresh Token
+     */
+    function setRefreshToken(value: string, expires?: number) {
+      refreshTokenValue.value = value;
+      if (expires) {
+        tokenExpires.value = expires;
+        storage.set('tokenExpires', expires);
+      }
+      if (value) {
+        storage.set('refreshToken', value);
+      } else {
+        storage.remove('refreshToken');
+        storage.remove('tokenExpires');
+      }
+    }
+
+    /**
      * 设置用户信息
      * @param info 用户信息
      */
@@ -57,30 +111,25 @@ export const useUserStore = defineStore(
     }
 
     /**
+     * 处理登录成功响应
+     */
+    function handleLoginResponse(response: { token: string; refreshToken: string; tokenExpires: number; user: User }) {
+      setToken(response.token);
+      setRefreshToken(response.refreshToken, response.tokenExpires);
+      setUserInfo(mapUserToUserInfo(response.user));
+    }
+
+    /**
      * 登录（手机号+密码）
      * @param params 登录参数
      */
     async function login(params: LoginParams): Promise<string> {
-      try {
-        // TODO: 调用实际的登录 API
-        // const response = await postAuthLogin(params);
-
-        // 模拟登录成功
-        const mockToken = 'mock_token_' + Date.now();
-        const mockUserInfo: UserInfo = {
-          id: 1,
-          username: params.phone,
-          avatar: '',
-          phone: params.phone,
-        };
-
-        setToken(mockToken);
-        setUserInfo(mockUserInfo);
-
-        return mockToken;
-      } catch (error) {
-        return Promise.reject(error);
-      }
+      const response = await loginWithPhone({
+        phone: params.phone,
+        password: params.password,
+      });
+      handleLoginResponse(response);
+      return response.token;
     }
 
     /**
@@ -88,26 +137,12 @@ export const useUserStore = defineStore(
      * @param params 注册参数
      */
     async function register(params: RegisterParams): Promise<string> {
-      try {
-        // TODO: 调用实际的注册 API
-        // const response = await postAuthRegister(params);
-
-        // 模拟注册成功，注册后自动登录
-        const mockToken = 'mock_token_' + Date.now();
-        const mockUserInfo: UserInfo = {
-          id: Date.now(),
-          username: params.phone,
-          avatar: '',
-          phone: params.phone,
-        };
-
-        setToken(mockToken);
-        setUserInfo(mockUserInfo);
-
-        return mockToken;
-      } catch (error) {
-        return Promise.reject(error);
-      }
+      const response = await registerWithPhone({
+        phone: params.phone,
+        password: params.password,
+      });
+      handleLoginResponse(response);
+      return response.token;
     }
 
     /**
@@ -115,42 +150,21 @@ export const useUserStore = defineStore(
      * @param params 验证码登录参数
      */
     async function smsLogin(params: SmsLoginParams): Promise<string> {
-      try {
-        // TODO: 调用实际的验证码登录 API
-        // const response = await postAuthSmsLogin(params);
-
-        // 模拟验证码登录成功
-        const mockToken = 'mock_sms_token_' + Date.now();
-        const mockUserInfo: UserInfo = {
-          id: Date.now(),
-          username: params.phone,
-          avatar: '',
-          phone: params.phone,
-        };
-
-        setToken(mockToken);
-        setUserInfo(mockUserInfo);
-
-        return mockToken;
-      } catch (error) {
-        return Promise.reject(error);
-      }
+      const response = await loginWithSms({
+        phone: params.phone,
+        code: params.code,
+      });
+      handleLoginResponse(response);
+      return response.token;
     }
 
     /**
      * 发送验证码
      * @param phone 手机号
+     * @param type 验证码类型
      */
-    async function sendSmsCode(phone: string): Promise<void> {
-      try {
-        // TODO: 调用实际的发送验证码 API
-        // await postAuthSendSmsCode({ phone });
-
-        // 模拟发送成功
-        console.log('验证码已发送到:', phone);
-      } catch (error) {
-        return Promise.reject(error);
-      }
+    async function sendSmsCode(phone: string, type: AuthSendCodeDtoType = 'login'): Promise<void> {
+      await apiSendSmsCode({ phone, type });
     }
 
     /**
@@ -158,27 +172,12 @@ export const useUserStore = defineStore(
      * @param params 微信登录参数
      */
     async function wechatLogin(params: WechatLoginParams): Promise<string> {
-      try {
-        // TODO: 调用实际的微信登录 API
-        // const response = await postAuthWechatLogin(params);
-        console.log('wechatLogin params:', params);
-
-        // 模拟微信登录成功
-        const mockToken = 'mock_wechat_token_' + Date.now();
-        const mockUserInfo: UserInfo = {
-          id: Date.now(),
-          username: '微信用户',
-          avatar: '',
-          phone: '',
-        };
-
-        setToken(mockToken);
-        setUserInfo(mockUserInfo);
-
-        return mockToken;
-      } catch (error) {
-        return Promise.reject(error);
-      }
+      const response = await loginWithWechat({
+        code: params.code,
+        type: 'mini_app', // 小程序登录
+      });
+      handleLoginResponse(response);
+      return response.token;
     }
 
     /**
@@ -189,16 +188,53 @@ export const useUserStore = defineStore(
         return null;
       }
 
-      try {
-        // TODO: 调用实际的获取用户信息 API
-        // const response = await getAuthUserInfo();
-        // setUserInfo(response);
-        // return response;
+      const user = await getCurrentUser();
+      const info = mapUserToUserInfo(user);
+      setUserInfo(info);
+      return info;
+    }
 
-        // 模拟获取用户信息
-        return userInfo.value;
-      } catch (error) {
-        return Promise.reject(error);
+    /**
+     * 更新用户信息
+     */
+    async function updateUserInfo(params: {
+      nickname?: string;
+      firstName?: string;
+      lastName?: string;
+      photo?: { id: string };
+      gender?: number;
+      birthday?: string;
+    }): Promise<UserInfo | null> {
+      const user = await updateCurrentUser(params);
+      const info = mapUserToUserInfo(user);
+      setUserInfo(info);
+      return info;
+    }
+
+    /**
+     * 修改密码
+     */
+    async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
+      await apiChangePassword({ oldPassword, newPassword });
+    }
+
+    /**
+     * 刷新 Token
+     */
+    async function refreshToken(): Promise<string | null> {
+      if (!refreshTokenValue.value) {
+        return null;
+      }
+
+      try {
+        const response = await apiRefreshToken();
+        setToken(response.token);
+        setRefreshToken(response.refreshToken, response.tokenExpires);
+        return response.token;
+      } catch {
+        // 刷新失败，清除登录状态
+        await logout();
+        return null;
       }
     }
 
@@ -207,15 +243,20 @@ export const useUserStore = defineStore(
      */
     async function logout(): Promise<void> {
       try {
-        // TODO: 调用实际的退出登录 API
-        // await postAuthLogout();
+        if (token.value) {
+          await apiLogout();
+        }
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
         token.value = '';
+        refreshTokenValue.value = '';
+        tokenExpires.value = 0;
         userInfo.value = null;
-        // 清除 storage 中的 token
+        // 清除 storage
         storage.remove(STORAGE_KEYS.TOKEN);
+        storage.remove('refreshToken');
+        storage.remove('tokenExpires');
       }
     }
 
@@ -268,6 +309,8 @@ export const useUserStore = defineStore(
     return {
       // State
       token,
+      refreshTokenValue,
+      tokenExpires,
       userInfo,
       // Getters
       isLoggedIn,
@@ -276,6 +319,7 @@ export const useUserStore = defineStore(
       roleLevel,
       // Actions
       setToken,
+      setRefreshToken,
       setUserInfo,
       login,
       register,
@@ -283,6 +327,9 @@ export const useUserStore = defineStore(
       sendSmsCode,
       wechatLogin,
       getUserInfo,
+      updateUserInfo,
+      changePassword,
+      refreshToken,
       logout,
       // 权限检查
       hasRole,

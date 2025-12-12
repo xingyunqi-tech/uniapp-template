@@ -158,8 +158,8 @@ async function handleSave() {
   saving.value = true;
 
   try {
-    // TODO: 调用实际的修改密码 API
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 调用修改密码 API
+    await userStore.changePassword(formData.oldPassword, formData.newPassword);
 
     uni.showToast({
       title: '密码修改成功',

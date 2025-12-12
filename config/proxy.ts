@@ -8,6 +8,5 @@ export const proxy = {
   '/api': {
     target: `${protocol}//${hostDict.API_SERVICE}`,
     changeOrigin: true,
-    rewrite: (path: string) => path.replace(/^\/api/, ''),
   },
 };

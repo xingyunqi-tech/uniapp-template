@@ -7,10 +7,9 @@ import { defineConfig } from 'orval';
  */
 export default defineConfig({
   api: {
-    // 输入：OpenAPI 文档
+    // 输入：OpenAPI 文档（使用后端在线 API）
     input: {
-      target: './src/api/openapi.json',
-      // target: 'https://ai-project-verification.zhihuishu.com/api/v3/api-docs',
+      target: 'http://localhost:3000/docs-json',
       // 使用 transformer 根据 API 路径自动生成英文 tag
       override: {
         transformer: './scripts/api/transform-openapi.ts',

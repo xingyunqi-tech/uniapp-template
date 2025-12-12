@@ -30,9 +30,61 @@
 export * from './generated/model';
 
 // 2. 自动生成的 API 函数 (只导出函数,不导出类型)
-export { postAuthLogin, postAuthLogout, getAuthUserInfo } from './generated/auth/auth';
+export {
+  createAddress,
+  getAddresses,
+  getDefaultAddress,
+  getAddress,
+  updateAddress,
+  deleteAddress,
+  setDefaultAddress,
+} from './generated/addresses/addresses';
 
-export { getConfig, putConfig } from './generated/config/config';
+export { homeControllerHealthCheck } from './generated/api/api';
+
+export {
+  loginWithEmail,
+  registerWithEmail,
+  confirmEmail,
+  confirmNewEmail,
+  forgotPassword,
+  resetPassword,
+  getCurrentUser,
+  updateCurrentUser,
+  deleteCurrentUser,
+  refreshToken,
+  logout,
+  sendSmsCode,
+  loginWithPhone,
+  loginWithSms,
+  registerWithPhone,
+  changePassword,
+  loginWithWechat,
+} from './generated/auth/auth';
+
+export { homeControllerAppInfo } from './generated/default/default';
+
+export {
+  createFavorite,
+  getFavorites,
+  checkFavorite,
+  toggleFavorite,
+  deleteFavorite,
+} from './generated/favorites/favorites';
+
+export { createFeedback, getFeedbacks, getFeedback } from './generated/feedbacks/feedbacks';
+
+export { uploadFile } from './generated/files/files';
+
+export {
+  healthControllerCheckV1,
+  healthControllerLivenessV1,
+  healthControllerReadinessV1,
+} from './generated/health/health';
+
+export { prometheusControllerIndex } from './generated/metrics/metrics';
+
+export { createUser, getUsers, getUser, updateUser, deleteUser } from './generated/users/users';
 
 // 3. 自定义工具函数 (自动扫描 custom 目录)
 export * from './custom/external';

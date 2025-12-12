@@ -17,5 +17,5 @@ export const port = 5173;
  */
 export const hostDict = {
   /** 主 API 服务 */
-  API_SERVICE: 'localhost:8080',
+  API_SERVICE: 'localhost:3000',
 } as const;

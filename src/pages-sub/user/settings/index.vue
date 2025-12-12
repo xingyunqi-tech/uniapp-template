@@ -63,20 +63,6 @@
       </UMenuGroup>
     </view>
 
-    <!-- 账号注销 -->
-    <view v-if="isLoggedIn" class="settings-section">
-      <UMenuGroup title="账号管理">
-        <UMenuItem
-          icon="i-carbon-trash-can"
-          title="注销账号"
-          danger
-          :border="false"
-          :show-arrow="false"
-          @click="handleDeleteAccount"
-        />
-      </UMenuGroup>
-    </view>
-
     <!-- 退出登录按钮 -->
     <view v-if="isLoggedIn" class="logout-section">
       <button class="logout-btn" @click="handleLogout">退出登录</button>
@@ -226,54 +212,6 @@ function handleToggleTheme(checked: boolean) {
  */
 function handleToggleLocale(checked: boolean) {
   globalStore.setLocale(checked ? LOCALE_TYPE.EN_US : LOCALE_TYPE.ZH_CN);
-}
-
-// 账号注销
-function handleDeleteAccount() {
-  uni.showModal({
-    title: '注销账号',
-    content: '注销后，您的账号数据将被永久删除且无法恢复，确定要注销吗？',
-    confirmColor: '#ee0a24',
-    confirmText: '确定注销',
-    success: res => {
-      if (res.confirm) {
-        // 二次确认
-        uni.showModal({
-          title: '再次确认',
-          content: '账号注销后将无法恢复，请再次确认',
-          confirmColor: '#ee0a24',
-          confirmText: '确定',
-          success: async secondRes => {
-            if (secondRes.confirm) {
-              uni.showLoading({ title: '处理中...' });
-              try {
-                // TODO: 调用注销 API
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
-                uni.hideLoading();
-                userStore.logout();
-                uni.showToast({
-                  title: '账号已注销',
-                  icon: 'success',
-                });
-                setTimeout(() => {
-                  uni.switchTab({
-                    url: '/pages/index/index',
-                  });
-                }, 1500);
-              } catch {
-                uni.hideLoading();
-                uni.showToast({
-                  title: '注销失败，请重试',
-                  icon: 'none',
-                });
-              }
-            }
-          },
-        });
-      }
-    },
-  });
 }
 </script>
 
