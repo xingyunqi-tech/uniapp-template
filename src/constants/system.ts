@@ -51,3 +51,13 @@ export const APP_NAME = 'UniApp Template';
  * 版权信息
  */
 export const COPYRIGHT = 'Copyright © 2024 All Rights Reserved';
+
+/**
+ * ICP 备案号
+ */
+export const ICP_LICENSE = '沪ICP备2025155741号-1';
+
+/**
+ * 工信部备案管理系统链接
+ */
+export const ICP_LINK = 'https://beian.miit.gov.cn/';

@@ -33,6 +33,11 @@
     <!-- 版权信息 -->
     <view class="copyright">
       <text class="copyright-text">{{ COPYRIGHT }}</text>
+      <!-- #ifdef H5 -->
+      <view class="icp-info">
+        <text class="icp-link" @click="handleIcpClick">{{ ICP_LICENSE }}</text>
+      </view>
+      <!-- #endif -->
     </view>
   </view>
 </template>
@@ -43,7 +48,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES } from '@/constants';
-import { APP_NAME, COPYRIGHT } from '@/constants/system';
+import { APP_NAME, COPYRIGHT, ICP_LICENSE, ICP_LINK } from '@/constants/system';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -103,6 +108,13 @@ function checkUpdate() {
     }
   }, 1000);
 }
+
+// 点击备案号
+function handleIcpClick() {
+  // #ifdef H5
+  window.open(ICP_LINK, '_blank');
+  // #endif
+}
 </script>
 
 <style scoped lang="scss">
@@ -150,14 +162,38 @@ function checkUpdate() {
 .copyright {
   display: flex;
   flex: 1;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   padding: 48rpx 0;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  gap: 16rpx;
 
   .copyright-text {
     color: var(--color-text-placeholder);
     font-size: 24rpx;
+  }
+
+  .icp-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .icp-link {
+      transition: color var(--duration-fast);
+      color: var(--color-text-placeholder);
+      font-size: 24rpx;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--color-primary);
+      }
+
+      &:active {
+        opacity: 0.7;
+      }
+    }
   }
 }
 </style>
