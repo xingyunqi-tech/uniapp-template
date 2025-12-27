@@ -50,7 +50,7 @@ export const APP_NAME = 'UniApp Template';
 /**
  * 版权信息
  */
-export const COPYRIGHT = 'Copyright © 2024 All Rights Reserved';
+export const COPYRIGHT = 'Copyright © 2025 All Rights Reserved';
 
 /**
  * ICP 备案号
