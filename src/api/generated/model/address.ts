@@ -9,9 +9,9 @@
  */
 
 export interface Address {
-  id: string;
+  id: number;
   /** User ID who owns this address */
-  userId: string;
+  userId: number;
   name: string;
   phone: string;
   province: string;

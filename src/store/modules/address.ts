@@ -63,7 +63,7 @@ export const useAddressStore = defineStore('address', () => {
       };
 
       const response = await getAddresses(params);
-      const newList = response.data || [];
+      const newList = response.list || [];
 
       if (refresh) {
         addressList.value = newList;
@@ -71,7 +71,7 @@ export const useAddressStore = defineStore('address', () => {
         addressList.value = [...addressList.value, ...newList];
       }
 
-      hasMore.value = response.hasNextPage ?? false;
+      hasMore.value = currentPage.value < response.totalPages;
       if (hasMore.value) {
         currentPage.value++;
       }
@@ -85,8 +85,8 @@ export const useAddressStore = defineStore('address', () => {
   /**
    * 获取地址详情
    */
-  async function fetchAddress(id: string): Promise<Address> {
-    return await getAddress(id);
+  async function fetchAddress(id: number): Promise<Address> {
+    return await getAddress(String(id));
   }
 
   /**
@@ -129,8 +129,8 @@ export const useAddressStore = defineStore('address', () => {
   /**
    * 更新地址
    */
-  async function editAddress(id: string, data: UpdateAddressDto): Promise<Address> {
-    const address = await updateAddress(id, data);
+  async function editAddress(id: number, data: UpdateAddressDto): Promise<Address> {
+    const address = await updateAddress(String(id), data);
 
     // 更新列表中的地址
     const index = addressList.value.findIndex(item => item.id === id);
@@ -149,8 +149,8 @@ export const useAddressStore = defineStore('address', () => {
   /**
    * 删除地址
    */
-  async function removeAddress(id: string): Promise<void> {
-    await deleteAddress(id);
+  async function removeAddress(id: number): Promise<void> {
+    await deleteAddress(String(id));
 
     // 从列表中移除
     const index = addressList.value.findIndex(item => item.id === id);
@@ -173,8 +173,8 @@ export const useAddressStore = defineStore('address', () => {
   /**
    * 设置默认地址
    */
-  async function setDefault(id: string): Promise<Address> {
-    const address = await setDefaultAddress(id);
+  async function setDefault(id: number): Promise<Address> {
+    const address = await setDefaultAddress(String(id));
 
     // 更新列表中所有地址的默认状态
     addressList.value.forEach(item => {

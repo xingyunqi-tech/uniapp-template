@@ -11,7 +11,7 @@ import type {
   Address,
   CreateAddressDto,
   GetAddressesParams,
-  InfinityPaginationAddressResponseDto,
+  PaginationAddressResponseDto,
   UpdateAddressDto,
 } from '.././model';
 
@@ -32,7 +32,7 @@ export const createAddress = (createAddressDto: CreateAddressDto) => {
  * @summary 获取地址列表
  */
 export const getAddresses = (params?: GetAddressesParams) => {
-  return customMutator<InfinityPaginationAddressResponseDto>({ url: `/api/v1/addresses`, method: 'GET', params });
+  return customMutator<PaginationAddressResponseDto>({ url: `/api/v1/addresses`, method: 'GET', params });
 };
 /**
  * @summary 获取默认地址

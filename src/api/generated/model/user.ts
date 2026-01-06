@@ -12,7 +12,7 @@ import type { Role } from './role';
 import type { Status } from './status';
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
   provider: string;
   firstName: string;

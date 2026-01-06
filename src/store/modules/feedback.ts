@@ -67,7 +67,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
       };
 
       const response = await getFeedbacks(params);
-      const newList = response.data || [];
+      const newList = response.list || [];
 
       if (refresh) {
         feedbackList.value = newList;
@@ -75,7 +75,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
         feedbackList.value = [...feedbackList.value, ...newList];
       }
 
-      hasMore.value = response.hasNextPage ?? false;
+      hasMore.value = currentPage.value < response.totalPages;
       if (hasMore.value) {
         currentPage.value++;
       }

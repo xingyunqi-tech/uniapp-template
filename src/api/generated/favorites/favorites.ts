@@ -13,7 +13,7 @@ import type {
   CreateFavoriteDto,
   Favorite,
   GetFavoritesParams,
-  InfinityPaginationFavoriteResponseDto,
+  PaginationFavoriteResponseDto,
   ToggleFavorite200,
 } from '.././model';
 
@@ -34,7 +34,7 @@ export const createFavorite = (createFavoriteDto: CreateFavoriteDto) => {
  * @summary 获取收藏列表
  */
 export const getFavorites = (params?: GetFavoritesParams) => {
-  return customMutator<InfinityPaginationFavoriteResponseDto>({ url: `/api/v1/favorites`, method: 'GET', params });
+  return customMutator<PaginationFavoriteResponseDto>({ url: `/api/v1/favorites`, method: 'GET', params });
 };
 /**
  * @summary 检查是否已收藏

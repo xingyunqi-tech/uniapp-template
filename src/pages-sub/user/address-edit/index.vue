@@ -86,7 +86,7 @@ const addressStore = useAddressStore();
 
 // 表单数据
 const formData = reactive({
-  id: '',
+  id: 0,
   name: '',
   phone: '',
   province: '',
@@ -131,7 +131,7 @@ const regionPickerValue = computed((): UniDataPickerValueArray => {
 onLoad(options => {
   if (options?.id) {
     isEdit.value = true;
-    loadAddressDetail(options.id);
+    loadAddressDetail(Number(options.id));
     // 动态设置页面标题
     uni.setNavigationBarTitle({ title: '编辑地址' });
   } else {
@@ -140,7 +140,7 @@ onLoad(options => {
 });
 
 // 加载地址详情
-async function loadAddressDetail(id: string) {
+async function loadAddressDetail(id: number) {
   try {
     const address = await addressStore.fetchAddress(id);
     if (address) {

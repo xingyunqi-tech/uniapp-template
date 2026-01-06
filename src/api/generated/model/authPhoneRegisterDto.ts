@@ -10,7 +10,7 @@
 
 export interface AuthPhoneRegisterDto {
   phone: string;
-  /** SMS code (optional, skip SMS verification if not provided) */
+  /** SMS verification code (optional, required for code-based registration) */
   code?: string;
   password: string;
   nickname?: string;

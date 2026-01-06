@@ -73,7 +73,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
       };
 
       const response = await getFavorites(params);
-      const newList = response.data || [];
+      const newList = response.list || [];
 
       if (refresh) {
         favoriteList.value = newList;
@@ -87,7 +87,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
         favoriteStatusCache.value.set(key, true);
       });
 
-      hasMore.value = response.hasNextPage ?? false;
+      hasMore.value = currentPage.value < response.totalPages;
       if (hasMore.value) {
         currentPage.value++;
       }
@@ -141,11 +141,11 @@ export const useFavoriteStore = defineStore('favorite', () => {
   /**
    * 取消收藏
    */
-  async function removeFavorite(id: string): Promise<void> {
+  async function removeFavorite(id: number): Promise<void> {
     // 先找到要删除的收藏，用于更新缓存
     const favorite = favoriteList.value.find(item => item.id === id);
 
-    await deleteFavorite(id);
+    await deleteFavorite(String(id));
 
     // 从列表中移除
     const index = favoriteList.value.findIndex(item => item.id === id);
@@ -199,7 +199,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     const favorite = favoriteList.value.find(item => item.targetType === targetType && item.targetId === targetId);
 
     if (favorite) {
-      await removeFavorite(String(favorite.id));
+      await removeFavorite(favorite.id);
     }
   }
 

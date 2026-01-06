@@ -11,8 +11,8 @@ import type { FeedbackType } from './feedbackType';
 import type { FeedbackStatus } from './feedbackStatus';
 
 export interface Feedback {
-  id: string;
-  userId: string;
+  id: number;
+  userId: number;
   type: FeedbackType;
   content: string;
   images?: string[];

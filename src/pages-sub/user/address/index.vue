@@ -89,7 +89,7 @@ async function handleSetDefault(item: Address) {
   if (item.isDefault) return;
 
   try {
-    await addressStore.setDefault(String(item.id));
+    await addressStore.setDefault(item.id);
     uni.showToast({
       title: '设置成功',
       icon: 'success',
@@ -111,7 +111,7 @@ function handleDelete(item: Address) {
     success: async res => {
       if (res.confirm) {
         try {
-          await addressStore.removeAddress(String(item.id));
+          await addressStore.removeAddress(item.id);
           uni.showToast({
             title: '删除成功',
             icon: 'success',

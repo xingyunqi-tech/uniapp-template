@@ -7,12 +7,7 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type {
-  CreateFeedbackDto,
-  Feedback,
-  GetFeedbacksParams,
-  InfinityPaginationFeedbackResponseDto,
-} from '.././model';
+import type { CreateFeedbackDto, Feedback, GetFeedbacksParams, PaginationFeedbackResponseDto } from '.././model';
 
 import { customMutator } from '../../core/mutator';
 
@@ -31,7 +26,7 @@ export const createFeedback = (createFeedbackDto: CreateFeedbackDto) => {
  * @summary 获取反馈列表
  */
 export const getFeedbacks = (params?: GetFeedbacksParams) => {
-  return customMutator<InfinityPaginationFeedbackResponseDto>({ url: `/api/v1/feedbacks`, method: 'GET', params });
+  return customMutator<PaginationFeedbackResponseDto>({ url: `/api/v1/feedbacks`, method: 'GET', params });
 };
 /**
  * @summary 获取反馈详情

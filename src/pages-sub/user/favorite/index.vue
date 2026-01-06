@@ -83,7 +83,7 @@ function handleRemove(item: Favorite) {
     success: async res => {
       if (res.confirm) {
         try {
-          await favoriteStore.removeFavorite(String(item.id));
+          await favoriteStore.removeFavorite(item.id);
           uni.showToast({
             title: '已取消收藏',
             icon: 'success',

@@ -10,9 +10,9 @@
 import type { FavoriteTargetType } from './favoriteTargetType';
 
 export interface Favorite {
-  id: string;
+  id: number;
   /** User ID who owns this favorite */
-  userId: string;
+  userId: number;
   /** Type of the favorited item */
   targetType: FavoriteTargetType;
   /** ID of the favorited item */
