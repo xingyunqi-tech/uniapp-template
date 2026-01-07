@@ -385,13 +385,14 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
     }
   } else {
     // 预览
+    const qrcodePath = resolve(TEMP_DIR, 'preview-qrcode.png');
     const previewResult = await ci.preview({
       project,
       version,
       desc: description,
       robot,
-      qrcodeFormat: 'terminal',
-      qrcodeOutputDest: resolve(TEMP_DIR, 'preview-qrcode.png'),
+      qrcodeFormat: 'image', // 改为只生成图片，不在终端显示
+      qrcodeOutputDest: qrcodePath,
       setting: {
         es6: true,
         es7: true,
@@ -405,7 +406,8 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
     });
 
     log(`微信小程序预览成功!`, 'success');
-    log(`请扫描二维码预览`, 'success');
+    log(`二维码已保存至: ${qrcodePath}`, 'success');
+    log(`请使用微信扫描二维码预览`, 'success');
     if (previewResult) {
       console.log('预览结果:', previewResult);
     }
