@@ -3,9 +3,9 @@
  * 支持微信小程序和支付宝小程序的自动上传
  *
  * 使用方式:
- *   pnpm mp:upload:weixin          # 上传微信小程序
+ *   pnpm mp:upload:weixin          # 上传微信小程序到开发版本
  *   pnpm mp:upload:alipay          # 上传支付宝小程序
- *   pnpm mp:preview:weixin         # 预览微信小程序
+ *   pnpm mp:preview:weixin         # 生成微信小程序预览二维码
  *
  * 环境变量:
  *   MP_VERSION                     # 版本号 (可选，默认读取 package.json)
@@ -384,14 +384,14 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
       console.log('上传结果:', uploadResult);
     }
   } else {
-    // 预览
+    // 预览：生成预览二维码
     const qrcodePath = resolve(TEMP_DIR, 'preview-qrcode.png');
     const previewResult = await ci.preview({
       project,
       version,
       desc: description,
       robot,
-      qrcodeFormat: 'image', // 改为只生成图片，不在终端显示
+      qrcodeFormat: 'image',
       qrcodeOutputDest: qrcodePath,
       setting: {
         es6: true,
