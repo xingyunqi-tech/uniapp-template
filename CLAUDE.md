@@ -305,6 +305,12 @@ pnpm test:ui          # 测试 UI 界面
 
 # Git
 pnpm commit           # 交互式提交 (cz-git)
+
+# Git 提交规范
+# 格式: [AI|Human][type]: 描述
+# 示例:
+# [AI][feat]: 添加用户登录功能
+# [Human][fix]: 修复登录超时问题
 ```
 
 ---
