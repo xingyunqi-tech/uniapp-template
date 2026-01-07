@@ -102,8 +102,8 @@ export function isApp(): boolean {
  */
 export function isIOS(): boolean {
   // #ifdef APP-PLUS
-  const systemInfo = uni.getSystemInfoSync();
-  return systemInfo.platform === 'ios';
+  const deviceInfo = uni.getDeviceInfo();
+  return deviceInfo.platform === 'ios';
   // #endif
   // #ifndef APP-PLUS
   return false;
@@ -115,8 +115,8 @@ export function isIOS(): boolean {
  */
 export function isAndroid(): boolean {
   // #ifdef APP-PLUS
-  const systemInfo = uni.getSystemInfoSync();
-  return systemInfo.platform === 'android';
+  const deviceInfo = uni.getDeviceInfo();
+  return deviceInfo.platform === 'android';
   // #endif
   // #ifndef APP-PLUS
   return false;
@@ -219,27 +219,27 @@ export function getDeviceInfo(refresh = false): DeviceInfo {
   }
 
   try {
-    const systemInfo = uni.getSystemInfoSync();
-    const safeAreaInsets = systemInfo.safeAreaInsets || { top: 0, bottom: 0, left: 0, right: 0 };
+    const deviceInfo = uni.getDeviceInfo();
+    const windowInfo = uni.getWindowInfo();
 
     cachedDeviceInfo = {
       platform: getPlatform(),
-      os: systemInfo.platform || 'unknown',
-      osVersion: systemInfo.system || 'unknown',
-      brand: systemInfo.brand || 'unknown',
-      model: systemInfo.model || 'unknown',
-      screenWidth: systemInfo.screenWidth || 375,
-      screenHeight: systemInfo.screenHeight || 667,
-      windowWidth: systemInfo.windowWidth || 375,
-      windowHeight: systemInfo.windowHeight || 667,
-      statusBarHeight: systemInfo.statusBarHeight || 0,
+      os: deviceInfo.platform || 'unknown',
+      osVersion: deviceInfo.system || 'unknown',
+      brand: deviceInfo.brand || 'unknown',
+      model: deviceInfo.model || 'unknown',
+      screenWidth: windowInfo.screenWidth || 375,
+      screenHeight: windowInfo.screenHeight || 667,
+      windowWidth: windowInfo.windowWidth || 375,
+      windowHeight: windowInfo.windowHeight || 667,
+      statusBarHeight: windowInfo.statusBarHeight || 0,
       safeArea: {
-        top: safeAreaInsets.top || 0,
-        bottom: safeAreaInsets.bottom || 0,
-        left: safeAreaInsets.left || 0,
-        right: safeAreaInsets.right || 0,
+        top: windowInfo.safeArea?.top || 0,
+        bottom: windowInfo.safeArea?.bottom || 0,
+        left: windowInfo.safeArea?.left || 0,
+        right: windowInfo.safeArea?.right || 0,
       },
-      pixelRatio: systemInfo.pixelRatio || 2,
+      pixelRatio: windowInfo.pixelRatio || 2,
     };
   } catch {
     cachedDeviceInfo = {

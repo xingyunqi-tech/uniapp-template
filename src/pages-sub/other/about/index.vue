@@ -62,9 +62,8 @@ onLoad(() => {
 
 // 获取版本号
 function getVersion() {
-  const systemInfo = uni.getSystemInfoSync();
-  // 从 manifest.json 读取版本号
-  version.value = systemInfo.appVersion || '1.0.0';
+  const appBaseInfo = uni.getAppBaseInfo();
+  version.value = appBaseInfo.version || '1.0.0';
 }
 
 // 菜单点击

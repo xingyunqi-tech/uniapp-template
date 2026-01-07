@@ -249,14 +249,19 @@ export const useUserStore = defineStore(
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
+        // 清除状态
         token.value = '';
         refreshTokenValue.value = '';
         tokenExpires.value = 0;
         userInfo.value = null;
+
         // 清除 storage
         storage.remove(STORAGE_KEYS.TOKEN);
         storage.remove('refreshToken');
         storage.remove('tokenExpires');
+
+        // 清除 Pinia 持久化的 userInfo (key 为 store id)
+        storage.remove('user');
       }
     }
 

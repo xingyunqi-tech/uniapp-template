@@ -8,10 +8,10 @@
     "tabFontColor": "#999999",
     "tabSelectedColor": "#07c160",
     "tabBorderStyle": "black",
-    "iconHome": "static/tabbar/home.png",
-    "iconHomeActive": "static/tabbar/home-active.png",
-    "iconMine": "static/tabbar/mine.png",
-    "iconMineActive": "static/tabbar/mine-active.png"
+    "iconHome": "/static/tabbar/home.png",
+    "iconHomeActive": "/static/tabbar/home-active.png",
+    "iconMine": "/static/tabbar/mine.png",
+    "iconMineActive": "/static/tabbar/mine-active.png"
   },
   "dark": {
     "navBgColor": "#1d1d1d",
@@ -22,9 +22,9 @@
     "tabFontColor": "#a3a6ad",
     "tabSelectedColor": "#409eff",
     "tabBorderStyle": "white",
-    "iconHome": "static/tabbar/home-dark.png",
-    "iconHomeActive": "static/tabbar/home-dark-active.png",
-    "iconMine": "static/tabbar/mine-dark.png",
-    "iconMineActive": "static/tabbar/mine-dark-active.png"
+    "iconHome": "/static/tabbar/home-dark.png",
+    "iconHomeActive": "/static/tabbar/home-dark-active.png",
+    "iconMine": "/static/tabbar/mine-dark.png",
+    "iconMineActive": "/static/tabbar/mine-dark-active.png"
   }
 }

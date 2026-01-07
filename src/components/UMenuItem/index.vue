@@ -170,7 +170,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
       color: var(--color-error);
     }
 
-    .u-menu-item__icon text {
+    .u-menu-item__icon {
       color: var(--color-error);
     }
   }
@@ -182,10 +182,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
     justify-content: center;
     width: 48rpx;
     height: 48rpx;
-
-    text {
-      font-size: 40rpx;
-    }
+    font-size: 40rpx;
   }
 
   &__content {

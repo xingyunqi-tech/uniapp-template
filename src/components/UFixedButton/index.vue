@@ -12,7 +12,11 @@
     用于表单提交、确认操作等场景
   -->
   <view class="u-fixed-button">
-    <button :class="['u-fixed-btn', type]" :disabled="disabled || loading" @click="handleClick">
+    <button
+      :class="['u-fixed-btn', type, { 'button-disabled': disabled || loading }]"
+      :disabled="disabled || loading"
+      @click="handleClick"
+    >
       <slot>
         {{ loading ? loadingText : text }}
       </slot>
@@ -94,14 +98,18 @@ function handleClick() {
       background: var(--color-bg);
       color: var(--color-text);
     }
+  }
 
-    &[disabled] {
-      opacity: var(--opacity-disabled);
-    }
+  .u-fixed-btn.button-disabled {
+    opacity: var(--opacity-disabled);
+  }
 
-    &:active:not([disabled]) {
-      opacity: var(--opacity-hover);
-    }
+  .u-fixed-btn:active {
+    opacity: var(--opacity-hover);
+  }
+
+  .u-fixed-btn.button-disabled:active {
+    opacity: var(--opacity-disabled);
   }
 }
 </style>

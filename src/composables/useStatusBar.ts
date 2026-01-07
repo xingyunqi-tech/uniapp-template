@@ -29,9 +29,9 @@ export function useStatusBar() {
   /** 总高度 = 状态栏 + 导航栏 (px) */
   const totalHeight = ref(44);
 
-  // 获取系统信息
-  const systemInfo = uni.getSystemInfoSync();
-  statusBarHeight.value = systemInfo.statusBarHeight || 20;
+  // 获取系统信息 (使用新 API)
+  const windowInfo = uni.getWindowInfo();
+  statusBarHeight.value = windowInfo.statusBarHeight || 20;
 
   // #ifdef MP-WEIXIN
   // 微信小程序：根据胶囊按钮计算导航栏高度

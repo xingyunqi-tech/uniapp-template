@@ -21,7 +21,12 @@
       :clearable="true"
       @update:model-value="$emit('update:modelValue', $event)"
     />
-    <button class="u-sms-btn" :disabled="isButtonDisabled" @click="handleClick">
+    <button
+      class="u-sms-btn"
+      :class="{ 'button-disabled': isButtonDisabled }"
+      :disabled="isButtonDisabled"
+      @click="handleClick"
+    >
       {{ buttonText }}
     </button>
   </view>
@@ -145,10 +150,14 @@ defineExpose({
     &:active {
       opacity: var(--opacity-hover);
     }
+  }
 
-    &[disabled] {
-      background: var(--color-bg-grey);
-      color: var(--color-text-disabled);
+  .u-sms-btn.button-disabled {
+    background: var(--color-bg-grey);
+    color: var(--color-text-disabled);
+
+    &:active {
+      opacity: 1;
     }
   }
 }

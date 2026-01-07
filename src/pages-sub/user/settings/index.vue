@@ -91,8 +91,10 @@ const version = ref('1.0.0');
 
 // ==================== 隐藏开发者选项 ====================
 const devModeClickCount = ref(0);
-const showDevOptions = ref(false);
 let devModeTimer: ReturnType<typeof setTimeout> | null = null;
+
+// 使用 global store 中的 showDevOptions 状态（持久化）
+const showDevOptions = computed(() => globalStore.showDevOptions);
 
 // 主题和语言状态
 const isDarkMode = computed(() => globalStore.currentTheme === THEME_TYPE.DARK);
@@ -192,9 +194,9 @@ function handleAboutClick() {
       clearTimeout(devModeTimer);
     }
     devModeClickCount.value = 0;
-    showDevOptions.value = !showDevOptions.value;
+    globalStore.toggleDevOptions();
     uni.showToast({
-      title: showDevOptions.value ? '已开启开发者选项' : '已关闭开发者选项',
+      title: globalStore.showDevOptions ? '已开启开发者选项' : '已关闭开发者选项',
       icon: 'none',
     });
   }

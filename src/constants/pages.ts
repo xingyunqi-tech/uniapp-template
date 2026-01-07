@@ -52,6 +52,40 @@ export const PAGES = {
 } as const;
 
 /**
+ * 导航栏文本颜色枚举
+ * theme.json 中使用 "black"/"white" (用于 pages.json 配置)
+ * uni.setNavigationBarColor 需要十六进制颜色值
+ */
+export enum NavTextColor {
+  black = '#000000',
+  white = '#ffffff',
+}
+
+/**
+ * TabBar 页面列表
+ */
+export const TAB_BAR_PAGES = [PAGES.HOME, PAGES.MINE] as const;
+
+/**
+ * TabBar 配置项
+ * 用于动态切换 TabBar 图标和文本
+ */
+export const TAB_BAR_CONFIG = [
+  {
+    index: 0,
+    text: '首页',
+    iconKey: 'iconHome',
+    iconActiveKey: 'iconHomeActive',
+  },
+  {
+    index: 1,
+    text: '我的',
+    iconKey: 'iconMine',
+    iconActiveKey: 'iconMineActive',
+  },
+] as const;
+
+/**
  * 白名单页面（无需登录）
  */
 export const WHITE_LIST = [

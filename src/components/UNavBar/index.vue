@@ -141,16 +141,15 @@ const backIconColor = computed(() => {
 // ==================== Lifecycle ====================
 
 onMounted(() => {
-  // 获取系统信息
-  const systemInfo = uni.getSystemInfoSync();
-  statusBarHeight.value = `${systemInfo.statusBarHeight || 20}px`;
+  const windowInfo = uni.getWindowInfo();
+  statusBarHeight.value = `${windowInfo.statusBarHeight || 20}px`;
 
   // #ifdef MP-WEIXIN
   // 微信小程序获取胶囊按钮位置
   const menuButtonInfo = uni.getMenuButtonBoundingClientRect?.();
   if (menuButtonInfo) {
     // 导航栏高度 = 胶囊按钮高度 + 上下边距
-    const navHeight = (menuButtonInfo.top - (systemInfo.statusBarHeight || 0)) * 2 + menuButtonInfo.height;
+    const navHeight = (menuButtonInfo.top - (windowInfo.statusBarHeight || 0)) * 2 + menuButtonInfo.height;
     navBarHeight.value = `${navHeight}px`;
   }
   // #endif

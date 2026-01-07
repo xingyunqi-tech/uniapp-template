@@ -155,13 +155,14 @@ function getErrorDeviceInfo(): ErrorDeviceInfo {
   }
 
   try {
-    const systemInfo = uni.getSystemInfoSync();
+    const deviceInfo = uni.getDeviceInfo();
+    const appBaseInfo = uni.getAppBaseInfo();
     cachedDeviceInfo = {
-      platform: systemInfo.platform || 'unknown',
-      system: systemInfo.system || 'unknown',
-      appVersion: systemInfo.appVersion || '1.0.0',
-      brand: systemInfo.brand,
-      model: systemInfo.model,
+      platform: deviceInfo.platform || 'unknown',
+      system: deviceInfo.system || 'unknown',
+      appVersion: appBaseInfo.version || '1.0.0',
+      brand: deviceInfo.brand,
+      model: deviceInfo.model,
     };
   } catch {
     cachedDeviceInfo = {

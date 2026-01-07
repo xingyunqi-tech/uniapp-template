@@ -1,20 +1,80 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE, LOCALE_TYPE, THEME_TYPE } from '@/constants';
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_THEME_STYLE,
+  LOCALE_TYPE,
+  THEME_TYPE,
+  TAB_BAR_PAGES,
+  TAB_BAR_CONFIG,
+  NavTextColor,
+} from '@/constants';
 import type { LocaleType, ThemeType } from '@/constants';
 import { i18n } from '@/utils/locale';
+import themeConfig from '@/theme.json';
+
+/**
+ * 判断当前页面是否为 TabBar 页面
+ */
+function isTabBarPage(): boolean {
+  const pages = getCurrentPages();
+  if (pages.length === 0) return false;
+
+  const currentPage = pages[pages.length - 1];
+  const route = currentPage.route || '';
+
+  // 使用常量定义的 TabBar 页面列表
+  return TAB_BAR_PAGES.some(page => page === `/${route}`);
+}
 
 /**
  * 应用主题到页面
- * 导航栏/TabBar 通过 theme.json 配置自动适配，此处仅处理 H5 的 CSS class
+ * H5: 需要运行时调用 uni API 切换 navbar/tabbar
+ * 小程序/App: 通过 theme.json 配置自动适配
  */
 function applyTheme(theme: ThemeType) {
   const isDark = theme === THEME_TYPE.DARK;
+  // 获取当前主题配置
+  const currentThemeConfig = isDark ? themeConfig.dark : themeConfig.light;
 
   // #ifdef H5
-  // H5: 设置根元素 class，让页面内容通过 CSS 变量获取主题色
   document.documentElement.classList.toggle('dark-theme', isDark);
   // #endif
+
+  // 检查页面是否已准备好
+  const pages = getCurrentPages();
+  if (pages.length === 0) {
+    // 页面栈为空，延迟执行
+    setTimeout(() => applyTheme(theme), 100);
+    return;
+  }
+
+  // 动态切换导航栏样式
+  const frontColor = NavTextColor[currentThemeConfig.navTxtStyle as keyof typeof NavTextColor] || NavTextColor.black;
+  uni.setNavigationBarColor({
+    frontColor,
+    backgroundColor: currentThemeConfig.navBgColor,
+  });
+
+  // 动态切换 TabBar 样式
+  if (isTabBarPage()) {
+    uni.setTabBarStyle({
+      color: currentThemeConfig.tabFontColor,
+      selectedColor: currentThemeConfig.tabSelectedColor,
+      backgroundColor: currentThemeConfig.tabBgColor,
+      borderStyle: currentThemeConfig.tabBorderStyle,
+    });
+
+    // 动态切换 TabBar 图标
+    TAB_BAR_CONFIG.forEach(item => {
+      uni.setTabBarItem({
+        index: item.index,
+        text: item.text,
+        iconPath: currentThemeConfig[item.iconKey],
+        selectedIconPath: currentThemeConfig[item.iconActiveKey],
+      });
+    });
+  }
 }
 
 /**
@@ -60,6 +120,24 @@ export const useGlobalStore = defineStore(
       setTheme(newTheme);
     }
 
+    // ==================== 开发者选项 ====================
+    /** 是否显示开发者选项 */
+    const showDevOptions = ref(false);
+
+    /**
+     * 切换开发者选项显示状态
+     */
+    function toggleDevOptions() {
+      showDevOptions.value = !showDevOptions.value;
+    }
+
+    /**
+     * 设置开发者选项显示状态
+     */
+    function setDevOptions(show: boolean) {
+      showDevOptions.value = show;
+    }
+
     // ==================== 语言相关 ====================
     const currentLocale = ref<LocaleType>(DEFAULT_LOCALE);
 
@@ -94,6 +172,10 @@ export const useGlobalStore = defineStore(
       initTheme,
       setTheme,
       toggleTheme,
+      // 开发者选项
+      showDevOptions,
+      toggleDevOptions,
+      setDevOptions,
       // 语言相关
       currentLocale,
       initLocale,
@@ -103,7 +185,7 @@ export const useGlobalStore = defineStore(
   },
   {
     persist: {
-      pick: ['currentTheme', 'currentLocale'],
+      pick: ['currentTheme', 'currentLocale', 'showDevOptions'],
       storage: {
         getItem: (key: string) => uni.getStorageSync(key),
         setItem: (key: string, value: string) => uni.setStorageSync(key, value),

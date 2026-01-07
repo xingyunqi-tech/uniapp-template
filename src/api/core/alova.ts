@@ -6,6 +6,7 @@ import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/errorReporter';
+import { useUserStore } from '@/store/modules/user';
 
 // ==================== 类型定义 ====================
 
@@ -75,14 +76,19 @@ const alovaInstance = createAlova({
         uni.hideLoading();
       }
 
-      // 401 未授权
+      // 401 未授权 - 登录过期
       if (statusCode === 401) {
-        storage.remove(STORAGE_KEYS.TOKEN);
         reportApiError(method.url, method.type, 'Unauthorized', 401);
 
         if (!isRedirectingToLogin) {
           isRedirectingToLogin = true;
-          uni.showToast({ title: '登录已过期', icon: 'none' });
+
+          // 清除完整的登录信息（包括 token、refreshToken、userInfo）
+          storage.remove(STORAGE_KEYS.TOKEN);
+          const userStore = useUserStore();
+          await userStore.logout();
+
+          uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
 
           setTimeout(() => {
             uni.redirectTo({
