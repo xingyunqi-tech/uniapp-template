@@ -90,6 +90,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
+import { encryptPassword } from '@/utils';
 
 const globalStore = useGlobalStore();
 
@@ -173,7 +174,7 @@ async function handleRegister() {
       // 密码注册
       await userStore.register({
         phone: formData.phone,
-        password: formData.password,
+        password: encryptPassword(formData.password),
       });
     } else {
       // 验证码注册（直接登录）

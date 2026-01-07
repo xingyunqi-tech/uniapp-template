@@ -44,8 +44,8 @@
         <UMenuItem
           v-if="showDevOptions"
           icon="i-carbon-sun"
-          title="主题模式"
-          :right-text="isDarkMode ? '深色' : '浅色'"
+          :title="$t('settings.theme')"
+          :right-text="isDarkMode ? $t('settings.dark') : $t('settings.light')"
           show-switch
           :switch-checked="isDarkMode"
           @switch-change="handleToggleTheme"
@@ -53,7 +53,7 @@
         <UMenuItem
           v-if="showDevOptions"
           icon="i-carbon-translate"
-          title="国际化"
+          :title="$t('settings.international')"
           :right-text="isEnglish ? 'English' : '中文'"
           :border="false"
           show-switch

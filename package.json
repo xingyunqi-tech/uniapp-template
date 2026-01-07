@@ -61,6 +61,7 @@
     "lodash-es": "^4.17.21",
     "pinia": "^2.3.1",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "ts-md5": "^2.0.1",
     "vue": "^3.5.25",
     "vue-i18n": "9.1.9"
   },

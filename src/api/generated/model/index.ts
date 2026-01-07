@@ -15,6 +15,7 @@ export * from './authEmailLoginDto';
 export * from './authForgotPasswordDto';
 export * from './authPhoneLoginDto';
 export * from './authPhoneRegisterDto';
+export * from './authPhoneResetPasswordDto';
 export * from './authPhoneSmsLoginDto';
 export * from './authRegisterLoginDto';
 export * from './authResetPasswordDto';

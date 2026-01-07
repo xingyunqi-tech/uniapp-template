@@ -179,8 +179,8 @@ async function handleReset() {
   submitting.value = true;
 
   try {
-    // TODO: 调用重置密码接口
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 调用重置密码接口
+    await userStore.resetPasswordByPhone(formData.phone, formData.code, formData.newPassword);
 
     uni.showToast({
       title: '密码重置成功',
@@ -191,7 +191,8 @@ async function handleReset() {
     setTimeout(() => {
       router.replace('/pages/login/index');
     }, DELAY_TIMES.LONG);
-  } catch {
+  } catch (error) {
+    console.error('重置密码失败:', error);
     uni.showToast({ title: '重置失败，请重试', icon: 'none' });
   } finally {
     submitting.value = false;

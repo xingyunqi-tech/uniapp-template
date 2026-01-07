@@ -14,6 +14,7 @@ import type {
   AuthForgotPasswordDto,
   AuthPhoneLoginDto,
   AuthPhoneRegisterDto,
+  AuthPhoneResetPasswordDto,
   AuthPhoneSmsLoginDto,
   AuthRegisterLoginDto,
   AuthResetPasswordDto,
@@ -173,6 +174,17 @@ export const registerWithPhone = (authPhoneRegisterDto: AuthPhoneRegisterDto) =>
   });
 };
 /**
+ * @summary 通过手机验证码重置密码
+ */
+export const resetPasswordByPhone = (authPhoneResetPasswordDto: AuthPhoneResetPasswordDto) => {
+  return customMutator<void>({
+    url: `/api/v1/auth/phone/reset-password`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    data: authPhoneResetPasswordDto,
+  });
+};
+/**
  * @summary 修改密码
  */
 export const changePassword = (authChangePasswordDto: AuthChangePasswordDto) => {
@@ -209,5 +221,6 @@ export type SendSmsCodeResult = NonNullable<Awaited<ReturnType<typeof sendSmsCod
 export type LoginWithPhoneResult = NonNullable<Awaited<ReturnType<typeof loginWithPhone>>>;
 export type LoginWithSmsResult = NonNullable<Awaited<ReturnType<typeof loginWithSms>>>;
 export type RegisterWithPhoneResult = NonNullable<Awaited<ReturnType<typeof registerWithPhone>>>;
+export type ResetPasswordByPhoneResult = NonNullable<Awaited<ReturnType<typeof resetPasswordByPhone>>>;
 export type ChangePasswordResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>;
 export type LoginWithWechatResult = NonNullable<Awaited<ReturnType<typeof loginWithWechat>>>;

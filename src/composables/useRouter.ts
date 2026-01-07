@@ -61,9 +61,6 @@ export function useRouter(): Router {
 
 /**
  * 获取当前路由信息
- * @example
- * const route = useRoute();
- * console.log(route.path, route.query);
  */
 export function useRoute(): Route {
   const pages = getCurrentPages();

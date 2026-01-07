@@ -25,6 +25,8 @@ export const PAGES = {
   // ========== order 分包 ==========
   /** 我的订单 */
   ORDER: '/pages-sub/order/list/index',
+  /** 订单详情 */
+  ORDER_DETAIL: '/pages-sub/order/detail/index',
 
   // ========== user 分包 ==========
   /** 地址管理 */

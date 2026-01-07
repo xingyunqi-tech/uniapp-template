@@ -11,6 +11,7 @@ interface NavigateToOptions {
        "/pages/login/index" |
        "/pages/mine/index" |
        "/pages/register/index" |
+       "/pages-sub/order/detail/index" |
        "/pages-sub/order/list/index" |
        "/pages-sub/user/address/index" |
        "/pages-sub/user/address-edit/index" |

@@ -35,24 +35,24 @@
         </view>
 
         <view class="order-goods">
-          <view v-for="goods in order.goodsList.slice(0, 2)" :key="goods.id" class="goods-item">
-            <image class="goods-image" :src="goods.image" mode="aspectFill" />
+          <view v-for="item in order.items.slice(0, 2)" :key="item.id" class="goods-item">
+            <image v-if="item.image" class="goods-image" :src="item.image" mode="aspectFill" />
             <view class="goods-info">
-              <text class="goods-name">{{ goods.name }}</text>
-              <text class="goods-spec">{{ goods.spec }}</text>
+              <text class="goods-name">{{ item.name }}</text>
+              <text v-if="item.spec" class="goods-spec">{{ item.spec }}</text>
               <view class="goods-price-row">
-                <text class="goods-price">¥{{ goods.price }}</text>
-                <text class="goods-count">x{{ goods.count }}</text>
+                <text class="goods-price">¥{{ item.price }}</text>
+                <text class="goods-count">x{{ item.quantity }}</text>
               </view>
             </view>
           </view>
-          <view v-if="order.goodsList.length > 2" class="goods-more"> 共 {{ order.goodsList.length }} 件商品 </view>
+          <view v-if="order.items.length > 2" class="goods-more"> 共 {{ order.items.length }} 件 </view>
         </view>
 
         <view class="order-footer">
           <view class="order-total">
             <text class="total-label">合计：</text>
-            <text class="total-price">¥{{ order.totalAmount }}</text>
+            <text class="total-price">¥{{ order.paidAmount }}</text>
           </view>
           <view class="order-actions">
             <button
@@ -70,7 +70,7 @@
               立即支付
             </button>
             <button
-              v-if="order.status === ORDER_STATUS.SHIPPED"
+              v-if="order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.SHIPPED"
               class="action-btn primary"
               @click.stop="handleConfirm(order.id)"
             >
@@ -103,46 +103,33 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { useGlobalStore } from '@/store/modules/global';
+import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm } from '@/utils';
 import type { LoadMoreStatus, TabItem } from '@/components';
-import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass, type OrderStatusType } from '@/constants';
+import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass } from '@/constants';
+import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
+const orderStore = useOrderStore();
 
-interface GoodsItem {
-  id: string;
-  name: string;
-  image: string;
-  spec: string;
-  price: number;
-  count: number;
-}
-
-interface OrderItem {
-  id: string;
-  orderNo: string;
-  status: OrderStatusType;
-  goodsList: GoodsItem[];
-  totalAmount: number;
-  createTime: string;
-}
-
-// 标签配置 - 从常量生成带 badge 的配置
+// 标签配置
 const tabs = ref<TabItem[]>(
   ORDER_TABS.map(tab => ({
     label: tab.label,
     value: tab.value,
-    badge: tab.value === ORDER_STATUS.PENDING ? 2 : tab.value === ORDER_STATUS.SHIPPED ? 1 : 0,
+    badge: 0,
   })),
 );
 
 const currentTab = ref('all');
-const orderList = ref<OrderItem[]>([]);
-const loading = ref(false);
 const refreshing = ref(false);
-const noMore = ref(false);
 const page = ref(1);
+const pageSize = ref(10);
+const noMore = ref(false);
+
+// 使用 Store 中的数据
+const orderList = computed(() => orderStore.orderList);
+const loading = computed(() => orderStore.loading);
 
 // 加载更多状态
 const loadMoreStatus = computed<LoadMoreStatus>(() => {
@@ -154,75 +141,54 @@ const loadMoreStatus = computed<LoadMoreStatus>(() => {
 onShow(() => {
   // 每次显示时刷新
   handleRefresh();
+  // 加载统计数据更新 badge
+  loadStats();
 });
+
+// 加载统计数据
+async function loadStats() {
+  try {
+    const stats = await orderStore.fetchStats();
+    // 更新 badge
+    tabs.value = tabs.value.map(tab => ({
+      ...tab,
+      badge:
+        tab.value === ORDER_STATUS.PENDING
+          ? stats.pendingCount
+          : tab.value === ORDER_STATUS.SHIPPED
+            ? stats.processingCount
+            : 0,
+    }));
+  } catch (error) {
+    console.error('加载订单统计失败:', error);
+  }
+}
 
 // 切换标签
 function handleTabChange(_tab: TabItem) {
   page.value = 1;
   noMore.value = false;
-  orderList.value = [];
   loadOrders();
 }
 
 // 加载订单
 async function loadOrders() {
-  if (loading.value) return;
-  loading.value = true;
-
   try {
-    // TODO: 替换为实际 API 调用
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await orderStore.fetchOrderList({
+      status: currentTab.value as any,
+      page: page.value,
+      pageSize: pageSize.value,
+    });
 
-    // 模拟数据
-    const mockOrders: OrderItem[] = [
-      {
-        id: '1',
-        orderNo: '202401010001',
-        status: ORDER_STATUS.PENDING,
-        goodsList: [
-          {
-            id: '1',
-            name: '商品名称示例',
-            image: '/static/images/default-avatar.png',
-            spec: '规格：默认',
-            price: 99.0,
-            count: 1,
-          },
-        ],
-        totalAmount: 99.0,
-        createTime: '2024-01-01 12:00:00',
-      },
-      {
-        id: '2',
-        orderNo: '202401010002',
-        status: ORDER_STATUS.SHIPPED,
-        goodsList: [
-          {
-            id: '2',
-            name: '另一个商品',
-            image: '/static/images/default-avatar.png',
-            spec: '规格：大号',
-            price: 199.0,
-            count: 2,
-          },
-        ],
-        totalAmount: 398.0,
-        createTime: '2024-01-02 14:30:00',
-      },
-    ];
-
-    if (page.value === 1) {
-      orderList.value = mockOrders;
-    } else {
-      orderList.value.push(...mockOrders);
-    }
-
-    // 模拟没有更多数据
-    if (page.value >= 2) {
-      noMore.value = true;
-    }
+    // 判断是否还有更多数据
+    noMore.value = response.list.length < pageSize.value || response.list.length >= response.total;
+  } catch (error) {
+    console.error('加载订单列表失败:', error);
+    uni.showToast({
+      title: '加载失败',
+      icon: 'none',
+    });
   } finally {
-    loading.value = false;
     refreshing.value = false;
   }
 }
@@ -244,26 +210,29 @@ function handleLoadMore() {
 
 // 订单详情
 function handleOrderDetail(id: string) {
-  uni.showToast({
-    title: `订单详情 ${id}`,
-    icon: 'none',
+  uni.navigateTo({
+    url: `${PAGES.ORDER_DETAIL}?id=${id}`,
   });
 }
 
 // 取消订单
-async function handleCancel(_id: string) {
+async function handleCancel(id: string) {
   const confirmed = await confirm({
     title: '提示',
     content: '确定要取消该订单吗？',
   });
 
   if (confirmed) {
-    // TODO: 调用取消订单 API，使用 _id
-    uni.showToast({
-      title: '订单已取消',
-      icon: 'success',
-    });
-    handleRefresh();
+    try {
+      await orderStore.cancel(id);
+      uni.showToast({
+        title: '订单已取消',
+        icon: 'success',
+      });
+      handleRefresh();
+    } catch (error) {
+      console.error('取消订单失败:', error);
+    }
   }
 }
 
@@ -276,19 +245,23 @@ function handlePay(id: string) {
 }
 
 // 确认收货
-async function handleConfirm(_id: string) {
+async function handleConfirm(id: string) {
   const confirmed = await confirm({
     title: '提示',
-    content: '确认已收到商品？',
+    content: '确认订单已完成？',
   });
 
   if (confirmed) {
-    // TODO: 调用确认收货 API，使用 _id
-    uni.showToast({
-      title: '收货成功',
-      icon: 'success',
-    });
-    handleRefresh();
+    try {
+      await orderStore.confirm(id);
+      uni.showToast({
+        title: '订单已完成',
+        icon: 'success',
+      });
+      handleRefresh();
+    } catch (error) {
+      console.error('确认订单失败:', error);
+    }
   }
 }
 

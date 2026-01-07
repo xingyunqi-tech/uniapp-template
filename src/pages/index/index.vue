@@ -174,7 +174,6 @@ function handleCategoryClick(item: CategoryItem) {
 
 // 时政新闻点击
 function handleNewsClick(item: NewsItem) {
-  console.log('点击新闻:', item);
   uni.showToast({ title: item.title, icon: 'none' });
 }
 

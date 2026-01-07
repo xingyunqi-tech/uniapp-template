@@ -17,5 +17,9 @@
   "uni.getClipboardData.fail": "Failed to read clipboard",
   "uni.async.error": "Connection timed out, tap screen to retry",
 
-  "common.setting": "Setting"
+  "common.setting": "Setting",
+  "settings.theme": "Theme",
+  "settings.light": "Light",
+  "settings.dark": "Dark",
+  "settings.international": "Internationalization"
 }

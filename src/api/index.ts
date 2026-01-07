@@ -58,6 +58,7 @@ export {
   loginWithPhone,
   loginWithSms,
   registerWithPhone,
+  resetPasswordByPhone,
   changePassword,
   loginWithWechat,
 } from './generated/auth/auth';

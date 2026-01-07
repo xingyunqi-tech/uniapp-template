@@ -46,6 +46,9 @@ importers:
       pinia-plugin-persistedstate:
         specifier: ^4.7.1
         version: 4.7.1(pinia@2.3.1(typescript@5.9.3)(vue@3.5.25(typescript@5.9.3)))
+      ts-md5:
+        specifier: ^2.0.1
+        version: 2.0.1
       vue:
         specifier: ^3.5.25
         version: 3.5.25(typescript@5.9.3)
@@ -11739,6 +11742,11 @@ packages:
     engines: { node: '>=18.12' }
     peerDependencies:
       typescript: '>=4.8.4'
+
+  ts-md5@2.0.1:
+    resolution:
+      { integrity: sha512-yF35FCoEOFBzOclSkMNEUbFQZuv89KEQ+5Xz03HrMSGUGB1+r+El+JiGOFwsP4p9RFNzwlrydYoTLvPOuICl9w== }
+    engines: { node: '>=18' }
 
   tsconfck@2.1.2:
     resolution:
@@ -24634,6 +24642,8 @@ snapshots:
   ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
+
+  ts-md5@2.0.1: {}
 
   tsconfck@2.1.2(typescript@5.9.3):
     optionalDependencies:

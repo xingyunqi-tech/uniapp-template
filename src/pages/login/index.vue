@@ -86,6 +86,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PHONE_LENGTH, DELAY_TIMES } from '@/constants';
+import { encryptPassword } from '@/utils';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -168,7 +169,7 @@ async function handleLogin() {
       // 密码登录
       await userStore.login({
         phone: formData.phone,
-        password: formData.password,
+        password: encryptPassword(formData.password),
       });
     } else {
       // 验证码登录

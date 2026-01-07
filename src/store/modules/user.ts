@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
 import { ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { encryptPassword } from '@/utils/crypto';
 import {
   loginWithPhone,
   loginWithSms,
@@ -12,6 +13,7 @@ import {
   getCurrentUser,
   updateCurrentUser,
   changePassword as apiChangePassword,
+  resetPasswordByPhone as apiResetPasswordByPhone,
   logout as apiLogout,
   refreshToken as apiRefreshToken,
   type User,
@@ -215,7 +217,21 @@ export const useUserStore = defineStore(
      * 修改密码
      */
     async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
-      await apiChangePassword({ oldPassword, newPassword });
+      await apiChangePassword({
+        oldPassword: encryptPassword(oldPassword),
+        newPassword: encryptPassword(newPassword),
+      });
+    }
+
+    /**
+     * 通过手机验证码重置密码
+     */
+    async function resetPasswordByPhone(phone: string, code: string, newPassword: string): Promise<void> {
+      await apiResetPasswordByPhone({
+        phone,
+        code,
+        password: encryptPassword(newPassword),
+      });
     }
 
     /**
@@ -334,6 +350,7 @@ export const useUserStore = defineStore(
       getUserInfo,
       updateUserInfo,
       changePassword,
+      resetPasswordByPhone,
       refreshToken,
       logout,
       // 权限检查

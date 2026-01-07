@@ -17,3 +17,4 @@ export * from './debounce';
 export * from './throttle';
 export * from './modal';
 export * from './toast';
+export * from './crypto';

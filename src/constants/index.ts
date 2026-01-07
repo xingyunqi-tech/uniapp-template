@@ -5,5 +5,6 @@ export * from './system';
 export * from './pages';
 export * from './form';
 export * from './order';
+export * from './payment';
 export * from './permission';
 export * from './region';
