@@ -10,5 +10,6 @@
 
 export interface AuthPhoneLoginDto {
   phone: string;
+  /** MD5 encrypted password */
   password: string;
 }

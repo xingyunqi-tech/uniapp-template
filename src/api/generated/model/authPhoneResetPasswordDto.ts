@@ -13,6 +13,6 @@ export interface AuthPhoneResetPasswordDto {
   phone: string;
   /** 短信验证码 */
   code: string;
-  /** 新密码 */
+  /** MD5 encrypted password */
   password: string;
 }

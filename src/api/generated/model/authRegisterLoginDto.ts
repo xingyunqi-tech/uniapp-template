@@ -10,6 +10,7 @@
 
 export interface AuthRegisterLoginDto {
   email: string;
+  /** MD5 encrypted password */
   password: string;
   firstName: string;
   lastName: string;

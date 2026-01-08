@@ -27,6 +27,8 @@ export const PAGES = {
   ORDER: '/pages-sub/order/list/index',
   /** 订单详情 */
   ORDER_DETAIL: '/pages-sub/order/detail/index',
+  /** 支付结果 */
+  PAYMENT_RESULT: '/pages-sub/order/payment-result/index',
 
   // ========== user 分包 ==========
   /** 地址管理 */
@@ -41,6 +43,10 @@ export const PAGES = {
   PASSWORD: '/pages-sub/user/password/index',
   /** 我的收藏 */
   FAVORITE: '/pages-sub/user/favorite/index',
+  /** 消息通知 */
+  NOTIFICATIONS: '/pages-sub/user/notifications/index',
+  /** 通知设置 */
+  NOTIFICATION_SETTINGS: '/pages-sub/user/notification-settings/index',
 
   // ========== other 分包 ==========
   /** 意见反馈 */

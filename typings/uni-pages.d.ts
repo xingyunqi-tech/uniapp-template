@@ -13,9 +13,12 @@ interface NavigateToOptions {
        "/pages/register/index" |
        "/pages-sub/order/detail/index" |
        "/pages-sub/order/list/index" |
+       "/pages-sub/order/payment-result/index" |
        "/pages-sub/user/address/index" |
        "/pages-sub/user/address-edit/index" |
        "/pages-sub/user/favorite/index" |
+       "/pages-sub/user/notification-settings/index" |
+       "/pages-sub/user/notifications/index" |
        "/pages-sub/user/password/index" |
        "/pages-sub/user/profile/index" |
        "/pages-sub/user/settings/index" |

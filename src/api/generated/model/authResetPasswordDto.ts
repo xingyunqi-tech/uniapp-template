@@ -9,6 +9,7 @@
  */
 
 export interface AuthResetPasswordDto {
+  /** MD5 encrypted password */
   password: string;
   hash: string;
 }

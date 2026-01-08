@@ -18,6 +18,8 @@ export interface AuthUpdateDto {
   gender?: number;
   birthday?: string;
   email?: string;
+  /** MD5 encrypted new password */
   password?: string;
+  /** MD5 encrypted old password */
   oldPassword?: string;
 }

@@ -26,6 +26,12 @@
       <UMenuGroup>
         <UMenuItem icon="i-carbon-document" title="我的订单" @click="handleMenuClick('order')" />
         <UMenuItem icon="i-carbon-star" title="我的收藏" @click="handleMenuClick('favorite')" />
+        <UMenuItem
+          icon="i-carbon-notification"
+          title="消息通知"
+          :badge="unreadCount"
+          @click="handleMenuClick('notifications')"
+        />
         <UMenuItem icon="i-carbon-location" title="收货地址" :border="false" @click="handleMenuClick('address')" />
       </UMenuGroup>
 
@@ -48,11 +54,13 @@
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
+import { useNotificationStore } from '@/store/modules/notification';
 import { useRouter, useStatusBar } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
+const notificationStore = useNotificationStore();
 
 // 状态栏 + 导航栏高度（避开胶囊按钮）
 const { totalHeight } = useStatusBar();
@@ -63,11 +71,17 @@ const userStore = useUserStore();
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const userInfo = computed(() => userStore.userInfo);
+const unreadCount = computed(() => {
+  const count = notificationStore.unreadCount;
+  return count > 0 ? (count > 99 ? '99+' : String(count)) : '';
+});
 
 onShow(() => {
   // 刷新用户信息
   if (isLoggedIn.value) {
     userStore.getUserInfo();
+    // 刷新未读通知数量
+    notificationStore.fetchUnreadCount();
   }
 });
 
@@ -84,7 +98,7 @@ function handleUserClick() {
 // 点击菜单项
 function handleMenuClick(type: string) {
   // 部分功能需要登录
-  const needLogin = ['favorite', 'order', 'address'];
+  const needLogin = ['favorite', 'order', 'address', 'notifications'];
   if (needLogin.includes(type) && !isLoggedIn.value) {
     uni.showToast({
       title: '请先登录',
@@ -100,6 +114,9 @@ function handleMenuClick(type: string) {
       break;
     case 'favorite':
       router.push(PAGES.FAVORITE);
+      break;
+    case 'notifications':
+      router.push(PAGES.NOTIFICATIONS);
       break;
     case 'address':
       router.push(PAGES.ADDRESS);

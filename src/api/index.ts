@@ -40,6 +40,15 @@ export {
   setDefaultAddress,
 } from './generated/addresses/addresses';
 
+export {
+  alipayControllerCreateMobilePaymentV1,
+  alipayControllerCreateWebPaymentV1,
+  alipayControllerQueryOrderV1,
+  alipayControllerRefundV1,
+  alipayControllerCloseOrderV1,
+  alipayControllerNotifyV1,
+} from './generated/alipay/alipay';
+
 export { homeControllerHealthCheck } from './generated/api/api';
 
 export {
@@ -85,7 +94,26 @@ export {
 
 export { prometheusControllerIndex } from './generated/metrics/metrics';
 
+export {
+  getNotifications,
+  getUnreadCount,
+  getNotificationSettings,
+  updateNotificationSettings,
+  getNotification,
+  deleteNotification,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from './generated/notifications/notifications';
+
 export { createUser, getUsers, getUser, updateUser, deleteUser } from './generated/users/users';
+
+export {
+  wechatPayControllerCreateJsapiPaymentV1,
+  wechatPayControllerCreateAppPaymentV1,
+  wechatPayControllerQueryOrderV1,
+  wechatPayControllerRefundV1,
+  wechatPayControllerNotifyV1,
+} from './generated/wechat/wechat';
 
 // 3. 自定义工具函数 (自动扫描 custom 目录)
 export * from './custom/external';

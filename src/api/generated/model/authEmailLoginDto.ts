@@ -10,5 +10,6 @@
 
 export interface AuthEmailLoginDto {
   email: string;
+  /** MD5 encrypted password */
   password: string;
 }

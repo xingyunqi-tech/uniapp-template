@@ -1,0 +1,402 @@
+<template>
+  <view class="notifications-page">
+    <!-- 自定义导航栏 -->
+    <UNavBar title="消息通知" :show-back="true">
+      <template #right>
+        <view class="nav-actions">
+          <text class="action-text" @tap="handleMarkAllRead">全部已读</text>
+          <text class="action-text" @tap="navigateToSettings">设置</text>
+        </view>
+      </template>
+    </UNavBar>
+
+    <!-- 内容区域 -->
+    <view class="notifications-content">
+      <!-- 筛选标签 -->
+      <view class="filter-tabs">
+        <view
+          v-for="tab in tabs"
+          :key="tab.value"
+          class="tab-item"
+          :class="{ active: activeTab === tab.value }"
+          @tap="handleTabChange(tab.value)"
+        >
+          {{ tab.label }}
+        </view>
+      </view>
+
+      <!-- 通知列表 -->
+      <scroll-view
+        class="notification-list"
+        scroll-y
+        :refresher-enabled="true"
+        :refresher-triggered="refreshing"
+        @refresherrefresh="onRefresh"
+        @scrolltolower="onLoadMore"
+      >
+        <!-- 加载中 -->
+        <ULoading v-if="loading && notifications.length === 0" />
+
+        <!-- 空状态 -->
+        <UEmpty v-else-if="notifications.length === 0" description="暂无通知" />
+
+        <!-- 通知列表 -->
+        <view v-else class="list-content">
+          <view
+            v-for="item in notifications"
+            :key="item.id"
+            class="notification-item"
+            :class="{ unread: !item.isRead }"
+            @tap="handleItemClick(item)"
+          >
+            <!-- 未读标记 -->
+            <view v-if="!item.isRead" class="unread-dot"></view>
+
+            <!-- 通知图标 -->
+            <view class="notification-icon" :class="`type-${item.type}`">
+              <uni-icons :type="getIconType(item.type) as any" size="20" color="#fff" />
+            </view>
+
+            <!-- 通知内容 -->
+            <view class="notification-content">
+              <view class="notification-header">
+                <text class="notification-title">{{ item.title }}</text>
+                <text class="notification-time">{{ formatTime(item.createdAt) }}</text>
+              </view>
+              <text class="notification-text">{{ item.content }}</text>
+            </view>
+
+            <!-- 删除按钮 -->
+            <view class="notification-actions" @tap.stop="handleDelete(item)">
+              <uni-icons type="trash" size="18" color="#969799" />
+            </view>
+          </view>
+
+          <!-- 加载更多 -->
+          <view v-if="hasMore" class="load-more">
+            <text class="load-more-text">{{ loading ? '加载中...' : '上拉加载更多' }}</text>
+          </view>
+          <view v-else-if="notifications.length > 0" class="load-more">
+            <text class="load-more-text">没有更多了</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
+import { useNotificationStore } from '@/store/modules/notification';
+import type { Notification } from '@/api';
+import { formatRelativeTime } from '@/utils/datetime';
+
+// ==================== Store ====================
+const notificationStore = useNotificationStore();
+
+// ==================== 状态 ====================
+const activeTab = ref<string>('all');
+const refreshing = ref(false);
+
+const tabs = [
+  { label: '全部', value: 'all' },
+  { label: '系统', value: 'SYSTEM' },
+  { label: '订单', value: 'ORDER' },
+  { label: '活动', value: 'ACTIVITY' },
+];
+
+// ==================== 计算属性 ====================
+const notifications = computed(() => notificationStore.notifications);
+const loading = computed(() => notificationStore.loading);
+const hasMore = computed(() => notificationStore.hasMore);
+
+// ==================== 生命周期 ====================
+onMounted(() => {
+  loadNotifications();
+});
+
+onShow(() => {
+  // 刷新未读数量
+  notificationStore.fetchUnreadCount();
+});
+
+// ==================== 方法 ====================
+
+/**
+ * 加载通知列表
+ */
+async function loadNotifications() {
+  const params = activeTab.value === 'all' ? {} : { category: activeTab.value as any };
+  await notificationStore.fetchNotifications(params);
+}
+
+/**
+ * 下拉刷新
+ */
+async function onRefresh() {
+  refreshing.value = true;
+  const params = activeTab.value === 'all' ? {} : { category: activeTab.value as any };
+  await notificationStore.refresh(params);
+  refreshing.value = false;
+}
+
+/**
+ * 加载更多
+ */
+async function onLoadMore() {
+  if (!hasMore.value || loading.value) return;
+  const params = activeTab.value === 'all' ? {} : { category: activeTab.value as any };
+  await notificationStore.loadMore(params);
+}
+
+/**
+ * 切换标签
+ */
+async function handleTabChange(value: string) {
+  if (activeTab.value === value) return;
+  activeTab.value = value;
+  notificationStore.currentPage = 1;
+  await loadNotifications();
+}
+
+/**
+ * 点击通知项
+ */
+async function handleItemClick(item: Notification) {
+  // 标记为已读
+  if (!item.isRead) {
+    await notificationStore.markAsRead(String(item.id));
+  }
+
+  // 根据通知类型跳转到不同页面
+  if (item.metadata?.url) {
+    uni.navigateTo({ url: item.metadata.url as any });
+  }
+}
+
+/**
+ * 删除通知
+ */
+function handleDelete(item: Notification) {
+  uni.showModal({
+    title: '提示',
+    content: '确定要删除这条通知吗？',
+    success: async res => {
+      if (res.confirm) {
+        await notificationStore.removeNotification(String(item.id));
+      }
+    },
+  });
+}
+
+/**
+ * 全部已读
+ */
+function handleMarkAllRead() {
+  if (notifications.value.every(n => n.isRead)) {
+    uni.showToast({ title: '已全部已读', icon: 'none' });
+    return;
+  }
+
+  uni.showModal({
+    title: '提示',
+    content: '确定要标记全部通知为已读吗？',
+    success: async res => {
+      if (res.confirm) {
+        await notificationStore.markAllAsRead();
+      }
+    },
+  });
+}
+
+/**
+ * 跳转到设置页面
+ */
+function navigateToSettings() {
+  uni.navigateTo({ url: '/pages-sub/user/notification-settings/index' as any });
+}
+
+/**
+ * 获取图标类型
+ */
+function getIconType(type: string): string {
+  const iconMap: Record<string, string> = {
+    SYSTEM: 'notification',
+    ORDER: 'cart',
+    ACTIVITY: 'gift',
+    ANNOUNCEMENT: 'sound',
+  };
+  return iconMap[type] || 'notification';
+}
+
+/**
+ * 格式化时间
+ */
+function formatTime(time: string): string {
+  return formatRelativeTime(time);
+}
+</script>
+
+<style lang="scss" scoped>
+.notifications-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-grey);
+}
+
+.notifications-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 24rpx;
+
+  .action-text {
+    color: var(--color-primary);
+    font-size: 28rpx;
+  }
+}
+
+.filter-tabs {
+  display: flex;
+  flex-shrink: 0;
+  padding: 20rpx 32rpx;
+  border-bottom: 1rpx solid var(--color-border);
+  background: var(--color-bg);
+  gap: 24rpx;
+
+  .tab-item {
+    padding: 12rpx 24rpx;
+    transition: all 0.3s;
+    border-radius: 8rpx;
+    color: var(--color-text-secondary);
+    font-size: 28rpx;
+
+    &.active {
+      background: rgb(25 137 250 / 0.1);
+      color: var(--color-primary);
+    }
+  }
+}
+
+.notification-list {
+  flex: 1;
+  height: 0;
+  overflow: hidden;
+}
+
+.list-content {
+  padding: 20rpx 0;
+}
+
+.notification-item {
+  display: flex;
+  position: relative;
+  align-items: flex-start;
+  margin-bottom: 2rpx;
+  padding: 24rpx 32rpx;
+  background: var(--color-bg);
+
+  &.unread {
+    background: rgb(25 137 250 / 0.05);
+  }
+
+  .unread-dot {
+    position: absolute;
+    top: 28rpx;
+    left: 16rpx;
+    width: 12rpx;
+    height: 12rpx;
+    border-radius: 50%;
+    background: var(--color-error);
+  }
+
+  .notification-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 72rpx;
+    height: 72rpx;
+    margin-right: 24rpx;
+    border-radius: 50%;
+
+    &.type-SYSTEM {
+      background: var(--color-primary);
+    }
+
+    &.type-ORDER {
+      background: var(--color-warning);
+    }
+
+    &.type-ACTIVITY {
+      background: var(--color-success);
+    }
+
+    &.type-ANNOUNCEMENT {
+      background: var(--color-error);
+    }
+  }
+
+  .notification-content {
+    flex: 1;
+    min-width: 0;
+
+    .notification-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12rpx;
+
+      .notification-title {
+        flex: 1;
+        overflow: hidden;
+        color: var(--color-text);
+        font-size: 30rpx;
+        font-weight: 500;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .notification-time {
+        flex-shrink: 0;
+        margin-left: 16rpx;
+        color: var(--color-text-secondary);
+        font-size: 24rpx;
+      }
+    }
+
+    .notification-text {
+      display: -webkit-box;
+      overflow: hidden;
+      color: var(--color-text-secondary);
+      font-size: 28rpx;
+      line-height: 1.6;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  .notification-actions {
+    flex-shrink: 0;
+    margin-left: 24rpx;
+    padding: 8rpx;
+  }
+}
+
+.load-more {
+  padding: 32rpx;
+  text-align: center;
+
+  .load-more-text {
+    color: var(--color-text-secondary);
+    font-size: 28rpx;
+  }
+}
+</style>

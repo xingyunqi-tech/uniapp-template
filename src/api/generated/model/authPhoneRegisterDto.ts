@@ -12,6 +12,7 @@ export interface AuthPhoneRegisterDto {
   phone: string;
   /** SMS verification code (optional, required for code-based registration) */
   code?: string;
+  /** MD5 encrypted password */
   password: string;
   nickname?: string;
 }
