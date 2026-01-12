@@ -29,10 +29,6 @@
           </view>
         </view>
         <view class="info-row">
-          <text class="label">订单类型</text>
-          <text class="value">{{ order.type }}</text>
-        </view>
-        <view class="info-row">
           <text class="label">创建时间</text>
           <text class="value">{{ formatTime(order.createdAt) }}</text>
         </view>
@@ -40,49 +36,47 @@
           <text class="label">支付时间</text>
           <text class="value">{{ formatTime(order.paidAt) }}</text>
         </view>
-        <view v-if="order.completedAt" class="info-row">
-          <text class="label">完成时间</text>
-          <text class="value">{{ formatTime(order.completedAt) }}</text>
+        <view v-if="order.paymentChannel" class="info-row">
+          <text class="label">支付渠道</text>
+          <text class="value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
         </view>
-      </view>
-
-      <!-- 订单项列表 -->
-      <view class="items-card">
-        <view class="card-title">订单项</view>
-        <view v-for="item in order.items" :key="item.id" class="item-row">
-          <image v-if="item.image" class="item-image" :src="item.image" mode="aspectFill" />
-          <view class="item-info">
-            <text class="item-name">{{ item.name }}</text>
-            <text v-if="item.spec" class="item-spec">{{ item.spec }}</text>
-            <view class="item-price-row">
-              <text class="item-price">¥{{ item.price }}</text>
-              <text class="item-quantity">x{{ item.quantity }}</text>
-            </view>
+        <view v-if="order.transactionId" class="info-row">
+          <text class="label">交易号</text>
+          <view class="value-row">
+            <text class="value">{{ order.transactionId }}</text>
+            <text class="copy-btn" @click="handleCopy(order.transactionId)">复制</text>
           </view>
-          <text class="item-subtotal">¥{{ item.subtotal }}</text>
+        </view>
+        <view v-if="order.refundedAt" class="info-row">
+          <text class="label">退款时间</text>
+          <text class="value">{{ formatTime(order.refundedAt) }}</text>
+        </view>
+        <view v-if="order.closedAt" class="info-row">
+          <text class="label">关闭时间</text>
+          <text class="value">{{ formatTime(order.closedAt) }}</text>
         </view>
       </view>
 
       <!-- 金额明细 -->
       <view class="amount-card">
+        <view class="card-title">金额明细</view>
         <view class="amount-row">
           <text class="label">订单总额</text>
-          <text class="value">¥{{ order.totalAmount }}</text>
+          <text class="value">¥{{ formatAmount(order.totalAmount) }}</text>
         </view>
-        <view v-if="order.discountAmount" class="amount-row">
-          <text class="label">优惠金额</text>
-          <text class="value discount">-¥{{ order.discountAmount }}</text>
-        </view>
-        <view class="amount-row total">
+        <view v-if="order.paidAmount" class="amount-row total">
           <text class="label">实付金额</text>
-          <text class="value">¥{{ order.paidAmount }}</text>
+          <text class="value">¥{{ formatAmount(order.paidAmount) }}</text>
         </view>
       </view>
 
-      <!-- 备注 -->
-      <view v-if="order.remark" class="remark-card">
-        <view class="card-title">备注</view>
-        <text class="remark-text">{{ order.remark }}</text>
+      <!-- 元数据 -->
+      <view v-if="order.metadata && Object.keys(order.metadata).length > 0" class="metadata-card">
+        <view class="card-title">附加信息</view>
+        <view v-for="(value, key) in order.metadata" :key="key" class="info-row">
+          <text class="label">{{ key }}</text>
+          <text class="value">{{ value }}</text>
+        </view>
       </view>
     </scroll-view>
 
@@ -90,7 +84,6 @@
     <view v-if="order" class="footer-actions">
       <button v-if="canCancel" class="action-btn cancel" @click="handleCancel">取消订单</button>
       <button v-if="canPay" class="action-btn primary" @click="handlePay">立即支付</button>
-      <button v-if="canConfirm" class="action-btn primary" @click="handleConfirm">确认完成</button>
       <button v-if="canDelete" class="action-btn" @click="handleDelete">删除订单</button>
     </view>
   </view>
@@ -100,9 +93,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
-import { ORDER_STATUS, getOrderStatusText, getOrderStatusClass } from '@/constants';
+import { OrderStatus, getOrderStatusText, getOrderStatusClass } from '@/constants';
 import { confirm } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
+import type { OrderPaymentChannel } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
@@ -113,19 +107,14 @@ const loading = ref(false);
 const order = computed(() => orderStore.currentOrder);
 
 // 是否可以取消
-const canCancel = computed(() => order.value?.status === ORDER_STATUS.PENDING);
+const canCancel = computed(() => order.value?.status === OrderStatus.UNPAID);
 
 // 是否可以支付
-const canPay = computed(() => order.value?.status === ORDER_STATUS.PENDING);
+const canPay = computed(() => order.value?.status === OrderStatus.UNPAID);
 
-// 是否可以确认完成
-const canConfirm = computed(
-  () => order.value?.status === ORDER_STATUS.PAID || order.value?.status === ORDER_STATUS.SHIPPED,
-);
-
-// 是否可以删除
+// 是否可以删除（已关闭或已退款的订单）
 const canDelete = computed(
-  () => order.value?.status === ORDER_STATUS.COMPLETED || order.value?.status === ORDER_STATUS.CANCELLED,
+  () => order.value?.status === OrderStatus.CLOSED || order.value?.status === OrderStatus.REFUNDED,
 );
 
 onLoad(options => {
@@ -152,6 +141,20 @@ async function loadOrderDetail() {
 // 格式化时间
 function formatTime(time: string): string {
   return formatDateTime(time);
+}
+
+// 格式化金额（分转元）
+function formatAmount(amount: number): string {
+  return (amount / 100).toFixed(2);
+}
+
+// 获取支付渠道文本
+function getPaymentChannelText(channel: OrderPaymentChannel): string {
+  const channelMap: Record<string, string> = {
+    wechat: '微信支付',
+    alipay: '支付宝',
+  };
+  return channelMap[channel] || channel;
 }
 
 // 复制订单号
@@ -189,24 +192,6 @@ function handlePay() {
     icon: 'none',
   });
   // TODO: 跳转到支付页面
-}
-
-// 确认完成
-async function handleConfirm() {
-  const confirmed = await confirm({
-    title: '提示',
-    content: '确认订单已完成？',
-  });
-
-  if (confirmed) {
-    try {
-      await orderStore.confirm(orderId.value);
-      uni.showToast({ title: '订单已完成', icon: 'success' });
-      loadOrderDetail();
-    } catch (error) {
-      console.error('确认订单失败:', error);
-    }
-  }
 }
 
 // 删除订单
@@ -289,9 +274,8 @@ async function handleDelete() {
 
 // 信息卡片
 .info-card,
-.items-card,
 .amount-card,
-.remark-card {
+.metadata-card {
   margin-bottom: 24rpx;
   padding: 24rpx;
   border-radius: var(--radius-lg);
@@ -338,65 +322,6 @@ async function handleDelete() {
   }
 }
 
-// 订单项
-.item-row {
-  display: flex;
-  gap: 20rpx;
-  padding: 20rpx 0;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--color-border-light);
-  }
-
-  .item-image {
-    flex-shrink: 0;
-    width: 120rpx;
-    height: 120rpx;
-    border-radius: var(--radius-base);
-    background: var(--color-bg-grey);
-  }
-
-  .item-info {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 8rpx;
-
-    .item-name {
-      color: var(--color-text);
-      font-size: 28rpx;
-    }
-
-    .item-spec {
-      color: var(--color-text-secondary);
-      font-size: 24rpx;
-    }
-
-    .item-price-row {
-      display: flex;
-      align-items: center;
-      gap: 16rpx;
-
-      .item-price {
-        color: var(--color-error);
-        font-size: 26rpx;
-      }
-
-      .item-quantity {
-        color: var(--color-text-secondary);
-        font-size: 24rpx;
-      }
-    }
-  }
-
-  .item-subtotal {
-    flex-shrink: 0;
-    color: var(--color-text);
-    font-size: 28rpx;
-    font-weight: 500;
-  }
-}
-
 // 金额明细
 .amount-row {
   display: flex;
@@ -412,10 +337,6 @@ async function handleDelete() {
   .value {
     color: var(--color-text);
     font-size: 26rpx;
-
-    &.discount {
-      color: var(--color-error);
-    }
   }
 
   &.total {
@@ -434,13 +355,6 @@ async function handleDelete() {
       font-weight: 600;
     }
   }
-}
-
-// 备注
-.remark-text {
-  color: var(--color-text-secondary);
-  font-size: 26rpx;
-  line-height: 1.6;
 }
 
 // 底部操作栏

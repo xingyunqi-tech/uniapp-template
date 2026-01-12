@@ -1,74 +1,59 @@
 /**
  * 订单相关常量
+ *
+ * 注意: 订单状态直接从 API 导入，确保与后端保持一致
  */
 
-/**
- * 订单状态枚举
- */
-export const ORDER_STATUS = {
-  /** 待付款 */
-  PENDING: 'pending',
-  /** 待发货 */
-  PAID: 'paid',
-  /** 待收货 */
-  SHIPPED: 'shipped',
-  /** 已完成 */
-  COMPLETED: 'completed',
-  /** 已取消 */
-  CANCELLED: 'cancelled',
-} as const;
+import { OrderStatus } from '@/api';
 
-export type OrderStatusType = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS];
+// 重导出 API 类型，供其他模块使用
+export { OrderStatus };
+export type OrderStatusType = OrderStatus;
 
 /**
  * 订单状态配置映射
  */
 export const ORDER_STATUS_MAP: Record<
-  OrderStatusType,
+  OrderStatus,
   {
     text: string;
     class: string;
     icon?: string;
   }
 > = {
-  [ORDER_STATUS.PENDING]: {
+  [OrderStatus.UNPAID]: {
     text: '待付款',
     class: 'warning',
     icon: 'i-carbon-time',
   },
-  [ORDER_STATUS.PAID]: {
-    text: '待发货',
-    class: 'info',
-    icon: 'i-carbon-delivery-parcel',
-  },
-  [ORDER_STATUS.SHIPPED]: {
-    text: '待收货',
-    class: 'primary',
-    icon: 'i-carbon-delivery-truck',
-  },
-  [ORDER_STATUS.COMPLETED]: {
-    text: '已完成',
+  [OrderStatus.PAID]: {
+    text: '已付款',
     class: 'success',
-    icon: 'i-carbon-checkmark-outline',
+    icon: 'i-carbon-checkmark',
   },
-  [ORDER_STATUS.CANCELLED]: {
-    text: '已取消',
+  [OrderStatus.REFUNDED]: {
+    text: '已退款',
+    class: 'info',
+    icon: 'i-carbon-undo',
+  },
+  [OrderStatus.CLOSED]: {
+    text: '已关闭',
     class: 'disabled',
-    icon: 'i-carbon-close-outline',
+    icon: 'i-carbon-close',
   },
 };
 
 /**
  * 获取订单状态文本
  */
-export function getOrderStatusText(status: OrderStatusType): string {
+export function getOrderStatusText(status: OrderStatus): string {
   return ORDER_STATUS_MAP[status]?.text ?? '未知状态';
 }
 
 /**
  * 获取订单状态样式类
  */
-export function getOrderStatusClass(status: OrderStatusType): string {
+export function getOrderStatusClass(status: OrderStatus): string {
   return ORDER_STATUS_MAP[status]?.class ?? '';
 }
 
@@ -77,8 +62,7 @@ export function getOrderStatusClass(status: OrderStatusType): string {
  */
 export const ORDER_TABS = [
   { label: '全部', value: 'all' },
-  { label: '待付款', value: ORDER_STATUS.PENDING },
-  { label: '待发货', value: ORDER_STATUS.PAID },
-  { label: '待收货', value: ORDER_STATUS.SHIPPED },
-  { label: '已完成', value: ORDER_STATUS.COMPLETED },
+  { label: '待付款', value: OrderStatus.UNPAID },
+  { label: '已付款', value: OrderStatus.PAID },
+  { label: '已退款', value: OrderStatus.REFUNDED },
 ] as const;

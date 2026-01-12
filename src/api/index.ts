@@ -105,6 +105,25 @@ export {
   markNotificationAsRead,
 } from './generated/notifications/notifications';
 
+export {
+  ordersControllerCreateV1,
+  ordersControllerFindAllV1,
+  ordersControllerFindOneV1,
+  ordersControllerCancelV1,
+} from './generated/orders/orders';
+
+export {
+  createShare,
+  getShares,
+  getShareByCode,
+  getShareById,
+  deleteShare,
+  getShareStats,
+  trackShare,
+  getWeChatConfig,
+  getAlipayConfig,
+} from './generated/shares/shares';
+
 export { createUser, getUsers, getUser, updateUser, deleteUser } from './generated/users/users';
 
 export {

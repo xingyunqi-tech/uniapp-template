@@ -26,7 +26,12 @@
       </UEmpty>
 
       <!-- 订单卡片 -->
-      <view v-for="order in orderList" :key="order.id" class="order-card" @click="handleOrderDetail(order.id)">
+      <view
+        v-for="order in orderList"
+        :key="orderStore.getOrderIdString(order.id)"
+        class="order-card"
+        @click="handleOrderDetail(orderStore.getOrderIdString(order.id))"
+      >
         <view class="order-header">
           <text class="order-no">订单号：{{ order.orderNo }}</text>
           <text class="order-status" :class="getOrderStatusClass(order.status)">{{
@@ -34,61 +39,40 @@
           }}</text>
         </view>
 
-        <view class="order-goods">
-          <view v-for="item in order.items.slice(0, 2)" :key="item.id" class="goods-item">
-            <image v-if="item.image" class="goods-image" :src="item.image" mode="aspectFill" />
-            <view class="goods-info">
-              <text class="goods-name">{{ item.name }}</text>
-              <text v-if="item.spec" class="goods-spec">{{ item.spec }}</text>
-              <view class="goods-price-row">
-                <text class="goods-price">¥{{ item.price }}</text>
-                <text class="goods-count">x{{ item.quantity }}</text>
-              </view>
-            </view>
+        <view class="order-info">
+          <view class="info-row">
+            <text class="info-label">订单金额</text>
+            <text class="info-value price">¥{{ formatAmount(order.totalAmount) }}</text>
           </view>
-          <view v-if="order.items.length > 2" class="goods-more"> 共 {{ order.items.length }} 件 </view>
+          <view v-if="order.paidAmount" class="info-row">
+            <text class="info-label">已付金额</text>
+            <text class="info-value">¥{{ formatAmount(order.paidAmount) }}</text>
+          </view>
+          <view class="info-row">
+            <text class="info-label">下单时间</text>
+            <text class="info-value">{{ formatTime(order.createdAt) }}</text>
+          </view>
+          <view v-if="order.paymentChannel" class="info-row">
+            <text class="info-label">支付渠道</text>
+            <text class="info-value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
+          </view>
         </view>
 
         <view class="order-footer">
-          <view class="order-total">
-            <text class="total-label">合计：</text>
-            <text class="total-price">¥{{ order.paidAmount }}</text>
-          </view>
           <view class="order-actions">
             <button
-              v-if="order.status === ORDER_STATUS.PENDING"
+              v-if="order.status === OrderStatus.UNPAID"
               class="action-btn cancel"
-              @click.stop="handleCancel(order.id)"
+              @click.stop="handleCancel(orderStore.getOrderIdString(order.id))"
             >
               取消订单
             </button>
             <button
-              v-if="order.status === ORDER_STATUS.PENDING"
+              v-if="order.status === OrderStatus.UNPAID"
               class="action-btn primary"
-              @click.stop="handlePay(order.id)"
+              @click.stop="handlePay(orderStore.getOrderIdString(order.id))"
             >
               立即支付
-            </button>
-            <button
-              v-if="order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.SHIPPED"
-              class="action-btn primary"
-              @click.stop="handleConfirm(order.id)"
-            >
-              确认收货
-            </button>
-            <button
-              v-if="order.status === ORDER_STATUS.COMPLETED"
-              class="action-btn"
-              @click.stop="handleReview(order.id)"
-            >
-              评价
-            </button>
-            <button
-              v-if="order.status === ORDER_STATUS.COMPLETED"
-              class="action-btn"
-              @click.stop="handleBuyAgain(order.id)"
-            >
-              再次购买
             </button>
           </view>
         </view>
@@ -106,8 +90,9 @@ import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm } from '@/utils';
 import type { LoadMoreStatus, TabItem } from '@/components';
-import { ORDER_STATUS, ORDER_TABS, getOrderStatusText, getOrderStatusClass } from '@/constants';
+import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass } from '@/constants';
 import { PAGES } from '@/constants';
+import type { OrderPaymentChannel } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
@@ -123,8 +108,6 @@ const tabs = ref<TabItem[]>(
 
 const currentTab = ref('all');
 const refreshing = ref(false);
-const page = ref(1);
-const pageSize = ref(10);
 const noMore = ref(false);
 
 // 使用 Store 中的数据
@@ -152,12 +135,7 @@ async function loadStats() {
     // 更新 badge
     tabs.value = tabs.value.map(tab => ({
       ...tab,
-      badge:
-        tab.value === ORDER_STATUS.PENDING
-          ? stats.pendingCount
-          : tab.value === ORDER_STATUS.SHIPPED
-            ? stats.processingCount
-            : 0,
+      badge: tab.value === OrderStatus.UNPAID ? stats.unpaidCount : 0,
     }));
   } catch (error) {
     console.error('加载订单统计失败:', error);
@@ -166,22 +144,18 @@ async function loadStats() {
 
 // 切换标签
 function handleTabChange(_tab: TabItem) {
-  page.value = 1;
   noMore.value = false;
-  loadOrders();
+  loadOrders(true);
 }
 
 // 加载订单
-async function loadOrders() {
+async function loadOrders(refresh = false) {
   try {
-    const response = await orderStore.fetchOrderList({
-      status: currentTab.value as any,
-      page: page.value,
-      pageSize: pageSize.value,
-    });
+    const status = currentTab.value === 'all' ? undefined : (currentTab.value as any);
+    await orderStore.fetchOrderList({ status, limit: 10 }, refresh);
 
     // 判断是否还有更多数据
-    noMore.value = response.list.length < pageSize.value || response.list.length >= response.total;
+    noMore.value = !orderStore.hasMore;
   } catch (error) {
     console.error('加载订单列表失败:', error);
     uni.showToast({
@@ -195,17 +169,15 @@ async function loadOrders() {
 
 // 下拉刷新
 function handleRefresh() {
-  page.value = 1;
   noMore.value = false;
   refreshing.value = true;
-  loadOrders();
+  loadOrders(true);
 }
 
 // 加载更多
 function handleLoadMore() {
   if (loading.value || noMore.value) return;
-  page.value++;
-  loadOrders();
+  loadOrders(false);
 }
 
 // 订单详情
@@ -244,48 +216,31 @@ function handlePay(id: string) {
   });
 }
 
-// 确认收货
-async function handleConfirm(id: string) {
-  const confirmed = await confirm({
-    title: '提示',
-    content: '确认订单已完成？',
-  });
-
-  if (confirmed) {
-    try {
-      await orderStore.confirm(id);
-      uni.showToast({
-        title: '订单已完成',
-        icon: 'success',
-      });
-      handleRefresh();
-    } catch (error) {
-      console.error('确认订单失败:', error);
-    }
-  }
-}
-
-// 评价
-function handleReview(id: string) {
-  uni.showToast({
-    title: `评价订单 ${id}`,
-    icon: 'none',
-  });
-}
-
-// 再次购买
-function handleBuyAgain(id: string) {
-  uni.showToast({
-    title: `再次购买 ${id}`,
-    icon: 'none',
-  });
-}
-
 // 去逛逛
 function handleGoShopping() {
   uni.switchTab({
     url: '/pages/index/index',
   });
+}
+
+// 格式化金额（分转元）
+function formatAmount(amount: number): string {
+  return (amount / 100).toFixed(2);
+}
+
+// 格式化时间
+function formatTime(time: string): string {
+  const date = new Date(time);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+// 获取支付渠道文本
+function getPaymentChannelText(channel: OrderPaymentChannel): string {
+  const channelMap: Record<string, string> = {
+    wechat: '微信支付',
+    alipay: '支付宝',
+  };
+  return channelMap[channel] || channel;
 }
 </script>
 
@@ -367,97 +322,43 @@ function handleGoShopping() {
     }
   }
 
-  .order-goods {
+  .order-info {
     padding: 20rpx 0;
 
-    .goods-item {
+    .info-row {
       display: flex;
-      gap: 20rpx;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12rpx;
 
-      &:not(:last-child) {
-        margin-bottom: 20rpx;
+      &:last-child {
+        margin-bottom: 0;
       }
 
-      .goods-image {
-        flex-shrink: 0;
-        width: 160rpx;
-        height: 160rpx;
-        border-radius: var(--radius-base);
-        background: var(--color-bg-grey);
+      .info-label {
+        color: var(--color-text-secondary);
+        font-size: 26rpx;
       }
 
-      .goods-info {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        gap: 8rpx;
+      .info-value {
+        color: var(--color-text);
+        font-size: 26rpx;
 
-        .goods-name {
-          display: -webkit-box;
-          overflow: hidden;
-          color: var(--color-text);
-          font-size: 28rpx;
-          line-height: 1.4;
-          text-overflow: ellipsis;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-        }
-
-        .goods-spec {
-          color: var(--color-text-secondary);
-          font-size: 24rpx;
-        }
-
-        .goods-price-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-top: auto;
-
-          .goods-price {
-            color: var(--color-error);
-            font-size: 28rpx;
-            font-weight: 500;
-          }
-
-          .goods-count {
-            color: var(--color-text-secondary);
-            font-size: 24rpx;
-          }
+        &.price {
+          color: var(--color-error);
+          font-size: 32rpx;
+          font-weight: 600;
         }
       }
-    }
-
-    .goods-more {
-      padding-top: 16rpx;
-      color: var(--color-text-secondary);
-      font-size: 24rpx;
-      text-align: center;
     }
   }
 
   .order-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding-top: 20rpx;
     border-top: 1px solid var(--color-border-light);
-
-    .order-total {
-      display: flex;
-      align-items: baseline;
-
-      .total-label {
-        color: var(--color-text-secondary);
-        font-size: 26rpx;
-      }
-
-      .total-price {
-        color: var(--color-error);
-        font-size: 32rpx;
-        font-weight: 600;
-      }
-    }
 
     .order-actions {
       display: flex;

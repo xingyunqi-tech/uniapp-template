@@ -9,7 +9,8 @@ export default defineConfig({
   api: {
     // 输入：OpenAPI 文档（使用后端在线 API）
     input: {
-      target: 'http://localhost:3000/docs-json',
+      // target: 'http://localhost:3000/docs-json',
+      target: 'https://api.sunweijie.top/docs-json',
       // 使用 transformer 根据 API 路径自动生成英文 tag
       override: {
         transformer: './scripts/api/transform-openapi.ts',

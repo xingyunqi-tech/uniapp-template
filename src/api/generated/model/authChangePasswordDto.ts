@@ -9,6 +9,8 @@
  */
 
 export interface AuthChangePasswordDto {
+  /** MD5 encrypted old password */
   oldPassword: string;
+  /** MD5 encrypted new password */
   newPassword: string;
 }

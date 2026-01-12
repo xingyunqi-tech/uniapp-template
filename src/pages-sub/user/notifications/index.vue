@@ -89,7 +89,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useNotificationStore } from '@/store/modules/notification';
-import type { Notification } from '@/api';
+import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
 
 // ==================== Store ====================
@@ -101,9 +101,10 @@ const refreshing = ref(false);
 
 const tabs = [
   { label: '全部', value: 'all' },
-  { label: '系统', value: 'SYSTEM' },
-  { label: '订单', value: 'ORDER' },
-  { label: '活动', value: 'ACTIVITY' },
+  { label: '系统', value: NotificationCategory.SYSTEM },
+  { label: '订单', value: NotificationCategory.ORDER },
+  { label: '支付', value: NotificationCategory.PAYMENT },
+  { label: '活动', value: NotificationCategory.ACTIVITY },
 ];
 
 // ==================== 计算属性 ====================
@@ -222,10 +223,11 @@ function navigateToSettings() {
  */
 function getIconType(type: string): string {
   const iconMap: Record<string, string> = {
-    SYSTEM: 'notification',
-    ORDER: 'cart',
-    ACTIVITY: 'gift',
-    ANNOUNCEMENT: 'sound',
+    [NotificationCategory.SYSTEM]: 'notification',
+    [NotificationCategory.ORDER]: 'cart',
+    [NotificationCategory.PAYMENT]: 'wallet',
+    [NotificationCategory.PROMOTION]: 'medal',
+    [NotificationCategory.ACTIVITY]: 'gift',
   };
   return iconMap[type] || 'notification';
 }
@@ -339,7 +341,11 @@ function formatTime(time: string): string {
       background: var(--color-success);
     }
 
-    &.type-ANNOUNCEMENT {
+    &.type-PAYMENT {
+      background: var(--color-primary);
+    }
+
+    &.type-PROMOTION {
       background: var(--color-error);
     }
   }

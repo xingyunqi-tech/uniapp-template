@@ -100,7 +100,7 @@ export const useNotificationStore = defineStore('notification', () => {
    */
   async function fetchNotificationDetail(id: string) {
     try {
-      const detail = await getNotification(id);
+      const detail = await getNotification(Number(id));
 
       // 更新本地列表中的通知
       const index = notifications.value.findIndex(n => n.id === Number(id));
@@ -120,7 +120,7 @@ export const useNotificationStore = defineStore('notification', () => {
    */
   async function markAsRead(id: string) {
     try {
-      const result = await markNotificationAsRead(id);
+      const result = await markNotificationAsRead(Number(id));
 
       if (result) {
         // 更新本地状态
@@ -169,7 +169,7 @@ export const useNotificationStore = defineStore('notification', () => {
    */
   async function removeNotification(id: string) {
     try {
-      await deleteNotification(id);
+      await deleteNotification(Number(id));
 
       // 从本地列表中移除
       const index = notifications.value.findIndex(n => n.id === Number(id));

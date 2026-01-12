@@ -49,13 +49,13 @@ export const updateNotificationSettings = (updateNotificationSettingsDto: Update
 /**
  * @summary 获取通知详情
  */
-export const getNotification = (id: string) => {
+export const getNotification = (id: number) => {
   return customMutator<Notification>({ url: `/api/v1/notifications/${id}`, method: 'GET' });
 };
 /**
  * @summary 删除通知
  */
-export const deleteNotification = (id: string) => {
+export const deleteNotification = (id: number) => {
   return customMutator<void>({ url: `/api/v1/notifications/${id}`, method: 'DELETE' });
 };
 /**
@@ -67,7 +67,7 @@ export const markAllNotificationsAsRead = () => {
 /**
  * @summary 标记通知为已读
  */
-export const markNotificationAsRead = (id: string) => {
+export const markNotificationAsRead = (id: number) => {
   return customMutator<Notification>({ url: `/api/v1/notifications/${id}/read`, method: 'PATCH' });
 };
 export type GetNotificationsResult = NonNullable<Awaited<ReturnType<typeof getNotifications>>>;

@@ -1,74 +1,41 @@
 /**
  * 订单状态管理
+ *
+ * 使用 Orval 自动生成的 API 进行订单管理
  */
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { ORDER_STATUS, type OrderStatusType } from '@/constants';
+import {
+  ordersControllerCreateV1,
+  ordersControllerFindAllV1,
+  ordersControllerFindOneV1,
+  ordersControllerCancelV1,
+  type Order,
+  type CreateOrderDto,
+  type OrdersControllerFindAllV1Params,
+  OrderStatus,
+} from '@/api';
 
-// TODO: 等待后端 OpenAPI 文档生成后，使用 Orval 自动生成以下 API
-// import {
-//   getOrderList,
-//   getOrderDetail,
-//   createOrder,
-//   cancelOrder,
-//   confirmOrder,
-//   deleteOrder,
-//   getOrderStats,
-//   type Order,
-//   type OrderListParams,
-//   type CreateOrderParams,
-//   type OrderStats,
-// } from '@/api';
-
-// 临时类型定义（等待 Orval 生成后删除）
-export interface OrderItem {
-  id: string;
-  name: string;
-  image?: string;
-  spec?: string;
-  price: number;
-  quantity: number;
-  subtotal: number;
-}
-
-export interface Order {
-  id: string;
-  orderNo: string;
-  status: OrderStatusType;
-  type: string;
-  title: string;
-  items: OrderItem[];
-  totalAmount: number;
-  paidAmount: number;
-  discountAmount?: number;
-  remark?: string;
-  createdAt: string;
-  paidAt?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-  extra?: Record<string, any>;
-}
-
-export interface OrderListParams {
-  status?: OrderStatusType | 'all';
-  type?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface CreateOrderParams {
-  type: string;
-  title: string;
-  items: Omit<OrderItem, 'id' | 'subtotal'>[];
-  remark?: string;
-  extra?: Record<string, any>;
-}
-
+/**
+ * 订单统计数据
+ */
 export interface OrderStats {
-  pendingCount: number;
-  processingCount: number;
-  completedCount: number;
+  unpaidCount: number;
+  paidCount: number;
+  refundedCount: number;
+  closedCount: number;
+}
+
+/**
+ * 分页响应结构
+ */
+interface PaginatedOrderResponse {
+  data: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export const useOrderStore = defineStore('order', () => {
@@ -76,47 +43,64 @@ export const useOrderStore = defineStore('order', () => {
   const orderList = ref<Order[]>([]);
   const currentOrder = ref<Order | null>(null);
   const stats = ref<OrderStats>({
-    pendingCount: 0,
-    processingCount: 0,
-    completedCount: 0,
+    unpaidCount: 0,
+    paidCount: 0,
+    refundedCount: 0,
+    closedCount: 0,
   });
   const loading = ref(false);
   const total = ref(0);
+  const currentPage = ref(1);
+  const hasMore = ref(true);
 
   // ==================== Getters ====================
-  const pendingOrders = computed(() => orderList.value.filter(order => order.status === ORDER_STATUS.PENDING));
+  const unpaidOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.UNPAID));
 
-  const processingOrders = computed(() =>
-    orderList.value.filter(order => order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.SHIPPED),
-  );
+  const paidOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.PAID));
 
-  const completedOrders = computed(() => orderList.value.filter(order => order.status === ORDER_STATUS.COMPLETED));
+  const refundedOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.REFUNDED));
+
+  const closedOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.CLOSED));
 
   // ==================== Actions ====================
 
   /**
    * 获取订单列表
    */
-  async function fetchOrderList(params: OrderListParams = {}) {
+  async function fetchOrderList(params: OrdersControllerFindAllV1Params = {}, refresh = false) {
+    if (refresh) {
+      currentPage.value = 1;
+      hasMore.value = true;
+    }
+
+    if (!hasMore.value && !refresh) {
+      return { data: orderList.value, total: total.value };
+    }
+
     loading.value = true;
     try {
-      // TODO: 等待 Orval 生成 API 后替换
-      // const response = await getOrderList(params);
-      // orderList.value = response.list;
-      // total.value = response.total;
-      // return response;
+      const response = (await ordersControllerFindAllV1({
+        ...params,
+        page: currentPage.value,
+        limit: params.limit ?? 10,
+      })) as unknown as PaginatedOrderResponse;
 
-      // 临时模拟数据
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const mockResponse = {
-        list: [] as Order[],
-        total: 0,
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? 10,
-      };
-      orderList.value = mockResponse.list;
-      total.value = mockResponse.total;
-      return mockResponse;
+      const newOrders = response.data || [];
+
+      if (refresh || currentPage.value === 1) {
+        orderList.value = newOrders;
+      } else {
+        orderList.value = [...orderList.value, ...newOrders];
+      }
+
+      total.value = response.total || 0;
+      hasMore.value = currentPage.value < (response.totalPages || 1);
+
+      if (hasMore.value) {
+        currentPage.value++;
+      }
+
+      return response;
     } finally {
       loading.value = false;
     }
@@ -128,26 +112,9 @@ export const useOrderStore = defineStore('order', () => {
   async function fetchOrderDetail(orderId: string) {
     loading.value = true;
     try {
-      // TODO: 等待 Orval 生成 API 后替换
-      // const order = await getOrderDetail(orderId);
-      // currentOrder.value = order;
-      // return order;
-
-      // 临时模拟数据
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const mockOrder: Order = {
-        id: orderId,
-        orderNo: '202401010001',
-        status: ORDER_STATUS.PENDING,
-        type: 'service',
-        title: '示例订单',
-        items: [],
-        totalAmount: 0,
-        paidAmount: 0,
-        createdAt: new Date().toISOString(),
-      };
-      currentOrder.value = mockOrder;
-      return mockOrder;
+      const order = await ordersControllerFindOneV1(orderId);
+      currentOrder.value = order;
+      return order;
     } finally {
       loading.value = false;
     }
@@ -156,98 +123,62 @@ export const useOrderStore = defineStore('order', () => {
   /**
    * 创建订单
    */
-  async function create(params: CreateOrderParams) {
-    // TODO: 等待 Orval 生成 API 后替换
-    // const order = await createOrder(params);
-    // orderList.value.unshift(order);
-    // total.value++;
-    // return order;
-
-    // 临时模拟数据
-    const mockOrder: Order = {
-      id: Date.now().toString(),
-      orderNo: `ORD${Date.now()}`,
-      status: ORDER_STATUS.PENDING,
-      type: params.type,
-      title: params.title,
-      items: params.items.map((item, index) => ({
-        ...item,
-        id: `item-${index}`,
-        subtotal: item.price * item.quantity,
-      })),
-      totalAmount: params.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      paidAmount: params.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      remark: params.remark,
-      createdAt: new Date().toISOString(),
-      extra: params.extra,
-    };
-    orderList.value.unshift(mockOrder);
+  async function create(params: CreateOrderDto) {
+    const order = await ordersControllerCreateV1(params);
+    orderList.value.unshift(order);
     total.value++;
-    return mockOrder;
+    return order;
+  }
+
+  /**
+   * 获取订单 ID 字符串
+   * OrderId 可能是对象或字符串，统一转为字符串
+   */
+  function getOrderIdString(id: Order['id']): string {
+    if (typeof id === 'string') return id;
+    if (typeof id === 'number') return String(id);
+    // 对象类型，尝试获取 id 属性或转为 JSON
+    if (id && typeof id === 'object') {
+      if ('id' in id) return String(id.id);
+      return JSON.stringify(id);
+    }
+    return String(id);
   }
 
   /**
    * 取消订单
    */
-  async function cancel(orderId: string, reason?: string) {
-    // TODO: 等待 Orval 生成 API 后替换
-    // await cancelOrder(orderId, reason);
-    console.log('取消订单:', orderId, reason);
+  async function cancel(orderId: string) {
+    await ordersControllerCancelV1(orderId);
 
     // 更新列表中的订单状态
-    const order = orderList.value.find(o => o.id === orderId);
+    const order = orderList.value.find(o => getOrderIdString(o.id) === orderId);
     if (order) {
-      order.status = ORDER_STATUS.CANCELLED;
-      order.cancelledAt = new Date().toISOString();
+      order.status = OrderStatus.CLOSED;
+      order.closedAt = new Date().toISOString();
     }
+
     // 更新当前订单
-    if (currentOrder.value?.id === orderId) {
-      currentOrder.value.status = ORDER_STATUS.CANCELLED;
-      currentOrder.value.cancelledAt = new Date().toISOString();
+    if (currentOrder.value && getOrderIdString(currentOrder.value.id) === orderId) {
+      currentOrder.value.status = OrderStatus.CLOSED;
+      currentOrder.value.closedAt = new Date().toISOString();
     }
+
     // 刷新统计
     await fetchStats();
   }
 
   /**
-   * 确认完成订单
+   * 删除订单（从列表中移除）
    */
-  async function confirm(orderId: string) {
-    // TODO: 等待 Orval 生成 API 后替换
-    // await confirmOrder(orderId);
-    console.log('确认订单:', orderId);
-
-    // 更新列表中的订单状态
-    const order = orderList.value.find(o => o.id === orderId);
-    if (order) {
-      order.status = ORDER_STATUS.COMPLETED;
-      order.completedAt = new Date().toISOString();
-    }
-    // 更新当前订单
-    if (currentOrder.value?.id === orderId) {
-      currentOrder.value.status = ORDER_STATUS.COMPLETED;
-      currentOrder.value.completedAt = new Date().toISOString();
-    }
-    // 刷新统计
-    await fetchStats();
-  }
-
-  /**
-   * 删除订单
-   */
-  async function remove(orderId: string) {
-    // TODO: 等待 Orval 生成 API 后替换
-    // await deleteOrder(orderId);
-    console.log('删除订单:', orderId);
-
-    // 从列表中移除
-    const index = orderList.value.findIndex(o => o.id === orderId);
+  function remove(orderId: string) {
+    const index = orderList.value.findIndex(o => getOrderIdString(o.id) === orderId);
     if (index > -1) {
       orderList.value.splice(index, 1);
       total.value--;
     }
-    // 清空当前订单
-    if (currentOrder.value?.id === orderId) {
+
+    if (currentOrder.value && getOrderIdString(currentOrder.value.id) === orderId) {
       currentOrder.value = null;
     }
   }
@@ -256,19 +187,15 @@ export const useOrderStore = defineStore('order', () => {
    * 获取订单统计
    */
   async function fetchStats() {
-    // TODO: 等待 Orval 生成 API 后替换
-    // const data = await getOrderStats();
-    // stats.value = data;
-    // return data;
-
-    // 临时模拟数据
-    const mockStats: OrderStats = {
-      pendingCount: 0,
-      processingCount: 0,
-      completedCount: 0,
+    // 基于当前列表计算统计数据
+    // 如果后端有专门的统计接口，可以替换为 API 调用
+    stats.value = {
+      unpaidCount: orderList.value.filter(o => o.status === OrderStatus.UNPAID).length,
+      paidCount: orderList.value.filter(o => o.status === OrderStatus.PAID).length,
+      refundedCount: orderList.value.filter(o => o.status === OrderStatus.REFUNDED).length,
+      closedCount: orderList.value.filter(o => o.status === OrderStatus.CLOSED).length,
     };
-    stats.value = mockStats;
-    return mockStats;
+    return stats.value;
   }
 
   /**
@@ -277,6 +204,8 @@ export const useOrderStore = defineStore('order', () => {
   function clearOrderList() {
     orderList.value = [];
     total.value = 0;
+    currentPage.value = 1;
+    hasMore.value = true;
   }
 
   /**
@@ -286,6 +215,20 @@ export const useOrderStore = defineStore('order', () => {
     currentOrder.value = null;
   }
 
+  /**
+   * 重置 Store
+   */
+  function reset() {
+    clearOrderList();
+    clearCurrentOrder();
+    stats.value = {
+      unpaidCount: 0,
+      paidCount: 0,
+      refundedCount: 0,
+      closedCount: 0,
+    };
+  }
+
   return {
     // State
     orderList,
@@ -293,19 +236,24 @@ export const useOrderStore = defineStore('order', () => {
     stats,
     loading,
     total,
+    currentPage,
+    hasMore,
     // Getters
-    pendingOrders,
-    processingOrders,
-    completedOrders,
+    unpaidOrders,
+    paidOrders,
+    refundedOrders,
+    closedOrders,
     // Actions
     fetchOrderList,
     fetchOrderDetail,
     create,
     cancel,
-    confirm,
     remove,
     fetchStats,
     clearOrderList,
     clearCurrentOrder,
+    reset,
+    // Utils
+    getOrderIdString,
   };
 });
