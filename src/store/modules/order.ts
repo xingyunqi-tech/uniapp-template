@@ -7,13 +7,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import {
-  ordersControllerCreateV1,
-  ordersControllerFindAllV1,
-  ordersControllerFindOneV1,
-  ordersControllerCancelV1,
+  createOrder,
+  getOrders,
+  getOrder,
+  cancelOrder,
   type Order,
   type CreateOrderDto,
-  type OrdersControllerFindAllV1Params,
+  type GetOrdersParams,
   OrderStatus,
 } from '@/api';
 
@@ -67,7 +67,7 @@ export const useOrderStore = defineStore('order', () => {
   /**
    * 获取订单列表
    */
-  async function fetchOrderList(params: OrdersControllerFindAllV1Params = {}, refresh = false) {
+  async function fetchOrderList(params: GetOrdersParams = {}, refresh = false) {
     if (refresh) {
       currentPage.value = 1;
       hasMore.value = true;
@@ -79,7 +79,7 @@ export const useOrderStore = defineStore('order', () => {
 
     loading.value = true;
     try {
-      const response = (await ordersControllerFindAllV1({
+      const response = (await getOrders({
         ...params,
         page: currentPage.value,
         limit: params.limit ?? 10,
@@ -112,7 +112,7 @@ export const useOrderStore = defineStore('order', () => {
   async function fetchOrderDetail(orderId: string) {
     loading.value = true;
     try {
-      const order = await ordersControllerFindOneV1(orderId);
+      const order = await getOrder(orderId);
       currentOrder.value = order;
       return order;
     } finally {
@@ -124,7 +124,7 @@ export const useOrderStore = defineStore('order', () => {
    * 创建订单
    */
   async function create(params: CreateOrderDto) {
-    const order = await ordersControllerCreateV1(params);
+    const order = await createOrder(params);
     orderList.value.unshift(order);
     total.value++;
     return order;
@@ -149,7 +149,7 @@ export const useOrderStore = defineStore('order', () => {
    * 取消订单
    */
   async function cancel(orderId: string) {
-    await ordersControllerCancelV1(orderId);
+    await cancelOrder(orderId);
 
     // 更新列表中的订单状态
     const order = orderList.value.find(o => getOrderIdString(o.id) === orderId);

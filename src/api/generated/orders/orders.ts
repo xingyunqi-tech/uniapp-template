@@ -7,14 +7,14 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateOrderDto, Order, OrdersControllerFindAllV1Params, PaginationResponseDto } from '.././model';
+import type { CreateOrderDto, GetOrdersParams, Order, PaginationResponseDto } from '.././model';
 
 import { customMutator } from '../../core/mutator';
 
 /**
- * @summary Create a new order
+ * @summary 创建订单
  */
-export const ordersControllerCreateV1 = (createOrderDto: CreateOrderDto) => {
+export const createOrder = (createOrderDto: CreateOrderDto) => {
   return customMutator<Order>({
     url: `/api/v1/orders`,
     method: 'POST',
@@ -23,24 +23,24 @@ export const ordersControllerCreateV1 = (createOrderDto: CreateOrderDto) => {
   });
 };
 /**
- * @summary Get user orders with pagination
+ * @summary 获取订单列表
  */
-export const ordersControllerFindAllV1 = (params?: OrdersControllerFindAllV1Params) => {
+export const getOrders = (params?: GetOrdersParams) => {
   return customMutator<PaginationResponseDto>({ url: `/api/v1/orders`, method: 'GET', params });
 };
 /**
- * @summary Get order by ID
+ * @summary 获取订单详情
  */
-export const ordersControllerFindOneV1 = (id: string) => {
+export const getOrder = (id: string) => {
   return customMutator<Order>({ url: `/api/v1/orders/${id}`, method: 'GET' });
 };
 /**
- * @summary Cancel an unpaid order
+ * @summary 取消未支付订单
  */
-export const ordersControllerCancelV1 = (id: string) => {
+export const cancelOrder = (id: string) => {
   return customMutator<void>({ url: `/api/v1/orders/${id}`, method: 'DELETE' });
 };
-export type OrdersControllerCreateV1Result = NonNullable<Awaited<ReturnType<typeof ordersControllerCreateV1>>>;
-export type OrdersControllerFindAllV1Result = NonNullable<Awaited<ReturnType<typeof ordersControllerFindAllV1>>>;
-export type OrdersControllerFindOneV1Result = NonNullable<Awaited<ReturnType<typeof ordersControllerFindOneV1>>>;
-export type OrdersControllerCancelV1Result = NonNullable<Awaited<ReturnType<typeof ordersControllerCancelV1>>>;
+export type CreateOrderResult = NonNullable<Awaited<ReturnType<typeof createOrder>>>;
+export type GetOrdersResult = NonNullable<Awaited<ReturnType<typeof getOrders>>>;
+export type GetOrderResult = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
+export type CancelOrderResult = NonNullable<Awaited<ReturnType<typeof cancelOrder>>>;

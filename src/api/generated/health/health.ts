@@ -7,32 +7,28 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type {
-  HealthControllerCheckV1200,
-  HealthControllerLivenessV1200,
-  HealthControllerReadinessV1200,
-} from '.././model';
+import type { HealthCheck200, LivenessProbe200, ReadinessProbe200 } from '.././model';
 
 import { customMutator } from '../../core/mutator';
 
 /**
- * @summary Health check endpoint
+ * @summary 健康检查
  */
-export const healthControllerCheckV1 = () => {
-  return customMutator<HealthControllerCheckV1200>({ url: `/api/v1/health`, method: 'GET' });
+export const healthCheck = () => {
+  return customMutator<HealthCheck200>({ url: `/api/v1/health`, method: 'GET' });
 };
 /**
- * @summary Liveness probe for Kubernetes
+ * @summary 存活探针（Kubernetes）
  */
-export const healthControllerLivenessV1 = () => {
-  return customMutator<HealthControllerLivenessV1200>({ url: `/api/v1/health/live`, method: 'GET' });
+export const livenessProbe = () => {
+  return customMutator<LivenessProbe200>({ url: `/api/v1/health/live`, method: 'GET' });
 };
 /**
- * @summary Readiness probe for Kubernetes
+ * @summary 就绪探针（Kubernetes）
  */
-export const healthControllerReadinessV1 = () => {
-  return customMutator<HealthControllerReadinessV1200>({ url: `/api/v1/health/ready`, method: 'GET' });
+export const readinessProbe = () => {
+  return customMutator<ReadinessProbe200>({ url: `/api/v1/health/ready`, method: 'GET' });
 };
-export type HealthControllerCheckV1Result = NonNullable<Awaited<ReturnType<typeof healthControllerCheckV1>>>;
-export type HealthControllerLivenessV1Result = NonNullable<Awaited<ReturnType<typeof healthControllerLivenessV1>>>;
-export type HealthControllerReadinessV1Result = NonNullable<Awaited<ReturnType<typeof healthControllerReadinessV1>>>;
+export type HealthCheckResult = NonNullable<Awaited<ReturnType<typeof healthCheck>>>;
+export type LivenessProbeResult = NonNullable<Awaited<ReturnType<typeof livenessProbe>>>;
+export type ReadinessProbeResult = NonNullable<Awaited<ReturnType<typeof readinessProbe>>>;

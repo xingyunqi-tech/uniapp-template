@@ -1,3 +1,12 @@
+<route lang="json5">
+{
+  style: {
+    navigationBarTitleText: '消息通知',
+    navigationStyle: 'custom',
+  },
+}
+</route>
+
 <template>
   <view class="notifications-page">
     <!-- 自定义导航栏 -->

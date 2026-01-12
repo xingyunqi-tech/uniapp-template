@@ -14,6 +14,9 @@ export interface Address {
   userId: number;
   name: string;
   phone: string;
+  provinceCode?: string;
+  cityCode?: string;
+  districtCode?: string;
   province: string;
   city: string;
   district: string;

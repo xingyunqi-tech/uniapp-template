@@ -49,7 +49,7 @@ export {
   alipayControllerNotifyV1,
 } from './generated/alipay/alipay';
 
-export { homeControllerHealthCheck } from './generated/api/api';
+export { simpleHealthCheck } from './generated/api/api';
 
 export {
   loginWithEmail,
@@ -72,7 +72,7 @@ export {
   loginWithWechat,
 } from './generated/auth/auth';
 
-export { homeControllerAppInfo } from './generated/default/default';
+export { getAppInfo } from './generated/default/default';
 
 export {
   createFavorite,
@@ -86,11 +86,7 @@ export { createFeedback, getFeedbacks, getFeedback } from './generated/feedbacks
 
 export { uploadFile } from './generated/files/files';
 
-export {
-  healthControllerCheckV1,
-  healthControllerLivenessV1,
-  healthControllerReadinessV1,
-} from './generated/health/health';
+export { healthCheck, livenessProbe, readinessProbe } from './generated/health/health';
 
 export { prometheusControllerIndex } from './generated/metrics/metrics';
 
@@ -105,12 +101,16 @@ export {
   markNotificationAsRead,
 } from './generated/notifications/notifications';
 
+export { createOrder, getOrders, getOrder, cancelOrder } from './generated/orders/orders';
+
 export {
-  ordersControllerCreateV1,
-  ordersControllerFindAllV1,
-  ordersControllerFindOneV1,
-  ordersControllerCancelV1,
-} from './generated/orders/orders';
+  getProvinces,
+  getCities,
+  getDistricts,
+  getRegionByCode,
+  getRegionTree,
+  queryRegions,
+} from './generated/regions/regions';
 
 export {
   createShare,

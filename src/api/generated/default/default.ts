@@ -9,7 +9,10 @@
  */
 import { customMutator } from '../../core/mutator';
 
-export const homeControllerAppInfo = () => {
+/**
+ * @summary 获取应用信息
+ */
+export const getAppInfo = () => {
   return customMutator<void>({ url: `/`, method: 'GET' });
 };
-export type HomeControllerAppInfoResult = NonNullable<Awaited<ReturnType<typeof homeControllerAppInfo>>>;
+export type GetAppInfoResult = NonNullable<Awaited<ReturnType<typeof getAppInfo>>>;

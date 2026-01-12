@@ -9,11 +9,22 @@
  */
 
 export interface CreateAddressDto {
+  /** 收件人姓名 */
   name: string;
+  /** 手机号码 */
   phone: string;
-  province: string;
-  city: string;
-  district: string;
+  /** 省份区划代码（12位），提供后自动填充省份名称 */
+  provinceCode?: string;
+  /** 城市区划代码（12位），提供后自动填充城市名称 */
+  cityCode?: string;
+  /** 区县区划代码（12位），提供后自动填充区县名称 */
+  districtCode?: string;
+  /** 省份名称（提供区划代码时可省略） */
+  province?: string;
+  /** 城市名称（提供区划代码时可省略） */
+  city?: string;
+  /** 区县名称（提供区划代码时可省略） */
+  district?: string;
   address: string;
   isDefault?: boolean;
 }

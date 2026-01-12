@@ -7,11 +7,14 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { HomeControllerHealthCheck200 } from '.././model';
+import type { SimpleHealthCheck200 } from '.././model';
 
 import { customMutator } from '../../core/mutator';
 
-export const homeControllerHealthCheck = () => {
-  return customMutator<HomeControllerHealthCheck200>({ url: `/api/health`, method: 'GET' });
+/**
+ * @summary 简单健康检查
+ */
+export const simpleHealthCheck = () => {
+  return customMutator<SimpleHealthCheck200>({ url: `/api/health`, method: 'GET' });
 };
-export type HomeControllerHealthCheckResult = NonNullable<Awaited<ReturnType<typeof homeControllerHealthCheck>>>;
+export type SimpleHealthCheckResult = NonNullable<Awaited<ReturnType<typeof simpleHealthCheck>>>;

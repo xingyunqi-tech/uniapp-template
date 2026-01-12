@@ -11,6 +11,12 @@
 export interface UpdateAddressDto {
   name?: string;
   phone?: string;
+  /** Province region code (12 digits) */
+  provinceCode?: string;
+  /** City region code (12 digits) */
+  cityCode?: string;
+  /** District region code (12 digits) */
+  districtCode?: string;
   province?: string;
   city?: string;
   district?: string;

@@ -19,23 +19,16 @@
           <input v-model="formData.phone" type="number" placeholder="请输入手机号" :maxlength="11" />
         </UFormItem>
 
-        <!-- #ifdef MP-WEIXIN || MP-ALIPAY || APP -->
-        <picker mode="region" :value="regionValue" @change="handleRegionChange">
-          <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
-        </picker>
-        <!-- #endif -->
-
-        <!-- #ifdef H5 -->
+        <!-- 统一使用 uni-data-picker，各平台使用相同的 API 数据 -->
         <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
         <uni-data-picker
-          :localdata="regionData"
+          :localdata="regionStore.regionTree"
           popup-title="请选择所在地区"
           :value="regionPickerValue"
-          @change="handleDataPickerChange"
+          @change="handleRegionChange"
         >
           <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
         </uni-data-picker>
-        <!-- #endif -->
 
         <UFormItem label="详细地址" required :border="false">
           <textarea
@@ -77,21 +70,20 @@ import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
-// #ifdef H5
-import { regionData } from '@/constants';
-// #endif
+import { useRegionStore } from '@/store/modules/region';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
+const regionStore = useRegionStore();
 
-// 表单数据
+// 表单数据（province/city/district 存储行政区划代码）
 const formData = reactive({
   id: 0,
   name: '',
   phone: '',
-  province: '',
-  city: '',
-  district: '',
+  province: '', // 省级代码
+  city: '', // 市级代码
+  district: '', // 区级代码
   address: '',
   isDefault: false,
 });
@@ -102,37 +94,30 @@ const isEdit = ref(false);
 // 保存状态
 const saving = ref(false);
 
-// 地区文本
+// 地区文本（将编码转换为名称显示）
 const regionText = computed(() => {
   if (formData.province && formData.city && formData.district) {
-    return `${formData.province} ${formData.city} ${formData.district}`;
+    const names = regionStore.codesToNamesSync(formData.province, formData.city, formData.district);
+    return `${names.province} ${names.city} ${names.district}`;
   }
   return '';
 });
 
-// 地区选择器值 (小程序用)
-const regionValue = computed(() => {
-  if (formData.province && formData.city && formData.district) {
-    return [formData.province, formData.city, formData.district];
-  }
-  return [];
-});
-
-// #ifdef H5
-// 地区选择器值 (H5 用 uni-data-picker)
+// 地区选择器值 (uni-data-picker 使用编码数组)
 const regionPickerValue = computed((): UniDataPickerValueArray => {
   if (formData.province && formData.city && formData.district) {
     return [formData.province, formData.city, formData.district];
   }
   return [];
 });
-// #endif
 
-onLoad(options => {
+onLoad(async options => {
+  // 预加载地区树形数据（所有平台统一）
+  await regionStore.fetchRegionTree();
+
   if (options?.id) {
     isEdit.value = true;
     loadAddressDetail(Number(options.id));
-    // 动态设置页面标题
     uni.setNavigationBarTitle({ title: '编辑地址' });
   } else {
     uni.setNavigationBarTitle({ title: '新增地址' });
@@ -147,11 +132,17 @@ async function loadAddressDetail(id: number) {
       formData.id = address.id;
       formData.name = address.name;
       formData.phone = address.phone;
-      formData.province = address.province;
-      formData.city = address.city;
-      formData.district = address.district;
+      // 优先使用区划代码，兼容旧数据使用名称
+      formData.province = address.provinceCode || address.province;
+      formData.city = address.cityCode || address.city;
+      formData.district = address.districtCode || address.district;
       formData.address = address.address;
       formData.isDefault = address.isDefault;
+
+      // 如果使用了区划代码，预加载对应的名称到缓存
+      if (address.provinceCode && address.cityCode && address.districtCode) {
+        await regionStore.codesToNames(address.provinceCode, address.cityCode, address.districtCode);
+      }
     }
   } catch (error) {
     console.error('加载地址详情失败:', error);
@@ -162,31 +153,20 @@ async function loadAddressDetail(id: number) {
   }
 }
 
-// 地区选择变更 (小程序用)
-function handleRegionChange(e: { detail: { value: string[] } }) {
-  const [province, city, district] = e.detail.value;
-  formData.province = province;
-  formData.city = city;
-  formData.district = district;
-}
-
-// #ifdef H5
-// 地区选择变更 (H5 用 uni-data-picker)
+// 地区选择变更 (uni-data-picker 直接返回编码)
 interface DataPickerChangeEvent {
   detail: {
     value: Array<{ value: string; text: string }>;
   };
 }
-function handleDataPickerChange(e: DataPickerChangeEvent) {
+function handleRegionChange(e: DataPickerChangeEvent) {
   const values = e.detail.value;
   if (values && values.length >= 3) {
-    // 正常三级：省/市/区
-    formData.province = values[0].text;
-    formData.city = values[1].text;
-    formData.district = values[2].text;
+    formData.province = values[0].value;
+    formData.city = values[1].value;
+    formData.district = values[2].value;
   }
 }
-// #endif
 
 // 设置默认
 function handleDefaultChange(checked: boolean) {
@@ -225,12 +205,13 @@ async function handleSave() {
   saving.value = true;
 
   try {
+    // 使用区划代码保存，后端会自动填充名称
     const addressData = {
       name: formData.name,
       phone: formData.phone,
-      province: formData.province,
-      city: formData.city,
-      district: formData.district,
+      provinceCode: formData.province,
+      cityCode: formData.city,
+      districtCode: formData.district,
       address: formData.address,
       isDefault: formData.isDefault,
     };
