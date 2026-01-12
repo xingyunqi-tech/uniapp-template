@@ -6,6 +6,7 @@ export * from './modules/address';
 export * from './modules/favorite';
 export * from './modules/feedback';
 export * from './modules/order';
+export * from './modules/share';
 export * from './plugins/persist';
 
 export default createPersistedPinia();

@@ -335,3 +335,27 @@ export function supportsNFC(): boolean {
 export function supportsShareTimeline(): boolean {
   return isWeixin();
 }
+
+/** 分享平台类型（用于 API） */
+export type SharePlatformType = 'WECHAT' | 'ALIPAY' | 'H5' | 'APP';
+
+/**
+ * 获取分享平台标识（用于 API 调用）
+ * 返回大写格式：WECHAT, ALIPAY, H5, APP
+ */
+export function getSharePlatform(): SharePlatformType {
+  // #ifdef MP-WEIXIN
+  return 'WECHAT';
+  // #endif
+  // #ifdef MP-ALIPAY
+  return 'ALIPAY';
+  // #endif
+  // #ifdef H5
+  return 'H5';
+  // #endif
+  // #ifdef APP-PLUS
+  return 'APP';
+  // #endif
+
+  return 'H5';
+}

@@ -8,6 +8,7 @@ export * from './usePasswordStrength';
 export * from './useSendSms';
 export * from './useAsyncAction';
 export * from './useShare';
+export * from './useShareTracking';
 export * from './useForm';
 export * from './useDebounce';
 export * from './useThrottle';

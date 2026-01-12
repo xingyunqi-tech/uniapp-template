@@ -1,9 +1,12 @@
 /**
  * 分享功能 Composable
- * 用于配置页面分享到朋友和朋友圈
+ * 用于配置页面分享到朋友和朋友圈，并对接后端 API 追踪分享数据
  */
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
+import { useShareStore } from '@/store';
+import { getSharePlatform } from '@/utils/platform';
+import type { ShareTargetType, Share } from '@/api';
 
 /** 分享参数接口 */
 export interface ShareParams {
@@ -42,6 +45,12 @@ export interface UseShareOptions {
   enableTimeline?: boolean;
   /** 分享前回调（可用于埋点） */
   onBeforeShare?: (from: ShareFrom, target?: ShareTarget) => void;
+  /** 是否启用 API 追踪（需要登录） */
+  enableTracking?: boolean;
+  /** 分享目标类型（启用追踪时必填） */
+  targetType?: ShareTargetType;
+  /** 分享目标 ID（启用追踪时必填） */
+  targetId?: string;
 }
 
 /**
@@ -72,11 +81,22 @@ function buildSharePath(path?: string, query?: Record<string, string | number>):
  *
  * @example
  * ```ts
- * // 基础用法
+ * // 基础用法（无追踪）
  * useShare({
  *   defaultShare: {
  *     title: '分享标题',
  *     imageUrl: '/static/share.png'
+ *   }
+ * })
+ *
+ * // 带 API 追踪的分享
+ * const { shareCode, shareUrl } = useShare({
+ *   enableTracking: true,
+ *   targetType: 'PRODUCT',
+ *   targetId: '12345',
+ *   defaultShare: {
+ *     title: '推荐一个好商品',
+ *     imageUrl: productImage
  *   }
  * })
  *
@@ -92,10 +112,65 @@ function buildSharePath(path?: string, query?: Record<string, string | number>):
  * ```
  */
 export function useShare(options: UseShareOptions = {}) {
-  const { defaultShare = {}, friendShare = {}, timelineShare = {}, enableTimeline = true, onBeforeShare } = options;
+  const {
+    defaultShare = {},
+    friendShare = {},
+    timelineShare = {},
+    enableTimeline = true,
+    onBeforeShare,
+    enableTracking = false,
+    targetType,
+    targetId,
+  } = options;
+
+  const shareStore = useShareStore();
 
   /** 当前分享参数（可动态修改） */
   const shareParams = ref<ShareParams>({ ...defaultShare });
+
+  /** 分享记录（仅启用追踪时有值） */
+  const shareRecord = ref<Share | null>(null);
+
+  /** 分享码 */
+  const shareCode = computed(() => shareRecord.value?.shareCode || '');
+
+  /** 分享链接（包含分享码） */
+  const shareUrl = computed(() => {
+    const query = { ...shareParams.value.query };
+    if (shareCode.value) {
+      query.sc = shareCode.value;
+    }
+    return buildSharePath(shareParams.value.path, query);
+  });
+
+  /** 是否正在加载 */
+  const loading = computed(() => shareStore.loading);
+
+  /**
+   * 创建分享记录（获取分享码）
+   */
+  async function createShareRecord(): Promise<Share | null> {
+    if (!enableTracking || !targetType || !targetId) {
+      return null;
+    }
+
+    try {
+      const share = await shareStore.createShareRecord({
+        targetType,
+        targetId,
+        platform: getSharePlatform(),
+        title: shareParams.value.title || '',
+        description: shareParams.value.desc,
+        image: shareParams.value.imageUrl,
+        url: shareUrl.value,
+      });
+      shareRecord.value = share;
+      return share;
+    } catch (error) {
+      console.error('创建分享记录失败:', error);
+      return null;
+    }
+  }
 
   /**
    * 设置分享参数（用于动态更新分享内容）
@@ -112,6 +187,13 @@ export function useShare(options: UseShareOptions = {}) {
     shareParams.value = { ...defaultShare };
   }
 
+  // 启用追踪时，组件挂载后创建分享记录
+  if (enableTracking && targetType && targetId) {
+    onMounted(() => {
+      createShareRecord();
+    });
+  }
+
   // 分享给朋友
   onShareAppMessage((res): Page.CustomShareContent => {
     const from = res.from as ShareFrom;
@@ -123,9 +205,15 @@ export function useShare(options: UseShareOptions = {}) {
     // 合并分享参数
     const params = { ...shareParams.value, ...friendShare };
 
+    // 构建分享路径（包含分享码）
+    const query = { ...params.query };
+    if (shareCode.value) {
+      query.sc = shareCode.value;
+    }
+
     return {
       title: params.title || '',
-      path: buildSharePath(params.path, params.query),
+      path: buildSharePath(params.path, query),
       imageUrl: params.imageUrl,
     };
   });
@@ -140,13 +228,17 @@ export function useShare(options: UseShareOptions = {}) {
       // 合并分享参数
       const params = { ...shareParams.value, ...timelineShare };
 
+      // 构建查询参数（包含分享码）
+      const query = { ...params.query };
+      if (shareCode.value) {
+        query.sc = shareCode.value;
+      }
+
       return {
         title: params.title || '',
-        query: params.query
-          ? Object.entries(params.query)
-              .map(([key, value]) => `${key}=${value}`)
-              .join('&')
-          : '',
+        query: Object.entries(query)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('&'),
         imageUrl: params.imageUrl,
       };
     });
@@ -156,10 +248,20 @@ export function useShare(options: UseShareOptions = {}) {
   return {
     /** 当前分享参数 */
     shareParams,
+    /** 分享记录 */
+    shareRecord,
+    /** 分享码 */
+    shareCode,
+    /** 分享链接 */
+    shareUrl,
+    /** 加载状态 */
+    loading,
     /** 设置分享参数 */
     setShareParams,
     /** 重置分享参数 */
     resetShareParams,
+    /** 创建分享记录 */
+    createShareRecord,
   };
 }
 
