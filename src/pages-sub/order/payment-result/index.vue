@@ -92,6 +92,7 @@ function handleBackHome() {
 <style lang="scss" scoped>
 .payment-result-page {
   display: flex;
+  box-sizing: border-box;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;

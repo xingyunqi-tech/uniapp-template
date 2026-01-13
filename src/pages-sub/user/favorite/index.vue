@@ -103,6 +103,7 @@ function handleRemove(item: Favorite) {
 
 <style scoped lang="scss">
 .favorite-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding: 24rpx;
   background: var(--color-bg-grey);

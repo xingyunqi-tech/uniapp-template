@@ -102,6 +102,7 @@ function goBack() {
 <style scoped lang="scss">
 .error-page {
   display: flex;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
