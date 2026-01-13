@@ -142,23 +142,32 @@ const backIconColor = computed(() => {
 // ==================== Lifecycle ====================
 
 onMounted(() => {
-  const windowInfo = uni.getWindowInfo();
-  statusBarHeight.value = `${windowInfo.statusBarHeight || 20}px`;
+  // 使用同步 API 避免闪烁
+  const systemInfo = uni.getSystemInfoSync();
 
-  // #ifdef MP-WEIXIN
-  // 微信小程序获取胶囊按钮位置
-  const menuButtonInfo = uni.getMenuButtonBoundingClientRect?.();
-  if (menuButtonInfo) {
-    // 导航栏高度 = 胶囊按钮高度 + 上下边距
-    const navHeight = (menuButtonInfo.top - (windowInfo.statusBarHeight || 0)) * 2 + menuButtonInfo.height;
-    navBarHeight.value = `${navHeight}px`;
-  }
-  // #endif
+  // 默认状态栏高度
+  statusBarHeight.value = `${systemInfo.statusBarHeight || 20}px`;
 
   // #ifdef MP-ALIPAY
-  // 支付宝小程序：固定导航栏高度为 48px（支付宝标准高度）
-  // 支付宝小程序没有胶囊按钮，但状态栏高度可能不同
+  // 支付宝小程序：根据 transparentTitle 判断原生导航栏是否透明
+  const transparentTitle = (systemInfo as { transparentTitle?: boolean }).transparentTitle;
+  if (transparentTitle) {
+    // 原生导航栏透明，需要自己处理状态栏占位
+    statusBarHeight.value = `${systemInfo.safeArea?.top || systemInfo.statusBarHeight || 25}px`;
+  } else {
+    // 原生导航栏存在，不需要状态栏占位（页面已从导航栏下方开始）
+    statusBarHeight.value = '0px';
+  }
   navBarHeight.value = '48px';
+  // #endif
+
+  // #ifdef MP-WEIXIN
+  // 微信小程序：根据胶囊按钮计算导航栏高度
+  const menuButtonInfo = uni.getMenuButtonBoundingClientRect?.();
+  if (menuButtonInfo) {
+    const navHeight = (menuButtonInfo.top - (systemInfo.statusBarHeight || 0)) * 2 + menuButtonInfo.height;
+    navBarHeight.value = `${navHeight}px`;
+  }
   // #endif
 });
 
