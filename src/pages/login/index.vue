@@ -85,7 +85,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PHONE_LENGTH, DELAY_TIMES } from '@/constants';
+import { PAGES, PHONE_LENGTH, DELAY_TIMES } from '@/constants';
 import { encryptPassword } from '@/utils';
 
 const globalStore = useGlobalStore();
@@ -130,7 +130,7 @@ function navigateAfterLogin() {
   if (redirectUrl) {
     router.replace(redirectUrl);
   } else {
-    router.switchTab('/pages/index/index');
+    router.switchTab(PAGES.HOME);
   }
 }
 
@@ -251,12 +251,12 @@ async function handleWechatLogin(e: any) {
 
 // 跳转注册页
 function goToRegister() {
-  router.push('/pages/register/index');
+  router.push(PAGES.REGISTER);
 }
 
 // 跳转忘记密码页
 function goToForgotPassword() {
-  router.push('/pages/forgot-password/index');
+  router.push(PAGES.FORGOT_PASSWORD);
 }
 </script>
 

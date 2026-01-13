@@ -91,7 +91,7 @@ import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES, PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 
@@ -170,7 +170,7 @@ async function handleSave() {
     setTimeout(() => {
       userStore.logout();
       uni.reLaunch({
-        url: '/pages/login/index',
+        url: PAGES.LOGIN,
       });
     }, DELAY_TIMES.LONG);
   } catch {

@@ -41,7 +41,7 @@
 
     <!-- 右侧箭头 -->
     <template v-if="showArrow" #right>
-      <uni-icons type="arrow-right" size="16" color="#bbb" />
+      <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
     </template>
   </uni-forms-item>
 </template>

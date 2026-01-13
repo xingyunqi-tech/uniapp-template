@@ -101,6 +101,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { useNotificationStore } from '@/store/modules/notification';
 import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
+import { PAGES } from '@/constants';
 
 // ==================== Store ====================
 const notificationStore = useNotificationStore();
@@ -225,7 +226,7 @@ function handleMarkAllRead() {
  * 跳转到设置页面
  */
 function navigateToSettings() {
-  uni.navigateTo({ url: '/pages-sub/user/notification-settings/index' as any });
+  uni.navigateTo({ url: PAGES.NOTIFICATION_SETTINGS });
 }
 
 /**

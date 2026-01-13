@@ -125,17 +125,14 @@ export const useNotificationStore = defineStore('notification', () => {
       if (result) {
         // 更新本地状态
         const notification = notifications.value.find(n => n.id === Number(id));
-        if (notification) {
+        if (notification && !notification.isRead) {
           notification.isRead = true;
-          notification.readAt = new Date().toISOString();
+          notification.readAt = result.readAt || new Date().toISOString();
+          // 本地递减未读数（不再重复调用 API）
+          if (unreadCount.value > 0) {
+            unreadCount.value--;
+          }
         }
-
-        // 更新未读数量
-        if (unreadCount.value > 0) {
-          unreadCount.value--;
-        }
-
-        await fetchUnreadCount();
       }
     } catch (error) {
       console.error('标记已读失败:', error);
@@ -171,17 +168,17 @@ export const useNotificationStore = defineStore('notification', () => {
     try {
       await deleteNotification(Number(id));
 
-      // 从本地列表中移除
+      // 从本地列表中移除，并更新未读数
       const index = notifications.value.findIndex(n => n.id === Number(id));
       if (index !== -1) {
         const notification = notifications.value[index];
+        // 如果是未读通知，递减未读数
         if (!notification.isRead && unreadCount.value > 0) {
           unreadCount.value--;
         }
         notifications.value.splice(index, 1);
       }
 
-      await fetchUnreadCount();
       uni.showToast({ title: '删除成功', icon: 'success' });
     } catch (error) {
       console.error('删除通知失败:', error);

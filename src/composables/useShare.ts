@@ -6,6 +6,7 @@ import { ref, computed, onMounted } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { useShareStore } from '@/store';
 import { getSharePlatform } from '@/utils/platform';
+import { PAGES } from '@/constants';
 import type { ShareTargetType, Share } from '@/api';
 
 /** 分享参数接口 */
@@ -62,7 +63,7 @@ function buildSharePath(path?: string, query?: Record<string, string | number>):
   // 获取当前页面路径作为默认值
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1];
-  const basePath = path || (currentPage ? `/${currentPage.route}` : '/pages/index/index');
+  const basePath = path || (currentPage ? `/${currentPage.route}` : PAGES.HOME);
 
   if (!query || Object.keys(query).length === 0) {
     return basePath;

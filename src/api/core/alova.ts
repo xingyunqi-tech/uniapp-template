@@ -7,6 +7,7 @@ import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/errorReporter';
 import { useUserStore } from '@/store/modules/user';
+import { PAGES } from '@/constants';
 
 // ==================== 类型定义 ====================
 
@@ -76,23 +77,38 @@ const alovaInstance = createAlova({
         uni.hideLoading();
       }
 
-      // 401 未授权 - 登录过期
+      // 401 未授权 - 尝试刷新 Token
       if (statusCode === 401) {
+        const userStore = useUserStore();
+
+        // 如果有 refreshToken，尝试刷新
+        if (userStore.refreshTokenValue && !isRedirectingToLogin) {
+          try {
+            const newToken = await userStore.refreshToken();
+            if (newToken) {
+              // Token 刷新成功，重试原请求
+              method.config.headers.Authorization = `Bearer ${newToken}`;
+              const retryResponse = await method.send();
+              return retryResponse;
+            }
+          } catch {
+            // Token 刷新失败，继续执行登出逻辑
+          }
+        }
+
+        // Token 刷新失败或无 refreshToken，执行登出
         reportApiError(method.url, method.type, 'Unauthorized', 401);
 
         if (!isRedirectingToLogin) {
           isRedirectingToLogin = true;
 
-          // 清除完整的登录信息（包括 token、refreshToken、userInfo）
-          storage.remove(STORAGE_KEYS.TOKEN);
-          const userStore = useUserStore();
           await userStore.logout();
 
           uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
 
           setTimeout(() => {
             uni.redirectTo({
-              url: '/pages/login/index',
+              url: PAGES.LOGIN,
               complete: () => {
                 isRedirectingToLogin = false;
               },

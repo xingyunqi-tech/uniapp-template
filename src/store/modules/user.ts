@@ -28,7 +28,7 @@ export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLogin
  */
 function mapUserToUserInfo(user: User): UserInfo {
   return {
-    id: Number(user.id) || undefined, // User.id 是 string，UserInfo.id 是 number
+    id: user.id ? Number(user.id) : undefined, // User.id 是 string，UserInfo.id 是 number
     username: user.nickname || user.firstName || user.phone,
     avatar: user.photo?.path || '',
     phone: user.phone,
@@ -256,6 +256,7 @@ export const useUserStore = defineStore(
 
     /**
      * 退出登录
+     * 清除所有用户相关状态，包括其他 Store 的数据
      */
     async function logout(): Promise<void> {
       try {
@@ -265,7 +266,7 @@ export const useUserStore = defineStore(
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
-        // 清除状态
+        // 清除用户状态
         token.value = '';
         refreshTokenValue.value = '';
         tokenExpires.value = 0;
@@ -278,6 +279,22 @@ export const useUserStore = defineStore(
 
         // 清除 Pinia 持久化的 userInfo (key 为 store id)
         storage.remove('user');
+
+        // 重置其他 Store 的用户相关数据
+        // 延迟导入避免循环依赖
+        const { useAddressStore } = await import('./address');
+        const { useOrderStore } = await import('./order');
+        const { useFavoriteStore } = await import('./favorite');
+        const { useNotificationStore } = await import('./notification');
+        const { useShareStore } = await import('./share');
+        const { useFeedbackStore } = await import('./feedback');
+
+        useAddressStore().reset();
+        useOrderStore().reset();
+        useFavoriteStore().reset();
+        useNotificationStore().reset();
+        useShareStore().clearState();
+        useFeedbackStore().reset();
       }
     }
 

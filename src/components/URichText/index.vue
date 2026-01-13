@@ -76,7 +76,7 @@ const parsedNodes = computed<RichTextNodes>(() => {
   // 处理视频标签（小程序不支持，转换为提示）
   html = html.replace(
     /<video[^>]*>.*?<\/video>/gi,
-    '<p class="u-rt-p" style="color:#999;text-align:center;">[视频内容请在APP中查看]</p>',
+    '<p class="u-rt-p" style="color:var(--color-text-secondary);text-align:center;">[视频内容请在APP中查看]</p>',
   );
 
   // 处理 iframe（小程序不支持）

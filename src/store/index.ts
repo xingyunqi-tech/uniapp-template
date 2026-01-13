@@ -8,6 +8,7 @@ export * from './modules/feedback';
 export * from './modules/order';
 export * from './modules/share';
 export * from './modules/region';
+export * from './modules/notification';
 export * from './plugins/persist';
 
 export default createPersistedPinia();

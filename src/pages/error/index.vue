@@ -31,6 +31,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { canGoBack as checkCanGoBack } from '@/utils/router';
+import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -89,7 +90,7 @@ onLoad(options => {
 
 // 返回首页
 function goHome() {
-  router.switchTab('/pages/index/index');
+  router.switchTab(PAGES.HOME);
 }
 
 // 返回上页

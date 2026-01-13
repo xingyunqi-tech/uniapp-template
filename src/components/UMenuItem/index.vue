@@ -227,7 +227,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
     padding: 4rpx 12rpx;
     border-radius: 20rpx;
     background: var(--color-error);
-    color: #fff;
+    color: var(--color-text-inverse);
     font-size: 22rpx;
   }
 

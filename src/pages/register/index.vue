@@ -191,7 +191,7 @@ async function handleRegister() {
 
     // 跳转到首页
     setTimeout(() => {
-      router.switchTab('/pages/index/index');
+      router.switchTab(PAGES.HOME);
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('注册失败:', error);

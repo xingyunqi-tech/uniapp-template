@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
+import { PAGES } from '@/constants';
 
 defineOptions({
   name: 'UNavBar',
@@ -172,7 +173,7 @@ function handleLeftClick() {
       uni.navigateBack({
         fail: () => {
           // 返回失败时跳转首页
-          uni.switchTab({ url: '/pages/index/index' });
+          uni.switchTab({ url: PAGES.HOME });
         },
       });
     }

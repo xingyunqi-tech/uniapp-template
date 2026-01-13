@@ -12,6 +12,7 @@ import {
 import type { LocaleType, ThemeType } from '@/constants';
 import { i18n } from '@/utils/locale';
 import themeConfig from '@/theme.json';
+import { uniStorage } from '../plugins/persist';
 
 /**
  * 判断当前页面是否为 TabBar 页面
@@ -186,10 +187,8 @@ export const useGlobalStore = defineStore(
   {
     persist: {
       pick: ['currentTheme', 'currentLocale', 'showDevOptions'],
-      storage: {
-        getItem: (key: string) => uni.getStorageSync(key),
-        setItem: (key: string, value: string) => uni.setStorageSync(key, value),
-      },
+      // 使用统一的 uniStorage 适配器，与其他 Store 保持一致
+      storage: uniStorage,
     },
   },
 );

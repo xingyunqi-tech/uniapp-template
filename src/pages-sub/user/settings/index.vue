@@ -160,7 +160,7 @@ function handleLogout() {
         });
         setTimeout(() => {
           uni.switchTab({
-            url: '/pages/index/index',
+            url: PAGES.HOME,
           });
         }, 1500);
       }

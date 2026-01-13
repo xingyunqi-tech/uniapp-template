@@ -219,7 +219,7 @@ function handlePay(id: string) {
 // 去逛逛
 function handleGoShopping() {
   uni.switchTab({
-    url: '/pages/index/index',
+    url: PAGES.HOME,
   });
 }
 

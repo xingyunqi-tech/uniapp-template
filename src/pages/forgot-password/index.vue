@@ -91,7 +91,7 @@ import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 
 const globalStore = useGlobalStore();
 
@@ -189,7 +189,7 @@ async function handleReset() {
 
     // 跳转到登录页
     setTimeout(() => {
-      router.replace('/pages/login/index');
+      router.replace(PAGES.LOGIN);
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('重置密码失败:', error);

@@ -13,7 +13,7 @@
       <uni-icons
         :type="isSuccess ? 'checkmarkempty' : 'closeempty'"
         :size="80"
-        :color="isSuccess ? '#07c160' : '#ee0a24'"
+        :color="isSuccess ? 'var(--color-success)' : 'var(--color-error)'"
       />
     </view>
 
@@ -47,6 +47,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { PAGES } from '@/constants';
 
 // ==================== 状态 ====================
 const isSuccess = ref(false);
@@ -74,7 +75,7 @@ function handleRetry() {
  */
 function handleViewOrder() {
   uni.redirectTo({
-    url: '/pages-sub/order/list/index',
+    url: PAGES.ORDER,
   });
 }
 
@@ -83,7 +84,7 @@ function handleViewOrder() {
  */
 function handleBackHome() {
   uni.switchTab({
-    url: '/pages/index/index',
+    url: PAGES.HOME,
   });
 }
 </script>
