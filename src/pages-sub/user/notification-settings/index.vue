@@ -1,8 +1,13 @@
+<route lang="json5">
+{
+  style: {
+    navigationBarTitleText: '通知设置',
+  },
+}
+</route>
+
 <template>
   <view class="notification-settings-page">
-    <!-- 自定义导航栏 -->
-    <UNavBar title="通知设置" :show-back="true" />
-
     <!-- 加载中 -->
     <ULoading v-if="loading" />
 

@@ -115,34 +115,54 @@ export async function createAppPayment(params: CreatePaymentDto): Promise<Paymen
 
 /**
  * 创建手机网站支付（H5）
+ * 仅支持 H5 平台，使用 DOM 操作提交支付表单
  */
 export async function createMobilePayment(params: CreatePaymentDto): Promise<PaymentResult> {
+  // #ifndef H5
+  return {
+    success: false,
+    message: '当前平台不支持支付宝 H5 支付',
+  };
+  // #endif
+
+  // #ifdef H5
   try {
-    // #ifdef H5
+    // 运行时双重检查，确保 DOM API 可用
+    if (typeof document === 'undefined') {
+      return {
+        success: false,
+        message: '当前环境不支持此支付方式',
+      };
+    }
+
     const paymentData = await alipayControllerCreateMobilePaymentV1(params);
 
     // 创建临时表单并提交
     const div = document.createElement('div');
     div.innerHTML = paymentData as any;
     document.body.appendChild(div);
-    const form = div.querySelector('form');
-    if (form) {
-      form.submit();
+    const form = div.querySelector<HTMLFormElement>('form');
+
+    if (!form) {
+      document.body.removeChild(div);
+      return {
+        success: false,
+        message: '支付表单解析失败',
+      };
     }
+
+    // 提交表单
+    (form as HTMLFormElement).submit();
+    // 表单提交后移除临时 DOM 元素
+    setTimeout(() => {
+      document.body.removeChild(div);
+    }, 100);
 
     return {
       success: true,
       message: '正在跳转支付宝...',
       outTradeNo: params.outTradeNo,
     };
-    // #endif
-
-    // #ifndef H5
-    return {
-      success: false,
-      message: '当前平台不支持支付宝 H5 支付',
-    };
-    // #endif
   } catch (error) {
     console.error('创建支付订单失败:', error);
     return {
@@ -150,38 +170,59 @@ export async function createMobilePayment(params: CreatePaymentDto): Promise<Pay
       message: '创建支付订单失败',
     };
   }
+  // #endif
 }
 
 /**
  * 创建电脑网站支付（PC）
+ * 仅支持 H5 平台，使用 DOM 操作提交支付表单
  */
 export async function createWebPayment(params: CreatePaymentDto): Promise<PaymentResult> {
+  // #ifndef H5
+  return {
+    success: false,
+    message: '当前平台不支持支付宝网站支付',
+  };
+  // #endif
+
+  // #ifdef H5
   try {
-    // #ifdef H5
+    // 运行时双重检查，确保 DOM API 可用
+    if (typeof document === 'undefined') {
+      return {
+        success: false,
+        message: '当前环境不支持此支付方式',
+      };
+    }
+
     const paymentData = await alipayControllerCreateWebPaymentV1(params);
 
     // 创建临时表单并提交
     const div = document.createElement('div');
     div.innerHTML = paymentData as any;
     document.body.appendChild(div);
-    const form = div.querySelector('form');
-    if (form) {
-      form.submit();
+    const form = div.querySelector<HTMLFormElement>('form');
+
+    if (!form) {
+      document.body.removeChild(div);
+      return {
+        success: false,
+        message: '支付表单解析失败',
+      };
     }
+
+    // 提交表单
+    (form as HTMLFormElement).submit();
+    // 表单提交后移除临时 DOM 元素
+    setTimeout(() => {
+      document.body.removeChild(div);
+    }, 100);
 
     return {
       success: true,
       message: '正在跳转支付宝...',
       outTradeNo: params.outTradeNo,
     };
-    // #endif
-
-    // #ifndef H5
-    return {
-      success: false,
-      message: '当前平台不支持支付宝网站支付',
-    };
-    // #endif
   } catch (error) {
     console.error('创建支付订单失败:', error);
     return {
@@ -189,6 +230,7 @@ export async function createWebPayment(params: CreatePaymentDto): Promise<Paymen
       message: '创建支付订单失败',
     };
   }
+  // #endif
 }
 
 /**

@@ -153,6 +153,12 @@ onMounted(() => {
     navBarHeight.value = `${navHeight}px`;
   }
   // #endif
+
+  // #ifdef MP-ALIPAY
+  // 支付宝小程序：固定导航栏高度为 48px（支付宝标准高度）
+  // 支付宝小程序没有胶囊按钮，但状态栏高度可能不同
+  navBarHeight.value = '48px';
+  // #endif
 });
 
 // ==================== Methods ====================

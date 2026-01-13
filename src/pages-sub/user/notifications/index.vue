@@ -2,38 +2,39 @@
 {
   style: {
     navigationBarTitleText: '消息通知',
-    navigationStyle: 'custom',
   },
 }
 </route>
 
 <template>
   <view class="notifications-page">
-    <!-- 自定义导航栏 -->
-    <UNavBar title="消息通知" :show-back="true">
-      <template #right>
-        <view class="nav-actions">
-          <text class="action-text" @tap="handleMarkAllRead">全部已读</text>
-          <text class="action-text" @tap="navigateToSettings">设置</text>
+    <!-- 筛选标签 -->
+    <view class="filter-tabs">
+      <scroll-view class="tabs-scroll" scroll-x :show-scrollbar="false">
+        <view class="tabs-left">
+          <view
+            v-for="tab in tabs"
+            :key="tab.value"
+            class="tab-item"
+            :class="{ active: activeTab === tab.value }"
+            @tap="handleTabChange(tab.value)"
+          >
+            {{ tab.label }}
+          </view>
         </view>
-      </template>
-    </UNavBar>
+      </scroll-view>
+
+      <!-- 操作按钮 -->
+      <view class="tabs-actions">
+        <text class="action-text" @tap="handleMarkAllRead">已读</text>
+        <view class="action-icon" @tap="navigateToSettings">
+          <uni-icons type="gear" size="20" color="#969799" />
+        </view>
+      </view>
+    </view>
 
     <!-- 内容区域 -->
     <view class="notifications-content">
-      <!-- 筛选标签 -->
-      <view class="filter-tabs">
-        <view
-          v-for="tab in tabs"
-          :key="tab.value"
-          class="tab-item"
-          :class="{ active: activeTab === tab.value }"
-          @tap="handleTabChange(tab.value)"
-        >
-          {{ tab.label }}
-        </view>
-      </view>
-
       <!-- 通知列表 -->
       <scroll-view
         class="notification-list"
@@ -264,26 +265,29 @@ function formatTime(time: string): string {
   overflow: hidden;
 }
 
-.nav-actions {
-  display: flex;
-  gap: 24rpx;
-
-  .action-text {
-    color: var(--color-primary);
-    font-size: 28rpx;
-  }
-}
-
 .filter-tabs {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
   padding: 20rpx 32rpx;
   border-bottom: 1rpx solid var(--color-border);
   background: var(--color-bg);
-  gap: 24rpx;
+  gap: 16rpx;
+
+  .tabs-scroll {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .tabs-left {
+    display: inline-flex;
+    gap: 16rpx;
+  }
 
   .tab-item {
-    padding: 12rpx 24rpx;
+    flex-shrink: 0;
+    padding: 12rpx 20rpx;
     transition: all 0.3s;
     border-radius: 8rpx;
     color: var(--color-text-secondary);
@@ -292,6 +296,28 @@ function formatTime(time: string): string {
     &.active {
       background: rgb(25 137 250 / 0.1);
       color: var(--color-primary);
+    }
+  }
+
+  .tabs-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 16rpx;
+
+    .action-text {
+      color: var(--color-primary);
+      font-size: 26rpx;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .action-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 26rpx;
+      line-height: 1;
     }
   }
 }

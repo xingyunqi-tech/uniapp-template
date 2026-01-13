@@ -165,6 +165,26 @@ function handleMessage(e: { detail: { data: unknown[] } }) {
 }
 
 /**
+ * 从 URL 中解析 hostname
+ * 兼容所有平台
+ */
+function parseHostname(urlStr: string): string {
+  // #ifdef H5
+  try {
+    return new URL(urlStr).hostname;
+  } catch {
+    return '';
+  }
+  // #endif
+
+  // #ifndef H5
+  // eslint-disable-next-line no-unreachable -- UniApp 条件编译，非 H5 平台使用正则解析
+  const match = urlStr.match(/^https?:\/\/([^/:]+)/);
+  return match?.[1] ?? '';
+  // #endif
+}
+
+/**
  * 处理加载完成
  */
 function handleLoad() {
@@ -173,13 +193,8 @@ function handleLoad() {
 
   // 如果没有传入标题，尝试从 URL 解析
   if (!title.value && url.value) {
-    try {
-      const urlObj = new URL(url.value);
-      const hostname = urlObj.hostname;
-      uni.setNavigationBarTitle({ title: hostname });
-    } catch {
-      uni.setNavigationBarTitle({ title: '详情' });
-    }
+    const hostname = parseHostname(url.value);
+    uni.setNavigationBarTitle({ title: hostname || '详情' });
   }
 }
 
