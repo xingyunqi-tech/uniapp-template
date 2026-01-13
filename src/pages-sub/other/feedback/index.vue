@@ -200,6 +200,7 @@ function handleSubmit() {
 
 <style scoped lang="scss">
 .feedback-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding: 24rpx;
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));

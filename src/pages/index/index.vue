@@ -204,7 +204,6 @@ onReachBottom(() => {
 <style scoped lang="scss">
 .home-page {
   min-height: 100vh;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx);
   background: var(--color-bg-grey);
 }
 

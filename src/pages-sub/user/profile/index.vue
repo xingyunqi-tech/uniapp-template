@@ -240,6 +240,7 @@ function handleSave() {
 
 <style scoped lang="scss">
 .profile-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding: 24rpx;
   padding-bottom: calc(200rpx + env(safe-area-inset-bottom));

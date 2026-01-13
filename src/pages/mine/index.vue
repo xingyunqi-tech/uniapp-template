@@ -134,7 +134,6 @@ function handleMenuClick(type: string) {
 <style scoped lang="scss">
 .user-page {
   min-height: 100vh;
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 120rpx);
   background: var(--color-bg-grey);
 }
 

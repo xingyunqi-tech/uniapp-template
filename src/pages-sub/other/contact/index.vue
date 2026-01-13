@@ -72,6 +72,7 @@ function handleOnlineChat() {
 
 <style scoped lang="scss">
 .contact-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
   background: var(--color-bg-grey);

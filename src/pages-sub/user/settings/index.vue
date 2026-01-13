@@ -219,6 +219,7 @@ function handleToggleLocale(checked: boolean) {
 
 <style scoped lang="scss">
 .settings-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding-bottom: calc(var(--safe-area-inset-bottom) + 48rpx);
   background: var(--color-bg-grey);

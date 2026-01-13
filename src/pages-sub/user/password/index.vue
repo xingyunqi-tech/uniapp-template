@@ -186,6 +186,7 @@ async function handleSave() {
 
 <style scoped lang="scss">
 .password-page {
+  box-sizing: border-box;
   min-height: 100vh;
   padding-bottom: calc(var(--safe-area-inset-bottom) + 140rpx);
   background: var(--color-bg-grey);
