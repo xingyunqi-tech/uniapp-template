@@ -10,7 +10,6 @@
 
 export type GetFavoritesTargetType = (typeof GetFavoritesTargetType)[keyof typeof GetFavoritesTargetType];
 
- 
 export const GetFavoritesTargetType = {
   product: 'product',
   article: 'article',

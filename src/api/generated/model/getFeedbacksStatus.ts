@@ -10,7 +10,6 @@
 
 export type GetFeedbacksStatus = (typeof GetFeedbacksStatus)[keyof typeof GetFeedbacksStatus];
 
- 
 export const GetFeedbacksStatus = {
   pending: 'pending',
   processing: 'processing',

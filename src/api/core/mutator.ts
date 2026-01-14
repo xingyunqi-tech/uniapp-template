@@ -9,7 +9,7 @@ import { http, type ApiResponse } from './alova';
  */
 export interface CustomRequestConfig {
   url: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   data?: any;
   params?: Record<string, any>;
   headers?: Record<string, string>;
@@ -58,14 +58,6 @@ export const customMutator = async <T>(config: CustomRequestConfig): Promise<Ext
       break;
     case 'DELETE':
       response = await http.Delete(url, { ...options, cacheFor: 0 });
-      break;
-    case 'PATCH':
-      // Alova 没有原生 PATCH，用 Post + header 模拟
-      response = await http.Post(url, data, {
-        ...options,
-        headers: { ...headers, 'X-HTTP-Method-Override': 'PATCH' },
-        cacheFor: 0,
-      });
       break;
     default:
       response = await http.Get(url, options);

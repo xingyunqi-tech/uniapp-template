@@ -10,7 +10,6 @@
 
 export type FeedbackType = (typeof FeedbackType)[keyof typeof FeedbackType];
 
- 
 export const FeedbackType = {
   bug: 'bug',
   suggestion: 'suggestion',

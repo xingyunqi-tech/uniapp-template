@@ -10,7 +10,6 @@
 
 export type CheckFavoriteDtoTargetType = (typeof CheckFavoriteDtoTargetType)[keyof typeof CheckFavoriteDtoTargetType];
 
- 
 export const CheckFavoriteDtoTargetType = {
   product: 'product',
   article: 'article',

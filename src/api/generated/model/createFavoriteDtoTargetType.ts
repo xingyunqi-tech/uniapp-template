@@ -14,7 +14,6 @@
 export type CreateFavoriteDtoTargetType =
   (typeof CreateFavoriteDtoTargetType)[keyof typeof CreateFavoriteDtoTargetType];
 
- 
 export const CreateFavoriteDtoTargetType = {
   product: 'product',
   article: 'article',

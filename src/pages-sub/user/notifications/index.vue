@@ -295,7 +295,7 @@ function formatTime(time: string): string {
     font-size: 28rpx;
 
     &.active {
-      background: rgb(25 137 250 / 0.1);
+      background: var(--color-primary-bg);
       color: var(--color-primary);
     }
   }
@@ -342,7 +342,7 @@ function formatTime(time: string): string {
   background: var(--color-bg);
 
   &.unread {
-    background: rgb(25 137 250 / 0.05);
+    background: var(--color-primary-bg-light);
   }
 
   .unread-dot {

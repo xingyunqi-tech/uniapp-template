@@ -13,7 +13,6 @@
  */
 export type CreateFeedbackDtoType = (typeof CreateFeedbackDtoType)[keyof typeof CreateFeedbackDtoType];
 
- 
 export const CreateFeedbackDtoType = {
   bug: 'bug',
   suggestion: 'suggestion',

@@ -41,7 +41,7 @@ export const getNotificationSettings = () => {
 export const updateNotificationSettings = (updateNotificationSettingsDto: UpdateNotificationSettingsDto) => {
   return customMutator<NotificationSetting>({
     url: `/api/v1/notifications/settings`,
-    method: 'PATCH',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     data: updateNotificationSettingsDto,
   });
@@ -62,13 +62,13 @@ export const deleteNotification = (id: number) => {
  * @summary 标记所有通知为已读
  */
 export const markAllNotificationsAsRead = () => {
-  return customMutator<void>({ url: `/api/v1/notifications/read-all`, method: 'PATCH' });
+  return customMutator<void>({ url: `/api/v1/notifications/read-all`, method: 'POST' });
 };
 /**
  * @summary 标记通知为已读
  */
 export const markNotificationAsRead = (id: number) => {
-  return customMutator<Notification>({ url: `/api/v1/notifications/${id}/read`, method: 'PATCH' });
+  return customMutator<Notification>({ url: `/api/v1/notifications/${id}/read`, method: 'POST' });
 };
 export type GetNotificationsResult = NonNullable<Awaited<ReturnType<typeof getNotifications>>>;
 export type GetUnreadCountResult = NonNullable<Awaited<ReturnType<typeof getUnreadCount>>>;

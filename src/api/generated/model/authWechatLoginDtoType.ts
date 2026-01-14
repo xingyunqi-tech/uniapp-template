@@ -13,7 +13,6 @@
  */
 export type AuthWechatLoginDtoType = (typeof AuthWechatLoginDtoType)[keyof typeof AuthWechatLoginDtoType];
 
- 
 export const AuthWechatLoginDtoType = {
   mini_app: 'mini_app',
   app: 'app',

@@ -10,7 +10,6 @@
 
 export type GetFeedbacksType = (typeof GetFeedbacksType)[keyof typeof GetFeedbacksType];
 
- 
 export const GetFeedbacksType = {
   bug: 'bug',
   suggestion: 'suggestion',

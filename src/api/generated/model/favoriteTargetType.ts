@@ -13,7 +13,6 @@
  */
 export type FavoriteTargetType = (typeof FavoriteTargetType)[keyof typeof FavoriteTargetType];
 
- 
 export const FavoriteTargetType = {
   product: 'product',
   article: 'article',
