@@ -16,7 +16,6 @@ coverage
 unpackage
 
 # UniApp auto-generated files
-src/pages.json
 typings/uni-pages.d.ts
 auto-imports.d.ts
 components.d.ts
