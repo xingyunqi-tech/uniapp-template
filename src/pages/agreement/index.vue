@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '协议详情',
-  },
-}
-</route>
-
 <template>
   <view class="agreement-page" :class="globalStore.themeClass">
     <scroll-view class="content-scroll" scroll-y>
@@ -15,6 +7,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '协议详情',
+  },
+});
+
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';

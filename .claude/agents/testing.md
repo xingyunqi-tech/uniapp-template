@@ -1,6 +1,8 @@
 ---
 name: testing
 description: 测试策略制定、测试用例编写、测试工具配置和质量保证
+tools: Read, Grep, Glob, WebFetch, WebSearch
+model: inherit
 ---
 
 # 测试指导 Agent

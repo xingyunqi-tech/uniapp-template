@@ -1,6 +1,8 @@
 ---
 name: store-development
 description: Uni-app Pinia状态管理开发指导，包括Store设计原则、状态组织和最佳实践
+tools: Read, Grep, Glob, WebFetch, WebSearch
+model: inherit
 ---
 
 # Uni-app Store 状态管理规范

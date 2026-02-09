@@ -1,6 +1,12 @@
 ---
 name: component-generator
 description: 【无设计稿时使用】根据项目规范纯代码生成Uni-app组件,支持基础/业务/页面组件。有Figma设计稿请用figma-to-component
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: development
 ---
 
 # 组件生成器 Skill

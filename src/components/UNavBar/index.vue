@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UNavBar - 自定义导航栏组件
@@ -47,6 +39,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref, computed, onMounted } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES } from '@/constants';

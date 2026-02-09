@@ -1,6 +1,12 @@
 ---
 name: code-optimizer
 description: 代码优化器 - 自动检测并提取常量、函数、Composables、组件、指令、类型，消除重复代码
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: quality
 ---
 
 # Code Optimizer - 代码优化 Skill

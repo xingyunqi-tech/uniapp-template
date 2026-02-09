@@ -1,6 +1,8 @@
 ---
 name: project-structure
 description: Uni-app 项目目录结构分析、文件组织规范和架构设计指导
+tools: Read, Grep, Glob
+model: inherit
 ---
 
 # Uni-app 项目结构解析

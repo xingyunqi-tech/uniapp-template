@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '意见反馈',
-  },
-}
-</route>
-
 <template>
   <view class="feedback-page" :class="globalStore.themeClass">
     <!-- 反馈类型 -->
@@ -84,6 +76,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '意见反馈',
+  },
+});
+
 import { reactive, computed, ref } from 'vue';
 import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';

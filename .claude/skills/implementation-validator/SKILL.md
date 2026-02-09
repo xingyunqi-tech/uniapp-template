@@ -1,6 +1,12 @@
 ---
 name: implementation-validator
 description: 指导 AI 系统化校验代码实现与 PRD 需求和 API 接口规范的一致性
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: quality
 ---
 
 # Implementation Validator - 代码实现校验执行指南

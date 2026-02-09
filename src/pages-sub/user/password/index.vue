@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '修改密码',
-  },
-}
-</route>
-
 <template>
   <view class="password-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
@@ -87,6 +79,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '修改密码',
+  },
+});
+
 import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePasswordStrength } from '@/composables';

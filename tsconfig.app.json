@@ -21,7 +21,13 @@
     },
 
     /* UniApp Types */
-    "types": ["@dcloudio/types", "@uni-helper/uni-app-types", "@uni-helper/uni-ui-types", "miniprogram-api-typings"],
+    "types": [
+      "@dcloudio/types",
+      "@uni-helper/uni-app-types",
+      "@uni-helper/uni-ui-types",
+      "@uni-helper/vite-plugin-uni-pages/client",
+      "miniprogram-api-typings"
+    ],
 
     /* Linting */
     "strict": true,
@@ -33,6 +39,6 @@
   "vueCompilerOptions": {
     "plugins": ["@uni-helper/uni-app-types/volar-plugin"]
   },
-  "include": ["src", "typings", "tests"],
+  "include": ["src", "typings"],
   "exclude": ["node_modules", "dist", "unpackage"]
 }

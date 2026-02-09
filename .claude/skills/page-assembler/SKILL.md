@@ -1,6 +1,12 @@
 ---
 name: page-assembler
 description: 将UI组件、Store、API自动集成到Uni-app页面中,完成完整的功能拼装
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript, Pinia
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: development
 ---
 
 # 页面拼装器 Skill

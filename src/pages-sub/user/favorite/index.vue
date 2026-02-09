@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '我的收藏',
-  },
-}
-</route>
-
 <template>
   <view class="favorite-page" :class="globalStore.themeClass">
     <!-- 空状态 -->
@@ -36,6 +28,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '我的收藏',
+  },
+});
+
 import { computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';

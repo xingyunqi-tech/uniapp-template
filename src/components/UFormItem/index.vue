@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UFormItem - 基于 uni-forms-item 的表单项组件
@@ -47,6 +39,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 defineOptions({
   name: 'UFormItem',
 });

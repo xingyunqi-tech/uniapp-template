@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UActionSheet - 操作菜单组件
@@ -52,6 +44,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref } from 'vue';
 import UPopup from '../UPopup/index.vue';
 

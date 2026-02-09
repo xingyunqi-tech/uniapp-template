@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UMenuGroup - 菜单分组组件
@@ -20,6 +12,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 defineOptions({
   name: 'UMenuGroup',
 });

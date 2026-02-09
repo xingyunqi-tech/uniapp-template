@@ -94,7 +94,7 @@ let globalOptions: GlobalOptions = {
 };
 
 /** 上报定时器 */
-let reportTimer: NodeJS.Timeout | null = null;
+let reportTimer: ReturnType<typeof setInterval> | null = null;
 
 /** 设备信息缓存 */
 let cachedDeviceInfo: ErrorDeviceInfo | null = null;

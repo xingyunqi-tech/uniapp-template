@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     USearchBar - 搜索栏组件
@@ -98,6 +90,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref, computed, onUnmounted } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
 import { useSearchHistory } from '@/composables/useSearchHistory';

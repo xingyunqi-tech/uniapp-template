@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '支付结果',
-  },
-}
-</route>
-
 <template>
   <view class="payment-result-page">
     <!-- 结果图标 -->
@@ -45,6 +37,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '支付结果',
+  },
+});
+
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';

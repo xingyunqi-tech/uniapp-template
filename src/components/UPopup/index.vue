@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UPopup - 基于 uni-popup 的弹出层组件
@@ -70,6 +62,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref, computed } from 'vue';
 
 defineOptions({

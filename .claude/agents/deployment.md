@@ -1,6 +1,8 @@
 ---
 name: deployment
 description: 应用部署、运维监控、性能优化和环境管理的完整解决方案指导
+tools: Read, Grep, Glob, Bash
+model: inherit
 ---
 
 # 部署指导 Agent

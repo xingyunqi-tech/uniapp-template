@@ -1,6 +1,8 @@
 ---
 name: api-development
 description: Uni-app API接口开发指导，基于Orval自动生成，聚焦API模块使用、自定义扩展和最佳实践
+tools: Read, Grep, Glob, WebFetch, WebSearch
+model: inherit
 ---
 
 # Uni-app API 开发规范 (基于 Alova.js + Orval)

@@ -1,6 +1,8 @@
 ---
 name: common-patterns
 description: 项目通用开发模式和规范，供其他 agent 引用，作为单一真实来源 (Uni-app 版本)
+tools: Read, Grep, Glob
+model: inherit
 ---
 
 # 通用开发模式 (Common Patterns)

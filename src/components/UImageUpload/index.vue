@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UImageUpload - 基于 uni-file-picker 的图片上传组件
@@ -41,6 +33,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref, computed, watch } from 'vue';
 
 defineOptions({

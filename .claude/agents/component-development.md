@@ -1,6 +1,8 @@
 ---
 name: component-development
 description: Uni-app 组件开发指导，包括组件设计原则、开发模式、最佳实践，区分基础组件和业务组件的开发规范
+tools: Read, Grep, Glob, WebFetch, WebSearch
+model: inherit
 ---
 
 # Uni-app 组件开发规范

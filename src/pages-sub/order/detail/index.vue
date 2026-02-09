@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '订单详情',
-  },
-}
-</route>
-
 <template>
   <view class="order-detail-page" :class="globalStore.themeClass">
     <ULoading v-if="loading" />
@@ -90,6 +82,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '订单详情',
+  },
+});
+
 import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';

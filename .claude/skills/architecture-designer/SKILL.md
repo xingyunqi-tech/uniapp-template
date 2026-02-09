@@ -1,6 +1,12 @@
 ---
 name: architecture-designer
 description: 根据PRD文档设计完整的技术架构,包括目录结构、路由配置、数据流设计和开发计划
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: architecture
 ---
 
 # 架构设计器 Skill

@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '地址管理',
-  },
-}
-</route>
-
 <template>
   <view class="address-page" :class="globalStore.themeClass">
     <!-- 地址列表 -->
@@ -46,6 +38,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '地址管理',
+  },
+});
+
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';

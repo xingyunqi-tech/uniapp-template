@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     ULoading - 加载动画组件
@@ -26,6 +18,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { computed } from 'vue';
 import type { CSSProperties } from 'vue';
 import { useLoading } from '@/composables/useLoading';

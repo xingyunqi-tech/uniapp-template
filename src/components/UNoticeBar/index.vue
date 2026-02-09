@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UNoticeBar - 基于 uni-notice-bar 的通知公告栏组件
@@ -36,6 +28,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { ref, computed } from 'vue';
 
 defineOptions({

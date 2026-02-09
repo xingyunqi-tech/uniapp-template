@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     URichText - 富文本渲染组件
@@ -17,6 +9,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { computed } from 'vue';
 import type { RichTextNodes, RichTextNode, RichTextSpace } from '@uni-helper/uni-app-types';
 

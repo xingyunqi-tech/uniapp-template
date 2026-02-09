@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '联系客服',
-  },
-}
-</route>
-
 <template>
   <view class="contact-page" :class="globalStore.themeClass">
     <!-- 顶部图标区域 -->
@@ -41,6 +33,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '联系客服',
+  },
+});
+
 import { useGlobalStore } from '@/store/modules/global';
 
 const globalStore = useGlobalStore();

@@ -1,12 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '我的',
-    navigationStyle: 'custom',
-  },
-}
-</route>
-
 <template>
   <view class="user-page" :class="globalStore.themeClass">
     <!-- 用户信息卡片 -->
@@ -51,6 +42,13 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '我的',
+    navigationStyle: 'custom',
+  },
+});
+
 import { computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';

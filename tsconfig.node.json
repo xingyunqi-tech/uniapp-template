@@ -24,5 +24,13 @@
     /* Types */
     "types": ["node", "vitest", "vitest/globals"]
   },
-  "include": ["config", "scripts", "vite.config.ts", "vitest.config.ts", "eslint.config.ts", "stylelint.config.mjs"]
+  "include": [
+    "config",
+    "scripts",
+    "tests",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "eslint.config.ts",
+    "stylelint.config.mjs"
+  ]
 }

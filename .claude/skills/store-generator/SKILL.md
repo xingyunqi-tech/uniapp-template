@@ -1,6 +1,12 @@
 ---
 name: store-generator
 description: 快速生成Pinia Store,遵循Composition API风格,支持持久化和类型安全
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript, Pinia
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: development
 ---
 
 # Store 生成器 Skill

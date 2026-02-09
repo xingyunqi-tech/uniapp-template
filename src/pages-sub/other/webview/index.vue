@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '加载中...',
-  },
-}
-</route>
-
 <template>
   <view class="webview-page" :class="globalStore.themeClass">
     <!-- 加载进度条 -->
@@ -30,6 +22,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '加载中...',
+  },
+});
+
 import { ref, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';

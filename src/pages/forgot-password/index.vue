@@ -1,12 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '忘记密码',
-    navigationStyle: 'custom',
-  },
-}
-</route>
-
 <template>
   <AuthLayout title="找回密码" card-title="重置密码" :class="globalStore.themeClass">
     <!-- 步骤指示器 -->
@@ -87,6 +78,13 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '忘记密码',
+    navigationStyle: 'custom',
+  },
+});
+
 import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms, usePasswordStrength } from '@/composables';

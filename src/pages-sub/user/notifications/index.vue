@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '消息通知',
-  },
-}
-</route>
-
 <template>
   <view class="notifications-page">
     <!-- 筛选标签 -->
@@ -96,6 +88,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '消息通知',
+  },
+});
+
 import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useNotificationStore } from '@/store/modules/notification';

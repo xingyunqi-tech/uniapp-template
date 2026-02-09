@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     UPasswordStrength - 密码强度指示器组件
@@ -49,6 +41,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants/form';
 
 defineOptions({

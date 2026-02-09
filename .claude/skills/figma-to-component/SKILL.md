@@ -1,6 +1,12 @@
 ---
 name: figma-to-component
 description: 【有Figma设计稿时使用】从设计稿还原Uni-app组件,自动下载切图、映射CSS变量、智能拆分页面。无设计稿请用component-generator
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript, Figma MCP
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: design
 ---
 
 # Figma 组件生成器 Skill

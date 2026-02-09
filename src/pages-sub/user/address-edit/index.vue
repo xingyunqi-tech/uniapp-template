@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '编辑地址',
-  },
-}
-</route>
-
 <template>
   <view class="address-edit-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
@@ -66,6 +58,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '编辑地址',
+  },
+});
+
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';

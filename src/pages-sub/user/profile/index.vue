@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '编辑资料',
-  },
-}
-</route>
-
 <template>
   <view class="profile-page" :class="globalStore.themeClass">
     <!-- 头像区域 -->
@@ -62,6 +54,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '编辑资料',
+  },
+});
+
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';

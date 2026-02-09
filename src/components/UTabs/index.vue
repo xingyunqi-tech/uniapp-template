@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <view class="u-tabs" :class="tabsClasses">
     <!-- 可滚动模式 -->
@@ -46,6 +38,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { computed } from 'vue';
 
 defineOptions({

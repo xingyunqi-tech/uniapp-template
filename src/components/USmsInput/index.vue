@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  meta: {
-    isComponent: true,
-  },
-}
-</route>
-
 <template>
   <!--
     USmsInput - 短信验证码输入组件
@@ -33,6 +25,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  meta: {
+    isComponent: true,
+  },
+});
+
 import { computed } from 'vue';
 import { SMS_CODE_LENGTH } from '@/constants/form';
 import { useCountdown } from '@/composables';

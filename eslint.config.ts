@@ -39,6 +39,8 @@ export default [
         // 自定义全局类型 (定义在 typings/uni.d.ts)
         UniIconsType: 'readonly',
         UniDataPickerValueArray: 'readonly',
+        // @uni-helper/vite-plugin-uni-pages 编译器宏
+        definePage: 'readonly',
       },
       // 指定 ECMAScript 版本为最新
       ecmaVersion: 'latest',
@@ -102,6 +104,8 @@ export default [
       'vue/no-multiple-template-root': 'off',
       // 在 Vue 文件中关闭未使用变量检查（模板中使用的变量可能被误报）
       '@typescript-eslint/no-unused-vars': 'off',
+      // 关闭无用赋值检查（<script setup> 中变量在模板使用，ESLint 无法追踪）
+      'no-useless-assignment': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
       'vue/require-default-prop': 'off',
     },

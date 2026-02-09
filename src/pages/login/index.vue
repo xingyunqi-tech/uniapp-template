@@ -1,12 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '登录',
-    navigationStyle: 'custom',
-  },
-}
-</route>
-
 <template>
   <AuthLayout title="欢迎回来" card-title="登录账号" :class="globalStore.themeClass">
     <!-- 登录方式切换 -->
@@ -80,6 +71,13 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '登录',
+    navigationStyle: 'custom',
+  },
+});
+
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';

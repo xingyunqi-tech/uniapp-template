@@ -1,6 +1,12 @@
 ---
 name: api-generator
 description: 生成自定义API代码,用于处理需要扩展业务逻辑、文件上传下载、特殊请求等20%场景,80%场景使用pnpm api:gen即可
+license: MIT
+compatibility: Requires Uni-app 3.x, Vue 3, TypeScript, Alova, Orval
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: development
 ---
 
 # API 生成器 Skill

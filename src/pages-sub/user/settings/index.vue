@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '设置',
-  },
-}
-</route>
-
 <template>
   <view class="settings-page" :class="globalStore.themeClass">
     <!-- 设置菜单 -->
@@ -71,6 +63,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '设置',
+  },
+});
+
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';

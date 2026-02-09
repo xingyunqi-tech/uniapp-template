@@ -1,6 +1,8 @@
 ---
 name: router-development
 description: Uni-app 路由开发指导，包括 pages.json 配置、分包策略、导航方法和权限控制
+tools: Read, Grep, Glob, WebFetch, WebSearch
+model: inherit
 ---
 
 # Uni-app 路由开发指南

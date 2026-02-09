@@ -1,12 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '注册',
-    navigationStyle: 'custom',
-  },
-}
-</route>
-
 <template>
   <AuthLayout title="创建账号" card-title="手机号注册" :class="globalStore.themeClass">
     <!-- 注册方式切换 -->
@@ -85,6 +76,13 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '注册',
+    navigationStyle: 'custom',
+  },
+});
+
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';

@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '关于我们',
-  },
-}
-</route>
-
 <template>
   <view class="about-page" :class="globalStore.themeClass">
     <!-- Logo 和应用信息 -->
@@ -43,6 +35,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '关于我们',
+  },
+});
+
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';

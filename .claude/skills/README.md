@@ -1,10 +1,28 @@
-# Vue Admin Template - Claude Code Skills
+# Uni-app Template - Claude Code Skills
 
-> **效率提升: 75% ⚡** | **Skills 数量: 9 个** | **智能化工作流**
+> **效率提升: 75% ⚡** | **Skills 数量: 9 个** | **智能化工作流** | **Agent Skills 标准格式 ✓**
 
 ## 📖 简介
 
 本项目配置了 **9 个核心 Skills**，覆盖从 PRD 到部署的完整开发流程，通过智能参数支持，让开发效率提升 75%。
+
+**符合 [Agent Skills 标准规范](https://agentskills.io/specification)**，兼容 Claude Code、Cursor、Codex、Gemini CLI 等多个 AI 编程助手。
+
+### 目录结构
+
+```
+.claude/skills/
+├── api-generator/SKILL.md          # API 生成器
+├── architecture-designer/SKILL.md  # 架构设计器
+├── code-optimizer/SKILL.md         # 代码优化器
+├── component-generator/SKILL.md    # 组件生成器
+├── figma-to-component/SKILL.md     # Figma 转组件
+├── implementation-validator/SKILL.md # 实现校验器
+├── page-assembler/SKILL.md         # 页面拼装器
+├── store-generator/SKILL.md        # Store 生成器
+├── test-coverage-checker/SKILL.md  # 测试覆盖检查
+└── README.md                       # 本文档
+```
 
 **什么是 Skills？**
 Skills 是 Claude Code 的命令式工具，可以快速完成重复性开发任务，就像在终端中执行命令一样简单。
@@ -197,7 +215,7 @@ pnpm commit
 - ✅ 生成详细的开发计划 (5 个阶段)
 - ✅ 自动创建开发任务
 
-**详细文档**: [architecture-designer.md](./architecture-designer.md)
+**详细文档**: [architecture-designer/SKILL.md](./architecture-designer/SKILL.md)
 
 ---
 
@@ -225,7 +243,7 @@ pnpm commit
 - ✅ 支持权限角色配置
 - ✅ 符合项目规范
 
-**详细文档**: [component-generator.md](./component-generator.md)
+**详细文档**: [component-generator/SKILL.md](./component-generator/SKILL.md)
 
 ---
 
@@ -252,7 +270,7 @@ pnpm commit
 - ✅ API 集成
 - ✅ Loading 和错误处理
 
-**详细文档**: [store-generator.md](./store-generator.md)
+**详细文档**: [store-generator/SKILL.md](./store-generator/SKILL.md)
 
 ---
 
@@ -278,7 +296,7 @@ pnpm commit
 - ✅ 支持 Loading、错误处理、无限滚动
 - ✅ 智能合并代码，不覆盖已有内容
 
-**详细文档**: [page-assembler.md](./page-assembler.md)
+**详细文档**: [page-assembler/SKILL.md](./page-assembler/SKILL.md)
 
 ---
 
@@ -305,7 +323,7 @@ pnpm commit
 - ✅ 自动更新导出配置
 - ✅ 符合项目 Orval 架构规范
 
-**详细文档**: [api-generator.md](./api-generator.md)
+**详细文档**: [api-generator/SKILL.md](./api-generator/SKILL.md)
 
 ---
 
@@ -331,7 +349,7 @@ pnpm commit
 - ✅ 使用 CSS 变量
 - ✅ 完整的 TypeScript 类型定义
 
-**详细文档**: [figma-to-component.md](./figma-to-component.md)
+**详细文档**: [figma-to-component/SKILL.md](./figma-to-component/SKILL.md)
 
 ---
 
@@ -359,7 +377,7 @@ pnpm commit
 - ✅ 自动生成测试模板
 - ✅ 生成详细报告
 
-**详细文档**: [test-coverage-checker.md](./test-coverage-checker.md)
+**详细文档**: [test-coverage-checker/SKILL.md](./test-coverage-checker/SKILL.md)
 
 ---
 
@@ -395,7 +413,7 @@ pnpm commit
 - ✅ 生成详细的校验报告和修复建议
 - ✅ 支持严格模式和自定义配置
 
-**详细文档**: [implementation-validator.md](./implementation-validator.md)
+**详细文档**: [implementation-validator/SKILL.md](./implementation-validator/SKILL.md)
 
 **核心优势:**
 - 🔍 自动发现 API 调用和类型不匹配问题
@@ -433,7 +451,7 @@ pnpm commit
 - ✅ 生成详细的优化报告
 - ✅ 遵循 "Rule of Three" 原则
 
-**详细文档**: [code-optimizer.md](./code-optimizer.md)
+**详细文档**: [code-optimizer/SKILL.md](./code-optimizer/SKILL.md)
 
 **核心优势:**
 - 🔍 自动检测魔法数字和硬编码
@@ -746,7 +764,7 @@ pnpm type-check  # 类型检查
 
 1. 检查拼写是否正确
 2. 使用 `/` 开头查看所有可用 Skills
-3. 查看具体 Skill 的文档: `.claude/skills/<category>/<skill-name>.md`
+3. 查看具体 Skill 的文档: `.claude/skills/<skill-name>/SKILL.md`
 
 ### Skill 执行失败？
 

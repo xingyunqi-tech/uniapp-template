@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '页面不存在',
-  },
-}
-</route>
-
 <template>
   <view class="error-page" :class="globalStore.themeClass">
     <view class="error-content">
@@ -26,6 +18,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '页面不存在',
+  },
+});
+
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';

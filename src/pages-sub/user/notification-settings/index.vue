@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '通知设置',
-  },
-}
-</route>
-
 <template>
   <view class="notification-settings-page">
     <!-- 加载中 -->
@@ -71,6 +63,12 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '通知设置',
+  },
+});
+
 import { ref, computed, onMounted } from 'vue';
 import { useNotificationStore } from '@/store/modules/notification';
 import type { NotificationSetting } from '@/api';

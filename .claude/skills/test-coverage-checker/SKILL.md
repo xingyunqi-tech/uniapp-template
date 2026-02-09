@@ -1,6 +1,12 @@
 ---
 name: test-coverage-checker
 description: 自动检查测试覆盖率是否达标,列出覆盖率不足的文件,并可选自动生成测试模板
+license: MIT
+compatibility: Requires Vitest
+metadata:
+  author: uniapp-template
+  version: "1.0.0"
+  category: testing
 ---
 
 # 测试覆盖率检查 Skill

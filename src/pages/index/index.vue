@@ -1,12 +1,3 @@
-<route lang="json5" type="home">
-{
-  style: {
-    navigationStyle: 'custom',
-    enablePullDownRefresh: true,
-  },
-}
-</route>
-
 <template>
   <view class="home-page" :class="globalStore.themeClass">
     <!-- 自定义导航栏 -->
@@ -55,6 +46,13 @@
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationStyle: 'custom',
+    enablePullDownRefresh: true,
+  },
+});
+
 import { ref, computed } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';

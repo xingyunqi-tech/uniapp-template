@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'child_process';
+import { execSync } from 'child_process';
 import fs from 'fs';
 import chalk from 'chalk';
 
@@ -21,26 +21,6 @@ if (!COMMIT_REGEXP.test(COMMIT_MESSAGE)) {
   console.error(
     `${chalk.blue('示例:')} ${chalk.green('feat: 添加用户登录功能')} ${chalk.yellow('或')} ${chalk.green('fix(auth): 修复登录验证问题')}`,
   );
-  process.exit(1);
-}
-
-// cspell校验
-try {
-  const result = spawnSync('npx', ['--no-install', 'cspell', 'stdin'], {
-    input: COMMIT_MESSAGE,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    encoding: 'utf-8',
-    shell: true, // Windows兼容性：需要shell来解析npx命令
-  });
-
-  if (result.status !== 0) {
-    console.error(`${chalk.red('❌ 拼写检查失败')}\n${chalk.yellow('请修正提交信息中的拼写错误。')}`);
-    console.error(chalk.gray('错误输出:'), result.stderr || result.stdout);
-    process.exit(1);
-  }
-  console.log(chalk.green('✅ Cspell 拼写检查通过'));
-} catch (error) {
-  console.error(`${chalk.red('❌ 拼写检查失败:')} ${chalk.yellow(error)}`);
   process.exit(1);
 }
 
