@@ -15,8 +15,11 @@ dist
 coverage
 unpackage
 
-# UniApp auto-generated files (by @uni-helper/vite-plugin-uni-pages)
+# UniApp auto-generated files
 src/pages.json
+typings/uni-pages.d.ts
+auto-imports.d.ts
+components.d.ts
 
 # env (保留 .env.development 和 .env.production 用于远程打包)
 .env
