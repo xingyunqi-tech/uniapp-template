@@ -19,6 +19,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 > 本文档专为 AI 助手设计，提供 Uni-app 项目快速概览和文档导航。人类开发者请查看 [README.md](README.md)
 
+## Git 提交规则
+
+- **提交格式**: `type: subject` 或 `type(scope): subject`
+- **示例**: `feat: 添加用户登录功能` 或 `fix(auth): 修复登录验证问题`
+- **AI 标识**: 提交代码时不要添加 Co-Authored-By 签名，改为在 commit 末尾添加：🤖 Generated with AI
+
+---
+
 ## 3 分钟项目速读
 
 ### 项目定位
@@ -305,12 +313,6 @@ pnpm test:ui          # 测试 UI 界面
 
 # Git
 pnpm commit           # 交互式提交 (cz-git)
-
-# Git 提交规范
-# 格式: [AI|Human][type]: 描述
-# 示例:
-# [AI][feat]: 添加用户登录功能
-# [Human][fix]: 修复登录超时问题
 ```
 
 ---

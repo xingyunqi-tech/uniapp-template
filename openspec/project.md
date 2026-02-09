@@ -1,6 +1,6 @@
-# Project Context
+# 项目上下文
 
-## Purpose
+## 项目定位
 
 Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构建，支持 H5、微信小程序、支付宝小程序、App 等多平台。
 
@@ -10,7 +10,7 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 - 80%+ 的 API 代码自动生成 (Orval)
 - 统一的组件库和样式系统
 
-## Tech Stack
+## 技术栈
 
 ### 核心框架
 - **Uni-app 3.x** - 跨平台框架 (3.0.0-alpha)
@@ -39,9 +39,9 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 ### 国际化
 - **vue-i18n 9.x** - 多语言支持
 
-## Project Conventions
+## 项目规范
 
-### Code Style
+### 代码风格
 
 **TypeScript 规范**：
 - 严格模式 (`strict: true`)
@@ -60,7 +60,7 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 - 必须使用 rpx 单位 (750rpx = 设计稿宽度)，禁止 px
 - 属性顺序遵循 SMACSS 规范
 
-### Architecture Patterns
+### 架构模式
 
 **路由系统** (非 Vue Router)：
 - 使用 `pages.json` 配置路由
@@ -86,7 +86,7 @@ src/api/
 - 模块化存放于 `src/store/modules/`
 - 支持持久化
 
-### Testing Strategy
+### 测试策略
 
 - **框架**：Vitest + @vue/test-utils
 - **覆盖率目标**：80%
@@ -97,27 +97,29 @@ src/api/
   - `pnpm test:coverage` - 覆盖率报告
   - `pnpm test:ui` - UI 界面
 
-### Git Workflow
+### Git 工作流
 
 **分支策略**：
 - `master` - 主分支
 - `feature/*` - 功能分支
 - `fix/*` - 修复分支
 
-**提交规范** (自定义格式)：
+**提交规范** (Conventional Commits)：
 ```
-[AI|Human][type]: subject
+type(scope): subject
+# 或
+type: subject
 
 # 示例
-[AI][feat]: 添加用户登录功能
-[Human][fix]: 修复表单验证问题
+feat: 添加用户登录功能
+fix(auth): 修复表单验证问题
 ```
 
 **类型**：feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
 
-**Scope**：AI (AI 生成) | Human (人类编写)
+**Scope**：可选，表示修改范围（如 auth, store, api 等）
 
-## Domain Context
+## 领域上下文
 
 **多端差异处理**：
 - 使用条件编译：`#ifdef MP-WEIXIN` / `#endif`
@@ -131,7 +133,7 @@ src/api/
 - Uni-app 特有：`onLoad`, `onShow`, `onHide`, `onUnload`
 - Vue 生命周期同样可用
 
-## Important Constraints
+## 重要约束
 
 ### 禁止事项
 | 禁止操作 | 原因 |
@@ -145,10 +147,11 @@ src/api/
 | 使用 localStorage | 小程序不支持 |
 
 ### 环境要求
+
 - Node.js >= 22.0.0
 - 包管理器：pnpm (推荐)
 
-## Key Directories
+## 关键目录
 
 | 目录 | 职责 | 注意事项 |
 |------|------|---------|
@@ -163,7 +166,7 @@ src/api/
 | `src/styles/theme.scss` | 主题变量 | CSS 变量定义 |
 | `src/constants/` | 常量定义 | 页面路径、权限等 |
 
-## Common Commands
+## 常用命令
 
 ```bash
 # 开发
@@ -186,7 +189,7 @@ pnpm test             # 运行测试
 pnpm commit           # 交互式提交 (cz-git)
 ```
 
-## External Dependencies
+## 外部依赖
 
 ### 核心依赖
 - **Uni-app CLI** - 多平台构建
@@ -206,7 +209,7 @@ pnpm commit           # 交互式提交 (cz-git)
 - [Pinia 官方文档](https://pinia.vuejs.org/)
 - [Orval 官方文档](https://orval.dev/)
 
-## AI Agent References
+## AI Agent 参考
 
 详细开发指南请参考 `.claude/agents/` 目录：
 

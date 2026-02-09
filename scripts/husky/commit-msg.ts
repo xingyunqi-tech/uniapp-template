@@ -10,13 +10,16 @@ if (!COMMIT_MESSAGE_FILE) {
 }
 const COMMIT_MESSAGE = fs.readFileSync(COMMIT_MESSAGE_FILE, 'utf8');
 
-// 定义正则
-const COMMIT_REGEXP =
-  /^\[(AI|Human)\]\[(feat|fix|docs|style|refactor|perf|test|workflow|build|ci|chore|release)\]: .{1,100}/;
+// 定义正则 - 标准 conventional commits 格式: type(scope): subject 或 type: subject
+const COMMIT_REGEXP = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,100}/;
 
 if (!COMMIT_REGEXP.test(COMMIT_MESSAGE)) {
+  console.error(`${chalk.bgRed.white(' 错误 ')} ${chalk.yellow('提交信息格式不正确！')}`);
   console.error(
-    `${chalk.bgRed.white(' 错误 ')} ${chalk.yellow('请使用')} ${chalk.green('yarn commit')} ${chalk.yellow('来提交代码！')}`,
+    `${chalk.blue('正确格式:')} ${chalk.green('type: subject')} ${chalk.yellow('或')} ${chalk.green('type(scope): subject')}`,
+  );
+  console.error(
+    `${chalk.blue('示例:')} ${chalk.green('feat: 添加用户登录功能')} ${chalk.yellow('或')} ${chalk.green('fix(auth): 修复登录验证问题')}`,
   );
   process.exit(1);
 }

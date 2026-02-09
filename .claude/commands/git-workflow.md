@@ -34,20 +34,19 @@ git checkout -b refactor/optimize-routing
 
 ---
 
-## 📝 提交规范 (项目自定义格式)
+## 📝 提交规范 (Conventional Commits)
 
 ### 提交格式
 
-**本项目使用自定义的提交格式（非标准 Conventional Commits）：**
-
 ```bash
 # 格式
-[AI|Human][type]: description
+type(scope): description
+# 或
+type: description
 
 # 说明
-# - [AI]     : AI 辅助生成的代码
-# - [Human]  : 人工编写的代码
-# - type     : 提交类型（见下表）
+# - type        : 提交类型（见下表）
+# - scope       : 修改范围（可选）
 # - description : 简短描述（1-100 字符）
 ```
 
@@ -55,18 +54,17 @@ git checkout -b refactor/optimize-routing
 
 | 类型 | 说明 | 示例 |
 |------|------|------|
-| **feat** | 新功能 | `[AI][feat]: 添加用户登录功能` |
-| **fix** | Bug 修复 | `[Human][fix]: 修复登录超时问题` |
-| **docs** | 文档更新 | `[Human][docs]: 更新 API 文档` |
-| **style** | 代码格式（不影响功能） | `[AI][style]: 使用 prettier 格式化代码` |
-| **refactor** | 代码重构 | `[Human][refactor]: 优化路由守卫逻辑` |
-| **perf** | 性能优化 | `[AI][perf]: 优化列表渲染性能` |
-| **test** | 测试相关 | `[Human][test]: 添加用户登录测试` |
-| **workflow** | 工作流相关 | `[Human][workflow]: 更新 CI 流程` |
-| **build** | 构建相关 | `[Human][build]: 更新构建配置` |
-| **ci** | CI/CD 相关 | `[Human][ci]: 优化构建流程` |
-| **chore** | 其他杂项 | `[Human][chore]: 更新依赖版本` |
-| **release** | 版本发布 | `[Human][release]: v1.0.0` |
+| **feat** | 新功能 | `feat: 添加用户登录功能` |
+| **fix** | Bug 修复 | `fix(auth): 修复登录超时问题` |
+| **docs** | 文档更新 | `docs: 更新 API 文档` |
+| **style** | 代码格式（不影响功能） | `style: 使用 prettier 格式化代码` |
+| **refactor** | 代码重构 | `refactor(router): 优化路由守卫逻辑` |
+| **perf** | 性能优化 | `perf: 优化列表渲染性能` |
+| **test** | 测试相关 | `test: 添加用户登录测试` |
+| **build** | 构建相关 | `build: 更新构建配置` |
+| **ci** | CI/CD 相关 | `ci: 优化构建流程` |
+| **chore** | 其他杂项 | `chore: 更新依赖版本` |
+| **revert** | 回退提交 | `revert: 回退登录功能` |
 
 ### 提交最佳实践
 
@@ -75,19 +73,19 @@ git checkout -b refactor/optimize-routing
 pnpm commit
 
 # ✅ 推荐：单一职责提交
-git commit -m "[AI][feat]: 添加用户登录表单"
-git commit -m "[AI][feat]: 添加登录 API 集成"
-git commit -m "[AI][feat]: 添加登录错误处理"
+git commit -m "feat: 添加用户登录表单"
+git commit -m "feat: 添加登录 API 集成"
+git commit -m "feat: 添加登录错误处理"
 
 # ❌ 避免：多个功能混合提交
-git commit -m "[Human][feat]: 添加登录、注册并修复 bug"
+git commit -m "feat: 添加登录、注册并修复 bug"
 
 # ✅ 推荐：清晰的提交信息
-git commit -m "[Human][fix]: 修复登录时 token 未保存的问题"
+git commit -m "fix(auth): 修复登录时 token 未保存的问题"
 
 # ❌ 避免：模糊的提交信息
-git commit -m "[Human][fix]: 修复 bug"
-git commit -m "[Human][chore]: 更新"
+git commit -m "fix: 修复 bug"
+git commit -m "chore: 更新"
 ```
 
 ---
@@ -111,7 +109,7 @@ git checkout -b feature/user-profile
 git add .
 pnpm commit
 # 或手动提交
-git commit -m "[AI][feat]: 添加用户资料页面"
+git commit -m "feat: 添加用户资料页面"
 
 # 4. 推送到远程
 git push origin feature/user-profile
@@ -144,7 +142,7 @@ git checkout -b fix/api-error
 
 # 3. 提交代码
 git add .
-git commit -m "[Human][fix]: 修复 API 超时重试逻辑"
+git commit -m "fix(api): 修复 API 超时重试逻辑"
 
 # 4. 推送并创建 PR
 git push origin fix/api-error
@@ -170,7 +168,7 @@ git checkout -b refactor/user-store
 
 # 3. 提交代码
 git add .
-git commit -m "[Human][refactor]: 提取用户状态管理公共逻辑"
+git commit -m "refactor(store): 提取用户状态管理公共逻辑"
 
 # 4. 重构完成后检查
 pnpm test
@@ -253,7 +251,7 @@ git checkout -b hotfix/security-patch
 
 # 3. 提交代码
 git add .
-git commit -m "[Human][hotfix]: 修复安全漏洞 CVE-2024-xxxx"
+git commit -m "fix: 修复安全漏洞 CVE-2024-xxxx"
 
 # 4. 立即创建 PR 并合并
 git push origin hotfix/security-patch
