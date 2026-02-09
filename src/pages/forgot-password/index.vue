@@ -92,6 +92,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
+import { AuthSendCodeDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
 
@@ -115,7 +116,7 @@ const submitting = ref(false);
 
 // 短信验证码
 const sms = useSendSms({
-  sendApi: phone => userStore.sendSmsCode(phone),
+  sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.reset_password),
 });
 
 // 密码强度

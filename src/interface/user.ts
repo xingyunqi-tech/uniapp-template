@@ -73,10 +73,10 @@ export interface SmsLoginParams {
 export interface WechatLoginParams {
   /** 微信登录 code */
   code: string;
-  /** 加密数据（小程序获取手机号） */
-  encryptedData?: string;
-  /** 加密向量（小程序获取手机号） */
-  iv?: string;
+  /** 用户昵称（首次注册时可选） */
+  nickname?: string;
+  /** 用户头像 URL（首次注册时可选） */
+  avatar?: string;
 }
 
 /**

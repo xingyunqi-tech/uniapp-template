@@ -225,8 +225,6 @@ async function handleWechatLogin(e: any) {
     // 调用微信登录接口
     await userStore.wechatLogin({
       code: loginRes.code,
-      encryptedData: e.detail.encryptedData!,
-      iv: e.detail.iv!,
     });
 
     uni.showToast({

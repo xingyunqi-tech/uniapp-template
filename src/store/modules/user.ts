@@ -17,7 +17,8 @@ import {
   logout as apiLogout,
   refreshToken as apiRefreshToken,
   type User,
-  type AuthSendCodeDtoType,
+  AuthSendCodeDtoType,
+  AuthWechatLoginDtoType,
 } from '@/api';
 
 // 重新导出类型，保持向后兼容
@@ -165,7 +166,7 @@ export const useUserStore = defineStore(
      * @param phone 手机号
      * @param type 验证码类型
      */
-    async function sendSmsCode(phone: string, type: AuthSendCodeDtoType = 'login'): Promise<void> {
+    async function sendSmsCode(phone: string, type: AuthSendCodeDtoType = AuthSendCodeDtoType.login): Promise<void> {
       await apiSendSmsCode({ phone, type });
     }
 
@@ -176,7 +177,7 @@ export const useUserStore = defineStore(
     async function wechatLogin(params: WechatLoginParams): Promise<string> {
       const response = await loginWithWechat({
         code: params.code,
-        type: 'mini_app', // 小程序登录
+        type: AuthWechatLoginDtoType.mini_app, // 小程序登录
       });
       handleLoginResponse(response);
       return response.token;

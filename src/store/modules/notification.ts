@@ -19,6 +19,7 @@ import {
   markAllNotificationsAsRead,
   getNotificationSettings,
   updateNotificationSettings,
+  UpdateNotificationSettingsDtoCategory,
 } from '@/api';
 
 export const useNotificationStore = defineStore('notification', () => {
@@ -205,7 +206,7 @@ export const useNotificationStore = defineStore('notification', () => {
    * 更新通知设置
    */
   async function updateSettings(
-    category: string,
+    category: UpdateNotificationSettingsDtoCategory,
     enableInApp: boolean,
     enableEmail: boolean,
     enableSms: boolean,
@@ -213,7 +214,7 @@ export const useNotificationStore = defineStore('notification', () => {
   ) {
     try {
       const result = await updateNotificationSettings({
-        category: category as any,
+        category,
         enableInApp,
         enableEmail,
         enableSms,
