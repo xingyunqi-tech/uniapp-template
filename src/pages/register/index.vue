@@ -21,6 +21,14 @@
         :clearable="true"
       />
 
+      <!-- 验证码（两种注册方式都需要） -->
+      <USmsInput
+        v-model="formData.code"
+        :countdown="sms.countdown.value"
+        :is-counting="sms.isCounting.value"
+        @send="handleSendCode"
+      />
+
       <!-- 密码注册 -->
       <template v-if="registerType === 'password'">
         <uni-easyinput
@@ -39,15 +47,6 @@
           :clearable="true"
         />
       </template>
-
-      <!-- 验证码注册 -->
-      <USmsInput
-        v-else
-        v-model="formData.code"
-        :countdown="sms.countdown.value"
-        :is-counting="sms.isCounting.value"
-        @send="handleSendCode"
-      />
 
       <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleRegister">
         {{ loading ? '注册中...' : '注册' }}
@@ -122,6 +121,8 @@ const sms = useSendSms({
 function validateForm(): boolean {
   if (!sms.validatePhone(formData.phone)) return false;
 
+  if (!sms.validateCode(formData.code)) return false;
+
   if (registerType.value === 'password') {
     if (!formData.password) {
       uni.showToast({ title: '请输入密码', icon: 'none' });
@@ -142,8 +143,6 @@ function validateForm(): boolean {
       uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
       return false;
     }
-  } else {
-    if (!sms.validateCode(formData.code)) return false;
   }
 
   if (!agreed.value) {
@@ -174,6 +173,7 @@ async function handleRegister() {
       await userStore.register({
         phone: formData.phone,
         password: encryptPassword(formData.password),
+        code: formData.code,
       });
     } else {
       // 验证码注册（直接登录）

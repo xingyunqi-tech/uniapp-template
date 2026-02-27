@@ -54,7 +54,7 @@ export interface RegisterParams {
   /** 确认密码 */
   confirmPassword?: string;
   /** 验证码 */
-  code?: string;
+  code: string;
 }
 
 /**

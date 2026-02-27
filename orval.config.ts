@@ -54,7 +54,7 @@ export default defineConfig({
 
     // 钩子：生成后自动格式化并更新导出
     hooks: {
-      afterAllFilesWrite: ['prettier --write', 'npx tsx scripts/api/update-api-exports.ts'],
+      afterAllFilesWrite: ['eslint --fix', 'prettier --write', 'npx tsx scripts/api/update-api-exports.ts'],
     },
   },
 });

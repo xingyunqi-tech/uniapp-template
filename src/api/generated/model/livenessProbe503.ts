@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { LivenessProbe503Info } from './livenessProbe503Info';
-import type { LivenessProbe503Error } from './livenessProbe503Error';
 import type { LivenessProbe503Details } from './livenessProbe503Details';
+import type { LivenessProbe503Error } from './livenessProbe503Error';
+import type { LivenessProbe503Info } from './livenessProbe503Info';
 
 export type LivenessProbe503 = {
   status?: string;

@@ -7,8 +7,8 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateOrderItemDto } from './createOrderItemDto';
 import type { CreateOrderDtoMetadata } from './createOrderDtoMetadata';
+import type { CreateOrderItemDto } from './createOrderItemDto';
 
 export interface CreateOrderDto {
   items: CreateOrderItemDto[];

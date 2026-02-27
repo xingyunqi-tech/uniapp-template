@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateShareDtoTargetType } from './createShareDtoTargetType';
-import type { CreateShareDtoPlatform } from './createShareDtoPlatform';
 import type { CreateShareDtoMetadata } from './createShareDtoMetadata';
+import type { CreateShareDtoPlatform } from './createShareDtoPlatform';
+import type { CreateShareDtoTargetType } from './createShareDtoTargetType';
 
 export interface CreateShareDto {
   targetType: CreateShareDtoTargetType;

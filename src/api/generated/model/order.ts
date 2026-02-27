@@ -8,10 +8,10 @@
  *  *\/
  */
 import type { OrderId } from './orderId';
-import type { OrderUserId } from './orderUserId';
-import type { OrderStatus } from './orderStatus';
-import type { OrderPaymentChannel } from './orderPaymentChannel';
 import type { OrderMetadata } from './orderMetadata';
+import type { OrderPaymentChannel } from './orderPaymentChannel';
+import type { OrderStatus } from './orderStatus';
+import type { OrderUserId } from './orderUserId';
 
 export interface Order {
   id: OrderId;

@@ -7,11 +7,11 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { NotificationType } from './notificationType';
 import type { NotificationCategory } from './notificationCategory';
-import type { NotificationMetadata } from './notificationMetadata';
 import type { NotificationChannelsItem } from './notificationChannelsItem';
+import type { NotificationMetadata } from './notificationMetadata';
 import type { NotificationSentChannels } from './notificationSentChannels';
+import type { NotificationType } from './notificationType';
 
 export interface Notification {
   id: number;

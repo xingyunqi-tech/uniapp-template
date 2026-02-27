@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { HealthCheck200Info } from './healthCheck200Info';
-import type { HealthCheck200Error } from './healthCheck200Error';
 import type { HealthCheck200Details } from './healthCheck200Details';
+import type { HealthCheck200Error } from './healthCheck200Error';
+import type { HealthCheck200Info } from './healthCheck200Info';
 
 export type HealthCheck200 = {
   status?: string;

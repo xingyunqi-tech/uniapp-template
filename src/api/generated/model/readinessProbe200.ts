@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { ReadinessProbe200Info } from './readinessProbe200Info';
-import type { ReadinessProbe200Error } from './readinessProbe200Error';
 import type { ReadinessProbe200Details } from './readinessProbe200Details';
+import type { ReadinessProbe200Error } from './readinessProbe200Error';
+import type { ReadinessProbe200Info } from './readinessProbe200Info';
 
 export type ReadinessProbe200 = {
   status?: string;

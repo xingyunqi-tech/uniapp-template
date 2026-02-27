@@ -7,8 +7,8 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { GetFeedbacksType } from './getFeedbacksType';
 import type { GetFeedbacksStatus } from './getFeedbacksStatus';
+import type { GetFeedbacksType } from './getFeedbacksType';
 
 export type GetFeedbacksParams = {
   type?: GetFeedbacksType;

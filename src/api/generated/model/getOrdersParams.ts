@@ -7,8 +7,8 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { GetOrdersStatus } from './getOrdersStatus';
 import type { GetOrdersPaymentChannel } from './getOrdersPaymentChannel';
+import type { GetOrdersStatus } from './getOrdersStatus';
 
 export type GetOrdersParams = {
   status?: GetOrdersStatus;

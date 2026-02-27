@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { ShareTargetType } from './shareTargetType';
-import type { SharePlatform } from './sharePlatform';
 import type { ShareMetadata } from './shareMetadata';
+import type { SharePlatform } from './sharePlatform';
+import type { ShareTargetType } from './shareTargetType';
 
 export interface Share {
   id: number;

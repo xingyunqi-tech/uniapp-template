@@ -7,8 +7,8 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { FeedbackType } from './feedbackType';
 import type { FeedbackStatus } from './feedbackStatus';
+import type { FeedbackType } from './feedbackType';
 
 export interface Feedback {
   id: number;

@@ -7,9 +7,9 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { ReadinessProbe503Info } from './readinessProbe503Info';
-import type { ReadinessProbe503Error } from './readinessProbe503Error';
 import type { ReadinessProbe503Details } from './readinessProbe503Details';
+import type { ReadinessProbe503Error } from './readinessProbe503Error';
+import type { ReadinessProbe503Info } from './readinessProbe503Info';
 
 export type ReadinessProbe503 = {
   status?: string;

@@ -143,6 +143,7 @@ export const useUserStore = defineStore(
       const response = await registerWithPhone({
         phone: params.phone,
         password: params.password,
+        code: params.code,
       });
       handleLoginResponse(response);
       return response.token;

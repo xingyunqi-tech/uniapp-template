@@ -7,8 +7,8 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { GetSharesTargetType } from './getSharesTargetType';
 import type { GetSharesPlatform } from './getSharesPlatform';
+import type { GetSharesTargetType } from './getSharesTargetType';
 
 export type GetSharesParams = {
   page?: number;
