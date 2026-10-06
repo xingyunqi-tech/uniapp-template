@@ -2,7 +2,7 @@
 
 > Uni-app 项目的 Claude Code 完整配置，包括 Agents、Skills、Commands 和 Hooks
 
-**重要**: 本项目是 Uni-app 多端项目，使用 pages.json 配置路由（非 Vue Router），使用 uni-ui 组件库。
+**重要**: 本项目是 Uni-app 多端项目，页面通过 `definePage` 宏 + `pages.config.ts` 生成 `src/pages.json`（非 Vue Router），使用 uni-ui 组件库。
 
 ---
 
@@ -151,7 +151,7 @@ Agents 提供专业领域的深度指导，Claude 根据任务内容自动选择
 | `common-patterns` | `common-patterns.md` | 通用开发模式 (SSoT)，Props/Emits/CSS变量/盒模型 | 查询通用模式和规范 |
 | `api-development` | `api-development.md` | Orval API 开发，四层架构/自定义扩展/工作流 | API 使用和扩展 |
 | `component-development` | `component-development.md` | 组件开发规范，设计原则/Figma 还原/样式规范 | 组件设计和开发 |
-| `router-development` | `router-development.md` | **Uni-app 路由**，pages.json 配置/分包/导航 | 路由和页面配置 |
+| `router-development` | `router-development.md` | **Uni-app 路由**，definePage/pages.config.ts 配置/分包/导航 | 路由和页面配置 |
 
 #### 专业 Agents (按需使用)
 
@@ -281,7 +281,6 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 | 文件 | 用途 | 说明 |
 |------|------|------|
 | `.mcp.json` | Claude Code 配置 | 项目根目录，Claude Code 读取 |
-| `.cursor/mcp.json` | Cursor 配置 | Cursor 编辑器读取 |
 | `settings.json` | 启用控制 | `enabledMcpjsonServers` 字段控制启用哪些 |
 
 ### 当前配置的 MCP 服务器

@@ -16,7 +16,7 @@ model: inherit
 - **构建**: Vite
 - **语言**: TypeScript
 - **状态**: Pinia (持久化)
-- **路由**: pages.json + useRouter composable
+- **路由**: `definePage` 宏 + `pages.config.ts` 生成 pages.json，useRouter composable 导航
 - **UI**: uni-ui + 自定义 U 前缀组件
 - **HTTP**: Alova + Orval
 - **样式**: SCSS + CSS 变量
@@ -36,9 +36,6 @@ uniapp-template/
 │   │   ├── generated/          # Orval 自动生成（禁止修改）
 │   │   ├── custom/             # 自定义扩展
 │   │   └── index.ts            # 统一导出
-│   ├── assets/                 # 静态资源
-│   │   ├── icons/              # SVG 图标
-│   │   └── images/             # 图片资源
 │   ├── components/             # 全局公用组件（U 前缀）
 │   │   ├── UNavBar/            # 导航栏
 │   │   ├── ULoading/           # 加载指示器
@@ -66,15 +63,18 @@ uniapp-template/
 │   ├── store/                  # Pinia 状态管理
 │   │   ├── modules/            # Store 模块
 │   │   └── plugins/            # Store 插件
+│   ├── static/                 # 静态资源（图片、TabBar 图标）
 │   ├── styles/                 # 全局样式
 │   │   ├── theme.scss          # 主题变量
 │   │   └── index.scss          # 全局样式
 │   ├── utils/                  # 工具函数
 │   ├── App.vue                 # 根组件
 │   ├── main.ts                 # 应用入口
-│   ├── pages.json              # 页面路由配置
-│   ├── manifest.json           # 应用配置
+│   ├── pages.json              # 由 pages.config.ts + definePage 自动生成
+│   └── manifest.json           # 由 manifest.config.ts 自动生成
 ├── typings/                    # TypeScript 类型声明
+├── pages.config.ts             # 页面全局配置（easycom、分包、tabBar）
+├── manifest.config.ts          # 应用配置
 ├── package.json                # 项目配置
 └── vite.config.ts              # Vite 配置
 ```
@@ -112,15 +112,18 @@ src/pages/
 ```
 src/pages-sub/
 ├── order/                  # 订单分包
-│   └── list/               # 订单列表
-│       └── index.vue
+│   ├── list/               # 订单列表
+│   ├── detail/             # 订单详情
+│   └── payment-result/     # 支付结果
 ├── user/                   # 用户分包
 │   ├── address/            # 地址管理
 │   ├── address-edit/       # 编辑地址
 │   ├── profile/            # 编辑资料
 │   ├── password/           # 修改密码
 │   ├── settings/           # 设置
-│   └── favorite/           # 收藏
+│   ├── favorite/           # 收藏
+│   ├── notifications/      # 消息通知
+│   └── notification-settings/ # 通知设置
 └── other/                  # 其他分包
     ├── about/              # 关于我们
     ├── contact/            # 联系客服
@@ -168,7 +171,15 @@ src/components/
 │   └── index.vue
 ├── USmsInput/              # 短信验证码
 │   └── index.vue
-└── UPasswordStrength/      # 密码强度
+├── UPasswordStrength/      # 密码强度
+│   └── index.vue
+├── ULoadMore/              # 加载更多
+│   └── index.vue
+├── USearchBar/             # 搜索栏
+│   └── index.vue
+├── UTag/                   # 标签
+│   └── index.vue
+└── AuthLayout/             # 认证页面布局
     └── index.vue
 ```
 
@@ -209,13 +220,16 @@ src/components/
 ```
 src/api/
 ├── core/                   # HTTP 客户端核心
-│   └── request.ts          # Alova 实例封装
+│   ├── alova.ts            # Alova 实例（拦截器）
+│   ├── mutator.ts          # Orval 适配器
+│   └── index.ts            # 导出 http、Hooks
 ├── generated/              # Orval 自动生成（🚫 禁止修改）
 │   ├── auth/               # 认证模块
 │   └── model/              # 类型定义
 ├── custom/                 # 自定义扩展
-│   └── upload.ts           # 文件上传等
-└── index.ts                # 统一导出
+│   ├── override.ts         # 覆盖生成的 API（含文件上传）
+│   └── external.ts         # 外部 API
+└── index.ts                # 统一导出（pnpm api:gen 自动生成）
 ```
 
 **核心原则**：
@@ -239,9 +253,12 @@ src/store/
 
 ```
 src/constants/
-├── pages.ts                # 页面路径常量
+├── pages.ts                # 页面路径常量、白名单、页面角色
 ├── permission.ts           # 权限角色常量
 ├── system.ts               # 系统配置常量
+├── form.ts                 # 表单相关常量
+├── order.ts                # 订单相关常量
+├── payment.ts              # 支付相关常量
 └── index.ts                # 统一导出
 ```
 
@@ -267,7 +284,9 @@ export const WHITE_LIST = [
 
 ```
 src/styles/
-├── theme.scss              # 主题变量（颜色、间距）
+├── theme.scss              # 主题变量（颜色）
+├── size.scss               # 尺寸变量
+├── mixin.scss              # SCSS mixin
 └── index.scss              # 全局样式
 ```
 
@@ -279,7 +298,7 @@ src/styles/
   --color-primary: #1989fa;
   --color-success: #07c160;
   --color-warning: #ff976a;
-  --color-danger: #ee0a24;
+  --color-error: #ee0a24;
 
   // 文本色
   --color-text: #323233;
@@ -287,8 +306,8 @@ src/styles/
   --color-text-placeholder: #c8c9cc;
 
   // 背景色
+  --color-bg: #fff;
   --color-bg-grey: #f7f8fa;
-  --color-white: #ffffff;
 
   // 边框色
   --color-border: #ebedf0;
@@ -304,7 +323,7 @@ src/styles/
 import { useRouter } from '@/composables';
 import { PAGES } from '@/constants';
 import { useUserStore } from '@/store/modules/user';
-import { postAuthLogin } from '@/api';
+import { loginWithPhone } from '@/api';
 
 // ❌ 错误：相对路径过长
 import { useRouter } from '../../../composables';
@@ -335,11 +354,10 @@ mkdir src/pages/new-page
 # 2. 创建页面文件
 touch src/pages/new-page/index.vue
 
-# 3. 在 pages.json 中注册
-# {
-#   "path": "pages/new-page/index",
-#   "style": { "navigationBarTitleText": "新页面" }
-# }
+# 3. 在页面 <script setup> 中用 definePage 声明配置（自动生成 pages.json）
+# definePage({
+#   style: { navigationBarTitleText: '新页面' },
+# });
 
 # 4. 在 constants/pages.ts 添加常量
 # NEW_PAGE: '/pages/new-page/index',
@@ -354,13 +372,9 @@ mkdir -p src/pages-sub/[module]/new-page
 # 2. 创建页面文件
 touch src/pages-sub/[module]/new-page/index.vue
 
-# 3. 在 pages.json 的 subPackages 中注册
-# {
-#   "root": "pages-sub/[module]",
-#   "pages": [
-#     { "path": "new-page/index", "style": {...} }
-#   ]
-# }
+# 3. 在页面中用 definePage 声明配置，页面自动加入对应分包
+#    新增分包模块时，需同时在 pages.config.ts 的 subPackages
+#    与 vite.config.ts 中 UniPages 的 subPackages 里添加该目录
 ```
 
 ### 新增全局组件
@@ -411,7 +425,7 @@ touch src/composables/useNewFeature.ts
 | 组件目录 | PascalCase + U前缀 | `UNavBar/` |
 | 组件文件 | index.vue | `index.vue` |
 | Composable | camelCase + use前缀 | `useRouter.ts` |
-| 工具函数 | camelCase | `storage.ts` |
+| 工具函数 | kebab-case | `error-reporter.ts` |
 | 常量文件 | camelCase | `pages.ts` |
 
 ### 3. 代码组织原则

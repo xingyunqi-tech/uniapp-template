@@ -41,18 +41,19 @@ Uni-app 使用小程序风格的标签，而非 HTML 标签：
 
 项目配置了 easycom，符合规范的组件会自动导入，无需手动 import：
 
-```json
-// pages.json 中的 easycom 配置
-{
-  "easycom": {
-    "autoscan": true,
-    "custom": {
-      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
-      "^U(.*)": "@/components/U$1/index.vue"
-    }
-  }
-}
+```typescript
+// pages.config.ts 中的 easycom 配置（生成到 src/pages.json）
+easycom: {
+  autoscan: true,
+  custom: {
+    '^uni-(.*)': '@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue',
+    '^U(.*)': '@/components/U$1/index.vue',
+    '^AuthLayout$': '@/components/AuthLayout/index.vue',
+  },
+},
 ```
+
+自定义组件使用 PascalCase 标签（如 `<UNavBar />`），不支持 `<u-nav-bar>` 这类 kebab 写法。
 
 **使用方式**：
 ```vue
@@ -149,6 +150,11 @@ Uni-app 使用小程序风格的标签，而非 HTML 标签：
 | `URichText` | 富文本 |
 | `USmsInput` | 短信验证码输入 |
 | `UPasswordStrength` | 密码强度 |
+| `ULoadMore` | 加载更多 |
+| `USearchBar` | 搜索栏 |
+| `UTag` | 标签 |
+
+另有布局组件 `AuthLayout`（认证页面布局），同样通过 easycom 自动导入。
 
 ### 页面级组件 (Page-specific Components)
 - **位置**: `src/pages/[page]/components/` 或 `src/pages-sub/[module]/[page]/components/`
@@ -159,7 +165,7 @@ Uni-app 使用小程序风格的标签，而非 HTML 标签：
 ### 页面组件 (Page Components)
 - **位置**: `src/pages/` (主包) 或 `src/pages-sub/` (分包)
 - **特点**: 完整的页面实现，路由对应的组件
-- **配置**: 在 `pages.json` 中注册
+- **配置**: 在页面中使用 `definePage({...})` 宏声明页面配置，由 `@uni-helper/vite-plugin-uni-pages` 自动生成 `src/pages.json`
 
 ---
 
@@ -194,7 +200,7 @@ Uni-app 使用小程序风格的标签，而非 HTML 标签：
 }
 
 .error {
-  color: var(--color-danger);            // 危险色 #ee0a24
+  color: var(--color-error);             // 错误色 #ee0a24
 }
 
 // ❌ 错误：硬编码颜色
@@ -549,7 +555,7 @@ const props = defineProps<{
   display: flex;
   align-items: center;
   padding: 24rpx 32rpx;
-  background: var(--color-white);
+  background: var(--color-bg-card);
   border-radius: 16rpx;
 
   .avatar {

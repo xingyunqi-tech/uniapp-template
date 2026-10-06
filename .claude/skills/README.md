@@ -83,7 +83,7 @@ Skills 是 Claude Code 的命令式工具，可以快速完成重复性开发任
 - 使用 `/tools` 命令可快速查看所有可用工具索引
 - API 同步使用 `pnpm api:gen` (Orval 自动生成,80% 场景)
 - 自定义 API 使用 `/api-generator` (文件上传/下载/WebSocket 等 20% 场景)
-- 国际化使用 `pnpm i18n` (AI 自动翻译)
+- 国际化文案维护在 `src/locale/` 下的语言文件
 - 代码检查使用 `pnpm lint` 和 `pnpm type-check`
 - 日常提交使用 `pnpm commit` (czg),配合 `/git-workflow` 查看规范
 
@@ -228,7 +228,7 @@ pnpm commit
 /component-generator ProductList --type page --smart
 
 # 🆕 指定 API 集成
-/component-generator UserManagement --type page --api getUserList,createUser
+/component-generator UserManagement --type page --api getUsers,createUser
 
 # 页面组件 + 自动生成路由
 /component-generator UserManagement --type page --with-router --roles admin,teacher
@@ -256,7 +256,7 @@ pnpm commit
 /store-generator ProductStore --smart
 
 # 🆕 指定 API 集成
-/store-generator UserStore --api getUserList,createUser,updateUser
+/store-generator UserStore --api getUsers,createUser,updateUser
 
 # 带持久化的 Store
 /store-generator SettingsStore --smart --persist
@@ -309,7 +309,7 @@ pnpm commit
 /api-generator uploadFile --type upload --with-progress
 
 # 覆盖生成的 API (添加业务逻辑)
-/api-generator postAuthLogin --type override
+/api-generator loginWithEmail --type override
 
 # 文件下载 API
 /api-generator downloadFile --type download
@@ -623,7 +623,7 @@ pnpm commit
 | 快速生成代码 | Skills ✅ | `/component-generator UserCard` |
 | 学习项目规范 | Agents ✅ | `@component-development` |
 | 深度咨询问题 | Agents ✅ | `@api-development 如何扩展 API?` |
-| 重复性任务 | Scripts + Skills ✅ | `pnpm i18n` + `/test-coverage-checker` |
+| 重复性任务 | Scripts + Skills ✅ | `pnpm checkCssVars` + `/test-coverage-checker` |
 | 代码质量检查 | Scripts ✅ | `pnpm lint` + `pnpm type-check` |
 | 自动化流程 | Scripts ✅ | `pnpm api:gen` + `pnpm commit` |
 
@@ -662,7 +662,7 @@ pnpm type-check → pnpm lint → /test-coverage-checker --auto-generate
 #### Q2: Skills 会修改我的代码吗？
 
 **A:**
-- `component-generator`: 生成新文件,使用 --with-router 时会修改路由文件
+- `component-generator`: 生成新文件,使用 --with-router 时会在页面中写入 `definePage` 配置
 - `store-generator`: 生成新的 Store 文件
 - `page-assembler`: 会修改页面文件,智能合并代码
 - `figma-to-component`: 生成新文件和下载图片
@@ -770,7 +770,7 @@ pnpm type-check  # 类型检查
 
 1. 查看错误信息
 2. 检查项目依赖是否安装: `pnpm install`
-3. 检查相关脚本是否存在 (如 `scripts/i18n/`)
+3. 检查相关脚本是否存在 (见 `package.json` 的 scripts)
 4. 查看对应 Agent 文档了解详情
 
 ---
@@ -814,7 +814,7 @@ pnpm api:gen
   - 删除的 Skills 替代方案:
     - `api-sync` → `pnpm api:gen`
     - `css-vars-check` → Stylelint (内置)
-    - `i18n-generate` → `pnpm i18n`
+    - `i18n-generate` → 无对应脚本，手动维护 `src/locale/`
     - `test-generator` → `/test-coverage-checker --auto-generate`
     - `code-reviewer` → `pnpm lint`
     - `type-fixer` → `pnpm type-check`

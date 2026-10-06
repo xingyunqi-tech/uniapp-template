@@ -80,7 +80,7 @@ metadata:
 📋 待拼装内容:
    ☐ 导入组件: UserList, UserForm
    ☐ 使用 Store: useUserStore
-   ☐ 集成 API: getUserList, createUser, deleteUser
+   ☐ 集成 API: getUsers, createUser, deleteUser
    ☐ 添加 Loading 状态
    ☐ 添加错误处理
    ☐ 添加下拉刷新和加载更多
@@ -93,8 +93,8 @@ metadata:
 **检查组件:**
 ```bash
 # 检查组件文件是否存在
-src/pages-sub/user/management/components/UserList.vue   # ✓ 存在
-src/pages-sub/user/management/components/UserForm.vue   # ✓ 存在
+src/components/UUserList/index.vue   # ✓ 存在
+src/components/UUserForm/index.vue   # ✓ 存在
 ```
 
 **检查 Store:**
@@ -106,7 +106,7 @@ src/store/modules/user.ts  # ✓ 存在
 **检查 API:**
 ```bash
 # 检查 API 函数是否存在
-src/api/generated/user/user.ts  # ✓ 存在
+src/api/generated/users/users.ts  # ✓ 存在
 ```
 
 **如果依赖不存在:**
@@ -125,22 +125,21 @@ src/api/generated/user/user.ts  # ✓ 存在
 
 根据分析结果，生成需要添加的导入语句：
 
-```typescript
-// ========== 组件导入 ==========
-import UserList from './components/UserList.vue';
-import UserForm from './components/UserForm.vue';
+`src/components/U*` 组件由 easycom 自动注册，无需导入。
 
+```typescript
 // ========== Store 导入 ==========
 import { useUserStore } from '@/store/modules/user';
 
 // ========== API 导入 ==========
-import { getUserList, createUser, deleteUser } from '@/api';
+import { getUsers, createUser, deleteUser } from '@/api';
 
 // ========== 类型导入 ==========
-import type { UserDTO, UserCreateRequest } from '@/api';
+import type { User, CreateUserDto } from '@/api';
 
 // ========== 工具函数 ==========
-import { showToast, showModal } from '@/utils/modal';
+import { showToast } from '@/utils/toast';
+import { confirm } from '@/utils/modal';
 ```
 
 ---
@@ -152,12 +151,12 @@ import { showToast, showModal } from '@/utils/modal';
 const userStore = useUserStore();
 
 // ========== 状态管理 ==========
-const popupVisible = ref(false);
-const currentUser = ref<UserDTO | null>(null);
+const popupRef = ref<{ open: () => void; close: () => void } | null>(null);
+const currentUser = ref<User | null>(null);
 const refreshing = ref(false);
 
 const listState = ref({
-  list: [] as UserDTO[],
+  list: [] as User[],
   loading: false,
   finished: false,
   page: 1,
@@ -172,21 +171,21 @@ onLoad(() => {
 // ========== 事件处理 ==========
 const handleAdd = () => {
   currentUser.value = null;
-  popupVisible.value = true;
+  popupRef.value?.open();
 };
 
-const handleEdit = (user: UserDTO) => {
+const handleEdit = (user: User) => {
   currentUser.value = user;
-  popupVisible.value = true;
+  popupRef.value?.open();
 };
 
 const handleDelete = async (id: string) => {
-  const { confirm } = await showModal({
+  const confirmed = await confirm({
     title: '提示',
     content: '确定要删除吗？',
   });
 
-  if (!confirm) return;
+  if (!confirmed) return;
 
   try {
     await deleteUser(id);
@@ -197,11 +196,11 @@ const handleDelete = async (id: string) => {
   }
 };
 
-const handleSubmit = async (data: UserCreateRequest) => {
+const handleSubmit = async (data: CreateUserDto) => {
   try {
     await createUser(data);
     showToast('操作成功');
-    popupVisible.value = false;
+    popupRef.value?.close();
     handleRefresh();
   } catch (error: any) {
     showToast(error.message || '操作失败');
@@ -214,14 +213,13 @@ const handleLoadMore = async () => {
 
   listState.value.loading = true;
   try {
-    const res = await getUserList({
+    const res = await getUsers({
       page: listState.value.page,
-      pageSize: listState.value.pageSize,
+      limit: listState.value.pageSize,
     });
-    const newList = res.data?.list || [];
-    listState.value.list.push(...newList);
+    listState.value.list.push(...res.data);
     listState.value.page++;
-    listState.value.finished = newList.length < listState.value.pageSize;
+    listState.value.finished = !res.hasNextPage;
   } finally {
     listState.value.loading = false;
   }
@@ -292,11 +290,11 @@ const handleRefresh = async () => {
     </scroll-view>
 
     <!-- 表单弹出层 -->
-    <UPopup v-model:show="popupVisible" position="bottom" round>
-      <UserForm
+    <UPopup ref="popupRef" type="bottom">
+      <UUserForm
         :data="currentUser"
         @submit="handleSubmit"
-        @cancel="popupVisible = false"
+        @cancel="popupRef?.close()"
       />
     </UPopup>
   </view>
@@ -328,14 +326,14 @@ const handleRefresh = async () => {
 📦 已集成内容:
 
    ✅ 组件集成 (2 个):
-      - UserList
-      - UserForm
+      - UUserList
+      - UUserForm
 
    ✅ Store 集成 (1 个):
       - useUserStore
 
    ✅ API 集成 (3 个):
-      - getUserList (查询)
+      - getUsers (查询)
       - createUser (创建)
       - deleteUser (删除)
 
@@ -353,7 +351,7 @@ const handleRefresh = async () => {
 💡 下一步:
    1. 查看生成的代码? (y/n)
    2. 运行类型检查? (pnpm type-check)
-   3. 启动开发服务器测试? (pnpm start:h5)
+   3. 启动开发服务器测试? (pnpm dev:h5)
 ```
 
 ---
@@ -400,7 +398,7 @@ try {
 ```typescript
 // 添加列表状态
 const listState = ref({
-  list: [] as UserDTO[],
+  list: [] as User[],
   loading: false,
   finished: false,
   page: 1,
@@ -468,15 +466,15 @@ const handleRefresh = async () => {
 ### 分析逻辑
 
 1. **根据页面路径推断**:
-   - `src/pages-sub/user/management/` → 查找 `components/` 子目录
-   - 自动导入该目录下的所有组件
+   - `src/pages-sub/user/management/` → 在 `src/components/` 中查找 `UUser*` 组件
+   - 组件由 easycom 自动注册，无需导入
 
 2. **根据页面名称推断 Store**:
    - `UserManagement` → `useUserStore`
    - `ProductList` → `useProductStore`
 
 3. **根据 Store 推断 API**:
-   - `useUserStore` → `getUserList`, `createUser`, `updateUser`, `deleteUser`
+   - `useUserStore` → `getUsers`, `createUser`, `updateUser`, `deleteUser`
    - `useProductStore` → `getProductList`, `getProductById`, `createProduct`
 
 ---
@@ -578,7 +576,7 @@ const handleRefresh = async () => {
 pnpm type-check
 
 # 启动开发服务器
-pnpm start:h5
+pnpm dev:h5
 
 # 访问页面测试
 ```
@@ -687,7 +685,7 @@ cat src/pages-sub/user/management/index.vue
 pnpm type-check
 
 # 步骤 5: 启动开发服务器测试
-pnpm start:h5
+pnpm dev:h5
 
 # 步骤 6: 如果有问题，调整代码
 # 编辑 src/pages-sub/user/management/index.vue

@@ -84,12 +84,8 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 ### 4. 国际化和无障碍
 
 #### 国际化 (i18n)
-- [ ] **所有用户可见文本使用中文明文**（不使用 `$t()` API）
-- [ ] 运行 `pnpm i18n` 自动提取和翻译
-- [ ] 检查生成的语言包文件（zh-CN、en-US）
+- [ ] 多语言文本使用 `$t('key')`，key 在 `src/locale/zh-CN.json`、`src/locale/en-US.json` 中同时定义
 - [ ] 参考 `@coding-standards#国际化原则`
-
-**注意:** 本项目使用 AI 自动翻译，禁止在代码中直接使用 `$t()` API
 
 #### 无障碍支持
 - [ ] 图片有 `alt` 属性
@@ -119,10 +115,10 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 
 #### 上下文一致性
 - [ ] **轮子检测**: 是否重复实现了项目已有的工具函数？
-  - 日期格式化 → `@/utils` (`formatDateShort`, `formatDateTime`, `formatRelativeTime`)
-  - HTML 净化 → `@/utils/sanitize` (`sanitizeHtml`, `sanitizeHtmlStrict`, `sanitizeText`)
+  - 日期格式化 → `@/utils/datetime` (`formatDateTime`, `formatRelativeTime`)
+  - 数据格式化 → `@/utils/formatters` (`formatMoney`, `formatPhone`, `formatFileSize`)
   - Toast 提示 → `@/utils/toast` (`showToast`, `showSuccess`, `showError`)
-  - 存储操作 → `uni.setStorageSync/uni.getStorageSync`
+  - 存储操作 → `@/utils/storage` (`storage`, `STORAGE_KEYS`)
 - [ ] **命名一致**: 命名风格是否与现有代码统一？
 - [ ] **注释同步**: 注释是否与代码逻辑匹配（AI 常忘记更新注释）？
 
@@ -134,7 +130,7 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 - [ ] 无明显性能问题（大量计算、渲染）
 - [ ] 列表使用虚拟滚动（长列表）
 - [ ] 图片懒加载
-- [ ] 组件懒加载（路由级别）
+- [ ] 非主流程页面放在分包（`src/pages-sub/`）
 
 #### 安全检查
 - [ ] 无 XSS 漏洞（v-html 使用 DOMPurify）
@@ -144,7 +140,7 @@ description: 快速提醒 PR 审查清单，确保代码质量和项目规范
 
 #### 依赖和构建
 - [ ] 无新增不必要的依赖
-- [ ] 运行 `pnpm build` 成功
+- [ ] 运行 `pnpm build:h5` 成功
 - [ ] 构建产物大小合理
 
 ---
@@ -174,14 +170,11 @@ pnpm type-check
 # 2. 代码检查
 pnpm lint
 
-# 3. 国际化检查
-pnpm i18n
-
-# 4. 运行测试
+# 3. 运行测试
 pnpm test
 
-# 5. 构建检查
-pnpm build
+# 4. 构建检查
+pnpm build:h5
 ```
 
 ---

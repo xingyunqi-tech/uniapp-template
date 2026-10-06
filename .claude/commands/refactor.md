@@ -37,7 +37,7 @@ description: 重构代码时的最佳实践提示，确保安全、高效、符�
 // ❌ 重复代码
 const handleUserLogin = async () => {
   try {
-    const response = await postAuthLogin(data);
+    const response = await loginWithEmail(data);
     uni.setStorageSync('token', response.token);
     uni.navigateTo({ url: '/pages/index/index' });
   } catch (error) {
@@ -47,7 +47,7 @@ const handleUserLogin = async () => {
 
 const handleAdminLogin = async () => {
   try {
-    const response = await postAuthLogin(data);
+    const response = await loginWithEmail(data);
     uni.setStorageSync('token', response.token);
     uni.navigateTo({ url: '/pages-sub/admin/index/index' });
   } catch (error) {
@@ -58,7 +58,7 @@ const handleAdminLogin = async () => {
 // ✅ 提取公共逻辑
 const login = async (redirectPath: string) => {
   try {
-    const response = await postAuthLogin(data);
+    const response = await loginWithEmail(data);
     uni.setStorageSync('token', response.token);
     uni.navigateTo({ url: redirectPath });
   } catch (error) {
@@ -173,7 +173,7 @@ pnpm lint
 pnpm test
 
 # 4. 运行构建
-pnpm build
+pnpm build:h5
 ```
 
 #### 手动检查
@@ -358,7 +358,7 @@ git commit -m "refactor: extract common logic"
 pnpm type-check
 pnpm lint
 pnpm test
-pnpm build
+pnpm build:h5
 
 # 7. 提交 PR
 git push origin refactor/feature-name
@@ -382,7 +382,7 @@ git push origin refactor/feature-name
 - `pnpm type-check` - 类型检查
 - `pnpm lint` - 代码检查
 - `pnpm test` - 运行测试
-- `pnpm build` - 构建检查
+- `pnpm build:h5` - 构建检查
 
 ---
 

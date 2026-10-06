@@ -1,6 +1,6 @@
 ---
 name: router-development
-description: Uni-app 路由开发指导，包括 pages.json 配置、分包策略、导航方法和权限控制
+description: Uni-app 路由开发指导，包括 definePage/pages.config.ts 页面配置、分包策略、导航方法和权限控制
 tools: Read, Grep, Glob, WebFetch, WebSearch
 model: inherit
 ---
@@ -9,9 +9,9 @@ model: inherit
 
 ## 职责
 
-专门负责 Uni-app 路由开发指导，包括 pages.json 配置、分包策略、导航方法、权限控制和最佳实践。
+专门负责 Uni-app 路由开发指导，包括页面配置（definePage + pages.config.ts 生成 pages.json）、分包策略、导航方法、权限控制和最佳实践。
 
-**重要**: 本项目是 Uni-app 项目，使用 pages.json 配置路由，**不是 Vue Router**！
+**重要**: 本项目是 Uni-app 项目，使用 pages.json 配置路由，**不是 Vue Router**！`src/pages.json` 由 `@uni-helper/vite-plugin-uni-pages` 根据根目录 `pages.config.ts` 与各页面的 `definePage({...})` 宏自动生成，**不要手动编辑**。
 
 ---
 
@@ -21,8 +21,8 @@ model: inherit
 
 | 特性 | Vue Router | Uni-app |
 |------|------------|---------|
-| 配置文件 | router/index.ts | **pages.json** |
-| 路由定义 | JavaScript 对象 | **JSON 配置** |
+| 配置文件 | router/index.ts | **pages.config.ts + definePage**（生成 pages.json） |
+| 路由定义 | JavaScript 对象 | **页面内 definePage 宏** |
 | 动态路由 | addRoute() | ❌ 不支持 |
 | 路由守卫 | beforeEach/afterEach | **路由拦截器** |
 | 导航方式 | router.push() | **uni.navigateTo()** |
@@ -32,7 +32,7 @@ model: inherit
 
 ```
 src/
-├── pages.json              # 路由配置 (核心!)
+├── pages.json              # 自动生成，勿手动编辑
 │
 ├── pages/                  # 主包页面 (7 个)
 │   ├── index/index.vue     # 首页 (TabBar)
@@ -45,76 +45,73 @@ src/
 │
 └── pages-sub/              # 分包 (3 个分包，优化小程序体积)
     ├── order/              # 订单分包
-    │   └── list/           # 订单列表
+    │   ├── list/           # 订单列表
+    │   ├── detail/         # 订单详情
+    │   └── payment-result/ # 支付结果
     ├── user/               # 用户分包
     │   ├── address/        # 地址管理
     │   ├── address-edit/   # 编辑地址
     │   ├── favorite/       # 我的收藏
+    │   ├── notifications/  # 消息通知
+    │   ├── notification-settings/ # 通知设置
     │   ├── password/       # 修改密码
     │   ├── profile/        # 编辑资料
     │   └── settings/       # 设置
     └── other/              # 其他分包
         ├── about/          # 关于我们
         ├── contact/        # 联系客服
-        └── feedback/       # 意见反馈
+        ├── feedback/       # 意见反馈
+        └── webview/        # 网页容器
 ```
+
+根目录还有 `pages.config.ts`（全局配置）与 `manifest.config.ts`（生成 `src/manifest.json`）。
 
 ---
 
-## pages.json 配置详解
+## 页面配置详解
 
 ### 完整配置结构
 
-```json
-{
-  "easycom": {
-    "autoscan": true,
-    "custom": {
-      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
-      "^u-(.*)": "@/components/U$1/index.vue"
-    }
+全局配置写在根目录 `pages.config.ts`，构建时与各页面的 `definePage` 合并生成 `src/pages.json`：
+
+```typescript
+// pages.config.ts
+import { defineUniPages } from '@uni-helper/vite-plugin-uni-pages';
+
+export default defineUniPages({
+  easycom: {
+    autoscan: true,
+    custom: {
+      '^uni-(.*)': '@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue',
+      '^U(.*)': '@/components/U$1/index.vue',
+      '^AuthLayout$': '@/components/AuthLayout/index.vue',
+    },
   },
-  "pages": [
-    // 主包页面配置...
+  pages: [],
+  subPackages: [
+    { root: 'pages-sub/order', pages: [] },
+    { root: 'pages-sub/user', pages: [] },
+    { root: 'pages-sub/other', pages: [] },
   ],
-  "subPackages": [
-    // 分包配置...
-  ],
-  "globalStyle": {
-    // 全局样式配置...
-  },
-  "tabBar": {
-    // TabBar 配置...
-  },
-  "condition": {
-    // 开发调试配置...
-  }
-}
+  globalStyle: { /* ... */ },
+  tabBar: { /* ... */ },
+  condition: { /* ... */ },
+});
 ```
 
 ### 页面配置
 
-```json
-{
-  "pages": [
-    {
-      "path": "pages/index/index",
-      "type": "home",
-      "style": {
-        "navigationBarTitleText": "首页",
-        "enablePullDownRefresh": true
-      }
-    },
-    {
-      "path": "pages/login/index",
-      "type": "page",
-      "style": {
-        "navigationBarTitleText": "登录",
-        "navigationStyle": "custom"
-      }
-    }
-  ]
-}
+页面配置写在页面自身的 `<script setup>` 中：
+
+```vue
+<script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '登录',
+    navigationStyle: 'custom',
+  },
+});
+</script>
 ```
 
 **style 常用配置**:
@@ -131,34 +128,14 @@ src/
 
 ### 分包配置
 
-```json
-{
-  "subPackages": [
-    {
-      "root": "pages-sub/order",
-      "pages": [
-        {
-          "path": "list/index",
-          "type": "page",
-          "style": {
-            "navigationBarTitleText": "我的订单"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages-sub/user",
-      "pages": [
-        { "path": "address/index", "style": { "navigationBarTitleText": "地址管理" } },
-        { "path": "address-edit/index", "style": { "navigationBarTitleText": "编辑地址" } },
-        { "path": "favorite/index", "style": { "navigationBarTitleText": "我的收藏" } },
-        { "path": "password/index", "style": { "navigationBarTitleText": "修改密码" } },
-        { "path": "profile/index", "style": { "navigationBarTitleText": "编辑资料" } },
-        { "path": "settings/index", "style": { "navigationBarTitleText": "设置" } }
-      ]
-    }
-  ]
-}
+`src/pages-sub/` 下的页面会被自动扫描到对应分包，分包目录在 `vite.config.ts` 的 `UniPages({ subPackages: [...] })` 中声明，并在 `pages.config.ts` 的 `subPackages` 中占位：
+
+```typescript
+// vite.config.ts
+UniPages({
+  dts: 'typings/uni-pages.d.ts',
+  subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other'],
+}),
 ```
 
 **分包原则**:
@@ -170,29 +147,29 @@ src/
 
 ### TabBar 配置
 
-```json
-{
-  "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#07c160",
-    "borderStyle": "black",
-    "backgroundColor": "#ffffff",
-    "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png"
-      },
-      {
-        "pagePath": "pages/mine/index",
-        "text": "我的",
-        "iconPath": "static/tabbar/mine.png",
-        "selectedIconPath": "static/tabbar/mine-active.png"
-      }
-    ]
-  }
-}
+TabBar 在 `pages.config.ts` 中配置，颜色与图标使用 `src/theme.json` 中的主题变量（`@xxx`）：
+
+```typescript
+tabBar: {
+  color: '@tabFontColor',
+  selectedColor: '@tabSelectedColor',
+  borderStyle: '@tabBorderStyle',
+  backgroundColor: '@tabBgColor',
+  list: [
+    {
+      pagePath: 'pages/index/index',
+      text: '首页',
+      iconPath: '@iconHome',
+      selectedIconPath: '@iconHomeActive',
+    },
+    {
+      pagePath: 'pages/mine/index',
+      text: '我的',
+      iconPath: '@iconMine',
+      selectedIconPath: '@iconMineActive',
+    },
+  ],
+},
 ```
 
 **TabBar 图标规范**:
@@ -203,33 +180,28 @@ src/
 
 ### globalStyle 全局样式
 
-```json
-{
-  "globalStyle": {
-    "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "UniApp",
-    "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f7f8fa",
-    "backgroundTextStyle": "dark",
-    "enablePullDownRefresh": false,
-    "onReachBottomDistance": 50
-  }
-}
+```typescript
+globalStyle: {
+  navigationBarTextStyle: '@navTxtStyle',
+  navigationBarTitleText: 'UniApp',
+  navigationBarBackgroundColor: '@navBgColor',
+  backgroundColor: '@bgColor',
+  backgroundTextStyle: '@bgTxtStyle',
+  enablePullDownRefresh: false,
+  onReachBottomDistance: 50,
+},
 ```
 
 ### condition 开发调试
 
-```json
-{
-  "condition": {
-    "current": 0,
-    "list": [
-      { "name": "首页", "path": "pages/index/index" },
-      { "name": "登录", "path": "pages/login/index" },
-      { "name": "订单", "path": "pages-sub/order/list/index", "query": "status=1" }
-    ]
-  }
-}
+```typescript
+condition: {
+  current: 0,
+  list: [
+    { name: '首页', path: 'pages/index/index' },
+    { name: '登录', path: 'pages/login/index' },
+  ],
+},
 ```
 
 ---
@@ -342,6 +314,8 @@ export const PAGES = {
 
   // ========== order 分包 ==========
   ORDER: '/pages-sub/order/list/index',
+  ORDER_DETAIL: '/pages-sub/order/detail/index',
+  PAYMENT_RESULT: '/pages-sub/order/payment-result/index',
 
   // ========== user 分包 ==========
   ADDRESS: '/pages-sub/user/address/index',
@@ -350,11 +324,14 @@ export const PAGES = {
   PROFILE: '/pages-sub/user/profile/index',
   PASSWORD: '/pages-sub/user/password/index',
   FAVORITE: '/pages-sub/user/favorite/index',
+  NOTIFICATIONS: '/pages-sub/user/notifications/index',
+  NOTIFICATION_SETTINGS: '/pages-sub/user/notification-settings/index',
 
   // ========== other 分包 ==========
   FEEDBACK: '/pages-sub/other/feedback/index',
   ABOUT: '/pages-sub/other/about/index',
   CONTACT: '/pages-sub/other/contact/index',
+  WEBVIEW: '/pages-sub/other/webview/index',
 } as const;
 
 // 使用
@@ -378,9 +355,13 @@ export const WHITE_LIST = [
   PAGES.REGISTER,
   PAGES.FORGOT_PASSWORD,
   PAGES.HOME,
+  PAGES.MINE,
   PAGES.ERROR,
   PAGES.AGREEMENT,
   PAGES.ABOUT,
+  PAGES.CONTACT,
+  PAGES.SETTINGS,
+  PAGES.WEBVIEW,
 ] as const;
 ```
 
@@ -393,83 +374,40 @@ import { ROLE } from './permission';
 export const PAGE_ROLES: Record<string, ROLE[]> = {
   // 管理员专属页面
   '/pages-sub/admin/dashboard/index': [ROLE.ADMIN],
-  // VIP 用户专属页面
-  '/pages-sub/vip/exclusive/index': [ROLE.ADMIN, ROLE.VIP],
 };
 ```
 
 ### 路由拦截器
 
+`src/utils/router-interceptor.ts` 基于 `uni.addInterceptor` 实现，在 `main.ts` 中调用 `setupRouterInterceptor()` 安装：
+
 ```typescript
 // src/utils/router-interceptor.ts
-import { useUserStore } from '@/store';
-import { WHITE_LIST, PAGES, PAGE_ROLES } from '@/constants/pages';
-import { isInWhiteList, getPathFromUrl } from '@/utils/router';
+export function setupRouterInterceptor(): void {
+  const interceptMethods = ['navigateTo', 'redirectTo', 'reLaunch'] as const;
 
-/**
- * 安装路由拦截器
- */
-export function setupRouterInterceptor() {
-  // 拦截 navigateTo
-  const originalNavigateTo = uni.navigateTo;
-  uni.navigateTo = function (options) {
-    if (checkPermission(options.url)) {
-      return originalNavigateTo.call(this, options);
-    }
-    return Promise.reject(new Error('Permission denied'));
-  };
-
-  // 拦截 redirectTo
-  const originalRedirectTo = uni.redirectTo;
-  uni.redirectTo = function (options) {
-    if (checkPermission(options.url)) {
-      return originalRedirectTo.call(this, options);
-    }
-    return Promise.reject(new Error('Permission denied'));
-  };
-
-  // 拦截 reLaunch
-  const originalReLaunch = uni.reLaunch;
-  uni.reLaunch = function (options) {
-    if (checkPermission(options.url)) {
-      return originalReLaunch.call(this, options);
-    }
-    return Promise.reject(new Error('Permission denied'));
-  };
-}
-
-/**
- * 检查页面访问权限
- */
-function checkPermission(url: string): boolean {
-  const path = getPathFromUrl(url);
-
-  // 1. 白名单检查 - 直接放行
-  if (isInWhiteList(url, WHITE_LIST)) {
-    return true;
-  }
-
-  // 2. 登录检查
-  const userStore = useUserStore();
-  if (!userStore.isLoggedIn) {
-    uni.navigateTo({
-      url: `${PAGES.LOGIN}?redirect=${encodeURIComponent(url)}`
+  interceptMethods.forEach(method => {
+    uni.addInterceptor(method, {
+      invoke(args: { url: string }) {
+        const result = handleRouteIntercept(args);
+        if (result === false) {
+          return false;
+        }
+        return typeof result === 'object' ? result : args;
+      },
     });
-    return false;
-  }
+  });
 
-  // 3. 角色权限检查
-  const requiredRoles = PAGE_ROLES[path];
-  if (requiredRoles && requiredRoles.length > 0) {
-    if (!requiredRoles.includes(userStore.role)) {
-      uni.showToast({ title: '无权限访问', icon: 'none' });
-      return false;
-    }
-  }
-
-  return true;
+  // switchTab 单独处理：白名单放行，未登录跳登录页（不携带 redirect）
+  uni.addInterceptor('switchTab', { /* ... */ });
 }
 ```
+
+`handleRouteIntercept` 的检查顺序：
+
+1. 白名单（`WHITE_LIST`）直接放行
+2. 未登录 → `redirectTo` 登录页并携带 `redirect` 参数
+3. `PAGE_ROLES` 角色校验失败 → 提示"暂无权限访问"并跳转 `PAGES.FORBIDDEN`
 
 ---
 
@@ -556,16 +494,15 @@ onReachBottom(() => {
 </script>
 ```
 
-**注意**: 需要在 pages.json 中开启:
+**注意**: 需要在页面的 `definePage` 中开启:
 
-```json
-{
-  "path": "pages/index/index",
-  "style": {
-    "enablePullDownRefresh": true,
-    "onReachBottomDistance": 50
-  }
-}
+```typescript
+definePage({
+  style: {
+    enablePullDownRefresh: true,
+    onReachBottomDistance: 50,
+  },
+});
 ```
 
 ---
@@ -584,7 +521,7 @@ touch src/pages/new-page/index.vue
 <!-- Step 2: 编写页面组件 -->
 <template>
   <view class="page">
-    <u-nav-bar title="新页面" />
+    <UNavBar title="新页面" />
     <view class="content">
       <!-- 页面内容 -->
     </view>
@@ -592,6 +529,13 @@ touch src/pages/new-page/index.vue
 </template>
 
 <script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '新页面',
+    navigationStyle: 'custom',
+  },
+});
+
 import { onLoad } from '@dcloudio/uni-app';
 
 onLoad((options) => {
@@ -611,24 +555,8 @@ onLoad((options) => {
 </style>
 ```
 
-```json
-// Step 3: pages.json 添加页面配置
-{
-  "pages": [
-    // ... 其他页面
-    {
-      "path": "pages/new-page/index",
-      "style": {
-        "navigationBarTitleText": "新页面",
-        "navigationStyle": "custom"
-      }
-    }
-  ]
-}
-```
-
 ```typescript
-// Step 4: 添加路径常量
+// Step 3: 添加路径常量
 // src/constants/pages.ts
 export const PAGES = {
   // ...
@@ -644,24 +572,20 @@ mkdir -p src/pages-sub/feature/detail
 touch src/pages-sub/feature/detail/index.vue
 ```
 
-```json
-// Step 2: pages.json 添加分包配置
-{
-  "subPackages": [
-    // ... 其他分包
-    {
-      "root": "pages-sub/feature",
-      "pages": [
-        {
-          "path": "detail/index",
-          "style": {
-            "navigationBarTitleText": "详情页"
-          }
-        }
-      ]
-    }
-  ]
-}
+页面同样用 `definePage` 声明配置。新分包模块需注册目录：
+
+```typescript
+// Step 2: 注册新分包目录
+// vite.config.ts
+UniPages({
+  subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other', 'src/pages-sub/feature'],
+}),
+
+// pages.config.ts
+subPackages: [
+  // ... 其他分包
+  { root: 'pages-sub/feature', pages: [] },
+],
 ```
 
 ```typescript
@@ -721,17 +645,17 @@ if (pages.length >= 10) {
 
 ```typescript
 // 方式 1: URL 参数 (简单数据)
-router.push(PAGES.DETAIL, { id: 123 });
+router.push(PAGES.ORDER_DETAIL, { id: 123 });
 
 // 方式 2: Pinia Store (推荐，复杂数据)
 import { useOrderStore } from '@/store';
 const orderStore = useOrderStore();
-orderStore.setCurrentOrder(orderData);
-router.push(PAGES.DETAIL);
+await orderStore.fetchOrderDetail(orderId);
+router.push(PAGES.ORDER_DETAIL, { id: orderId });
 
 // 方式 3: 事件通道 (Uni-app 特有)
 uni.navigateTo({
-  url: PAGES.DETAIL,
+  url: PAGES.ORDER_DETAIL,
   events: {
     acceptData: (data) => console.log('收到数据:', data)
   },
@@ -799,16 +723,14 @@ if (redirect) {
 
 ### 5. 分包预加载
 
-```json
-// pages.json - 预加载配置
-{
-  "preloadRule": {
-    "pages/index/index": {
-      "network": "all",
-      "packages": ["pages-sub/order"]
-    }
-  }
-}
+```typescript
+// pages.config.ts - 预加载配置
+preloadRule: {
+  'pages/index/index': {
+    network: 'all',
+    packages: ['pages-sub/order'],
+  },
+},
 ```
 
 ---
@@ -817,7 +739,8 @@ if (redirect) {
 
 | 禁止操作 | 原因 | 正确做法 |
 |---------|------|---------|
-| 🚫 使用 Vue Router | Uni-app 不支持 | 使用 pages.json + uni API |
+| 🚫 使用 Vue Router | Uni-app 不支持 | 使用 definePage + uni API |
+| 🚫 手动编辑 src/pages.json | 构建时被覆盖 | 改 definePage 或 pages.config.ts |
 | 🚫 硬编码页面路径 | 难以维护 | 使用 PAGES 常量 |
 | 🚫 navigateTo 跳 TabBar | 会失败 | 使用 switchTab |
 | 🚫 页面栈超 10 层 | 会报错 | 使用 redirectTo/reLaunch |

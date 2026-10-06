@@ -17,7 +17,7 @@ description: 快速修复常见问题的诊断和解决方案
 | **Vue 组件** | Emits 未定义 | 添加 defineEmits | [详见](#vue-组件问题) |
 | **API** | Network Error | 检查后端服务 → CORS | [详见](#api-调用问题) |
 | **API** | 401 Unauthorized | 检查 token → 重新登录 | [详见](#api-调用问题) |
-| **API** | Orval 生成失败 | 检查 openapi.json → `pnpm api:gen` | [详见](#api-调用问题) |
+| **API** | Orval 生成失败 | 检查 orval.config.ts 中的 OpenAPI 地址 → `pnpm api:gen` | [详见](#api-调用问题) |
 | **路由** | 404 Not Found | 检查路由配置 → path | [详见](#路由问题) |
 | **路由** | 403 Forbidden | 检查权限配置 → roles | [详见](#路由问题) |
 | **样式** | 硬编码颜色 | 使用 CSS 变量 (src/styles/theme.scss) | [详见](#样式问题) |
@@ -26,8 +26,8 @@ description: 快速修复常见问题的诊断和解决方案
 | **构建** | 产物过大 | `pnpm analyzer` → 代码分割 | [详见](#构建问题) |
 | **Store** | 状态丢失 | 添加 persist 配置 | [详见](#store-问题) |
 | **Store** | State 未响应 | 使用 ref/reactive | [详见](#store-问题) |
-| **i18n** | 翻译不生效 | 检查语言包 → `pnpm i18n` | [详见](#国际化问题) |
-| **i18n** | 翻译缺失 | `pnpm i18n` | [详见](#国际化问题) |
+| **i18n** | 翻译不生效 | 检查 `src/locale/*.json` 语言包 | [详见](#国际化问题) |
+| **i18n** | 翻译缺失 | 在 `src/locale/*.json` 中补充 | [详见](#国际化问题) |
 | **测试** | 测试失败 | 运行单个测试 → 查看错误 | [详见](#测试问题) |
 | **测试** | 组件未挂载 | 检查 mount() 配置 | [详见](#测试问题) |
 | **性能** | 页面加载慢 | `pnpm analyzer` → 懒加载 | [详见](#性能问题) |
@@ -98,7 +98,7 @@ pnpm lint
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
 | `Props type mismatch` | Props 类型不匹配 | 检查 Props 定义 → 参考 @component-development |
-| `Failed to resolve component` | 组件未导入 | 添加 `import` 语句 |
+| `Failed to resolve component` | 组件未被 easycom 匹配 | 检查组件名 (PascalCase，如 `<UNavBar />`) 与 `pages.config.ts` 的 easycom 规则 |
 | `v-model not working` | Emits 未定义 | 定义 `update:modelValue` emit |
 | `Slot content is empty` | 插槽未传入内容 | 检查父组件 slot 使用 |
 
@@ -167,22 +167,22 @@ pnpm lint                    # 代码检查
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `页面跳转失败` | 路由未注册或路径错误 | 检查 pages.json 配置 → 检查路径格式 |
-| `页面不存在` | pages.json 未配置 | 添加页面配置到 pages.json |
-| `分包加载失败` | 分包配置错误 | 检查 subPackages 配置 |
+| `页面跳转失败` | 页面未生成或路径错误 | 检查页面文件是否位于 `src/pages`/`src/pages-sub` → 检查路径格式 |
+| `页面不存在` | 页面未写入 pages.json | 页面中使用 `definePage({...})` 并重新运行 dev，由插件生成 `src/pages.json` |
+| `分包加载失败` | 分包配置错误 | 检查 `pages.config.ts` 的 subPackages 与 `vite.config.ts` 的 UniPages subPackages 配置 |
 
 **解决方案:**
 ```typescript
 // 使用 useRouter composable
 import { useRouter } from '@/composables';
 
-const { navigateTo, redirectTo, switchTab } = useRouter();
+const router = useRouter();
 
 // 普通页面跳转
-navigateTo('/pages-sub/user/profile/index');
+router.push('/pages-sub/user/profile/index');
 
 // TabBar 页面跳转
-switchTab('/pages/mine/index');
+router.switchTab('/pages/mine/index');
 ```
 
 **详细文档:** [router-development.md](../agents/router-development.md)
@@ -236,8 +236,8 @@ pnpm lint
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `pnpm build 失败` | 类型错误、依赖问题 | 清理缓存 → `pnpm type-check` → `pnpm lint` |
-| `dist/assets/index.js 过大` | 依赖过多、未代码分割 | `pnpm analyzer` → 检查依赖 → 代码分割 |
+| `pnpm build:h5 失败` | 类型错误、依赖问题 | 清理缓存 → `pnpm type-check` → `pnpm lint` |
+| `dist/build/h5/assets/*.js 过大` | 依赖过多、未代码分割 | `pnpm analyzer` → 检查依赖 → 代码分割 |
 
 **工具命令:**
 ```bash
@@ -246,7 +246,7 @@ rm -rf node_modules dist .vite && pnpm install
 
 # 类型检查和构建
 pnpm type-check
-pnpm build --debug
+pnpm build:h5
 
 # 构建分析
 pnpm analyzer
@@ -298,14 +298,8 @@ export const useUserStore = defineStore(
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `$t('key') 显示为 key` | 语言包未定义或拼写错误 | 检查语言包 → `pnpm i18n` |
-| `翻译缺失` | 新增文本未翻译 | `pnpm i18n` |
-
-**工具命令:**
-```bash
-pnpm i18n                     # 交互式国际化管理
-pnpm i18n:exportLocale        # 导出语言包
-```
+| `$t('key') 显示为 key` | 语言包未定义或拼写错误 | 检查 `src/locale/*.json` 语言包 |
+| `翻译缺失` | 新增文本未翻译 | 在 `src/locale/zh-CN.json`、`en-US.json` 中补充对应 key |
 
 **详细文档:** [coding-standards.md#国际化原则](../agents/coding-standards.md#国际化原则)
 
@@ -338,7 +332,7 @@ pnpm test -- -u                       # 更新快照
 
 | 错误信息 | 原因 | 快速修复 |
 |---------|------|---------|
-| `页面加载超过 5 秒` | 资源过大、未优化 | `pnpm analyzer` → 路由懒加载 → 代码分割 |
+| `页面加载超过 5 秒` | 资源过大、未优化 | `pnpm analyzer` → 分包 → 代码分割 |
 | `页面卡顿` | 计算量大、未缓存 | 检查 `computed` 依赖 → 使用 `v-memo` |
 | `列表渲染慢` | 数据量大 | 虚拟滚动 → 分页加载 |
 
@@ -349,7 +343,7 @@ pnpm analyzer                 # 构建分析
 ```
 
 **优化措施:**
-- 路由懒加载
+- 分包加载 (pages-sub)
 - 图片懒加载和压缩
 - 代码分割
 - 使用 CDN
@@ -394,7 +388,7 @@ pnpm test
 
 5. **构建检查**
    ```bash
-   pnpm build
+   pnpm build:h5
    ```
 
 ---

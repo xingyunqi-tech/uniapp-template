@@ -1,7 +1,7 @@
 # 前端架构设计文档规范
 
 > **最后更新**: 2025-11-26
-> **适用范围**: Vue 3 + TypeScript 企业级项目
+> **适用范围**: Uni-app 3 + Vue 3 + TypeScript 多端项目
 
 ---
 
@@ -251,9 +251,9 @@
 
 | 问题类型 | 属于本模块（需要写） | 属于项目级（不需要写） |
 |---------|---------------------|----------------------|
-| **性能** | 本模块特有的大数据量场景（如列表 > 500 条） | 路由懒加载、图片懒加载（全局配置） |
-| **性能** | 本模块特有的复杂计算（如实时图表渲染） | 组件缓存 keep-alive（全局配置） |
-| **错误** | 业务逻辑错误（如 Excel 格式错误、数据冲突） | HTTP 错误码处理（Axios 拦截器） |
+| **性能** | 本模块特有的大数据量场景（如列表 > 500 条） | 分包加载、图片懒加载（全局配置） |
+| **性能** | 本模块特有的复杂计算（如实时图表渲染） | 主题、国际化等全局能力（全局配置） |
+| **错误** | 业务逻辑错误（如 Excel 格式错误、数据冲突） | HTTP 错误码处理（Alova 拦截器） |
 | **错误** | 本模块特有的校验失败（如文件大小超限） | Token 过期刷新（全局配置） |
 | **安全** | 本模块引入的新攻击面（如富文本 XSS） | CSRF 防护（全局配置） |
 | **安全** | 敏感数据处理（如导出用户隐私数据） | 请求签名、加密传输（全局配置） |
@@ -301,12 +301,12 @@ AI 在编写架构文档前，应先输出简要校验报告：
 ## 技术选型校验报告
 
 ### 1. package.json 依赖确认
-- 富文本: @tiptap/vue-3 ✅
-- 图表: echarts ✅
-- PDF: pdfjs-dist ✅
+- UI 组件: @dcloudio/uni-ui ✅
+- 请求: alova ✅
+- 状态管理: pinia ✅
 
 ### 2. 可复用全局组件
-- RichTextEditor、PdfViewer、LazyImage、Skeleton/*
+- UImage、USkeleton、ULoadMore、UEmpty、URichText
 
 ### 3. API 状态
 - [已生成] / [待生成]
@@ -426,19 +426,21 @@ graph TB
 
 ```
 src/
-├── views/
-│   └── [module-name]/           ⭐ 新增模块
-│       ├── index.vue            ⭐ 列表页
-│       └── components/          ⭐ 页面级组件
-│           └── XxxForm.vue      ⭐ 表单组件
+├── pages-sub/
+│   └── [module-name]/           ⭐ 新增分包 (同时在 pages.config.ts 的 subPackages 与 vite.config.ts 的 UniPages subPackages 中登记)
+│       └── list/
+│           └── index.vue        ⭐ 列表页 (definePage 声明页面配置)
+└── components/
+    └── UXxxForm/
+        └── index.vue            ⭐ 表单组件 (easycom 自动注册)
 ```
 
 ### 4.2 组件分类规范
 
 | 分类 | 位置 | 说明 |
 |------|------|------|
-| 页面组件 | `views/[module]/` | 路由对应的页面 |
-| 页面级组件 | `views/[module]/components/` | 本模块专属组件 |
+| 页面组件 | `pages/` 或 `pages-sub/[module]/[page]/index.vue` | 通过 `definePage` 声明页面配置，自动生成到 `src/pages.json` |
+| 全局组件 | `components/U[Name]/index.vue` | `U` 前缀，easycom 自动注册；页面目录下的 `.vue` 会被扫描为页面，组件不放在 `pages/`、`pages-sub/` 内 |
 
 ### 4.3 核心组件设计
 

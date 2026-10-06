@@ -331,12 +331,11 @@ pnpm update
 
 ```bash
 # .env.production（提交到 Git）
-VITE_API_BASE_URL=
-VITE_SENTRY_DSN=
+VITE_API_BASE_URL = 'https://api.example.com'
+VITE_ERROR_REPORT_URL = ''
 
 # .env.local（不提交到 Git）
-VITE_API_BASE_URL=https://api.example.com
-VITE_SENTRY_DSN=https://xxx@sentry.io/xxx
+VITE_ERROR_REPORT_URL = 'https://report.example.com'
 ```
 
 ---
@@ -404,7 +403,7 @@ cat .env.local
 ### 自动化检查
 
 ```bash
-# ESLint 安全规则（已配置）
+# ESLint 检查
 pnpm lint
 
 # TypeScript 类型检查
@@ -493,7 +492,7 @@ fetch('/api/transfer', {
 - **Burp Suite** - 渗透测试工具
 
 ### 监控
-- **Sentry** - 错误和安全事件监控（已集成）
+- **Sentry** - 错误和安全事件监控（可在 `src/App.vue` 的错误上报回调中对接）
 - **CSP Report** - CSP 违规报告
 
 ---

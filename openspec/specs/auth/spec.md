@@ -175,8 +175,8 @@
 - **UserInfo**: 使用 Pinia persist 插件持久化
 
 ### API Integration
-- 当前为 Mock 实现，待接入实际 API
-- API 方法已预留：`postAuthLogin`, `postAuthRegister`, `postAuthSmsLogin` 等
+- 认证操作在 `src/store/modules/user.ts` 中调用 `@/api` 的生成函数：`loginWithPhone`、`loginWithSms`、`loginWithWechat`、`registerWithPhone`、`sendSmsCode`、`resetPasswordByPhone` 等
+- `refreshToken`、`logout` 由 `src/api/custom/override.ts` 覆盖（`skipAuthHandling`）
 
 ### Cross-Platform Considerations
 - 微信登录仅在 `MP-WEIXIN` 平台可用（条件编译）

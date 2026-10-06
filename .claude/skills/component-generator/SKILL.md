@@ -40,12 +40,12 @@ metadata:
 /component-generator ProductList --type page --smart
 
 # 🆕 指定 API 集成
-/component-generator UserManagement --type page --api getUserList,createUser,updateUser
+/component-generator UserManagement --type page --api getUsers,createUser,updateUser
 
 # 🆕 指定 Store 集成
 /component-generator OrderManagement --type page --store order,product
 
-# 页面组件 + 自动配置 pages.json
+# 页面组件 + 路由配置 (definePage)
 /component-generator UserManagement --type page --with-router
 
 # 包含表单验证
@@ -87,9 +87,9 @@ metadata:
 - 项目特定，可在项目内多个页面复用
 - 可能依赖 API、Store 或业务规则
 
-**生成路径:**
-- 页面级组件 (仅在某个页面使用): `src/pages[-sub]/[page]/components/`
-- 全局公用组件 (多个页面复用): `src/components/U<Name>/`
+**生成路径:** `src/components/U<Name>/`
+
+> `src/pages/`、`src/pages-sub/` 下的 `.vue` 文件都会被 `@uni-helper/vite-plugin-uni-pages` 扫描为页面，组件不要放在页面目录内。
 
 **使用场景:**
 - 用户列表 (UserList)、订单卡片 (OrderCard) 等业务组件
@@ -102,7 +102,7 @@ metadata:
 
 **特点:**
 - 完整的页面实现
-- 对应 pages.json 配置
+- 通过 `definePage({...})` 声明页面配置，自动生成到 `src/pages.json`
 - 包含完整的业务流程
 
 **生成路径:**
@@ -111,10 +111,9 @@ metadata:
 
 **包含文件:**
 - `index.vue` - 页面主文件
-- `components/` - 页面专属组件目录 (可选)
 
 **额外生成 (使用 --with-router 时):**
-- 自动添加路由配置到 `pages.json`
+- 在页面中写入 `definePage({...})` 页面配置
 - 支持指定分包 (`--subpackage user`)
 - 支持配置页面标题
 
@@ -127,7 +126,7 @@ metadata:
 使用 `--with-router` 选项时，会自动:
 1. 生成页面组件文件
 2. 分析路由配置需求
-3. 自动添加路由到 `pages.json`
+3. 在页面中写入 `definePage({...})`，由插件生成 `src/pages.json`
 
 ### 路由类型
 
@@ -138,6 +137,7 @@ metadata:
 
 **2. 分包页面 (sub) - 默认**
 - 放在 `src/pages-sub/<module>/` 目录
+- 新增分包时需在 `pages.config.ts` 的 `subPackages` 与 `vite.config.ts` 中 `UniPages({ subPackages })` 同时登记
 - 适用于低频页面
 - 优化小程序加载性能
 
@@ -158,31 +158,28 @@ metadata:
 
 #### 主包页面
 
-```json
-// 自动添加到 pages.json 的 pages 数组
-{
-  "path": "pages/user-center/index",
-  "style": {
-    "navigationBarTitleText": "个人中心"
-  }
-}
+```vue
+<!-- src/pages/user-center/index.vue -->
+<script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '个人中心',
+  },
+});
+</script>
 ```
 
 #### 分包页面
 
-```json
-// 自动添加到 pages.json 的 subPackages
-{
-  "root": "pages-sub/user",
-  "pages": [
-    {
-      "path": "profile/index",
-      "style": {
-        "navigationBarTitleText": "用户资料"
-      }
-    }
-  ]
-}
+```vue
+<!-- src/pages-sub/user/profile/index.vue -->
+<script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '用户资料',
+  },
+});
+</script>
 ```
 
 ### 参数选项说明
@@ -190,7 +187,7 @@ metadata:
 | 选项 | 说明 | 默认值 | 示例 |
 |------|------|-------|------|
 | `--smart` | 🆕 智能模式，自动分析依赖 | `false` | `--smart` |
-| `--api` | 🆕 指定集成的 API 函数 | 无 | `--api getUserList,createUser` |
+| `--api` | 🆕 指定集成的 API 函数 | 无 | `--api getUsers,createUser` |
 | `--store` | 🆕 指定使用的 Store | 无 | `--store user,product` |
 | `--with-router` | 是否生成路由配置 | `false` | `--with-router` |
 | `--route-type` | 路由类型 | `sub` | `--route-type main` |
@@ -216,7 +213,7 @@ metadata:
 
 根据组件类型确定路径：
 - 基础组件: `src/components/U<ComponentName>/`
-- 业务组件: `src/components/U<Name>/` 或 `src/pages[-sub]/[page]/components/`
+- 业务组件: `src/components/U<Name>/`
 - 页面组件: `src/pages/<kebab-case-name>/` 或 `src/pages-sub/<module>/<name>/`
 
 ### 步骤 3: 生成代码文件
@@ -325,7 +322,7 @@ const handleClick = () => {
 
   &__btn {
     background: var(--color-primary);
-    color: #fff;
+    color: var(--color-text-inverse);
     border: none;
     border-radius: 8rpx;
     padding: 16rpx 32rpx;
@@ -367,7 +364,13 @@ import { ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 
-const { navigateTo } = useRouter();
+definePage({
+  style: {
+    navigationBarTitleText: '用户管理',
+  },
+});
+
+const router = useRouter();
 
 // ========== 生命周期 ==========
 onLoad((options) => {
@@ -403,7 +406,7 @@ const handleAddUser = () => {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-inverse);
   border: none;
   border-radius: 8rpx;
   padding: 16rpx 32rpx;
@@ -474,9 +477,10 @@ const handleAddUser = () => {
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { getUserList, deleteUser } from '@/api';
-import type { UserDTO } from '@/api';
-import { showToast, showModal } from '@/utils/modal';
+import { getUsers, deleteUser } from '@/api';
+import type { User } from '@/api';
+import { showToast } from '@/utils/toast';
+import { confirm } from '@/utils/modal';
 
 // ========== Store ==========
 const userStore = useUserStore();
@@ -487,7 +491,7 @@ const error = ref<Error | null>(null);
 const refreshing = ref(false);
 
 const listState = ref({
-  list: [] as UserDTO[],
+  list: [] as User[],
   loading: false,
   finished: false,
   page: 1,
@@ -504,17 +508,17 @@ const handleAddUser = () => {
   showToast('添加用户功能开发中...');
 };
 
-const handleEdit = (user: UserDTO) => {
+const handleEdit = (user: User) => {
   showToast(`编辑用户: ${user.username}`);
 };
 
 const handleDelete = async (id: string) => {
-  const { confirm } = await showModal({
+  const confirmed = await confirm({
     title: '提示',
     content: '确定要删除这个用户吗？',
   });
 
-  if (!confirm) return;
+  if (!confirmed) return;
 
   try {
     await deleteUser(id);
@@ -531,14 +535,13 @@ const handleLoadMore = async () => {
 
   listState.value.loading = true;
   try {
-    const res = await getUserList({
+    const res = await getUsers({
       page: listState.value.page,
-      pageSize: listState.value.pageSize,
+      limit: listState.value.pageSize,
     });
-    const newList = res.data?.list || [];
-    listState.value.list.push(...newList);
+    listState.value.list.push(...res.data);
     listState.value.page++;
-    listState.value.finished = newList.length < listState.value.pageSize;
+    listState.value.finished = !res.hasNextPage;
   } finally {
     listState.value.loading = false;
   }
@@ -573,7 +576,7 @@ const handleRefresh = async () => {
 }
 
 .user-card {
-  background: var(--color-white);
+  background: var(--color-bg-card);
   border-radius: 16rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
@@ -601,7 +604,7 @@ const handleRefresh = async () => {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-inverse);
   border: none;
   border-radius: 8rpx;
   padding: 16rpx 32rpx;
@@ -621,8 +624,8 @@ const handleRefresh = async () => {
 
 **当用户使用 `--with-router` 选项时:**
 
-1. **读取 pages.json 文件**
-2. **根据路由类型添加配置**
+1. **在页面 `<script setup>` 中写入 `definePage({...})`**（不手动编辑 `src/pages.json`）
+2. **分包页面确认分包已在 `pages.config.ts` 与 `vite.config.ts` 中登记**
 3. **更新 constants/pages.ts 常量**
 
 ### 步骤 5: 类型检查和验证
@@ -646,7 +649,7 @@ pnpm lint && pnpm type-check
 💡 下一步:
    1. 查看生成的组件代码
    2. 在页面中直接使用 <UUserCard /> (easycom 自动导入)
-   3. 运行开发服务器测试: pnpm start:h5
+   3. 运行开发服务器测试: pnpm dev:h5
 ```
 
 ---

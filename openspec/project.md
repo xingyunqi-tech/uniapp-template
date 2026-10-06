@@ -15,8 +15,8 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 ### 核心框架
 - **Uni-app 3.x** - 跨平台框架 (3.0.0-alpha)
 - **Vue 3** - Composition API + `<script setup>`
-- **TypeScript 5.x** - 严格类型检查
-- **Vite 6.x** - 构建工具 + @dcloudio/vite-plugin-uni
+- **TypeScript 6.x** - 严格类型检查
+- **Vite 7.x** - 构建工具 + @dcloudio/vite-plugin-uni
 
 ### 状态 & 数据
 - **Pinia** - Composition API 风格状态管理 + 持久化
@@ -29,12 +29,14 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 - **CSS 变量** - 主题系统 (Light/Dark)
 
 ### 开发工具
-- **ESLint 9.x** + typescript-eslint - 代码检查
+- **ESLint 10.x** + typescript-eslint - 代码检查
 - **Stylelint** - 样式检查
+- **markdownlint-cli2** - Markdown 检查
 - **Prettier** - 代码格式化
 - **Vitest** - 单元测试 (80% 覆盖率目标)
 - **Husky + lint-staged** - Git 钩子
 - **cz-git** - 交互式提交
+- **commitlint** - 提交信息校验 (`commitlint.config.ts`)
 
 ### 国际化
 - **vue-i18n 9.x** - 多语言支持
@@ -63,9 +65,11 @@ Uni-app 多端应用模板 - 基于 Uni-app 3.x + Vue 3 + TypeScript + Vite 构�
 ### 架构模式
 
 **路由系统** (非 Vue Router)：
-- 使用 `pages.json` 配置路由
+- `src/pages.json` 由 `@uni-helper/vite-plugin-uni-pages` 生成：页面用 `definePage({...})` 宏声明，全局配置写在根目录 `pages.config.ts`
+- `src/manifest.json` 由根目录 `manifest.config.ts` 生成
 - 主包 `pages/` + 分包 `pages-sub/`
-- 导航使用 `uni.navigateTo()` 等 API
+- 导航使用 `uni.navigateTo()` 等 API 或 `useRouter()`（`push`/`replace`/`back`/`switchTab`/`reLaunch`）
+- 登录拦截：`src/utils/router-interceptor.ts`，白名单为 `src/constants/pages.ts` 的 `WHITE_LIST`
 
 **API 架构** (Orval 自动生成)：
 ```
@@ -79,7 +83,8 @@ src/api/
 **组件系统** (easycom)：
 - 组件自动注册，无需手动 import
 - uni-ui: `uni-xxx`
-- 自定义: `u-xxx` → `@/components/UXxx/index.vue`
+- 自定义: `<UXxx />` → `@/components/UXxx/index.vue`（规则 `^U(.*)`，使用 PascalCase 标签，不支持 `u-xxx` 写法）
+- 布局: `<AuthLayout />` → `@/components/AuthLayout/index.vue`
 
 **状态管理**：
 - Pinia Composition API 风格
@@ -148,8 +153,9 @@ fix(auth): 修复表单验证问题
 
 ### 环境要求
 
-- Node.js >= 22.22.2
-- 包管理器：pnpm (推荐)
+- Node.js >= 22.22.2（见 `.nvmrc`）
+- 包管理器：pnpm >= 11
+- `package.json` 为 `"type": "module"`
 
 ## 关键目录
 
@@ -157,10 +163,10 @@ fix(auth): 修复表单验证问题
 |------|------|---------|
 | `src/pages/` | 主包页面 (7 个) | TabBar 页面必须在主包 |
 | `src/pages-sub/` | 分包页面 (3 个分包) | 优化小程序体积 |
-| `src/pages.json` | 路由配置 | 所有页面必须在此注册 |
+| `src/pages.json` | 路由配置 | 自动生成，页面用 `definePage` 声明，全局配置改 `pages.config.ts` |
 | `src/api/generated/` | Orval 自动生成 | 🚫 禁止修改 |
 | `src/api/custom/` | 自定义 API | ✅ 在这里扩展 |
-| `src/components/` | 全局组件 (20+) | easycom 自动注册，U 前缀 |
+| `src/components/` | 全局组件 (22 个) | easycom 自动注册，U 前缀 + AuthLayout |
 | `src/composables/` | Composition API | 可复用逻辑 |
 | `src/store/modules/` | Pinia Store | 状态管理 |
 | `src/styles/theme.scss` | 主题变量 | CSS 变量定义 |
@@ -181,7 +187,7 @@ pnpm build:mp-weixin  # 微信小程序构建
 pnpm api:gen          # Orval 生成 API 代码
 
 # 质量
-pnpm lint             # ESLint + Stylelint
+pnpm lint             # ESLint + Stylelint + markdownlint（自动 --fix）
 pnpm type-check       # TypeScript 类型检查
 pnpm test             # 运行测试
 

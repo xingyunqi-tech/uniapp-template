@@ -23,10 +23,10 @@ metadata:
 
 ```bash
 # 覆盖生成的 API (添加业务逻辑)
-/api-generator postAuthLogin --type override
+/api-generator loginWithEmail --type override
 
 # 完全自定义 API (不在 OpenAPI 中)
-/api-generator uploadFile --type custom
+/api-generator uploadAttachment --type custom
 
 # 交互式模式
 /api-generator
@@ -40,7 +40,7 @@ metadata:
 pnpm api:gen
 
 # 然后使用
-import { getUserList, createUser } from '@/api';
+import { getUsers, createUser } from '@/api';
 ```
 
 ### 场景 2: 覆盖生成的 API (15%)
@@ -58,17 +58,17 @@ import { getUserList, createUser } from '@/api';
 ### 模板 1: 覆盖生成的 API
 
 ```typescript
-// src/api/custom/auth.ts
-import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
-import type { LoginRequest, LoginResponse } from '@/api';
+// src/api/custom/override.ts
+import { loginWithEmail as generatedLoginWithEmail } from '../generated/auth/auth';
+import type { AuthEmailLoginDto, LoginResponseDto } from '../generated/model';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
 /**
- * 用户登录 (覆盖自动生成)
+ * 邮箱登录 (覆盖自动生成)
  */
-export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> => {
+export const loginWithEmail = async (data: AuthEmailLoginDto): Promise<LoginResponseDto> => {
   // 1. 调用原始生成的 API
-  const response = await generatedLogin(data);
+  const response = await generatedLoginWithEmail(data);
 
   // 2. 业务逻辑: 保存 Token
   if (response.token) {
@@ -77,14 +77,15 @@ export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> 
 
   return response;
 };
-
-// 其他接口直接导出
-export { postAuthLogout, getAuthUserInfo } from '../generated/auth/auth';
 ```
+
+> 项目 `src/api/custom/override.ts` 中已有 `refreshToken`、`logout` 的覆盖实现可作参考。custom 目录不要 import Store（会形成循环依赖）。
 
 ---
 
 ### 模板 2: 文件上传
+
+> 项目 `src/api/custom/override.ts` 已提供 `uploadFileByPath` / `uploadFilesByPath`（上传到 `/api/v1/files/upload`），通用上传直接使用即可。
 
 ```typescript
 // src/api/custom/upload.ts
@@ -99,7 +100,7 @@ export interface UploadResponse {
 /**
  * 文件上传
  */
-export const uploadFile = async (filePath: string): Promise<UploadResponse> => {
+export const uploadAttachment = async (filePath: string): Promise<UploadResponse> => {
   const response = await http.Post<ApiResponse<UploadResponse>>(
     '/upload',
     { filePath, name: 'file' },
@@ -127,8 +128,7 @@ export const createUploadMethod = (filePath: string) => {
 
 ```vue
 <script setup lang="ts">
-import { useRequest } from '@/api/core';
-import { createUploadMethod } from '@/api';
+import { useRequest, createUploadMethod } from '@/api';
 
 const { loading, uploading, send } = useRequest(
   (filePath: string) => createUploadMethod(filePath),
@@ -181,8 +181,7 @@ export const createDownloadMethod = (url: string, filePath: string) => {
 
 ```vue
 <script setup lang="ts">
-import { useRequest } from '@/api/core';
-import { createDownloadMethod } from '@/api';
+import { useRequest, createDownloadMethod } from '@/api';
 
 const { loading, downloading, send } = useRequest(
   (url: string) => createDownloadMethod(url, 'download.pdf'),
@@ -201,9 +200,27 @@ const { loading, downloading, send } = useRequest(
 
 ### 模板 4: 外部 API
 
+第三方接口不走业务实例的 Token 注入、401 刷新与 code 校验，使用独立的 alova 实例（参考 `src/api/custom/external.ts`）：
+
 ```typescript
 // src/api/custom/external.ts
-import { http, type ApiResponse } from '../core';
+import { createAlova } from 'alova';
+import AdapterUniapp from '@alova/adapter-uniapp';
+
+const externalHttp = createAlova({
+  timeout: 10000,
+  ...AdapterUniapp(),
+  responded: {
+    onSuccess: response => {
+      const { statusCode, data } = response as UniNamespace.RequestSuccessCallbackResult;
+      if (statusCode >= 400) {
+        throw new Error(`请求失败(${statusCode})`);
+      }
+      return data;
+    },
+  },
+  cacheFor: null,
+});
 
 export interface WeatherResponse {
   city: string;
@@ -214,15 +231,9 @@ export interface WeatherResponse {
  * 调用外部天气 API
  */
 export const getWeather = async (city: string): Promise<WeatherResponse> => {
-  const response = await http.Get<ApiResponse<WeatherResponse>>(
-    `https://api.weather.com/weather/${city}`,
-    {
-      headers: { 'X-API-Key': import.meta.env.VITE_WEATHER_API_KEY || '' },
-      meta: { showError: true },
-      cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
-    }
-  );
-  return response.data as WeatherResponse;
+  return externalHttp.Get<WeatherResponse>(`https://api.weather.example.com/weather/${encodeURIComponent(city)}`, {
+    cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
+  });
 };
 ```
 
@@ -248,10 +259,7 @@ export const pollTaskStatus = async <T>(
   return new Promise((resolve, reject) => {
     const checkStatus = async () => {
       try {
-        const response = await http.Get<ApiResponse<T>>(
-          `/task/${taskId}/status`,
-          { cacheFor: 0 } // 禁用缓存
-        );
+        const response = await http.Get<ApiResponse<T>>(`/task/${taskId}/status`);
 
         if (condition(response.data as T)) {
           resolve(response.data as T);
@@ -278,21 +286,12 @@ export const pollTaskStatus = async <T>(
 
 ## 更新导出
 
-生成代码后,更新 `src/api/index.ts`:
+`src/api/index.ts` 由 `scripts/api/update-api-exports.ts` 自动生成（`pnpm api:gen` 的 afterAllFilesWrite 钩子），请勿手写：
 
-```typescript
-// 1. 导出所有生成的 API
-export * from './generated/auth/auth';
-export * from './generated/config/config';
+- 扫描 `src/api/custom/` 下的所有 `.ts` 文件，以 `export *` 导出
+- generated 中与 custom 同名的函数自动剔除，custom 版本优先
 
-// 2. 导出类型定义
-export * from './generated/model';
-
-// 3. 导出自定义 API (覆盖同名函数)
-export * from './custom/auth';
-export * from './custom/upload';
-export * from './custom/external';
-```
+新增 custom 文件后运行 `pnpm api:gen`（或 `pnpm tsx scripts/api/update-api-exports.ts`）刷新导出。
 
 ---
 
@@ -302,7 +301,7 @@ export * from './custom/external';
 
 ```
 src/api/custom/
-├── auth.ts           # 认证相关覆盖
+├── override.ts       # 覆盖生成的 API (refreshToken、logout、uploadFileByPath 等)
 ├── upload.ts         # 文件上传
 ├── download.ts       # 文件下载
 ├── external.ts       # 外部 API
@@ -313,17 +312,17 @@ src/api/custom/
 
 ```typescript
 // 正确: 保持与生成代码一致
-export const postAuthLogin = async (data: LoginRequest) => { ... };
+export const loginWithEmail = async (data: AuthEmailLoginDto) => { ... };
 
 // 错误: 改变函数名
-export const customLogin = async (data: LoginRequest) => { ... };
+export const customLogin = async (data: AuthEmailLoginDto) => { ... };
 ```
 
 ### 类型使用
 
 ```typescript
 // 正确: 使用生成的类型
-import type { LoginRequest } from '@/api';
+import type { AuthEmailLoginDto } from '@/api';
 
 // 错误: 重复定义
 interface MyLoginRequest { ... }
@@ -332,10 +331,10 @@ interface MyLoginRequest { ... }
 ### http 导入
 
 ```typescript
-// 正确: 使用 http (隐藏 Alova 实现)
+// 正确: 业务接口使用 http (隐藏 Alova 实现)
 import { http } from '../core';
 
-// 错误: 直接导入 alova
+// 错误: 业务接口另建 alova 实例 (第三方接口除外，见模板 4)
 import { createAlova } from 'alova';
 ```
 
@@ -359,15 +358,17 @@ const { uploading, downloading } = useRequest(method);
 // downloading.loaded / downloading.total
 ```
 
-### Q: 如何禁用 GET 缓存?
+### Q: GET 请求会缓存吗?
+
+不会。`src/api/core/alova.ts` 全局配置 `cacheFor: null`，不缓存响应结果；仅合并进行中的相同 GET/HEAD 请求（shareRequest）。如需单个请求不合并：
 
 ```typescript
-http.Get('/users', { cacheFor: 0 })
+http.Get('/users', { shareRequest: false })
 ```
 
 ---
 
 ## 相关文档
 
-- [api-development.md](../agents/api-development.md) - API 开发规范
-- [src/api/README.md](../../src/api/README.md) - API 模块文档
+- [api-development.md](../../agents/api-development.md) - API 开发规范
+- [src/api/README.md](../../../src/api/README.md) - API 模块文档

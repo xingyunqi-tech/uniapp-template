@@ -13,22 +13,21 @@ metadata:
 
 ## ⚠️ 重要提醒
 
-**本项目 API 参数使用扁平结构，分页字段为 `pageSize`**
+**本项目 API 参数使用扁平结构，分页字段为 `page` + `limit`**
 
 ```typescript
 // ✅ 标准参数结构
-type ListCompetitionsParams = {
+type GetUsersParams = {
   page?: number;
-  pageSize?: number;
-  name?: string;
-  status?: string;
-  category?: string;
+  limit?: number;
+  filters?: string;
+  sort?: string;
 }
 
 // ✅ 标准 Store 初始化
-const queryParams = ref<ListCompetitionsParams>({
+const queryParams = ref<GetUsersParams>({
   page: 1,
-  pageSize: 10,
+  limit: 10,
 });
 ```
 
@@ -40,22 +39,22 @@ const queryParams = ref<ListCompetitionsParams>({
 
 ```typescript
 // State
-const queryParams = ref<ListXxxParams>({
+const queryParams = ref<GetXxxsParams>({
   page: 1,
-  pageSize: 10,
+  limit: 10,
 });
 
 // Getters
 const currentPage = computed(() => queryParams.value.page || 1);
-const pageSize = computed(() => queryParams.value.pageSize || 10);
+const pageSize = computed(() => queryParams.value.limit || 10);
 
 // Actions
-function setQueryParams(params: Partial<ListXxxParams>) {
+function setQueryParams(params: Partial<GetXxxsParams>) {
   queryParams.value = { ...queryParams.value, ...params };
 }
 
 function resetQueryParams() {
-  queryParams.value = { page: 1, pageSize: 10 };
+  queryParams.value = { page: 1, limit: 10 };
 }
 ```
 
@@ -84,7 +83,7 @@ function resetQueryParams() {
 /store-generator ProductStore --smart
 
 # 🆕 指定 API 集成
-/store-generator UserStore --api getUserList,createUser,updateUser,deleteUser
+/store-generator UserStore --api getUsers,createUser,updateUser,deleteUser
 
 # 指定持久化策略
 /store-generator CartStore --persist
@@ -131,8 +130,8 @@ function resetQueryParams() {
 当使用 `--smart` 参数时，根据 Store 名称自动推断：
 
 1. **分析 Store 名称关键词**:
-   - `UserStore` → API: `getUserList`, `getUserById`, `createUser`, `updateUser`, `deleteUser`
-   - `ProductStore` → API: `getProductList`, `getProductById`, `createProduct`, `updateProduct`, `deleteProduct`
+   - `UserStore` → API: `getUsers`, `getUser`, `createUser`, `updateUser`, `deleteUser`
+   - `OrderStore` → API: `getOrders`, `getOrder`, `createOrder`, `cancelOrder`
    - `SettingsStore` → 持久化到 uni storage，无需 API
 
 2. **检查可用 API**:
@@ -142,17 +141,17 @@ function resetQueryParams() {
 3. **生成 State 和 Actions**:
    ```typescript
    // State
-   const queryParams = ref<ListXxxParams>({
+   const queryParams = ref<GetXxxsParams>({
      page: 1,
-     pageSize: 10,
+     limit: 10,
    });
 
    // Getters
    const currentPage = computed(() => queryParams.value.page || 1);
-   const pageSize = computed(() => queryParams.value.pageSize || 10);
+   const pageSize = computed(() => queryParams.value.limit || 10);
 
    // Actions
-   function setQueryParams(params: Partial<ListXxxParams>) {
+   function setQueryParams(params: Partial<GetXxxsParams>) {
      queryParams.value = { ...queryParams.value, ...params };
    }
    ```
@@ -173,8 +172,8 @@ Store 文件路径：`src/store/modules/<store-name>.ts`
 
 ```typescript
 // 使用 Read 工具读取参数类型文件
-// 例如：CompetitionStore → listCompetitionsParams.ts
-const paramsFilePath = `src/api/generated/model/list${storeName}Params.ts`;
+// 例如：UserStore → getUsersParams.ts
+const paramsFilePath = `src/api/generated/model/get${storeName}sParams.ts`;
 const paramsTypeContent = await Read(paramsFilePath);
 ```
 
@@ -184,22 +183,22 @@ const paramsTypeContent = await Read(paramsFilePath);
 
 ```typescript
 // State
-const queryParams = ref<ListXxxParams>({
+const queryParams = ref<GetXxxsParams>({
   page: 1,
-  pageSize: 10,
+  limit: 10,
 });
 
 // Getters
 const currentPage = computed(() => queryParams.value.page || 1);
-const pageSize = computed(() => queryParams.value.pageSize || 10);
+const pageSize = computed(() => queryParams.value.limit || 10);
 
 // Actions
-function setQueryParams(params: Partial<ListXxxParams>) {
+function setQueryParams(params: Partial<GetXxxsParams>) {
   queryParams.value = { ...queryParams.value, ...params };
 }
 
 function resetQueryParams() {
-  queryParams.value = { page: 1, pageSize: 10 };
+  queryParams.value = { page: 1, limit: 10 };
 }
 ```
 
@@ -208,7 +207,7 @@ function resetQueryParams() {
 2. 使用 `defineStore` 定义 Store
 3. Composition API 风格 (`ref`, `computed`, `watch`)
 4. 如果需要持久化，配置 `persist` 选项
-5. **⭐ 扁平参数结构（`{ page, pageSize }`）**
+5. **⭐ 扁平参数结构（`{ page, limit }`）**
 6. **⭐ 完整的错误处理（try-catch-finally）**
 
 ### 步骤 4: 展示生成结果
@@ -224,7 +223,7 @@ function resetQueryParams() {
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { UserInfo } from '@/api';
+import type { UserInfo } from '@/interface';
 
 /**
  * 用户信息管理 Store
@@ -551,7 +550,7 @@ const competitionStore = useCompetitionStore();
 // 调用列表查询
 await competitionStore.fetchCompetitionList({
   page: 1,
-  pageSize: 10,
+  limit: 10,
   name: '搜索关键词',
 });
 </script>
@@ -580,7 +579,7 @@ export interface ProductState {
  */
 export interface ProductQueryParams {
   page?: number;
-  pageSize?: number;
+  limit?: number;
   keyword?: string;
   categoryId?: string;
 }
@@ -626,7 +625,7 @@ onLoad(() => {
   // 获取产品列表
   productStore.fetchProductList({
     page: 1,
-    pageSize: 20,
+    limit: 20,
   });
 });
 </script>
@@ -1010,19 +1009,19 @@ pnpm type-check
 
 ### Q6: 分页字段使用什么名称？
 
-**A:** 本项目统一使用 `pageSize`（不是 `size`）
+**A:** 本项目统一使用 `limit`（不是 `size` / `pageSize`）
 
 ```typescript
 // ✅ 正确
-const queryParams = ref<ListXxxParams>({
+const queryParams = ref<GetXxxsParams>({
   page: 1,
-  pageSize: 10,
+  limit: 10,
 });
 
 // ❌ 错误
-const queryParams = ref<ListXxxParams>({
+const queryParams = ref<GetXxxsParams>({
   page: 1,
-  size: 10,  // 错误：应该是 pageSize
+  size: 10,  // 错误：应该是 limit
 });
 ```
 

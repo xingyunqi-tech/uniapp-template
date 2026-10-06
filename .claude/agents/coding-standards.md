@@ -35,9 +35,8 @@ model: inherit
 - **平台兼容**: 使用条件编译处理平台差异
 
 ### 3. 国际化原则
-- **禁止使用 i18n API**: AI 生成的代码中禁止使用 `$t`、`t()` 等国际化 API
-- **使用明文文本**: 所有文本内容使用中文明文编写
-- **统一翻译处理**: 国际化由脚本统一扫描和处理
+- **使用 vue-i18n**: 需要多语言的文本在模板中使用 `$t('key')`（实例见 `src/utils/locale.ts`）
+- **同步维护语言包**: 新增 key 时同时添加到 `src/locale/zh-CN.json` 与 `src/locale/en-US.json`
 
 ### 4. 函数式原则
 - **纯函数优先**: 工具函数应该是纯函数
@@ -145,7 +144,7 @@ onUnload(() => {
   // 清理资源
 });
 
-// 下拉刷新（需在 pages.json 启用 enablePullDownRefresh）
+// 下拉刷新（需在页面 definePage 的 style 中启用 enablePullDownRefresh）
 onPullDownRefresh(async () => {
   await fetchData();
   uni.stopPullDownRefresh();
@@ -384,7 +383,7 @@ defineExpose({ /* ... */ });
 // src/store/modules/user.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { postAuthLogin, getUserInfo } from '@/api';
+import { loginWithPhone, getCurrentUser } from '@/api';
 import type { UserInfo, LoginParams } from '@/interface';
 
 export const useUserStore = defineStore('user', () => {
@@ -398,16 +397,16 @@ export const useUserStore = defineStore('user', () => {
 
   // ==================== 动作定义 ====================
   const login = async (params: LoginParams): Promise<void> => {
-    const res = await postAuthLogin(params);
-    token.value = res.data.token;
+    const res = await loginWithPhone(params);
+    token.value = res.token;
     uni.setStorageSync('token', token.value);
     await fetchUserInfo();
   };
 
   const fetchUserInfo = async (): Promise<void> => {
     if (!token.value) return;
-    const res = await getUserInfo();
-    userInfo.value = res.data;
+    const res = await getCurrentUser();
+    userInfo.value = mapUserToUserInfo(res);
   };
 
   const logout = (): void => {
@@ -457,8 +456,8 @@ export const useUserStore = defineStore('user', () => {
 
 ```typescript
 // ✅ 正确：从 @/api 统一导入
-import { postAuthLogin, getUserInfo } from '@/api';
-import type { LoginParams, UserInfo } from '@/api';
+import { loginWithPhone, getCurrentUser } from '@/api';
+import type { AuthPhoneLoginDto, User } from '@/api';
 
 // ✅ 正确：使用 Pinia Store
 import { useUserStore } from '@/store/modules/user';
@@ -466,7 +465,7 @@ const userStore = useUserStore();
 await userStore.login(params);
 
 // ❌ 错误：直接从 generated 导入
-import { postAuthLogin } from '@/api/generated/auth/auth';
+import { loginWithPhone } from '@/api/generated/auth/auth';
 ```
 
 ### API 调用规范
@@ -511,7 +510,7 @@ const fetchData = async () => {
 }
 
 .error {
-  color: var(--color-danger);            // 危险色 #ee0a24
+  color: var(--color-error);             // 错误色 #ee0a24
 }
 
 // ❌ 错误：硬编码颜色
@@ -739,9 +738,10 @@ const submitForm = async () => {
 ## 常用命令
 
 ```bash
-# ESLint 检查
+# ESLint + Stylelint + markdownlint（自动修复）
 pnpm lint
-pnpm lint:fix
+# 只检查不修复
+pnpm lint:check
 
 # TypeScript 类型检查
 pnpm type-check

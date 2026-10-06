@@ -171,7 +171,7 @@ metadata:
    ├─ ✓ 快照测试 (1 个用例)
    └─ ✓ 条件渲染测试 (2 个用例)
 
-   tests/views/order/detail.test.ts (新增)
+   tests/pages/order/detail.test.ts (新增)
    ├─ ✓ 页面初始化测试 (2 个用例)
    ├─ ✓ API 调用 Mock 测试 (3 个用例)
    ├─ ✓ Loading 状态测试 (2 个用例)
@@ -425,7 +425,7 @@ describe('useProductStore', () => {
 
 ### vitest.config.ts
 
-项目默认配置 80% 覆盖率阈值:
+项目 `vitest.config.ts` 的 coverage 未配置 `thresholds`，80% 为覆盖率目标；需要强制阈值时在 coverage 中添加:
 
 ```typescript
 // vitest.config.ts

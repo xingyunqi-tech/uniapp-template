@@ -55,7 +55,7 @@ src/store/
 // store/modules/user.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { postAuthLogin, postAuthLogout } from '@/api';
+import { loginWithPhone, logout } from '@/api';
 
 /**
  * 用户状态管理Store
@@ -131,10 +131,10 @@ export const useUserStore = defineStore(
     /**
      * 登录操作
      */
-    const loginAction = async (userInfo: { username: string; password: string }) => {
-      const username = userInfo.username.trim();
+    const loginAction = async (userInfo: { phone: string; password: string }) => {
+      const phone = userInfo.phone.trim();
       try {
-        const response = await postAuthLogin({ username, password: userInfo.password });
+        const response = await loginWithPhone({ phone, password: userInfo.password });
         const tokenStr = response.token;
         if (!tokenStr) {
           return Promise.reject(new Error('登录失败：未获取到token'));
@@ -182,7 +182,7 @@ export const useUserStore = defineStore(
      */
     const logoutAction = async () => {
       try {
-        await postAuthLogout();
+        await logout();
         setTokenValue('');
         setId('');
         setName('');
@@ -376,7 +376,7 @@ const getIsLoggedIn = () => !!token.value;
 ### 3. Actions命名规范
 ```typescript
 // ✅ 正确：清晰的Action命名
-const loginAction = async (credentials: LoginRequest) => {
+const loginAction = async (credentials: AuthPhoneLoginDto) => {
   // 登录逻辑
 };
 
@@ -414,7 +414,7 @@ const logoutAction = async () => {
 
 ### 5. 持久化配置
 
-**核心原则**: 使用 `pinia-plugin-persistedstate` 插件，默认存储在 IndexedDB
+**核心原则**: 使用 `pinia-plugin-persistedstate` 插件，全局存储适配器为 `src/store/plugins/persist.ts` 中的 `uniStorage`（基于 `uni.setStorageSync`）
 
 #### 5.1 基础配置
 ```typescript
@@ -568,7 +568,7 @@ export const useAwardStore = defineStore(
 ⚠️ **重要提醒**:
 - 只支持 `pick` 和 `omit` 两个参数，不支持 `paths`
 - 插件自动处理 `key` 和 `storage`，无需手动配置
-- 默认存储在 IndexedDB，无需指定存储类型
+- 全局默认使用 `uniStorage` 适配器，无需指定存储类型
 
 ## 📂 Store组织结构
 
@@ -663,7 +663,7 @@ export const useStore1 = defineStore('store1', () => {
 ### Q: 如何处理Store中的异步操作？
 **A**:
 ```typescript
-import { getAuthUserInfo } from '@/api';
+import { getCurrentUser } from '@/api';
 
 // ✅ 正确：完善的异步处理
 const fetchUserInfo = async () => {
@@ -671,7 +671,7 @@ const fetchUserInfo = async () => {
   error.value = null;
 
   try {
-    const userResponse = await getAuthUserInfo();
+    const userResponse = await getCurrentUser();
     userInfo.value = userResponse;
   } catch (err) {
     error.value = err instanceof Error ? err.message : '获取失败';

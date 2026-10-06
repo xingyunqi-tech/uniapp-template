@@ -42,8 +42,7 @@ src/api/
 │   ├── override.ts           # 覆盖生成的 API
 │   └── external.ts           # 调用外部 API
 │
-├── openapi.json              # OpenAPI 文档
-└── index.ts                  # API 模块统一导出
+└── index.ts                  # API 模块统一导出（pnpm api:gen 自动生成）
 ```
 
 ### 层级职责
@@ -59,15 +58,11 @@ src/api/
 ```
 1. 后端更新 API
    ↓
-2. 获取最新 openapi.json
+2. 运行 pnpm api:gen（Orval 直接拉取 orval.config.ts 中配置的在线 OpenAPI 文档）
    ↓
-3. 替换 src/api/openapi.json
+3. 必要时在 custom/ 添加业务逻辑
    ↓
-4. 运行 pnpm api:gen
-   ↓
-5. 必要时在 custom/ 添加业务逻辑
-   ↓
-6. pnpm type-check
+4. pnpm type-check
 ```
 
 ### 常用命令
@@ -82,15 +77,15 @@ pnpm type-check   # 类型检查
 ### 场景 1: 直接使用自动生成（80%）
 
 ```typescript
-import { postAuthLogin, getAuthUserInfo } from '@/api';
-import type { LoginRequest, UserInfo } from '@/api';
+import { loginWithPhone } from '@/api';
+import type { AuthPhoneLoginDto } from '@/api';
 
 const handleLogin = async () => {
-  const loginData: LoginRequest = {
-    username: 'admin',
-    password: '123456',
+  const loginData: AuthPhoneLoginDto = {
+    phone: '13800138000',
+    password: encryptedPassword,
   };
-  const response = await postAuthLogin(loginData);
+  const response = await loginWithPhone(loginData);
   console.log('Token:', response.token);
 };
 ```
@@ -106,12 +101,12 @@ const handleLogin = async () => {
 在生成的 API 基础上添加业务逻辑。
 
 ```typescript
-// src/api/custom/auth.ts
-import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
-import type { LoginRequest, LoginResponse } from '../generated/model';
+// src/api/custom/override.ts
+import { loginWithPhone as generatedLogin } from '../generated/auth/auth';
+import type { AuthPhoneLoginDto, LoginResponseDto } from '../generated/model';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
-export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> => {
+export const loginWithPhone = async (data: AuthPhoneLoginDto): Promise<LoginResponseDto> => {
   const response = await generatedLogin(data);
 
   // 额外业务逻辑：保存 token
@@ -121,10 +116,9 @@ export const postAuthLogin = async (data: LoginRequest): Promise<LoginResponse> 
 
   return response;
 };
-
-// 其他接口直接导出
-export { postAuthLogout, getAuthUserInfo } from '../generated/auth/auth';
 ```
+
+`src/api/index.ts` 由 `pnpm api:gen` 的钩子（`scripts/api/update-api-exports.ts`）生成，会自动剔除被 `custom/` 覆盖的同名 generated 导出，无需手动处理。
 
 **何时使用**:
 - 需要在 API 调用前后添加业务逻辑
@@ -138,7 +132,17 @@ OpenAPI 文档中不存在的接口。
 
 ```typescript
 // src/api/custom/external.ts
-import { http, type ApiResponse } from '../core';
+import { createAlova } from 'alova';
+import AdapterUniapp from '@alova/adapter-uniapp';
+
+const externalHttp = createAlova({
+  timeout: 10000,
+  ...AdapterUniapp(),
+  responded: {
+    onSuccess: response => (response as UniNamespace.RequestSuccessCallbackResult).data,
+  },
+  cacheFor: null,
+});
 
 export interface WeatherResponse {
   city: string;
@@ -146,16 +150,13 @@ export interface WeatherResponse {
 }
 
 export const getWeather = async (city: string): Promise<WeatherResponse> => {
-  const response = await http.Get<ApiResponse<WeatherResponse>>(
-    `https://api.weather.com/weather/${city}`,
-    {
-      meta: { showError: true },
-      cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
-    }
-  );
-  return response.data as WeatherResponse;
+  return externalHttp.Get<WeatherResponse>(`https://api.weather.example.com/weather/${encodeURIComponent(city)}`, {
+    cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
+  });
 };
 ```
+
+第三方接口使用独立的 alova 实例，不注入业务 Token，也不走业务的 401 刷新与 code 校验。
 
 **何时使用**:
 - 外部 API 调用
@@ -169,7 +170,7 @@ export const getWeather = async (city: string): Promise<WeatherResponse> => {
 项目通过 `http` 导出 Alova 实例，隐藏实现细节：
 
 ```typescript
-import { http } from '@/api/core';
+import { http } from '@/api';
 
 // GET 请求（默认不缓存）
 const data = await http.Get('/users');
@@ -196,6 +197,7 @@ const data = await http.Get('/users', {
 | `showLoading` | boolean | 显示 loading |
 | `loadingText` | string | loading 文字 |
 | `showError` | boolean | 显示错误提示（默认 true） |
+| `skipAuthHandling` | boolean | 401 时不刷新 Token、不清理登录态，直接抛错（刷新、登出等认证接口使用） |
 
 ### 缓存配置
 
@@ -207,12 +209,12 @@ http.Get('/config', { cacheFor: 30 * 60 * 1000 })
 
 ## Alova Hooks
 
-从 `@/api/core` 导出的响应式 Hooks：
+从 `@/api` 导出的响应式 Hooks（来自 `alova/client`）：
 
 ### useRequest
 
 ```typescript
-import { useRequest, http } from '@/api/core';
+import { useRequest, http } from '@/api';
 
 const { loading, data, error, send } = useRequest(
   http.Get('/users'),
@@ -225,7 +227,7 @@ const { loading, data, error, send } = useRequest(
 监听数据变化自动请求：
 
 ```typescript
-import { useWatcher, http } from '@/api/core';
+import { useWatcher, http } from '@/api';
 
 const keyword = ref('');
 const { loading, data } = useWatcher(
@@ -240,7 +242,7 @@ const { loading, data } = useWatcher(
 预加载数据：
 
 ```typescript
-import { useFetcher, http } from '@/api/core';
+import { useFetcher, http } from '@/api';
 
 const { fetch } = useFetcher();
 fetch(http.Get('/users/123'));
@@ -253,17 +255,17 @@ fetch(http.Get('/users/123'));
 ```typescript
 // src/store/modules/user.ts
 import { defineStore } from 'pinia';
-import { postAuthLogin, getAuthUserInfo } from '@/api';
-import type { LoginRequest, UserInfo } from '@/api';
+import { loginWithPhone, getCurrentUser } from '@/api';
+import type { AuthPhoneLoginDto, User } from '@/api';
 
 export const useUserStore = defineStore('user', () => {
-  const userInfo = ref<UserInfo | null>(null);
+  const userInfo = ref<User | null>(null);
   const loading = ref(false);
 
-  const login = async (data: LoginRequest) => {
+  const login = async (data: AuthPhoneLoginDto) => {
     loading.value = true;
     try {
-      return await postAuthLogin(data);
+      return await loginWithPhone(data);
     } finally {
       loading.value = false;
     }
@@ -272,7 +274,7 @@ export const useUserStore = defineStore('user', () => {
   const fetchUserInfo = async () => {
     loading.value = true;
     try {
-      userInfo.value = await getAuthUserInfo();
+      userInfo.value = await getCurrentUser();
     } finally {
       loading.value = false;
     }
@@ -292,7 +294,7 @@ const userStore = useUserStore();
 const userInfo = computed(() => userStore.userInfo);
 
 const handleLogin = async () => {
-  await userStore.login({ username: 'admin', password: '123456' });
+  await userStore.login({ phone: '13800138000', password: encryptedPassword });
 };
 </script>
 ```
@@ -303,21 +305,21 @@ const handleLogin = async () => {
 
 ```typescript
 // 正确：从 @/api 统一导入
-import type { LoginRequest, UserInfo } from '@/api';
+import type { AuthPhoneLoginDto, User } from '@/api';
 
 // 错误：从 generated 直接导入
-import type { LoginRequest } from '@/api/generated/model';
+import type { AuthPhoneLoginDto } from '@/api/generated/model';
 ```
 
 ### 类型复用
 
 ```typescript
 // 正确：使用生成的类型
-import type { LoginRequest } from '@/api';
+import type { AuthPhoneLoginDto } from '@/api';
 
-const loginData: LoginRequest = {
-  username: 'admin',
-  password: '123456',
+const loginData: AuthPhoneLoginDto = {
+  phone: '13800138000',
+  password: encryptedPassword,
 };
 
 // 错误：重复定义类型
@@ -331,10 +333,10 @@ interface MyLoginRequest { ... }
 错误在拦截器中统一处理：
 
 ```typescript
-import { postAuthLogin } from '@/api';
+import { loginWithPhone } from '@/api';
 
 try {
-  await postAuthLogin({ username, password });
+  await loginWithPhone({ phone, password });
 } catch (error) {
   // 错误已自动处理（显示提示、401跳转等）
   console.error('Login failed:', error);
@@ -345,7 +347,7 @@ try {
 
 | 状态码 | 处理方式 |
 |--------|----------|
-| 401 | 清除 Token，跳转登录页 |
+| 401 | 用 Refresh Token 刷新后重发一次；仍失败则清除登录态并跳转登录页 |
 | 400-499 | 显示错误提示 |
 | 500+ | 显示服务器错误提示 |
 | 网络错误 | 显示网络错误提示 |
@@ -398,18 +400,17 @@ try {
 ### Q: 如何添加新接口？
 
 1. 后端更新 OpenAPI 文档
-2. 更新 `src/api/openapi.json`
-3. 运行 `pnpm api:gen`
-4. 从 `@/api` 导入使用
+2. 运行 `pnpm api:gen`（拉取 `orval.config.ts` 中配置的在线文档）
+3. 从 `@/api` 导入使用
 
 ### Q: 生成的接口不满足需求？
 
 在 `custom/` 目录创建同名函数覆盖：
 
 ```typescript
-import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
+import { loginWithPhone as generatedLogin } from '../generated/auth/auth';
 
-export const postAuthLogin = async (data) => {
+export const loginWithPhone = async (data) => {
   const response = await generatedLogin(data);
   // 添加业务逻辑
   return response;
@@ -418,15 +419,13 @@ export const postAuthLogin = async (data) => {
 
 ### Q: 如何处理文件上传？
 
-```typescript
-// src/api/custom/upload.ts
-import { http } from '../core';
+`src/api/custom/override.ts` 已提供 `uploadFileByPath` / `uploadFilesByPath`（经 `http` 实例以 `uni.uploadFile` 上传）：
 
-export const uploadFile = async (filePath: string) => {
-  return http.Post('/upload', { filePath, name: 'file' }, {
-    requestType: 'upload',
-  } as any);
-};
+```typescript
+import { uploadFileByPath } from '@/api';
+
+const res = await uni.chooseImage({ count: 1 });
+const file = await uploadFileByPath(res.tempFilePaths[0]);
 ```
 
 ### Q: 为什么用 http 而不是直接用 alova？

@@ -39,37 +39,25 @@ pnpm build:mp-weixin && du -sh dist/build/mp-weixin
 
 #### 1.1 合理划分分包
 
-```json
-// pages.json
-{
-  "pages": [
-    // 主包：TabBar 页面 + 高频页面（控制在 2MB 以内）
-    { "path": "pages/index/index" },
-    { "path": "pages/mine/index" },
-    { "path": "pages/login/index" }
+- 主包 `src/pages/`：TabBar 页面 + 高频页面（控制在 2MB 以内）
+- 分包 `src/pages-sub/<name>/`：页面由 `@uni-helper/vite-plugin-uni-pages` 扫描并写入 `src/pages.json`，页面配置写在各页面的 `definePage({...})` 中
+- 新增分包需同时在 `pages.config.ts` 与 `vite.config.ts` 的 `UniPages({ subPackages })` 中声明
+
+```typescript
+// pages.config.ts
+export default defineUniPages({
+  subPackages: [
+    { root: 'pages-sub/order', pages: [] },
+    { root: 'pages-sub/user', pages: [] },
+    { root: 'pages-sub/other', pages: [] },
   ],
-  "subPackages": [
-    {
-      "root": "pages-sub/order",
-      "pages": [
-        { "path": "list/index" }
-      ]
-    },
-    {
-      "root": "pages-sub/user",
-      "pages": [
-        { "path": "profile/index" },
-        { "path": "settings/index" }
-      ]
-    }
-  ]
-}
+});
 ```
 
 #### 1.2 分包预加载
 
 ```json
-// pages.json
+// pages.config.ts 的 defineUniPages 配置
 {
   "preloadRule": {
     "pages/index/index": {

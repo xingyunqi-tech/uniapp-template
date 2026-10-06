@@ -193,9 +193,9 @@ Commands 是轻量级的提示命令，用于快速调用重复使用的提示�
 - 新手快速了解项目工具
 
 **包含内容:**
-- 6 个 Skills (代码生成和自动化)
+- 9 个 Skills (代码生成和自动化)
 - 7 个 Commands (快速提示)
-- 10 个 Agents (深度指导)
+- 11 个 Agents (深度指导)
 - 工具使用建议和对比
 
 **示例:**
@@ -230,7 +230,7 @@ Commands 是轻量级的提示命令，用于快速调用重复使用的提示�
 
 # 场景 2: 审查代码前
 /review-pr                    # 查看审查清单
-pnpm lint                     # ESLint 检查
+pnpm lint                     # ESLint + Stylelint + markdownlint（自动 --fix）
 pnpm type-check               # TypeScript 类型检查
 
 # 场景 3: 重构代码
@@ -335,11 +335,11 @@ description: 你的命令描述
 ## 📚 相关资源
 
 ### Skills
-- `.claude/skills/` - 7 个自动化 Skills（包括 api-generator）
+- `.claude/skills/` - 9 个自动化 Skills（包括 api-generator）
 - `.claude/skills/README.md` - Skills 使用指南
 
 ### Agents
-- `.claude/agents/` - 10 个专业 Agents
+- `.claude/agents/` - 11 个专业 Agents
 - `.claude/agents/common-patterns.md` - 通用开发模式
 
 ### 文档

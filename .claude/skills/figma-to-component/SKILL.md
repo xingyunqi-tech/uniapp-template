@@ -103,10 +103,10 @@ metadata:
    - 阴影: 0 2px 8px rgba(0,0,0,0.1)
 
    🎨 颜色分析:
-   - 主色: #1890FF → var(--colorPrimary)
-   - 文本色: #262626 → var(--colorTextHeading)
-   - 背景色: #FFFFFF → var(--colorBgContainer)
-   - 边框色: #D9D9D9 → var(--colorBorder)
+   - 主色: #1890FF → var(--color-primary)
+   - 文本色: #262626 → var(--color-text)
+   - 背景色: #FFFFFF → var(--color-bg-card)
+   - 边框色: #D9D9D9 → var(--color-border)
 
    📝 文本分析:
    - 标题: "用户姓名" (16px, 500)
@@ -234,15 +234,15 @@ const handleViewClick = () => {
   flex-direction: column;
   gap: 32rpx;
   padding: 48rpx;
-  background: var(--colorBgContainer);
-  border: 1rpx solid var(--colorBorder);
+  background: var(--color-bg-card);
+  border: 1rpx solid var(--color-border);
   border-radius: 16rpx;
   box-shadow: 0 4rpx 16rpx rgb(0 0 0 / 10%);
   transition: all 0.3s ease;
 
   &--active {
-    border-color: var(--colorPrimary);
-    background: var(--colorPrimaryBg);
+    border-color: var(--color-primary);
+    background: var(--color-primary-bg);
   }
 
   &__avatar {
@@ -265,13 +265,13 @@ const handleViewClick = () => {
     margin: 0 0 16rpx;
     font-size: 32rpx;
     font-weight: 500;
-    color: var(--colorTextHeading);
+    color: var(--color-text);
   }
 
   &__description {
     margin: 0 0 24rpx;
     font-size: 28rpx;
-    color: var(--colorTextSecondary);
+    color: var(--color-text-secondary);
     line-height: 1.6;
   }
 
@@ -284,9 +284,9 @@ const handleViewClick = () => {
   &__tag {
     padding: 4rpx 16rpx;
     font-size: 24rpx;
-    color: var(--colorPrimary);
-    background: var(--colorPrimaryBg);
-    border: 1rpx solid var(--colorPrimaryBorder);
+    color: var(--color-primary);
+    background: var(--color-primary-bg);
+    border: 1rpx solid var(--color-primary-light);
     border-radius: 8rpx;
   }
 
@@ -383,19 +383,19 @@ export interface UserCardEmits {
    - CSS 变量: 8 个
 
 5️⃣ 颜色映射
-   #1890FF → var(--colorPrimary)
-   #262626 → var(--colorTextHeading)
-   #8C8C8C → var(--colorTextSecondary)
-   #FFFFFF → var(--colorBgContainer)
-   #D9D9D9 → var(--colorBorder)
-   #E6F7FF → var(--colorPrimaryBg)
+   #1890FF → var(--color-primary)
+   #262626 → var(--color-text)
+   #8C8C8C → var(--color-text-secondary)
+   #FFFFFF → var(--color-bg-card)
+   #D9D9D9 → var(--color-border)
+   #E6F7FF → var(--color-primary-bg)
 
 ─────────────────────────────────────────
 
 💡 下一步建议:
    1. 查看生成的组件代码
    2. 根据业务需求调整逻辑
-   3. 添加国际化文本: pnpm i18n
+   3. 添加国际化文本: 更新 src/locale/ 下的语言文件
    4. 生成单元测试: /test-coverage-checker --auto-generate
    5. 在页面中使用组件
 
@@ -460,18 +460,18 @@ export interface UserCardEmits {
    📝 拆分计划:
 
    1️⃣ UserManagement (页面组件)
-      路径: src/pages-sub/user-management/index.vue
+      路径: src/pages-sub/user/management/index.vue
       类型: Page
       职责: 页面容器,协调子组件
 
    2️⃣ UserSearch (业务组件)
-      路径: src/pages-sub/user-management/components/UserSearch.vue
+      路径: src/components/UUserSearch/index.vue
       类型: Business
       职责: 搜索表单,新增按钮
       原因: 独立 Auto Layout,包含交互逻辑
 
    3️⃣ UserList (业务组件)
-      路径: src/pages-sub/user-management/components/UserList.vue
+      路径: src/components/UUserList/index.vue
       类型: List (移动端列表)
       职责: 用户列表展示 (scroll-view 无限滚动)
       原因: 独立 Auto Layout,数据驱动
@@ -496,12 +496,12 @@ export interface UserCardEmits {
    ✓ src/components/UUserCard/index.vue (158 行)
    ✓ src/components/UUserCard/types.ts (35 行)
 
-   2️⃣ 生成页面级组件...
-   ✓ src/pages-sub/user-management/components/UserSearch.vue (89 行)
-   ✓ src/pages-sub/user-management/components/UserList.vue (142 行)
+   2️⃣ 生成业务组件...
+   ✓ src/components/UUserSearch/index.vue (89 行)
+   ✓ src/components/UUserList/index.vue (142 行)
 
    3️⃣ 生成主页面...
-   ✓ src/pages-sub/user-management/index.vue (176 行)
+   ✓ src/pages-sub/user/management/index.vue (176 行)
 
    📊 进度: [████████████████████] 100%
 ```
@@ -569,21 +569,18 @@ export interface UserCardEmits {
 
    ✓ 检测到 --with-router 参数
 
-   追加到: src/pages.json (subPackages)
+   写入页面: src/pages-sub/user/management/index.vue
 
-   {
-     "root": "pages-sub/user-management",
-     "pages": [
-       {
-         "path": "index",
-         "style": {
-           "navigationBarTitleText": "用户管理"
-         }
-       }
-     ]
-   }
+   definePage({
+     style: {
+       navigationBarTitleText: '用户管理',
+     },
+   });
 
-   ⚠️ 注意: 如需权限控制,请在路由拦截器中配置
+   ℹ️ src/pages.json 由 @uni-helper/vite-plugin-uni-pages 根据 definePage 自动生成
+   ⚠️ 注意: 新增分包需在 pages.config.ts 与 vite.config.ts 中登记;
+      如需权限控制,在 src/constants/pages.ts 的 PAGE_ROLES / WHITE_LIST 中配置
+      (由 src/utils/router-interceptor.ts 拦截检查)
 ```
 
 #### 步骤 7: 生成完成报告
@@ -611,14 +608,12 @@ export interface UserCardEmits {
        ├── index.vue (158 行)
        └── types.ts (35 行)
 
-   src/pages-sub/user-management/
-   ├── index.vue (176 行) ← 主页面
-   └── components/
-       ├── UserSearch.vue (89 行)
-       └── UserList.vue (142 行)
+   src/components/
+   ├── UUserSearch/index.vue (89 行)
+   └── UUserList/index.vue (142 行)
 
-   src/pages.json
-   └── subPackages (追加 1 个分包路由)
+   src/pages-sub/user/management/
+   └── index.vue (176 行) ← 主页面 (含 definePage 页面配置)
 
 4️⃣ 下载的资源
    src/static/images/user-management/
@@ -644,7 +639,7 @@ export interface UserCardEmits {
    2. 补充业务逻辑 (API 调用、状态管理)
    3. 运行 pnpm api:gen 同步 API
    4. 运行 /store-generator UserStore --smart
-   5. 添加国际化: pnpm i18n
+   5. 添加国际化: 更新 src/locale/ 下的语言文件
    6. 生成测试: /test-coverage-checker --auto-generate
    7. 类型检查: pnpm type-check
 
@@ -765,19 +760,19 @@ const DEFAULT_SPLIT_RULES = [
 
 ┌─────────────────────────────────────────────────────────┐
 │ 组件 1: UserManagement (页面)                            │
-│ ├─ 路径: src/pages-sub/user-management/index.vue       │
+│ ├─ 路径: src/pages-sub/user/management/index.vue       │
 │ ├─ 类型: Page                                           │
 │ ├─ 子组件: 3 个                                          │
 │ └─ 预估行数: ~180 行                                     │
 ├─────────────────────────────────────────────────────────┤
 │ 组件 2: UserSearch (业务)                                │
-│ ├─ 路径: src/pages-sub/user-management/components/     │
+│ ├─ 路径: src/components/UUserSearch/                   │
 │ ├─ 类型: Business                                       │
 │ ├─ 命中规则: auto-layout-rule                           │
 │ └─ 预估行数: ~90 行                                      │
 ├─────────────────────────────────────────────────────────┤
 │ 组件 3: UserList (业务)                                  │
-│ ├─ 路径: src/pages-sub/user-management/components/     │
+│ ├─ 路径: src/components/UUserList/                     │
 │ ├─ 类型: List (移动端列表)                               │
 │ ├─ 命中规则: auto-layout-rule                           │
 │ └─ 预估行数: ~140 行                                     │
@@ -836,9 +831,9 @@ UserCard (Frame)
 
 ```
 推荐使用 Figma Styles:
-✅ Primary → 自动映射到 var(--colorPrimary)
-✅ Text/Heading → 自动映射到 var(--colorTextHeading)
-✅ Background → 自动映射到 var(--colorBgContainer)
+✅ Primary → 自动映射到 var(--color-primary)
+✅ Text/Heading → 自动映射到 var(--color-text)
+✅ Background → 自动映射到 var(--color-bg-card)
 
 避免硬编码颜色:
 ❌ #1890FF (直接使用 Hex)
@@ -853,16 +848,16 @@ UserCard (Frame)
 // theme-mapping.json
 {
   "colorMapping": {
-    "#1890FF": "var(--colorPrimary)",
-    "#262626": "var(--colorTextHeading)",
-    "#595959": "var(--colorText)",
-    "#8C8C8C": "var(--colorTextSecondary)",
-    "#BFBFBF": "var(--colorTextDisabled)",
-    "#FFFFFF": "var(--colorBgContainer)",
-    "#FAFAFA": "var(--colorBgLayout)",
-    "#F5F5F5": "var(--colorBgSecondary)",
-    "#D9D9D9": "var(--colorBorder)",
-    "#F0F0F0": "var(--colorBorderSecondary)"
+    "#1890FF": "var(--color-primary)",
+    "#262626": "var(--color-text)",
+    "#595959": "var(--color-text)",
+    "#8C8C8C": "var(--color-text-secondary)",
+    "#BFBFBF": "var(--color-text-disabled)",
+    "#FFFFFF": "var(--color-bg-card)",
+    "#FAFAFA": "var(--color-bg-grey)",
+    "#F5F5F5": "var(--color-bg-grey)",
+    "#D9D9D9": "var(--color-border)",
+    "#F0F0F0": "var(--color-border-light)"
   }
 }
 ```
@@ -882,8 +877,7 @@ UserCard (Frame)
 # 步骤 1: 从 Figma 生成组件
 /figma-to-component https://www.figma.com/file/xxx --type basic
 
-# 步骤 2: 国际化处理
-pnpm i18n src/components/UserCard/
+# 步骤 2: 国际化处理 (在 src/locale/ 下的语言文件中补充文案)
 
 # 步骤 3: 生成单元测试
 /test-coverage-checker src/components/UserCard/ --auto-generate
@@ -905,7 +899,7 @@ pnpm commit
 # 等效于:
 # 1. 从 Figma 提取设计
 # 2. 生成页面组件
-# 3. 自动添加路由配置
+# 3. 在页面中写入 definePage 页面配置
 ```
 
 ## 支持的 Figma 特性
@@ -1097,8 +1091,7 @@ pnpm lint
 # 编辑 src/components/UUserCard/index.vue
 # 添加 API 调用、状态管理等
 
-# 4. 国际化处理
-pnpm i18n src/components/UUserCard/
+# 4. 国际化处理 (在 src/locale/ 下的语言文件中补充文案)
 
 # 5. 生成测试并检查覆盖率
 /test-coverage-checker src/components/UUserCard/ --auto-generate

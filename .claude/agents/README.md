@@ -67,8 +67,8 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 - 三种使用场景 (80%/15%/5%)
 - 从 `@/api` 统一导入,不直接从 `generated/` 导入
 - Pinia Store + Orval API 组合使用
-- HTTP 实例管理 (defaultHttp/downloadHttp)
-- 请求去重、取消、重试
+- HTTP 实例 `http` 与 Alova Hooks (useRequest/useWatcher/useFetcher)
+- 请求 meta 配置与 401 刷新处理
 
 ---
 
@@ -80,7 +80,6 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 - ✅ 开发页面级组件 (src/pages/[page]/components/ 或 src/pages-sub/[module]/[page]/components/)
 - ✅ 开发页面组件 (src/pages/ 或 src/pages-sub/)
 - ✅ Figma 设计稿还原
-- ✅ 组件路由配置
 
 **核心内容**:
 - 组件三层体系 (基础/页面级/页面)
@@ -88,27 +87,25 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 - Figma 设计稿还原规范
 - 视觉规范补充 (字体/间距/盒模型)
 - 页面布局约定 (复用全局 Layout)
-- 组件路由配置 (同步配置到 router)
 - 避免冗余 DOM 和样式
 
 ---
 
 ### 🚦 [router-development.md](router-development.md)
-**职责**: Uni-app pages.json 路由开发指导,包括路由配置、权限控制、路由守卫
+**职责**: Uni-app 路由开发指导,包括页面配置 (definePage + pages.config.ts)、权限控制、路由拦截器
 
 **适用场景**:
-- ✅ 配置基础路由 (登录/404/403)
-- ✅ 配置公共路由 (所有登录用户可访问)
-- ✅ 配置异步路由 (需要角色权限)
-- ✅ 实现权限控制
-- ✅ 配置路由守卫
+- ✅ 新增主包/分包页面
+- ✅ 配置白名单 (无需登录的页面)
+- ✅ 配置页面角色权限 (PAGE_ROLES)
+- ✅ 配置路由拦截器
 
 **核心内容**:
-- Uni-app pages.json 路由配置
+- definePage + pages.config.ts 生成 pages.json
 - 分包配置 (pages-sub/)
-- 路由守卫实现 (routerInterceptor)
+- 路由拦截器实现 (src/utils/router-interceptor.ts)
 - 路由跳转方式 (navigateTo/redirectTo/switchTab)
-- Permission Store 实现
+- 白名单与页面角色配置 (src/constants/pages.ts)
 - 页面生命周期 (onLoad/onShow/onHide)
 
 ---
@@ -148,7 +145,7 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 - Vue Composition API 规范
 - API 导入规范 (从 `@/api` 统一导入)
 - 全局插件使用原则 (Dayjs/i18n/Storage)
-- 国际化原则 (禁止使用 i18n API)
+- 国际化原则 (vue-i18n `$t`，同步维护语言包)
 - 样式编码规范 (CSS 变量/BEM 命名)
 
 ---
@@ -235,17 +232,15 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 **职责**: 应用部署、运维监控、环境管理
 
 **适用场景**:
-- ✅ 本地 Docker 部署
-- ✅ 生产环境打包部署
-- ✅ Nginx 配置
+- ✅ H5 / 小程序构建
+- ✅ GitHub Actions 自动部署 (H5 rsync / 小程序上传)
+- ✅ 本地上传小程序
 - ✅ 故障排查
 
 **核心内容**:
-- 部署文件结构 (Dockerfile/package.sh/deploy/)
-- package.sh 生产环境打包
-- manage.sh 容器管理脚本
-- Nginx 配置 (SPA 路由/静态资源缓存/Gzip)
-- 部署流程 (开发/测试/生产)
+- 部署文件结构 (.github/workflows/、scripts/mp-upload.ts)
+- 构建产物目录
+- H5 与小程序部署流程及所需 Secrets
 - 故障排查指南
 
 ---

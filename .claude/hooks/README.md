@@ -17,7 +17,7 @@ Hooks 是 Claude Code 的自动化执行机制,在特定事件触发时自动运
 
 ---
 
-## 🎯 当前配置的 Hooks（3 个）
+## 🎯 当前配置的 Hooks（4 个）
 
 ### 1. UserPromptSubmit - 提交前显示 Git 状态
 
@@ -48,7 +48,24 @@ A  src/pages/index/index.vue
 
 ---
 
-### 2. SessionStart - 会话开始提醒
+### 2. PostToolUse(Write) - 写文件后确认路径
+
+**触发时机:** Claude 调用 `Write` 工具写入文件后
+
+**作用:** 输出写入的文件路径,确认文件位置
+
+**命令:**
+```bash
+printf '✅ 文件已写入: %s\n' "$CLAUDE_FILE_PATH"
+```
+
+**说明:**
+- `matcher: "Write"` 只在 `Write` 工具调用后触发
+- `timeout: 5` 设置超时时间（秒）
+
+---
+
+### 3. SessionStart - 会话开始提醒
 
 **触发时机:** Claude Code 会话开始时
 
@@ -56,7 +73,7 @@ A  src/pages/index/index.vue
 
 **命令:**
 ```bash
-printf '🚀 Uni-app Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\n' "$(git branch --show-current 2>/dev/null || echo 'unknown')" "$(git status --short 2>/dev/null | wc -l | tr -d ' ')"
+printf '🚀 Uni-app Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | 使用rpx单位 | 用uni API\n' "$(git branch --show-current 2>/dev/null || echo 'unknown')" "$(git status --short 2>/dev/null | wc -l | tr -d ' ')"
 ```
 
 **为什么使用 `printf` 而不是 `echo`？**
@@ -72,7 +89,7 @@ printf '🚀 Uni-app Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n
 
 ---
 
-### 3. SessionEnd - 会话结束提醒
+### 4. SessionEnd - 会话结束提醒
 
 **触发时机:** Claude Code 会话结束时
 
@@ -165,7 +182,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\n' \"$FILE_PATH\"",
+            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
             "timeout": 5
           }
         ]
@@ -195,7 +212,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | 使用rpx单位 | 用uni API\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }
@@ -384,12 +401,24 @@ A  src/pages/index/index.vue
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | 使用rpx单位 | 用uni API\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }
@@ -440,7 +469,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\\n' \"$FILE_PATH\"",
+            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
             "timeout": 5
           }
         ]
@@ -461,7 +490,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | Props/Emits分离\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
+            "command": "printf '🚀 Uni-app Template\\n📊 分支: %s\\n📝 未提交: %s 个文件\\n\\n⚡ 快速命令: /review-pr | /quick-fix | /git-workflow | /tools\\n⚠️  规范提醒: API从@/api导入 | 颜色用CSS变量 | 使用rpx单位 | 用uni API\\n' \"$(git branch --show-current 2>/dev/null || echo 'unknown')\" \"$(git status --short 2>/dev/null | wc -l | tr -d ' ')\""
           }
         ]
       }
@@ -574,14 +603,14 @@ which printf
 
 ### 项目文档
 - `.claude/commands/` - 7 个 Commands
-- `.claude/skills/` - 10 个 Skills
-- `.claude/agents/` - 10 个 Agents
+- `.claude/skills/` - 9 个 Skills
+- `.claude/agents/` - 11 个 Agents
 
 ---
 
 ## 🎉 开始使用
 
-当前项目已配置 3 个 Hooks（UserPromptSubmit、SessionStart、SessionEnd），覆盖完整的会话周期。
+当前项目已配置 4 个 Hooks（UserPromptSubmit、PostToolUse、SessionStart、SessionEnd），覆盖完整的会话周期。
 
 如需添加更多 Hooks,请参考上面的推荐配置,逐步添加到 `.claude/settings.json` 中。
 
@@ -592,7 +621,7 @@ which printf
 **最后更新:** 2025-11-17
 
 **当前配置:**
-- 3 个 Hooks (UserPromptSubmit, SessionStart, SessionEnd)
+- 4 个 Hooks (UserPromptSubmit, PostToolUse, SessionStart, SessionEnd)
 - 轻量级设计，只读操作
 - 使用 `printf` 确保跨平台兼容
 - 使用 `|| true` 避免阻塞

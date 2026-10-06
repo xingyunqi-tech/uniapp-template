@@ -200,7 +200,7 @@ const displayName = computed(() => {
 <template>
   <view class="container">
     <!-- ✅ 正确：加载中显示骨架屏 -->
-    <u-skeleton v-if="loading" :rows="5" animated />
+    <USkeleton v-if="loading" type="list" :rows="5" />
 
     <!-- 加载完成显示数据 -->
     <view v-else class="content">
@@ -240,33 +240,28 @@ onLoad(() => {
 
 ```typescript
 interface SkeletonProps {
-  /** 是否加载中 */
+  /** 是否显示骨架屏 */
   loading?: boolean;
-  /** 段落行数 */
-  rows?: number;
-  /** 是否显示标题 */
-  title?: boolean;
-  /** 标题宽度 */
-  titleWidth?: string | number;
+  /** 骨架屏类型 */
+  type?: SkeletonType;
+  /** 是否显示动画 */
+  animated?: boolean;
   /** 是否显示头像 */
   avatar?: boolean;
   /** 头像形状 */
-  avatarShape?: 'round' | 'square';
-  /** 头像大小 */
-  avatarSize?: string | number;
-  /** 是否显示动画 */
-  animated?: boolean;
-  /** 每行宽度 */
-  rowsWidth?: (string | number)[];
-}
-```
+  avatarShape?: AvatarShape;
+  /** 行数 (列表/卡片/表单的重复次数) */
+  rows?: number;
+  /** 段落行数 */
+  paragraphRows?: number;
+}```
 
 #### 骨架屏使用原则
 
 1. **异步加载必须有骨架屏** - 避免空白页面
 2. **动画增强** - 启用 `animated` 属性提升视觉效果
 3. **尺寸匹配** - 骨架屏尺寸应与实际内容接近，避免布局跳动
-4. **easycom 自动导入** - 使用 `<u-skeleton>` 无需 import
+4. **easycom 自动导入** - 使用 `<USkeleton>` 无需 import（不支持 `<u-skeleton>` 写法）
 
 ---
 
@@ -895,7 +890,7 @@ const fetchUserInfo = async (): Promise<void> => {
   error.value = null;
 
   try {
-    const response = await getAuthUserInfo();
+    const response = await getCurrentUser();
     userInfo.value = response;
   } catch (err) {
     error.value = err instanceof Error ? err.message : '获取用户信息失败';
@@ -908,7 +903,7 @@ const fetchUserInfo = async (): Promise<void> => {
 
 // ❌ 错误：缺少错误处理
 const fetchUserInfo = async () => {
-  const response = await getAuthUserInfo();
+  const response = await getCurrentUser();
   userInfo.value = response;
 };
 ```
@@ -917,13 +912,13 @@ const fetchUserInfo = async () => {
 
 ```typescript
 // ✅ 正确：Store Action 错误处理
-const loginAction = async (credentials: ILoginRequest): Promise<void> => {
+const loginAction = async (credentials: AuthPhoneLoginDto): Promise<void> => {
   loading.value = true;
 
   try {
-    const response = await postAuthLogin(credentials);
+    const response = await loginWithPhone(credentials);
     token.value = response.token;
-    userInfo.value = response.userInfo;
+    userInfo.value = response.user;
 
     // 持久化存储
     uni.setStorageSync('token', token.value);
@@ -936,9 +931,9 @@ const loginAction = async (credentials: ILoginRequest): Promise<void> => {
 };
 
 // ❌ 错误：吞掉错误
-const loginAction = async (credentials: ILoginRequest) => {
+const loginAction = async (credentials: AuthPhoneLoginDto) => {
   try {
-    const response = await postAuthLogin(credentials);
+    const response = await loginWithPhone(credentials);
     token.value = response.token;
   } catch (error) {
     console.error(error);  // 只打印,不抛出,调用方无法知道失败

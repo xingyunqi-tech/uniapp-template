@@ -8,23 +8,23 @@
 
 ### Requirement: Page Configuration
 
-所有页面 SHALL 在 `pages.json` 中注册，系统使用 pages.json 作为路由配置源。
+所有页面 SHALL 通过页面文件中的 `definePage({...})` 宏声明，由 `@uni-helper/vite-plugin-uni-pages` 结合根目录 `pages.config.ts` 生成 `src/pages.json`，系统使用 pages.json 作为路由配置源；`src/pages.json` 不手动编辑。
 
 #### Scenario: Main package pages
 - **GIVEN** 页面位于 `src/pages/` 目录
 - **WHEN** 配置页面路由
-- **THEN** 在 `pages.json` 的 `pages` 数组中注册
+- **THEN** 插件自动扫描并写入 `pages.json` 的 `pages` 数组
 - **AND** TabBar 页面必须在主包中
 
 #### Scenario: Sub-package pages
 - **GIVEN** 页面位于 `src/pages-sub/` 目录
 - **WHEN** 配置页面路由
-- **THEN** 在 `pages.json` 的 `subPackages` 数组中注册
+- **THEN** 插件按 `pages.config.ts` 的 `subPackages` 与 `vite.config.ts` 中 `UniPages({ subPackages })` 声明的分包目录扫描，写入 `pages.json` 的 `subPackages`
 - **AND** 按功能模块划分分包（order、user、other）
 
 #### Scenario: Page style configuration
 - **GIVEN** 需要配置页面样式
-- **WHEN** 在 pages.json 中定义页面
+- **WHEN** 在页面的 `definePage({ style: {...} })` 中定义
 - **THEN** 可以设置 navigationBarTitleText、navigationStyle 等属性
 - **AND** 可以启用/禁用下拉刷新
 
@@ -87,7 +87,7 @@
 
 #### Scenario: TabBar configuration
 - **GIVEN** 需要配置 TabBar
-- **WHEN** 在 pages.json 的 tabBar 中定义
+- **WHEN** 在 `pages.config.ts` 的 tabBar 中定义
 - **THEN** 设置图标、文字、选中颜色等属性
 - **AND** tabBar.list 中的 pagePath 必须在主包 pages 中
 
@@ -105,12 +105,12 @@
 #### Scenario: Order sub-package
 - **GIVEN** 订单相关页面
 - **THEN** 位于 `pages-sub/order/` 分包
-- **AND** 包含订单列表页
+- **AND** 包含订单列表、订单详情、支付结果页
 
 #### Scenario: User sub-package
 - **GIVEN** 用户相关页面
 - **THEN** 位于 `pages-sub/user/` 分包
-- **AND** 包含地址管理、收藏、密码修改、资料编辑、设置页
+- **AND** 包含地址管理、地址编辑、收藏、消息通知、通知设置、密码修改、资料编辑、设置页
 
 #### Scenario: Other sub-package
 - **GIVEN** 其他功能页面
@@ -128,6 +128,11 @@
 - **WHEN** 用户未登录时被重定向到登录页
 - **THEN** 登录页接收 redirect 参数
 - **AND** 登录成功后跳转到原页面
+
+#### Scenario: Login interception
+- **GIVEN** 路由拦截器 `src/utils/router-interceptor.ts`
+- **WHEN** 跳转到不在 `src/constants/pages.ts` 的 `WHITE_LIST` 中的页面且未登录
+- **THEN** 重定向到登录页并携带 redirect 参数
 
 #### Scenario: Default redirect
 - **GIVEN** 用户直接访问登录页（无 redirect 参数）
@@ -156,9 +161,9 @@
 - pages/error/index
 
 **分包**:
-- pages-sub/order (1 页面)
-- pages-sub/user (6 页面)
-- pages-sub/other (4 页面)
+- pages-sub/order (3 页面: list、detail、payment-result)
+- pages-sub/user (8 页面: address、address-edit、favorite、notifications、notification-settings、password、profile、settings)
+- pages-sub/other (4 页面: about、contact、feedback、webview)
 
 ### Restrictions
 - 禁止使用 Vue Router

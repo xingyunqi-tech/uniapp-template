@@ -641,7 +641,7 @@ Figma 提取完成
 **组件目录**:
 - `src/components/` - 全局公用组件（基础组件）
 - `src/pages/[page]/components/` 或 `src/pages-sub/[module]/[page]/components/` - 页面级组件（业务组件）
-- `src/pages/` 或 `src/pages-sub/` - 页面组件（pages.json 路由对应）
+- `src/pages/` 或 `src/pages-sub/` - 页面组件（definePage 声明配置，自动生成 pages.json）
 
 ### 外部资源
 

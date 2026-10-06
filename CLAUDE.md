@@ -42,7 +42,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 | **语言** | TypeScript | 严格类型检查 |
 | **构建** | Vite + @dcloudio/vite-plugin-uni | 多平台构建 |
 | **状态** | Pinia | Composition API 风格 + 持久化 |
-| **路由** | pages.json | Uni-app 标准路由配置 (非 Vue Router) |
+| **路由** | pages.json | 由 `definePage` + `pages.config.ts` 生成 (非 Vue Router) |
 | **UI** | @dcloudio/uni-ui | 官方 UI 组件库 |
 | **HTTP** | Alova | 轻量级请求策略库 |
 | **API** | Orval | OpenAPI → 自动生成类型安全的 API |
@@ -56,7 +56,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. **分包优化** - `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 4. **easycom 自动注册** - 组件无需手动导入
 5. **主题系统** - CSS 变量支持 Light/Dark 主题切换
-6. **自定义组件库** - 20+ 业务组件，统一 `U` 前缀
+6. **自定义组件库** - 22 个组件（21 个 `U` 前缀组件 + `AuthLayout`）
 
 ---
 
@@ -66,9 +66,11 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 **与 Vue Router 的核心区别** - 使用 `pages.json` 配置路由，而非 Vue Router
 
+`src/pages.json` 由 `@uni-helper/vite-plugin-uni-pages` 生成，不要手动编辑：页面路由与样式写在各页面的 `definePage({...})` 宏中，全局配置（easycom、subPackages、globalStyle、tabBar）写在根目录 `pages.config.ts`。`src/manifest.json` 同样由根目录 `manifest.config.ts` 生成。
+
 ```
 src/
-├── pages.json           # 路由配置 (核心!)
+├── pages.json           # 路由配置 (由 pages.config.ts + definePage 生成)
 ├── pages/               # 主包页面 (7 个)
 │   ├── index/           # 首页 (TabBar)
 │   ├── mine/            # 我的 (TabBar)
@@ -80,18 +82,23 @@ src/
 │
 └── pages-sub/           # 分包页面 (3 个分包)
     ├── order/           # 订单分包
-    │   └── list/        # 订单列表
+    │   ├── list/        # 订单列表
+    │   ├── detail/      # 订单详情
+    │   └── payment-result/ # 支付结果
     ├── user/            # 用户分包
     │   ├── address/     # 地址管理
     │   ├── address-edit/# 编辑地址
     │   ├── favorite/    # 我的收藏
+    │   ├── notifications/ # 消息通知
+    │   ├── notification-settings/ # 通知设置
     │   ├── password/    # 修改密码
     │   ├── profile/     # 编辑资料
     │   └── settings/    # 设置
     └── other/           # 其他分包
         ├── about/       # 关于我们
         ├── contact/     # 联系客服
-        └── feedback/    # 意见反馈
+        ├── feedback/    # 意见反馈
+        └── webview/     # Webview 容器
 ```
 
 **路由跳转方式**:
@@ -104,26 +111,37 @@ uni.redirectTo({ url: '/pages/error/index' });
 
 // ✅ 推荐: 使用封装的 composable
 import { useRouter } from '@/composables';
-const { navigateTo, switchTab, redirectTo } = useRouter();
-navigateTo('/pages/login/index');
+const router = useRouter();
+router.push('/pages-sub/order/detail/index', { id: 1 }); // navigateTo
+router.replace('/pages/error/index');                    // redirectTo
+router.switchTab('/pages/index/index');
+router.back();
 
 // ❌ 错误: 没有 Vue Router
 import { useRouter } from 'vue-router';  // 禁止!
 ```
 
-**分包配置** (pages.json):
+**新增页面** (在页面文件中声明，自动扫描生成 pages.json):
 
-```json
-{
-  "subPackages": [
-    {
-      "root": "pages-sub/order",
-      "pages": [
-        { "path": "list/index", "style": { "navigationBarTitleText": "我的订单" } }
-      ]
-    }
-  ]
-}
+```vue
+<!-- src/pages-sub/order/list/index.vue -->
+<script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '我的订单',
+  },
+});
+</script>
+```
+
+**分包配置** (pages.config.ts，分包目录还需在 vite.config.ts 的 `UniPages({ subPackages })` 中声明):
+
+```ts
+subPackages: [
+  { root: 'pages-sub/order', pages: [] },
+  { root: 'pages-sub/user', pages: [] },
+  { root: 'pages-sub/other', pages: [] },
+],
 ```
 
 **详细文档**: [.claude/agents/router-development.md](.claude/agents/router-development.md)
@@ -138,11 +156,12 @@ import { useRouter } from 'vue-router';  // 禁止!
 src/api/
 ├── core/              # HTTP 客户端、请求封装 (手动维护)
 │   ├── index.ts       # 导出
-│   ├── request.ts     # Alova 实例封装
+│   ├── alova.ts       # Alova 实例封装
 │   └── mutator.ts     # Orval 适配器
 ├── generated/         # 🚫 Orval 自动生成 (禁止修改!)
 │   ├── auth/          # 认证 API
 │   ├── config/        # 配置 API
+│   ├── ...            # 其他按 tag 拆分的模块
 │   └── model/         # 类型定义
 ├── custom/            # ✅ 自定义扩展 (手动编写)
 │   ├── external.ts    # 外部 API (新增场景)
@@ -160,7 +179,7 @@ src/api/
 **工作流程**:
 
 ```bash
-后端更新 API → 更新 openapi.json → pnpm api:gen → 自动生成代码
+后端更新 API → pnpm api:gen（orval.config.ts 直接拉取在线 OpenAPI 文档）→ 自动生成代码
 ```
 
 **详细文档**: [.claude/agents/api-development.md](.claude/agents/api-development.md)
@@ -212,7 +231,8 @@ easycom: {
 | `UFormItem` | 表单项 | `USmsInput` | 短信验证码 |
 | `UImageUpload` | 图片上传 | `UPasswordStrength` | 密码强度 |
 | `URichText` | 富文本 | `UFixedButton` | 固定按钮 |
-| `AuthLayout` | 认证布局 | - | - |
+| `ULoadMore` | 加载更多 | `USearchBar` | 搜索栏 |
+| `UTag` | 标签 | `AuthLayout` | 认证布局 |
 
 **详细文档**: [.claude/agents/component-development.md](.claude/agents/component-development.md)
 
@@ -269,7 +289,7 @@ globalStore.setTheme('dark');  // 切换到深色主题
 |------|------|---------|
 | `src/pages/` | 主包页面 | TabBar 页面必须在主包 |
 | `src/pages-sub/` | 分包页面 | 优化小程序体积 |
-| `src/pages.json` | 路由配置 | 所有页面必须在此注册 |
+| `src/pages.json` | 路由配置 | 自动生成，页面用 `definePage` 声明，全局配置改 `pages.config.ts` |
 | `src/api/generated/` | Orval 自动生成 | 🚫 **禁止修改** |
 | `src/api/custom/` | 自定义 API | ✅ 在这里扩展 |
 | `src/components/` | 全局组件 | easycom 自动注册 |
@@ -302,7 +322,8 @@ pnpm build:app        # App 构建
 pnpm api:gen          # 生成 API 代码 (Orval)
 
 # 代码质量
-pnpm lint             # ESLint + Stylelint
+pnpm lint             # ESLint + Stylelint + markdownlint（自动 --fix）
+pnpm lint:check       # 只检查不修复
 pnpm type-check       # TypeScript 类型检查
 
 # 测试
@@ -449,7 +470,8 @@ localStorage.setItem('token', 'xxx');  // 禁止!
 # 页面目录
 src/pages/               # 主包页面
 src/pages-sub/           # 分包页面
-src/pages.json           # 路由配置
+src/pages.json           # 路由配置 (自动生成)
+pages.config.ts          # 全局路由配置 (easycom/分包/tabBar)
 
 # API 层
 src/api/generated/       # 🚫 自动生成
@@ -467,7 +489,7 @@ src/styles/theme.scss    # 主题变量
 src/styles/size.scss     # 尺寸变量
 
 # 配置
-src/manifest.json        # 平台配置
+manifest.config.ts       # 平台配置 (生成 src/manifest.json)
 vite.config.ts           # Vite 配置
 orval.config.ts          # API 生成配置
 ```

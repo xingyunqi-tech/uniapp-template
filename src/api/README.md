@@ -27,7 +27,7 @@ src/api/
 │   │                         # - 请求/响应拦截器
 │   │                         # - Token 自动注入
 │   │                         # - 401 统一处理
-│   │                         # - 缓存配置
+│   │                         # - 请求合并（不缓存）
 │   ├── mutator.ts            # Orval 适配器
 │   │                         # - 连接生成代码和 Alova
 │   │                         # - 自动提取 data 字段
@@ -36,15 +36,17 @@ src/api/
 ├── generated/                 # Orval 自动生成（禁止手动修改）
 │   ├── auth/                 # 认证模块
 │   ├── config/               # 配置模块
+│   ├── ...                   # 其他按 tag 拆分的模块
 │   └── model/                # 类型定义
 │
 ├── custom/                    # 自定义扩展（手动编写）
 │   ├── external.ts           # 外部 API 调用示例
 │   └── override.ts           # 覆盖生成 API 示例
 │
-├── openapi.json              # OpenAPI 文档
-└── index.ts                  # API 模块统一导出
+└── index.ts                  # API 模块统一导出（由 pnpm api:gen 生成）
 ```
+
+OpenAPI 文档不在仓库中，`orval.config.ts` 的 `input.target` 直接拉取后端在线文档。
 
 ---
 
@@ -60,16 +62,18 @@ pnpm api:gen
 
 ```vue
 <script setup lang="ts">
-import { postAuthLogin, getAuthUserInfo } from '@/api';
-import type { LoginRequest } from '@/api';
+import { loginWithEmail, getCurrentUser } from '@/api';
+import type { AuthEmailLoginDto } from '@/api';
 
 const handleLogin = async () => {
-  const loginData: LoginRequest = {
-    username: 'admin',
-    password: '123456',
+  const loginData: AuthEmailLoginDto = {
+    email: 'user@example.com',
+    password: 'md5-encrypted-password',
   };
-  const response = await postAuthLogin(loginData);
+  const response = await loginWithEmail(loginData);
   console.log('Token:', response.token);
+  const user = await getCurrentUser();
+  console.log('昵称:', user.nickname);
 };
 </script>
 ```
@@ -80,17 +84,20 @@ const handleLogin = async () => {
 <template>
   <view v-if="loading">加载中...</view>
   <view v-else-if="error">{{ error.message }}</view>
-  <view v-else>{{ data?.username }}</view>
+  <view v-else>{{ data?.data?.nickname }}</view>
 </template>
 
 <script setup lang="ts">
-import { useRequest, http } from '@/api/core';
+import { useRequest, http } from '@/api';
+import type { ApiResponse, User } from '@/api';
 
 const { loading, data, error } = useRequest(
-  http.Get('/auth/userinfo')
+  http.Get<ApiResponse<User>>('/api/v1/auth/me')
 );
 </script>
 ```
+
+`http` 实例返回完整的 `ApiResponse`（`{ code, data, message }`），业务数据在 `data` 字段；Orval 生成的函数经 `customMutator` 提取 `data`，直接返回业务数据。
 
 ---
 
@@ -99,46 +106,46 @@ const { loading, data, error } = useRequest(
 ### 场景 1: 直接使用自动生成（80%）
 
 ```typescript
-import { postAuthLogin, getAuthUserInfo } from '@/api';
+import { loginWithEmail, getCurrentUser } from '@/api';
 
-await postAuthLogin({ username: 'admin', password: '123' });
-await getAuthUserInfo();
+await loginWithEmail({ email: 'user@example.com', password: 'md5-encrypted-password' });
+await getCurrentUser();
 ```
 
 ### 场景 2: 自定义 API（15%）
 
-OpenAPI 中不存在的接口（如外部 API）：
+OpenAPI 中不存在的接口（如外部 API），参考 `custom/external.ts`：第三方服务单独创建 alova 实例，不注入业务 Token、不走业务的 401 刷新与 code 校验。
 
 ```typescript
-// src/api/custom/weather.ts
-import { http, type ApiResponse } from '../core';
+// src/api/custom/external.ts
+const externalHttp = createAlova({
+  timeout: 10000,
+  ...AdapterUniapp(),
+  responded: { /* 只校验 HTTP 状态码，返回原始响应体 */ },
+  cacheFor: null,
+});
 
-export const getWeather = async (city: string) => {
-  const response = await http.Get<ApiResponse<WeatherData>>(
-    `https://api.weather.com/weather/${city}`,
-    {
-      cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
-    }
-  );
-  return response.data;
+export const getWeather = async (city: string): Promise<WeatherResponse> => {
+  return externalHttp.Get<WeatherResponse>(`https://api.weather.example.com/weather/${encodeURIComponent(city)}`, {
+    cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
+  });
 };
 ```
 
 ### 场景 3: 覆盖生成 API（5%）
 
-在生成的 API 基础上添加业务逻辑：
+在生成的 API 基础上调整请求参数或添加业务逻辑，函数名与生成的保持一致（`pnpm api:gen` 会让 `src/api/index.ts` 跳过 generated 中的同名导出）。参考 `custom/override.ts`：
 
 ```typescript
-// src/api/custom/auth.ts
-import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
-import { storage } from '@/utils/storage';
+// src/api/custom/override.ts
+import { customMutator } from '../core/mutator';
+import type { RefreshResponseDto } from '../generated/model';
 
-export const postAuthLogin = async (data: LoginRequest) => {
-  const response = await generatedLogin(data);
-  if (response.token) {
-    storage.set('token', response.token);
-  }
-  return response;
+export const refreshToken = (refreshTokenValue: string) => {
+  return customMutator<RefreshResponseDto>(
+    { url: `/api/v1/auth/refresh`, method: 'POST' },
+    { headers: { Authorization: `Bearer ${refreshTokenValue}` }, skipAuthHandling: true, showError: false },
+  );
 };
 ```
 
@@ -149,23 +156,22 @@ export const postAuthLogin = async (data: LoginRequest) => {
 ### http 实例 (alova.ts)
 
 ```typescript
-import { http } from '@/api/core';
+import { http } from '@/api';
 
-// GET 请求（默认不缓存）
-const data = await http.Get('/users');
+// GET 请求（不缓存，进行中的相同请求合并）
+const data = await http.Get('/api/v1/users');
 
-// POST 请求（不缓存）
-const result = await http.Post('/users', { name: 'test' });
+// POST 请求（不合并）
+const result = await http.Post('/api/v1/users', { name: 'test' });
 
 // 带配置
-const data = await http.Get('/users', {
+const list = await http.Get('/api/v1/users', {
   params: { page: 1 },
   meta: {
     showLoading: true,
     loadingText: '加载中...',
     showError: false,
   },
-  cacheFor: 5 * 60 * 1000, // 缓存 5 分钟（缓存键不含 Token，只用于与用户无关的数据）
 });
 ```
 
@@ -176,25 +182,22 @@ const data = await http.Get('/users', {
 | `showLoading` | boolean | 显示 loading |
 | `loadingText` | string | loading 文字 |
 | `showError` | boolean | 显示错误提示（默认 true） |
+| `skipAuthHandling` | boolean | 401 时不刷新 Token、不清理登录态，直接抛错（刷新、登出等认证接口使用） |
 
 ### 缓存配置
 
-```typescript
-// 默认不缓存响应结果（alova.ts 中 cacheFor: null），进行中的相同请求自动合并
-// 缓存键不含 Token，只给与用户无关的数据单独开启缓存
-http.Get('/config', { cacheFor: 30 * 60 * 1000 }) // 30 分钟
-```
+`alova.ts` 中全局 `cacheFor: null`，不缓存响应结果；只有进行中的相同 GET/HEAD 请求会被合并（`shareRequest`），其他方法的请求不合并。
 
 ---
 
 ## Alova Hooks
 
-从 `@/api/core` 导出的 Hooks：
+从 `@/api` 导出的 Hooks（来自 `alova/client`）：
 
 ### useRequest
 
 ```typescript
-import { useRequest, http } from '@/api/core';
+import { useRequest, http } from '@/api';
 
 const {
   loading,    // 加载状态
@@ -203,7 +206,7 @@ const {
   send,       // 手动触发
   onSuccess,  // 成功回调
   onError,    // 失败回调
-} = useRequest(http.Get('/users'), {
+} = useRequest(http.Get('/api/v1/users'), {
   immediate: true, // 立即执行（默认 true）
 });
 ```
@@ -213,11 +216,11 @@ const {
 监听数据变化自动请求：
 
 ```typescript
-import { useWatcher, http } from '@/api/core';
+import { useWatcher, http } from '@/api';
 
 const keyword = ref('');
 const { loading, data } = useWatcher(
-  () => http.Get('/search', { params: { keyword: keyword.value } }),
+  () => http.Get('/api/v1/regions', { params: { keyword: keyword.value } }),
   [keyword],
   { debounce: 300 }
 );
@@ -228,10 +231,10 @@ const { loading, data } = useWatcher(
 预加载数据：
 
 ```typescript
-import { useFetcher, http } from '@/api/core';
+import { useFetcher, http } from '@/api';
 
 const { fetch } = useFetcher();
-fetch(http.Get('/users/123')); // 预加载
+fetch(http.Get('/api/v1/users/123')); // 预加载
 ```
 
 ---
@@ -249,20 +252,20 @@ fetch(http.Get('/users/123')); // 预加载
 
 ```typescript
 // 正确
-import { postAuthLogin } from '@/api';
-import type { LoginRequest } from '@/api';
+import { loginWithEmail } from '@/api';
+import type { AuthEmailLoginDto } from '@/api';
 
 // 错误
-import { postAuthLogin } from '@/api/generated/auth/auth';
+import { loginWithEmail } from '@/api/generated/auth/auth';
 ```
 
 ### 3. 自定义 API 使用 http
 
 ```typescript
-// 正确：使用 http（隐藏 Alova 实现）
-import { http } from '@/api/core';
+// 正确：业务接口使用 http（隐藏 Alova 实现）
+import { http } from '@/api';
 
-// 避免：直接导入 alova
+// 避免：业务接口直接导入 alova（第三方服务的独立实例见 custom/external.ts）
 import { createAlova } from 'alova';
 ```
 

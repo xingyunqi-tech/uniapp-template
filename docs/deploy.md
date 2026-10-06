@@ -155,7 +155,7 @@ base64 -i private.wx.key | tr -d '\n'
 
 1. 登录 [DCloud 开发者中心](https://dev.dcloud.net.cn)
 2. 创建应用并获取 AppID
-3. 配置 `manifest.json` 中的应用信息
+3. 配置 `manifest.config.ts` 中的应用信息（构建时生成 `src/manifest.json`）
 4. 执行构建并提交云打包
 
 ### 本地打包
@@ -168,12 +168,13 @@ base64 -i private.wx.key | tr -d '\n'
 
 ### GitHub Actions
 
-项目配置了两个工作流：
+项目配置了三个工作流：
 
-| 工作流 | 文件 | 触发条件 |
-|--------|------|---------|
-| CI | `.github/workflows/ci.yml` | 推送/PR 到主分支 |
-| 小程序部署 | `.github/workflows/deploy-mp.yml` | Tag 推送 / 手动触发 |
+| 工作流 | 文件 | 触发条件 | 说明 |
+|--------|------|---------|------|
+| Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被部署工作流调用 | lint:check、type-check、test，以及 H5 / 微信 / 支付宝 / App 四端构建 |
+| Deploy H5 | `.github/workflows/deploy-h5.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器 |
+| Deploy MiniProgram | `.github/workflows/deploy-mp.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建并上传微信 / 支付宝小程序 |
 
 ### Secrets 配置
 
@@ -186,10 +187,17 @@ base64 -i private.wx.key | tr -d '\n'
 | `ALIPAY_APPID` | 支付宝小程序 AppID | 可选 |
 | `ALIPAY_PRIVATE_KEY` | 支付宝私钥 | 可选 |
 | `ALIPAY_TOOL_ID` | 支付宝工具 ID | 可选 |
+| `ALIYUN_HOST` | H5 部署服务器 IP 或域名 | H5 部署必填 |
+| `ALIYUN_PORT` | SSH 端口 (默认 22) | 可选 |
+| `ALIYUN_USER` | SSH 用户名 | H5 部署必填 |
+| `ALIYUN_SSH_KEY` | SSH 私钥 (完整内容) | H5 部署必填 |
+| `ALIYUN_DEPLOY_PATH` | 部署目标路径 (如 `/var/www/h5`) | H5 部署必填 |
+
+> 支付宝 secrets 未配置时：Tag 触发会跳过支付宝上传；手动选择支付宝平台则直接失败。
 
 ### 自动触发部署
 
-推送版本 Tag 时自动上传到微信体验版：
+推送版本 Tag 时自动部署 H5，并上传微信小程序（已配置支付宝 secrets 时同时上传支付宝小程序）：
 
 ```bash
 # 更新版本号
@@ -201,9 +209,9 @@ git push origin --tags
 
 ### 手动触发部署
 
-1. 进入 GitHub 仓库 → **Actions** → **Deploy MiniProgram**
+1. 进入 GitHub 仓库 → **Actions** → **Deploy MiniProgram**（或 **Deploy H5**）
 2. 点击 **Run workflow**
-3. 选择目标平台和操作类型
+3. 小程序：选择目标平台 (weixin / alipay / all)、操作类型 (upload / preview)，可选填版本号与描述；H5：选择是否部署到服务器
 
 ---
 
@@ -211,17 +219,17 @@ git push origin --tags
 
 ### 环境变量配置
 
-创建 `.env.local` 文件（已在 .gitignore 中忽略）：
+`scripts/mp-upload.ts` 只读取 `process.env`，不会加载 `.env` 文件，需在 shell 中导出环境变量：
 
-```env
+```bash
 # 微信小程序
-WEIXIN_APPID=wx1234567890
-WEIXIN_PRIVATE_KEY=Base64编码的密钥内容
+export WEIXIN_APPID=wx1234567890
+export WEIXIN_PRIVATE_KEY=Base64编码的密钥内容
 
 # 支付宝小程序 (可选)
-ALIPAY_APPID=2021001234567890
-ALIPAY_PRIVATE_KEY=私钥内容
-ALIPAY_TOOL_ID=工具ID
+export ALIPAY_APPID=2021001234567890
+export ALIPAY_PRIVATE_KEY=私钥内容
+export ALIPAY_TOOL_ID=工具ID
 ```
 
 ### 命令使用
@@ -236,7 +244,7 @@ pnpm mp:preview:weixin
 # 构建并上传支付宝小程序
 pnpm mp:upload:alipay
 
-# 构建并预览支付宝小程序
+# 构建并预览支付宝小程序 (生成二维码)
 pnpm mp:preview:alipay
 ```
 
@@ -261,7 +269,7 @@ MP_VERSION=1.2.0 MP_DESC="修复登录问题" pnpm mp:upload:weixin
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  1. Checkout 代码                                    │   │
 │  │  2. 安装依赖 (pnpm install)                         │   │
-│  │  3. 类型检查 + Lint                                  │   │
+│  │  3. Check 工作流: Lint + 类型检查 + 测试 + 四端构建  │   │
 │  │  4. 构建小程序                                       │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
@@ -270,7 +278,7 @@ MP_VERSION=1.2.0 MP_DESC="修复登录问题" pnpm mp:upload:weixin
               ▼                               ▼
 ┌─────────────────────────┐     ┌─────────────────────────┐
 │   微信小程序上传         │     │   支付宝小程序上传       │
-│  (miniprogram-ci)       │     │  (alipay-dev)           │
+│  (miniprogram-ci)       │     │  (minidev)              │
 └─────────────────────────┘     └─────────────────────────┘
               │                               │
               ▼                               ▼

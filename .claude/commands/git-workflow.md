@@ -173,7 +173,7 @@ git commit -m "refactor(store): 提取用户状态管理公共逻辑"
 # 4. 重构完成后检查
 pnpm test
 pnpm type-check
-pnpm build
+pnpm build:h5
 
 # 5. 推送并创建 PR
 git push origin refactor/user-store
@@ -197,7 +197,7 @@ pnpm type-check
 pnpm test
 
 # 4. 构建检查
-pnpm build
+pnpm build:h5
 
 # 5. 查看变更
 git diff main...HEAD

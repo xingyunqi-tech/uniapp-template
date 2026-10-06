@@ -4,7 +4,7 @@
 
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-green)](https://nodejs.org/)
 [![Vue.js](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.x-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-6.x-blue)](https://www.typescriptlang.org/)
 [![Uni-app](https://img.shields.io/badge/uni--app-3.x-green)](https://uniapp.dcloud.io/)
 
 ## 特性
@@ -15,10 +15,10 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 19 个业务组件，统一 `U` 前缀
+- **自定义组件库**: 22 个组件（21 个 `U` 前缀组件 + `AuthLayout`）
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
-- **代码质量**: ESLint + Stylelint + Prettier + Husky
+- **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
 - **测试完善**: Vitest 单元测试，80% 覆盖率目标
 
 ## 技术架构
@@ -31,7 +31,7 @@
 | **语言** | TypeScript | 严格类型检查 |
 | **构建** | Vite + @dcloudio/vite-plugin-uni | 多平台构建 |
 | **状态** | Pinia | Composition API 风格 + 持久化 |
-| **路由** | pages.json | Uni-app 标准路由配置 (非 Vue Router) |
+| **路由** | pages.json | 由 `definePage` + `pages.config.ts` 生成 (非 Vue Router) |
 | **UI** | @dcloudio/uni-ui | 官方 UI 组件库 |
 | **HTTP** | Alova | 轻量级请求策略库 |
 | **API** | Orval | OpenAPI → 自动生成类型安全的 API |
@@ -40,11 +40,12 @@
 
 ### 开发工具
 
-- **代码检查**: ESLint + typescript-eslint
+- **代码检查**: ESLint 10 + typescript-eslint
 - **样式检查**: Stylelint + SCSS
+- **文档检查**: markdownlint-cli2
 - **代码格式化**: Prettier
 - **Git 钩子**: Husky + lint-staged
-- **提交规范**: Commitizen + cz-git
+- **提交规范**: Commitizen + cz-git + commitlint (`commitlint.config.ts`)
 - **拼写检查**: CSpell
 - **测试框架**: Vitest + @vitest/ui
 
@@ -62,11 +63,13 @@ uniapp-template/
 ├── src/
 │   ├── api/                   # API 接口层
 │   │   ├── core/              # HTTP 客户端 (手动维护)
-│   │   │   ├── request.ts     # Alova 实例封装
-│   │   │   └── mutator.ts     # Orval 适配器
+│   │   │   ├── alova.ts       # Alova 实例封装
+│   │   │   ├── mutator.ts     # Orval 适配器
+│   │   │   └── index.ts       # 导出
 │   │   ├── generated/         # Orval 自动生成 (禁止修改!)
 │   │   │   ├── auth/          # 认证 API
 │   │   │   ├── config/        # 配置 API
+│   │   │   ├── ...            # 其他按 tag 拆分的模块
 │   │   │   └── model/         # 类型定义
 │   │   ├── custom/            # 自定义扩展 (手动编写)
 │   │   │   ├── external.ts    # 外部 API
@@ -91,6 +94,9 @@ uniapp-template/
 │   │   ├── UPasswordStrength/ # 密码强度
 │   │   ├── URichText/         # 富文本
 │   │   ├── UFixedButton/      # 固定按钮
+│   │   ├── ULoadMore/         # 加载更多
+│   │   ├── USearchBar/        # 搜索栏
+│   │   ├── UTag/              # 标签
 │   │   └── AuthLayout/        # 认证布局
 │   ├── composables/           # Composition API
 │   │   ├── useRouter.ts       # 路由导航封装
@@ -100,7 +106,8 @@ uniapp-template/
 │   │   ├── useShare.ts        # 分享功能
 │   │   └── usePasswordStrength.ts
 │   ├── constants/             # 常量定义
-│   │   ├── index.ts           # 页面路径常量
+│   │   ├── index.ts           # 统一导出
+│   │   ├── pages.ts           # 页面路径常量、白名单
 │   │   ├── form.ts            # 表单常量
 │   │   ├── order.ts           # 订单常量
 │   │   └── permission.ts      # 权限常量
@@ -120,25 +127,31 @@ uniapp-template/
 │   │   └── error/             # 错误页
 │   ├── pages-sub/             # 分包页面 (3 个分包)
 │   │   ├── order/             # 订单分包
-│   │   │   └── list/          # 订单列表
+│   │   │   ├── list/          # 订单列表
+│   │   │   ├── detail/        # 订单详情
+│   │   │   └── payment-result/ # 支付结果
 │   │   ├── user/              # 用户分包
 │   │   │   ├── address/       # 地址管理
 │   │   │   ├── address-edit/  # 编辑地址
 │   │   │   ├── favorite/      # 我的收藏
+│   │   │   ├── notifications/ # 消息通知
+│   │   │   ├── notification-settings/ # 通知设置
 │   │   │   ├── password/      # 修改密码
 │   │   │   ├── profile/       # 编辑资料
 │   │   │   └── settings/      # 设置
 │   │   └── other/             # 其他分包
 │   │       ├── about/         # 关于我们
 │   │       ├── contact/       # 联系客服
-│   │       └── feedback/      # 意见反馈
+│   │       ├── feedback/      # 意见反馈
+│   │       └── webview/       # Webview 容器
 │   ├── static/                # 静态资源
 │   │   ├── images/            # 图片资源
 │   │   └── tabbar/            # TabBar 图标
 │   ├── store/                 # Pinia 状态管理
 │   │   ├── modules/           # 状态模块
 │   │   │   ├── user.ts        # 用户状态
-│   │   │   └── global.ts      # 全局状态
+│   │   │   ├── global.ts      # 全局状态
+│   │   │   └── ...            # address/favorite/order 等业务模块
 │   │   ├── plugins/           # Store 插件
 │   │   │   └── persist.ts     # 持久化插件
 │   │   └── index.ts           # Store 导出
@@ -164,10 +177,12 @@ uniapp-template/
 │   │   └── error-reporter.ts  # 错误上报
 │   ├── App.vue                # 根组件
 │   ├── main.ts                # 应用入口
-│   ├── pages.json             # 路由配置
-│   ├── manifest.json          # 平台配置
+│   ├── pages.json             # 路由配置 (由 pages.config.ts + definePage 生成)
+│   └── manifest.json          # 平台配置 (由 manifest.config.ts 生成)
 ├── tests/                     # 测试文件
 ├── .mcp.json                  # Claude Code MCP 配置
+├── pages.config.ts            # 全局路由配置 (easycom/分包/tabBar)
+├── manifest.config.ts         # 平台配置
 ├── orval.config.ts            # Orval API 生成配置
 ├── vite.config.ts             # Vite 构建配置
 ├── tsconfig.json              # TypeScript 配置
@@ -179,8 +194,8 @@ uniapp-template/
 
 ### 环境要求
 
-- **Node.js**: >= 22.22.2
-- **包管理器**: pnpm (推荐)
+- **Node.js**: >= 22.22.2（见 `.nvmrc`）
+- **包管理器**: pnpm >= 11
 
 ### 安装依赖
 
@@ -242,9 +257,11 @@ pnpm api:gen          # 生成 API 代码 (Orval)
 ### 代码质量
 
 ```bash
-pnpm lint             # ESLint + Stylelint
-pnpm lint:script      # JavaScript/TypeScript 检查
-pnpm lint:style       # 样式文件检查
+pnpm lint             # ESLint + Stylelint + markdownlint（自动 --fix）
+pnpm lint:check       # 只检查不修复 (CI 使用)
+pnpm lint:script      # JavaScript/TypeScript 检查并修复
+pnpm lint:style       # 样式文件检查并修复
+pnpm lint:md          # Markdown 检查
 pnpm format           # Prettier 格式化
 ```
 
@@ -277,7 +294,7 @@ pnpm commit           # 交互式提交 (cz-git)
 
 ### 1. 路由系统 (pages.json)
 
-**重要**: Uni-app 使用 `pages.json` 配置路由，不使用 Vue Router。
+**重要**: Uni-app 使用 `pages.json` 配置路由，不使用 Vue Router。`src/pages.json` 由 `@uni-helper/vite-plugin-uni-pages` 生成，不要手动编辑：页面在各自文件中用 `definePage({ style: {...} })` 声明，easycom、分包、tabBar 等全局配置写在根目录 `pages.config.ts`。
 
 ```typescript
 // ✅ 正确: 使用 uni API
@@ -287,8 +304,11 @@ uni.redirectTo({ url: '/pages/error/index' });
 
 // ✅ 推荐: 使用封装的 composable
 import { useRouter } from '@/composables';
-const { navigateTo, switchTab, redirectTo } = useRouter();
-navigateTo('/pages/login/index');
+const router = useRouter();
+router.push('/pages-sub/order/detail/index', { id: 1 });
+router.replace('/pages/error/index');
+router.switchTab('/pages/index/index');
+router.back();
 
 // ❌ 错误: 不要使用 Vue Router
 import { useRouter } from 'vue-router';  // 禁止!
@@ -313,7 +333,7 @@ src/api/
 **工作流程**:
 
 ```bash
-后端更新 API → 更新 openapi.json → pnpm api:gen → 自动生成代码
+后端更新 API → pnpm api:gen（orval.config.ts 直接拉取在线 OpenAPI 文档）→ 自动生成代码
 ```
 
 ### 3. 组件系统 (easycom)
@@ -325,10 +345,10 @@ src/api/
   <!-- uni-ui 组件，自动导入 -->
   <uni-icons type="home" />
 
-  <!-- 自定义组件，自动导入 -->
-  <u-loading />
-  <u-empty />
-  <u-nav-bar title="标题" />
+  <!-- 自定义组件，自动导入（使用 PascalCase 标签） -->
+  <ULoading />
+  <UEmpty />
+  <UNavBar title="标题" />
 </template>
 ```
 
@@ -487,8 +507,8 @@ pnpm install
 node -v
 
 # 使用 nvm 切换版本
-nvm install 22
-nvm use 22
+nvm install
+nvm use
 ```
 
 ### 类型检查错误

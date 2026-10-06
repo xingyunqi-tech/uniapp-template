@@ -43,56 +43,38 @@ model: inherit
 ```typescript
 // vitest.config.ts
 import { defineConfig } from 'vitest/config';
-import vue from '@vitejs/plugin-vue';
-import path from 'path';
+import { resolve } from 'node:path';
 
 export default defineConfig({
-  plugins: [vue()],
   test: {
     environment: 'jsdom',
     globals: true,
+    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/unpackage/**'],
     setupFiles: ['./tests/setup.ts'],
-    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', 'coverage'],
+    server: {
+      deps: {
+        inline: ['@alova/adapter-uniapp'],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      thresholds: { branches: 80, functions: 80, lines: 80, statements: 80 },
+      reportsDirectory: './coverage',
+      exclude: ['node_modules/', 'tests/', 'dist/', '**/*.d.ts', '**/*.config.*', 'scripts/', 'src/api/generated/**'],
     },
   },
   resolve: {
-    alias: { '@': path.resolve(__dirname, './src') },
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
   },
 });
 ```
 
 ### 测试设置文件
-```typescript
-// tests/setup.ts
-import { beforeAll, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/vue';
-import '@testing-library/jest-dom/vitest';
 
-beforeAll(() => {
-  // Mock全局对象
-  window.matchMedia = vi.fn().mockImplementation(query => ({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  }));
-
-  // Mock Observer APIs
-  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    disconnect: vi.fn(),
-  }));
-});
-
-afterEach(() => {
-  cleanup();
-  vi.clearAllMocks();
-});
-```
+`tests/setup.ts` 用 `vi.stubGlobal('uni', {...})` 模拟 `uni` 全局对象（存储为内存实现，`request`、`showToast`、`showLoading`、`redirectTo` 等为 `vi.fn()`），并模拟 `window.matchMedia`，测试中按需 `mockImplementation`。
 
 ## 🧪 单元测试
 
@@ -213,58 +195,23 @@ describe('BaseInput', () => {
 **重要**: 项目使用Orval自动生成API，详细架构说明参考 [@api-development.md](api-development.md)
 
 **核心测试策略**:
-- ✅ 使用MSW (Mock Service Worker) 模拟API响应
+- ✅ 使用 `vi.mock` 模拟 API 模块，或模拟 `uni.request` 测试请求层（见 `tests/api/`）
 - ✅ 测试从 `@/api` 导入（不直接导入 `generated/`）
 - ✅ 类型定义从 `@/api` 导入
 
 **详细说明**: 参考 [@api-development.md#测试Orval生成的API](api-development.md#测试orval生成的api)
-
-**完整测试示例**:
-```typescript
-// tests/integration/api.test.ts
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
-import { postAuthLogin, getConfigValues } from '@/api';
-import type { UserInfo } from '@/api';
-
-// 设置MSW服务器 (详细配置见完整示例)
-const server = setupServer(
-  rest.post('/api/auth/login', (req, res, ctx) => {
-    // Mock登录逻辑
-    return res(ctx.json({ token: 'mock-token', userInfo: {...} }));
-  })
-);
-
-describe('API Integration Tests', () => {
-  beforeAll(() => server.listen());
-  afterAll(() => server.close());
-
-  describe('Auth API (Orval Generated)', () => {
-    it('应该成功登录', async () => {
-      const result = await postAuthLogin({
-        username: 'testuser',
-        password: 'password123',
-      });
-      expect(result.token).toBe('mock-token-123');
-    });
-  });
-});
-```
-
-**完整MSW配置**: 参考上述代码或查看 [testing.md 完整版本](testing.md#api-集成测试)
 
 ### 测试自动生成的API (Vitest Mock)
 
 ```typescript
 // tests/api/generated.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { postAuthLogin, getAuthUserInfo } from '@/api';
+import { loginWithPhone, getCurrentUser } from '@/api';
 
 // ✅ 正确：Mock generated 模块
 vi.mock('@/api/generated/auth/auth', () => ({
-  postAuthLogin: vi.fn(),
-  getAuthUserInfo: vi.fn(),
+  loginWithPhone: vi.fn(),
+  getCurrentUser: vi.fn(),
 }));
 
 describe('Generated API Functions', () => {
@@ -272,21 +219,23 @@ describe('Generated API Functions', () => {
     vi.clearAllMocks();
   });
 
-  it('应该成功调用 postAuthLogin', async () => {
+  it('应该成功调用 loginWithPhone', async () => {
     const mockResponse = {
       token: 'test-token',
-      userInfo: { username: 'test' },
+      refreshToken: 'test-refresh-token',
+      tokenExpires: 0,
+      user: { id: '1', phone: '13800138000' },
     };
 
-    vi.mocked(postAuthLogin).mockResolvedValue(mockResponse);
+    vi.mocked(loginWithPhone).mockResolvedValue(mockResponse);
 
-    const result = await postAuthLogin({
-      username: 'test',
+    const result = await loginWithPhone({
+      phone: '13800138000',
       password: '123',
     });
 
-    expect(postAuthLogin).toHaveBeenCalledWith({
-      username: 'test',
+    expect(loginWithPhone).toHaveBeenCalledWith({
+      phone: '13800138000',
       password: '123',
     });
     expect(result).toEqual(mockResponse);
@@ -299,20 +248,18 @@ describe('Generated API Functions', () => {
 ```typescript
 // tests/api/custom.test.ts
 import { describe, it, expect, vi } from 'vitest';
-import { postAuthLogin as generatedLogin } from '@/api/generated/auth/auth';
-import storage from '@/plugins/storage';
+import { loginWithPhone as generatedLogin } from '@/api/generated/auth/auth';
+import { loginWithPhone } from '@/api';
 
 // Mock生成的API
 vi.mock('@/api/generated/auth/auth');
-// Mock storage
-vi.mock('@/plugins/storage');
 
 describe('Custom Auth API', () => {
   it('应该登录并保存token', async () => {
     const mockResponse = { token: 'test-token' };
     vi.mocked(generatedLogin).mockResolvedValue(mockResponse);
 
-    await postAuthLogin({ username: 'test', password: '123' });
+    await loginWithPhone({ phone: '13800138000', password: '123' });
 
     expect(generatedLogin).toHaveBeenCalled();
     expect(uni.setStorageSync).toHaveBeenCalledWith(
@@ -334,8 +281,8 @@ import * as api from '@/api';
 
 // Mock API
 vi.mock('@/api', () => ({
-  postAuthLogin: vi.fn(),
-  getAuthUserInfo: vi.fn(),
+  loginWithPhone: vi.fn(),
+  getCurrentUser: vi.fn(),
 }));
 
 describe('UserStore', () => {
@@ -344,30 +291,33 @@ describe('UserStore', () => {
     vi.clearAllMocks();
   });
 
-  it('loginAction 应该成功登录并保存用户信息', async () => {
+  it('login 应该成功登录并保存 Token', async () => {
     const mockResponse = {
       token: 'mock-token',
-      userInfo: { id: 1, username: 'test' },
+      refreshToken: 'mock-refresh-token',
+      tokenExpires: 0,
+      user: { id: '1', phone: '13800138000' },
     };
 
-    vi.mocked(api.postAuthLogin).mockResolvedValue(mockResponse);
+    vi.mocked(api.loginWithPhone).mockResolvedValue(mockResponse);
 
     const store = useUserStore();
-    await store.loginAction({ username: 'test', password: '123' });
+    await store.login({ phone: '13800138000', password: '123' });
 
     expect(store.token).toBe('mock-token');
-    expect(store.userInfo).toEqual(mockResponse.userInfo);
+    expect(store.isLoggedIn).toBe(true);
   });
 
-  it('fetchUserInfo 应该获取用户信息', async () => {
-    const mockUserInfo = { id: 1, username: 'test', realName: 'Test User' };
+  it('getUserInfo 应该获取用户信息', async () => {
+    const mockUser = { id: '1', phone: '13800138000', nickname: 'Test User' };
 
-    vi.mocked(api.getAuthUserInfo).mockResolvedValue(mockUserInfo);
+    vi.mocked(api.getCurrentUser).mockResolvedValue(mockUser);
 
     const store = useUserStore();
-    await store.fetchUserInfo();
+    store.setToken('mock-token');
+    await store.getUserInfo();
 
-    expect(store.userInfo).toEqual(mockUserInfo);
+    expect(store.userInfo?.nickname).toBe('Test User');
   });
 });
 ```
@@ -383,11 +333,11 @@ import UserManagement from '@/pages-sub/user/profile/index.vue';
 
 // ✅ Mock generated API
 vi.mock('@/api/generated/auth/auth', () => ({
-  getAuthUserInfo: vi.fn(),
-  postAuthLogin: vi.fn(),
+  getCurrentUser: vi.fn(),
+  loginWithPhone: vi.fn(),
 }));
 
-import { getAuthUserInfo, postAuthLogin } from '@/api';
+import { getCurrentUser, loginWithPhone } from '@/api';
 
 // Mock Uni-app Toast
 vi.mock('@/utils/toast', () => ({
@@ -411,7 +361,7 @@ describe('UserManagement Integration', () => {
       roles: ['user'],
     };
 
-    vi.mocked(getAuthUserInfo).mockResolvedValueOnce(mockUserInfo);
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(mockUserInfo);
 
     const wrapper = mount(UserManagement, {
       global: { plugins: [createPinia()] },
@@ -419,7 +369,7 @@ describe('UserManagement Integration', () => {
 
     await wrapper.vm.$nextTick();
 
-    expect(getAuthUserInfo).toHaveBeenCalled();
+    expect(getCurrentUser).toHaveBeenCalled();
     expect(wrapper.text()).toContain('testuser');
   });
 
@@ -429,7 +379,7 @@ describe('UserManagement Integration', () => {
       userInfo: { username: 'test' },
     };
 
-    vi.mocked(postAuthLogin).mockResolvedValueOnce(mockResponse);
+    vi.mocked(loginWithPhone).mockResolvedValueOnce(mockResponse);
 
     const wrapper = mount(UserManagement);
 
@@ -438,8 +388,8 @@ describe('UserManagement Integration', () => {
     await wrapper.find('[data-testid="password-input"]').setValue('123');
     await wrapper.find('[data-testid="login-button"]').trigger('click');
 
-    expect(postAuthLogin).toHaveBeenCalledWith({
-      username: 'test',
+    expect(loginWithPhone).toHaveBeenCalledWith({
+      phone: 'test',
       password: '123',
     });
     expect(showToast).toHaveBeenCalledWith('登录成功');
@@ -448,25 +398,7 @@ describe('UserManagement Integration', () => {
 ```
 ## 📊 测试覆盖率配置
 
-```typescript
-// vitest.config.ts 中的覆盖率配置
-export default defineConfig({
-  test: {
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      thresholds: {
-        branches: 80,
-        functions: 80,
-        lines: 80,
-        statements: 80,
-        'src/utils/**': { branches: 90, functions: 90, lines: 90, statements: 90 },
-      },
-      exclude: ['coverage/**', 'dist/**', '**/*.d.ts', 'src/main.ts', '**/*.config.*'],
-    },
-  },
-});
-```
+覆盖率配置见上方 `vitest.config.ts` 的 `coverage` 字段（v8，排除 `src/api/generated/**` 等），未配置 `thresholds`。运行 `pnpm test:coverage` 生成报告到 `coverage/`。
 
 ## 🎯 常见测试场景
 

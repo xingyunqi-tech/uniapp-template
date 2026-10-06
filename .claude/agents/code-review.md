@@ -229,8 +229,8 @@ if (element instanceof HTMLElement) {
 import { ref, computed, watch } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { showToast } from '@/utils/toast';
-import { getAuthUserInfo } from '@/api';
-import type { UserInfo } from '@/api';
+import { getCurrentUser } from '@/api';
+import type { User } from '@/api';
 
 // ✅ 检查点：Props类型定义完整
 interface Props {
@@ -246,7 +246,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // ✅ 检查点：事件定义清晰
 interface Emits {
-  (e: 'update', user: UserInfo): void;
+  (e: 'update', user: User): void;
   (e: 'delete', userId: string): void;
 }
 
@@ -256,21 +256,21 @@ const emit = defineEmits<Emits>();
 const userInfo = ref(null); // 应该指定类型
 
 // ✅ 改进：明确类型定义
-const userInfo = ref<UserInfo | null>(null);
+const userInfo = ref<User | null>(null);
 
 // ❌ 问题：计算属性没有返回类型
 const displayName = computed(() => {
-  return userInfo.value?.username || '未知用户';
+  return userInfo.value?.nickname || '未知用户';
 });
 
 // ✅ 改进：添加返回类型
 const displayName = computed((): string => {
-  return userInfo.value?.username || '未知用户';
+  return userInfo.value?.nickname || '未知用户';
 });
 
 // ❌ 问题：异步函数缺少错误处理
 const fetchUser = async () => {
-  const userData = await getAuthUserInfo();
+  const userData = await getCurrentUser();
   userInfo.value = userData;
 };
 
@@ -278,7 +278,7 @@ const fetchUser = async () => {
 const fetchUser = async (): Promise<void> => {
   try {
     loading.value = true;
-    const userData = await getAuthUserInfo();
+    const userData = await getCurrentUser();
     userInfo.value = userData;
   } catch (error) {
     console.error('获取用户信息失败:', error);
@@ -361,12 +361,12 @@ watch(
 **自定义API扩展示例**:
 ```typescript
 // ✅ 正确：扩展生成的API（参考 api-development.md）
-import { postAuthLogin as generatedLogin } from '../generated/auth/auth';
-import type { LoginRequest } from '@/api';
+import { loginWithPhone as generatedLogin } from '../generated/auth/auth';
+import type { AuthPhoneLoginDto } from '../generated/model';
 
-export const postAuthLogin = async (data: LoginRequest) => {
+export const loginWithPhone = async (data: AuthPhoneLoginDto) => {
   // 参数验证
-  if (!data.username?.trim()) throw new Error('用户名不能为空');
+  if (!data.phone?.trim()) throw new Error('手机号不能为空');
 
   // 调用生成的API + 添加业务逻辑
   const response = await generatedLogin(data);
@@ -378,34 +378,34 @@ export const postAuthLogin = async (data: LoginRequest) => {
 
 ### 状态管理检查
 ```typescript
-import { postAuthLogin, postAuthLogout } from '@/api';
-import type { LoginRequest, UserInfo } from '@/api';
+import { loginWithPhone, logout as apiLogout } from '@/api';
+import type { AuthPhoneLoginDto, User } from '@/api';
 
 // ✅ 检查点：Store定义规范
 export const useUserStore = defineStore('user', () => {
   // ✅ 检查点：状态类型明确
   const token = ref<string>('');
-  const userInfo = ref<UserInfo | null>(null);
+  const userInfo = ref<User | null>(null);
   const loading = ref<boolean>(false);
 
   // ✅ 检查点：计算属性类型明确
   const isLoggedIn = computed((): boolean => !!token.value);
 
   // ❌ 问题：异步操作缺少加载状态
-  const login = async (credentials: LoginRequest) => {
-    const response = await postAuthLogin(credentials);
+  const login = async (credentials: AuthPhoneLoginDto) => {
+    const response = await loginWithPhone(credentials);
     token.value = response.token;
-    userInfo.value = response.userInfo;
+    userInfo.value = response.user;
   };
 
   // ✅ 改进：添加加载状态和错误处理
-  const login = async (credentials: LoginRequest): Promise<void> => {
+  const login = async (credentials: AuthPhoneLoginDto): Promise<void> => {
     loading.value = true;
 
     try {
-      const response = await postAuthLogin(credentials);
+      const response = await loginWithPhone(credentials);
       token.value = response.token;
-      userInfo.value = response.userInfo;
+      userInfo.value = response.user;
 
       // 持久化存储
       uni.setStorageSync('token', token.value);
@@ -420,7 +420,7 @@ export const useUserStore = defineStore('user', () => {
   // ✅ 检查点：清理操作完整
   const logout = async (): Promise<void> => {
     try {
-      await postAuthLogout();
+      await apiLogout();
     } finally {
       // 确保状态被清理
       token.value = '';
@@ -528,14 +528,14 @@ const CONFIG = {
 
 ```typescript
 // ❌ 问题：手动管理缓存（不推荐）
-const userCache = new Map<string, UserInfo>();
+const userCache = new Map<string, User>();
 
-const fetchUserInfo = async (userId: string): Promise<UserInfo> => {
+const fetchUserInfo = async (userId: string): Promise<User> => {
   if (userCache.has(userId)) {
     return userCache.get(userId)!;
   }
 
-  const userInfo = await getAuthUserInfo();
+  const userInfo = await getCurrentUser();
   userCache.set(userId, userInfo);
 
   return userInfo;
@@ -695,34 +695,24 @@ const plainText = computed(() => {
 
 ### 权限控制
 
-**项目已封装**: 使用 `src/utils/auth.ts` 中的工具函数
+**项目已封装**: 角色常量在 `src/constants/permission.ts`，判断方法在 `useUserStore`
 
 ```typescript
-import { checkRole, getRoleLabel } from '@/utils/auth';
 import { useUserStore } from '@/store/modules/user';
-import { ROLES } from '@/constants/roles';
-import type { RoleType } from '@/constants/roles';
+import { ROLE, ROLE_LABELS } from '@/constants/permission';
 
-// ✅ 检查点：角色验证（使用项目工具函数）
+// ✅ 检查点：角色验证（使用 Store 方法）
 const userStore = useUserStore();
-const isAdmin = checkRole(userStore.role, ROLES.ADMIN);
-const isTeacher = checkRole(userStore.role, [ROLES.ADMIN, ROLES.TEACHER]);
+const isAdmin = userStore.hasRole(ROLE.ADMIN);
+const isUserOrAbove = userStore.hasRoleOrAbove(ROLE.USER);
 
 // ✅ 在组件中使用
-const canManage = computed(() => checkRole(userStore.role, [ROLES.ADMIN, ROLES.TEACHER]));
-const roleDisplayName = computed(() => getRoleLabel(userStore.role as RoleType));
+const canManage = computed(() => userStore.isAdmin);
+const roleDisplayName = computed(() => ROLE_LABELS[userStore.role]);
 
-// ✅ 在路由守卫中使用（参考 src/router/guard.ts）
-router.beforeEach((to, from, next) => {
-  const requiredRoles = to.meta.roles as RoleType[];
-
-  if (requiredRoles && !checkRole(userStore.role, requiredRoles)) {
-    next('/403');
-    return;
-  }
-
-  next();
-});
+// ✅ 页面级权限：在 src/constants/pages.ts 的 PAGE_ROLES 中配置，
+// 由 src/utils/router-interceptor.ts 的 uni 路由拦截器统一校验
+PAGE_ROLES['/pages-sub/admin/dashboard/index'] = [ROLE.ADMIN];
 ```
 
 ## 📊 代码质量指标

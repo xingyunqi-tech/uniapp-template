@@ -107,7 +107,7 @@ metadata:
 
 ✅ 用户角色:
    - admin (完整权限)
-   - teacher (查看和编辑)
+   - user (查看和编辑)
 
 ✅ 数据实体:
    - User (id, username, email, role, status, createdAt)
@@ -120,8 +120,8 @@ metadata:
    - DELETE /api/user/:id (删除)
 
 ✅ 页面需求:
-   - 用户列表页 (UserManagement)
-   - 用户详情页 (UserDetail)
+   - 用户列表页 (pages-sub/user/management/index)
+   - 用户详情页 (pages-sub/user/management-detail/index)
 ```
 
 ---
@@ -134,68 +134,65 @@ metadata:
 📁 目录结构设计:
 
 src/
-├── views/
-│   └── user-management/              # 用户管理模块
-│       ├── index.vue                 # 用户列表页
-│       ├── detail.vue                # 用户详情页
-│       └── components/               # 页面专属组件
-│           ├── UserList.vue          # 用户列表 (移动端使用列表而非表格)
-│           ├── UserForm.vue          # 用户表单 (添加/编辑)
-│           └── UserFilter.vue        # 用户筛选器
+├── pages-sub/
+│   └── user/                         # user 分包 (已在 pages.config.ts 与 vite.config.ts 中登记)
+│       ├── management/
+│       │   └── index.vue             # 用户列表页 (definePage 声明页面配置)
+│       └── management-detail/
+│           └── index.vue             # 用户详情页
+│
+├── components/                       # 全局组件 (U 前缀，easycom 自动注册)
+│   ├── UUserList/index.vue           # 用户列表 (移动端使用列表而非表格)
+│   ├── UUserForm/index.vue           # 用户表单 (添加/编辑)
+│   └── UUserFilter/index.vue         # 用户筛选器
 │
 ├── store/
 │   └── modules/
 │       └── user.ts                   # 用户状态管理
 │
 ├── api/
-│   ├── generated/                    # (运行 pnpm api:gen 自动生成)
-│   │   └── user/
-│   │       └── user.ts
-│   └── hooks/                        # (Orval 自动生成)
-│       └── user.ts
+│   └── generated/                    # (运行 pnpm api:gen 自动生成)
+│       └── users/
+│           └── users.ts
 │
-└── router/
-    └── routes/
-        └── async.ts                  # 添加异步路由配置
+└── constants/
+    └── pages.ts                      # 添加页面路径常量与页面角色配置 (PAGE_ROLES)
 ```
+
+> 页面配置通过各页面的 `definePage({...})` 宏声明，由 `@uni-helper/vite-plugin-uni-pages` 生成 `src/pages.json`，不手动编辑 `pages.json`。`pages/`、`pages-sub/` 下的 `.vue` 文件都会被扫描为页面，组件放在 `src/components/`。
 
 ---
 
 ### 步骤 3: 设计路由配置
 
-```typescript
-// src/router/routes/async.ts
-
-import { ROLES } from '@/constants/roles';
-import type { RouteRecordRaw } from 'vue-router';
-
-export const asyncRoutes: RouteRecordRaw[] = [
-  // ... 现有路由
-
-  // 🆕 用户管理路由
-  {
-    path: '/user-management',
-    name: 'UserManagement',
-    component: () => import('@/views/user-management/index.vue'),
-    meta: {
-      title: 'route.user_management',
-      requiresAuth: true,
-      roles: [ROLES.ADMIN, ROLES.TEACHER],
-    },
+```vue
+<!-- src/pages-sub/user/management/index.vue -->
+<script setup lang="ts">
+definePage({
+  style: {
+    navigationBarTitleText: '用户管理',
+    enablePullDownRefresh: true,
   },
-  {
-    path: '/user-management/:id',
-    name: 'UserDetail',
-    component: () => import('@/views/user-management/detail.vue'),
-    meta: {
-      title: 'route.user_detail',
-      requiresAuth: true,
-      roles: [ROLES.ADMIN, ROLES.TEACHER],
-      hidden: true, // 不在菜单中显示
-    },
-  },
-];
+});
+</script>
 ```
+
+```typescript
+// src/constants/pages.ts
+
+export const PAGES = {
+  // ... 现有页面
+  USER_MANAGEMENT: '/pages-sub/user/management/index',
+  USER_MANAGEMENT_DETAIL: '/pages-sub/user/management-detail/index',
+} as const;
+
+export const PAGE_ROLES: Record<string, ROLE[]> = {
+  [PAGES.USER_MANAGEMENT]: [ROLE.ADMIN, ROLE.USER],
+  [PAGES.USER_MANAGEMENT_DETAIL]: [ROLE.ADMIN, ROLE.USER],
+};
+```
+
+**权限控制**: 路由拦截器 `src/utils/router-interceptor.ts` 拦截 `navigateTo` / `redirectTo` / `reLaunch` 等跳转：`WHITE_LIST`（`src/constants/pages.ts`）中的页面直接放行，未登录跳转登录页，再按 `PAGE_ROLES` 检查角色。详情页通过查询参数传 id：`router.push(PAGES.USER_MANAGEMENT_DETAIL, { id })`。
 
 ---
 
@@ -206,16 +203,16 @@ export const asyncRoutes: RouteRecordRaw[] = [
 
 ┌─────────────────────────────────────────┐
 │ 1. 用户访问列表页                       │
-│    /user-management                      │
+│    /pages-sub/user/management/index      │
 └────────────┬────────────────────────────┘
              ▼
 ┌─────────────────────────────────────────┐
-│ 2. 组件加载，调用 API Hook             │
-│    const { data } = useUserList()       │
+│ 2. 页面加载，调用 useList              │
+│    useList({ fetchData: getUsers })     │
 └────────────┬────────────────────────────┘
              ▼
 ┌─────────────────────────────────────────┐
-│ 3. API Hook 自动请求数据                │
+│ 3. 调用 Orval 生成的 API 请求数据       │
 │    GET /api/user/list                   │
 └────────────┬────────────────────────────┘
              ▼
@@ -226,7 +223,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
              ▼
 ┌─────────────────────────────────────────┐
 │ 5. 组件渲染列表                         │
-│    <UserList :data="userList" />        │
+│    <UUserList :data="list" />           │
 └─────────────────────────────────────────┘
 
 用户操作流程:
@@ -236,12 +233,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
        ▼
 ┌────────────────────┐
 │ 打开表单弹出层     │
-│ <UserForm />       │
+│ <UUserForm />      │
 └────────┬───────────┘
          ▼
 ┌──────────────────────────┐
 │ 填写表单 → 提交          │
-│ useUserCreate.mutate()   │
+│ await createUser(form)   │
 └────────┬─────────────────┘
          ▼
 ┌──────────────────────────┐
@@ -251,7 +248,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
          ▼
 ┌──────────────────────────┐
 │ 刷新列表                 │
-│ refetch()                │
+│ refresh()                │
 └──────────────────────────┘
 ```
 
@@ -287,7 +284,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
   ☐ 生成单元测试: /test-coverage-checker --auto-generate
   ☐ 代码审查: pnpm lint
   ☐ 类型检查: pnpm type-check
-  ☐ 国际化处理: pnpm i18n
+  ☐ 国际化处理: 更新 src/locale/ 下的语言文件
 
 总计: 7-11 小时
 ```
@@ -353,10 +350,9 @@ PRD 来源: docs/prd/user-management.md
 **执行内容:**
 ```bash
 # 自动创建以下目录和文件
-mkdir -p src/pages-sub/user/management/components
+mkdir -p src/pages-sub/user/management src/pages-sub/user/management-detail
 touch src/pages-sub/user/management/index.vue
-touch src/pages-sub/user/detail/index.vue
-touch src/pages-sub/user/management/components/.gitkeep
+touch src/pages-sub/user/management-detail/index.vue
 ```
 
 ---
@@ -533,11 +529,11 @@ pnpm commit
 📁 目录结构设计完成
    ✓ src/pages-sub/user/management/
    ✓ src/store/modules/user.ts
-   ✓ pages.json (需要更新分包配置)
+   ✓ src/constants/pages.ts (页面路径与 PAGE_ROLES)
 
 🚦 路由配置设计完成
-   ✓ /user-management (列表页)
-   ✓ /user-management/:id (详情页)
+   ✓ /pages-sub/user/management/index (列表页)
+   ✓ /pages-sub/user/management-detail/index (详情页)
 
 📊 数据流设计完成
    ✓ 用户访问流程
