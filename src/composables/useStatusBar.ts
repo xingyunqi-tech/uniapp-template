@@ -31,7 +31,7 @@ export function useStatusBar() {
 
   // 获取系统信息 (使用新 API)
   const windowInfo = uni.getWindowInfo();
-  statusBarHeight.value = windowInfo.statusBarHeight || 20;
+  statusBarHeight.value = windowInfo.statusBarHeight ?? 20;
 
   // #ifdef MP-WEIXIN
   // 微信小程序：根据胶囊按钮计算导航栏高度

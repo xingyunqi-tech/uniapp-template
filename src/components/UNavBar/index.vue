@@ -144,7 +144,7 @@ onMounted(() => {
   const systemInfo = uni.getSystemInfoSync();
 
   // 默认状态栏高度
-  statusBarHeight.value = `${systemInfo.statusBarHeight || 20}px`;
+  statusBarHeight.value = `${systemInfo.statusBarHeight ?? 20}px`;
 
   // #ifdef MP-ALIPAY
   // 支付宝小程序：根据 transparentTitle 判断原生导航栏是否透明

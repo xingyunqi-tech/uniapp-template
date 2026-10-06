@@ -28,6 +28,9 @@ function isTabBarPage(): boolean {
   return TAB_BAR_PAGES.some(page => page === `/${route}`);
 }
 
+/** 最近一次应用到 TabBar 的主题 */
+let tabBarTheme: ThemeType | null = null;
+
 /**
  * 应用主题到页面
  * H5: 需要运行时调用 uni API 切换 navbar/tabbar
@@ -57,8 +60,9 @@ function applyTheme(theme: ThemeType) {
     backgroundColor: currentThemeConfig.navBgColor,
   });
 
-  // 动态切换 TabBar 样式
-  if (isTabBarPage()) {
+  // 动态切换 TabBar 样式（TabBar 为全局共享，主题未变时跳过）
+  if (isTabBarPage() && tabBarTheme !== theme) {
+    tabBarTheme = theme;
     uni.setTabBarStyle({
       color: currentThemeConfig.tabFontColor,
       selectedColor: currentThemeConfig.tabSelectedColor,
@@ -78,6 +82,22 @@ function applyTheme(theme: ThemeType) {
   }
 }
 
+/** vue-i18n 语言值对应的 uni 内置语言 */
+const UNI_LOCALE_MAP: Record<string, string> = {
+  [LOCALE_TYPE.ZH_CN]: 'zh-Hans',
+  [LOCALE_TYPE.EN_US]: 'en',
+};
+
+/**
+ * 同步 uni 内置组件与 API 的语言，未变化时不调用
+ */
+function syncUniLocale(locale: LocaleType) {
+  const uniLocale = UNI_LOCALE_MAP[locale];
+  if (uniLocale && uni.getLocale() !== uniLocale) {
+    uni.setLocale(uniLocale);
+  }
+}
+
 /**
  * 全局状态管理 Store
  * 管理主题、语言等全局配置
@@ -89,11 +109,29 @@ export const useGlobalStore = defineStore(
     /** 当前主题 */
     const currentTheme = ref<ThemeType>(DEFAULT_THEME_STYLE);
 
+    /** 是否跟随系统主题，用户手动切换后关闭 */
+    const followSystemTheme = ref(true);
+
     /**
-     * 初始化主题 (应用启动时调用)
+     * 应用当前主题 (应用启动、页面显示时调用)
      */
     function initTheme() {
+      if (followSystemTheme.value) {
+        const systemTheme = uni.getAppBaseInfo().theme;
+        if (systemTheme === THEME_TYPE.LIGHT || systemTheme === THEME_TYPE.DARK) {
+          currentTheme.value = systemTheme;
+        }
+      }
       applyTheme(currentTheme.value);
+    }
+
+    /**
+     * 系统主题变化时调用，仅在跟随系统时生效
+     */
+    function syncSystemTheme(theme: ThemeType) {
+      if (!followSystemTheme.value) return;
+      currentTheme.value = theme;
+      applyTheme(theme);
     }
 
     /**
@@ -102,6 +140,10 @@ export const useGlobalStore = defineStore(
      */
     function initLocale() {
       i18n.global.locale.value = currentLocale.value;
+      // App 端 uni.setLocale 会重启应用，启动时不同步
+      // #ifndef APP
+      syncUniLocale(currentLocale.value);
+      // #endif
     }
 
     /**
@@ -109,6 +151,7 @@ export const useGlobalStore = defineStore(
      * @param theme 主题值
      */
     function setTheme(theme: ThemeType) {
+      followSystemTheme.value = false;
       currentTheme.value = theme;
       applyTheme(theme);
     }
@@ -157,6 +200,7 @@ export const useGlobalStore = defineStore(
     function setLocale(locale: LocaleType) {
       currentLocale.value = locale;
       i18n.global.locale.value = locale;
+      syncUniLocale(locale);
     }
 
     /** 是否为深色主题 */
@@ -168,9 +212,11 @@ export const useGlobalStore = defineStore(
     return {
       // 主题相关
       currentTheme,
+      followSystemTheme,
       isDark,
       themeClass,
       initTheme,
+      syncSystemTheme,
       setTheme,
       toggleTheme,
       // 开发者选项
@@ -186,9 +232,20 @@ export const useGlobalStore = defineStore(
   },
   {
     persist: {
-      pick: ['currentTheme', 'currentLocale', 'showDevOptions'],
+      pick: ['currentTheme', 'followSystemTheme', 'currentLocale', 'showDevOptions'],
       // 使用统一的 uniStorage 适配器，与其他 Store 保持一致
       storage: uniStorage,
+      // 已保存主题但无 followSystemTheme 的旧数据视为手动设置过主题
+      afterHydrate: ({ store }) => {
+        try {
+          const state = JSON.parse(uniStorage.getItem(store.$id) || '{}') as Record<string, unknown>;
+          if ('currentTheme' in state && !('followSystemTheme' in state)) {
+            store.followSystemTheme = false;
+          }
+        } catch {
+          // 存储内容无法解析时保持默认值
+        }
+      },
     },
   },
 );

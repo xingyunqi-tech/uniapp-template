@@ -9,7 +9,26 @@
  * - 前端直接调用非本系统 API
  */
 
-import { http, type ApiResponse } from '../core';
+import { createAlova } from 'alova';
+import AdapterUniapp from '@alova/adapter-uniapp';
+
+/**
+ * 第三方服务专用实例：不注入业务 Token，不走业务的 401 刷新与 code 校验
+ */
+const externalHttp = createAlova({
+  timeout: 10000,
+  ...AdapterUniapp(),
+  responded: {
+    onSuccess: response => {
+      const { statusCode, data } = response as UniNamespace.RequestSuccessCallbackResult;
+      if (statusCode >= 400) {
+        throw new Error(`请求失败(${statusCode})`);
+      }
+      return data;
+    },
+  },
+  cacheFor: null,
+});
 
 /**
  * 天气 API 响应类型
@@ -37,12 +56,7 @@ export interface WeatherResponse {
  */
 export const getWeather = async (city: string): Promise<WeatherResponse> => {
   // 注意：这只是示例代码，实际使用时需要替换为真实的 API 地址
-  const response = await http.Get<ApiResponse<WeatherResponse>>(`https://api.weather.example.com/weather/${city}`, {
-    meta: {
-      showError: true,
-    },
+  return externalHttp.Get<WeatherResponse>(`https://api.weather.example.com/weather/${encodeURIComponent(city)}`, {
     cacheFor: 10 * 60 * 1000, // 缓存 10 分钟
   });
-
-  return response.data as WeatherResponse;
 };

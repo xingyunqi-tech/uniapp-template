@@ -1,5 +1,5 @@
 <template>
-  <view class="payment-result-page">
+  <view class="payment-result-page" :class="globalStore.themeClass">
     <!-- 结果图标 -->
     <view class="result-icon">
       <uni-icons
@@ -46,6 +46,9 @@ definePage({
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
+import { useGlobalStore } from '@/store/modules/global';
+
+const globalStore = useGlobalStore();
 
 // ==================== 状态 ====================
 const isSuccess = ref(false);
@@ -156,7 +159,7 @@ function handleBackHome() {
 
     &.btn-primary {
       background: var(--color-primary);
-      color: #fff;
+      color: var(--color-text-inverse);
     }
 
     &.btn-default {

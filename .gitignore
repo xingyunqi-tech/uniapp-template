@@ -17,6 +17,9 @@ reports
 coverage
 unpackage
 
+# 小程序上传脚本临时目录（私钥、预览二维码）
+.temp
+
 # UniApp auto-generated files
 typings/uni-pages.d.ts
 auto-imports.d.ts

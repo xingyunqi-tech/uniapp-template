@@ -171,17 +171,16 @@ src/api/
 
 **自动注册机制** - 无需手动 import
 
-```json
-// pages.json
-{
-  "easycom": {
-    "autoscan": true,
-    "custom": {
-      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
-      "^u-(.*)": "@/components/U$1/index.vue"
-    }
-  }
-}
+```ts
+// pages.config.ts（生成 src/pages.json）
+easycom: {
+  autoscan: true,
+  custom: {
+    '^uni-(.*)': '@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue',
+    '^U(.*)': '@/components/U$1/index.vue',
+    '^AuthLayout$': '@/components/AuthLayout/index.vue',
+  },
+},
 ```
 
 **组件使用**:
@@ -191,10 +190,10 @@ src/api/
   <!-- uni-ui 组件，自动导入 -->
   <uni-icons type="home" />
 
-  <!-- 自定义组件，自动导入 -->
-  <u-loading />
-  <u-empty />
-  <u-nav-bar title="标题" />
+  <!-- 自定义组件，自动导入（使用 PascalCase 标签） -->
+  <ULoading />
+  <UEmpty />
+  <UNavBar title="标题" />
 </template>
 
 <!-- 无需 import！easycom 自动注册 -->

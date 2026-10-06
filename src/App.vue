@@ -97,12 +97,12 @@ onUnhandledRejection(event => {
   errorHandlers?.onUnhandledRejection(event);
 });
 
-// 系统主题变化监听 (跟随系统自动切换)
+// 系统主题变化监听 (跟随系统时自动切换)
 // 文档: https://uniapp.dcloud.net.cn/tutorial/darkmode.html
 onThemeChange(res => {
   console.log('System theme changed:', res.theme);
   const globalStore = useGlobalStore();
-  globalStore.setTheme(res.theme as ThemeType);
+  globalStore.syncSystemTheme(res.theme as ThemeType);
 });
 </script>
 

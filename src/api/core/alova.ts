@@ -77,7 +77,7 @@ function handleUnauthorized(): void {
   isRedirectingToLogin = true;
 
   authHandlers?.clearAuth();
-  uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+  showRequestToast('登录已过期，请重新登录');
 
   setTimeout(() => {
     uni.redirectTo({
@@ -87,6 +87,51 @@ function handleUnauthorized(): void {
       },
     });
   }, 1500);
+}
+
+// ==================== 请求辅助 ====================
+
+/** 序列化查询参数：键值做 URL 编码，忽略 undefined/null，数组展开为同名多项 */
+export function serializeParams(params: Record<string, unknown>): string {
+  return Object.entries(params)
+    .flatMap(([key, value]) => (Array.isArray(value) ? value.map(item => [key, item]) : [[key, value]]))
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => {
+      const text = value instanceof Date ? value.toISOString() : String(value);
+      return `${encodeURIComponent(key)}=${encodeURIComponent(text)}`;
+    })
+    .join('&');
+}
+
+let loadingCount = 0;
+
+/** 并发请求共用一个 Loading，最后一个结束时关闭 */
+function showRequestLoading(title: string): void {
+  if (loadingCount++ === 0) {
+    uni.showLoading({ title, mask: true });
+  }
+}
+
+function hideRequestLoading(): void {
+  if (loadingCount > 0 && --loadingCount === 0) {
+    uni.hideLoading();
+  }
+}
+
+/** 小程序中 Toast 会顶替 Loading，计数清零，避免后续 hideLoading 关掉这条 Toast */
+function showRequestToast(title: string): void {
+  loadingCount = 0;
+  uni.showToast({ title, icon: 'none' });
+}
+
+/** uni.uploadFile 的响应体是字符串，统一解析为对象 */
+function parseResponseData(data: unknown): unknown {
+  if (typeof data !== 'string') return data;
+  try {
+    return JSON.parse(data);
+  } catch {
+    return data;
+  }
 }
 
 // ==================== 创建 Alova 实例 ====================
@@ -106,13 +151,21 @@ const alovaInstance = createAlova({
       method.config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // 2. 显示 Loading
+    // 2. 查询参数编码
+    const { params } = method.config;
+    if (params && typeof params === 'object') {
+      (method.config as { params: unknown }).params = serializeParams(params);
+    }
+
+    // 3. 只合并进行中的 GET/HEAD 请求
+    if (method.type !== 'GET' && method.type !== 'HEAD') {
+      method.config.shareRequest = false;
+    }
+
+    // 4. 显示 Loading
     const meta = method.meta as RequestMeta | undefined;
     if (meta?.showLoading) {
-      uni.showLoading({
-        title: meta.loadingText || '加载中...',
-        mask: true,
-      });
+      showRequestLoading(meta.loadingText || '加载中...');
     }
   },
 
@@ -120,12 +173,13 @@ const alovaInstance = createAlova({
   responded: {
     // 成功响应
     onSuccess: async (response, method) => {
-      const { statusCode, data } = response as UniNamespace.RequestSuccessCallbackResult;
+      const { statusCode } = response as UniNamespace.RequestSuccessCallbackResult;
+      const data = parseResponseData((response as UniNamespace.RequestSuccessCallbackResult).data);
       const meta = method.meta as InternalRequestMeta | undefined;
 
       // 隐藏 Loading
       if (meta?.showLoading) {
-        uni.hideLoading();
+        hideRequestLoading();
       }
 
       // 401 未授权 - 换用最新 Token 重发一次
@@ -135,10 +189,10 @@ const alovaInstance = createAlova({
           throw new Error('Unauthorized');
         }
 
+        const sentToken = method.config.headers.Authorization;
         if (!meta?.authRetried) {
           // 请求发出后 Token 已被其他请求刷新时，直接用当前 Token 重发
           const currentToken = storage.get<string>(STORAGE_KEYS.TOKEN);
-          const sentToken = method.config.headers.Authorization;
           const newToken =
             currentToken && sentToken !== `Bearer ${currentToken}` ? currentToken : await refreshTokenOnce();
           if (newToken) {
@@ -151,7 +205,10 @@ const alovaInstance = createAlova({
         }
 
         reportApiError(method.url, method.type, 'Unauthorized', 401);
-        handleUnauthorized();
+        // 带 Token 发出、当前已无 Token：期间已主动登出，不再提示过期和跳转
+        if (!sentToken || storage.get<string>(STORAGE_KEYS.TOKEN)) {
+          handleUnauthorized();
+        }
         throw new Error('Unauthorized');
       }
 
@@ -159,7 +216,7 @@ const alovaInstance = createAlova({
       if (statusCode >= 400) {
         const msg = (data as ApiResponse)?.message || `请求失败(${statusCode})`;
         if (meta?.showError !== false) {
-          uni.showToast({ title: msg, icon: 'none' });
+          showRequestToast(msg);
         }
         reportApiError(method.url, method.type, msg, statusCode);
         throw new Error(msg);
@@ -170,7 +227,7 @@ const alovaInstance = createAlova({
       // 业务错误
       if (result.code !== 200 && result.code !== 0) {
         if (meta?.showError !== false) {
-          uni.showToast({ title: result.message || '请求失败', icon: 'none' });
+          showRequestToast(result.message || '请求失败');
         }
         reportApiError(method.url, method.type, result.message || '业务错误', result.code);
         throw new Error(result.message || '业务错误');
@@ -181,22 +238,32 @@ const alovaInstance = createAlova({
 
     // 请求失败
     onError: (error, method) => {
-      uni.hideLoading();
-
       const meta = method.meta as RequestMeta | undefined;
+      if (meta?.showLoading) {
+        hideRequestLoading();
+      }
+
       const errorMessage = error.message || '网络请求失败';
 
       if (meta?.showError !== false) {
-        uni.showToast({ title: errorMessage, icon: 'none' });
+        showRequestToast(errorMessage);
       }
 
       reportApiError(method.url, method.type, errorMessage);
       throw error;
     },
+
+    // 命中缓存时不经过 onSuccess/onError，在此关闭对应的 Loading
+    onComplete: method => {
+      const meta = method.meta as RequestMeta | undefined;
+      if (method.fromCache && meta?.showLoading) {
+        hideRequestLoading();
+      }
+    },
   },
 
   // ==================== 缓存配置 ====================
-  // 不缓存响应结果；进行中的相同请求由 alova 的 shareRequest 合并
+  // 不缓存响应结果；进行中的相同 GET/HEAD 请求由 alova 的 shareRequest 合并
   cacheFor: null,
 });
 

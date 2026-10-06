@@ -137,6 +137,23 @@ describe('401 刷新 Token', () => {
     expect(uni.redirectTo).not.toHaveBeenCalled();
   });
 
+  it('刷新期间已登出时直接抛错，不提示登录过期也不跳转', async () => {
+    const clearAuth = registerHandlers({
+      refreshToken: async () => {
+        storage.remove(STORAGE_KEYS.TOKEN);
+        return null;
+      },
+    });
+    (uni.showToast as Mock).mockClear();
+    mockServer(() => unauthorized);
+
+    await expect(http.Get('/profile')).rejects.toThrow('Unauthorized');
+
+    expect(clearAuth).not.toHaveBeenCalled();
+    expect(uni.showToast).not.toHaveBeenCalled();
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
   it('刷新期间发出的相同请求不与重发请求合并，且直接用新 Token 重发', async () => {
     const { refreshToken, finish: finishRefresh } = pendingRefresh();
     const clearAuth = registerHandlers({ refreshToken });

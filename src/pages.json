@@ -4,7 +4,6 @@
     "custom": {
       "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue",
       "^U(.*)": "@/components/U$1/index.vue",
-      "^u-(.*)": "@/components/U$1/index.vue",
       "^AuthLayout$": "@/components/AuthLayout/index.vue"
     }
   },

@@ -1,5 +1,5 @@
 <template>
-  <view class="notifications-page">
+  <view class="notifications-page" :class="globalStore.themeClass">
     <!-- 筛选标签 -->
     <view class="filter-tabs">
       <scroll-view class="tabs-scroll" scroll-x :show-scrollbar="false">
@@ -20,7 +20,7 @@
       <view class="tabs-actions">
         <text class="action-text" @tap="handleMarkAllRead">已读</text>
         <view class="action-icon" @tap="navigateToSettings">
-          <uni-icons type="gear" size="20" color="#969799" />
+          <uni-icons type="gear" size="20" color="var(--color-text-secondary)" />
         </view>
       </view>
     </view>
@@ -56,7 +56,7 @@
 
             <!-- 通知图标 -->
             <view class="notification-icon" :class="`type-${item.type}`">
-              <uni-icons :type="getIconType(item.type) as any" size="20" color="#fff" />
+              <uni-icons :type="getIconType(item.type) as any" size="20" color="var(--color-text-inverse)" />
             </view>
 
             <!-- 通知内容 -->
@@ -70,7 +70,7 @@
 
             <!-- 删除按钮 -->
             <view class="notification-actions" @tap.stop="handleDelete(item)">
-              <uni-icons type="trash" size="18" color="#969799" />
+              <uni-icons type="trash" size="18" color="var(--color-text-secondary)" />
             </view>
           </view>
 
@@ -97,12 +97,14 @@ definePage({
 import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useNotificationStore } from '@/store/modules/notification';
+import { useGlobalStore } from '@/store/modules/global';
 import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
 import { PAGES } from '@/constants';
 
 // ==================== Store ====================
 const notificationStore = useNotificationStore();
+const globalStore = useGlobalStore();
 
 // ==================== 状态 ====================
 const activeTab = ref<string>('all');

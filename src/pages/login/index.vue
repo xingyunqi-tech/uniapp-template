@@ -51,7 +51,7 @@
       </view>
 
       <view class="social-login">
-        <button class="social-btn wechat" open-type="getPhoneNumber" @getphonenumber="handleWechatLogin">
+        <button class="social-btn wechat" @click="handleWechatLogin">
           <uni-icons type="weixin" color="var(--color-brand-wechat)" size="48rpx" />
         </button>
       </view>
@@ -198,16 +198,7 @@ async function handleLogin() {
 }
 
 // 处理微信登录（小程序）
-async function handleWechatLogin(e: any) {
-  // 获取手机号失败
-  if (e.detail.errMsg !== 'getPhoneNumber:ok') {
-    uni.showToast({
-      title: '获取手机号失败',
-      icon: 'none',
-    });
-    return;
-  }
-
+async function handleWechatLogin() {
   loading.value = true;
 
   try {

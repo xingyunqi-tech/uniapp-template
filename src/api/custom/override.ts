@@ -13,7 +13,7 @@
  * - 本目录不要 import Store（会形成循环依赖）
  */
 
-import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { http, type ApiResponse } from '../core/alova';
 import { customMutator } from '../core/mutator';
 import type { FileType, RefreshResponseDto } from '../generated/model';
 
@@ -40,22 +40,9 @@ export const logout = () => {
 };
 
 /**
- * 上传文件响应结构
- * 后端返回格式：{ code: 200, data: { file: { id, path } } }
- */
-interface UploadResponse {
-  code: number;
-  message?: string;
-  data?: {
-    file: FileType;
-  };
-}
-
-/**
  * 上传单个文件（兼容 uni-app）
  *
- * 覆盖 Orval 生成的 uploadFile，使用 uni.uploadFile 实现
- * 因为小程序不支持 FormData，需要使用平台原生 API
+ * 小程序不支持 FormData，经 http 实例以 uni.uploadFile 上传，与普通请求共用 Token 注入和 401 刷新
  *
  * @param filePath 文件临时路径（uni.chooseImage 返回的 tempFilePath）
  * @returns 上传后的文件信息（包含 id 和 path）
@@ -69,40 +56,16 @@ interface UploadResponse {
  * console.log('上传成功:', file.id, file.path);
  * ```
  */
-export const uploadFileByPath = (filePath: string): Promise<FileType> => {
-  return new Promise((resolve, reject) => {
-    const token = storage.get<string>(STORAGE_KEYS.TOKEN);
-    const baseURL = import.meta.env.VITE_API_BASE_URL || '';
-
-    uni.uploadFile({
-      url: `${baseURL}/api/v1/files/upload`,
-      filePath,
-      name: 'file',
-      header: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      success: res => {
-        if (res.statusCode === 200 || res.statusCode === 201) {
-          try {
-            const response = JSON.parse(res.data) as UploadResponse;
-            // 兼容 ApiResponse 格式
-            if ((response.code === 200 || response.code === 0) && response.data?.file) {
-              resolve(response.data.file);
-            } else {
-              reject(new Error(response.message || '上传失败'));
-            }
-          } catch {
-            reject(new Error('解析响应失败'));
-          }
-        } else {
-          reject(new Error(`上传失败(${res.statusCode})`));
-        }
-      },
-      fail: err => {
-        reject(new Error(err.errMsg || '上传失败'));
-      },
-    });
-  });
+export const uploadFileByPath = async (filePath: string): Promise<FileType> => {
+  const response = await http.Post<ApiResponse<{ file: FileType }>>(
+    '/api/v1/files/upload',
+    { name: 'file', filePath },
+    { requestType: 'upload', meta: { showError: false } },
+  );
+  if (!response.data?.file) {
+    throw new Error(response.message || '上传失败');
+  }
+  return response.data.file;
 };
 
 /**

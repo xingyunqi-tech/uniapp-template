@@ -250,14 +250,20 @@ export const useUserStore = defineStore(
         return null;
       }
 
-      try {
-        const response = await apiRefreshToken(refreshTokenValue.value);
-        setToken(response.token);
-        setRefreshToken(response.refreshToken, response.tokenExpires);
-        return response.token;
-      } catch {
+      const usedRefreshToken = refreshTokenValue.value;
+      const response = await apiRefreshToken(usedRefreshToken).catch(() => null);
+
+      // 刷新期间已登出或重新登录：丢弃本次结果，沿用当前登录态
+      if (refreshTokenValue.value !== usedRefreshToken) {
+        return token.value || null;
+      }
+      if (!response) {
         return null;
       }
+
+      setToken(response.token);
+      setRefreshToken(response.refreshToken, response.tokenExpires);
+      return response.token;
     }
 
     /**

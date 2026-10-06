@@ -438,10 +438,10 @@ function getAlipayConfig(): AlipayConfig {
  */
 async function uploadAlipay(config: UploadConfig): Promise<void> {
   let { version } = config;
-  const { description } = config;
+  const { action, description } = config;
   const alipayConfig = getAlipayConfig();
 
-  log(`开始上传支付宝小程序...`);
+  log(`开始${action === 'upload' ? '上传' : '预览'}支付宝小程序...`);
   log(`描述: ${description}`);
 
   // 检查构建产物
@@ -458,6 +458,16 @@ async function uploadAlipay(config: UploadConfig): Promise<void> {
     'alipay.authentication.privateKey': alipayConfig.privateKey,
     'alipay.authentication.toolId': alipayConfig.toolId,
   });
+
+  if (action === 'preview') {
+    const previewResult = await minidev.preview({
+      appId: alipayConfig.appid,
+      project: alipayConfig.projectPath,
+    });
+    log('支付宝小程序预览二维码生成成功!', 'success');
+    log(`预览二维码: ${previewResult.qrcodeUrl}`, 'success');
+    return;
+  }
 
   // 版本冲突检测和自动递增
   try {

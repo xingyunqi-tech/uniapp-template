@@ -1,5 +1,5 @@
 <template>
-  <view class="notification-settings-page">
+  <view class="notification-settings-page" :class="globalStore.themeClass">
     <!-- 加载中 -->
     <ULoading v-if="loading" />
 
@@ -24,7 +24,7 @@
             <text class="setting-label">应用内通知</text>
             <switch
               :checked="setting.enableInApp"
-              color="#1989fa"
+              :color="switchColor"
               @change="handleToggle(setting, 'enableInApp', $event)"
             />
           </view>
@@ -33,7 +33,7 @@
             <text class="setting-label">推送通知</text>
             <switch
               :checked="setting.enablePush"
-              color="#1989fa"
+              :color="switchColor"
               @change="handleToggle(setting, 'enablePush', $event)"
             />
           </view>
@@ -42,14 +42,18 @@
             <text class="setting-label">邮件通知</text>
             <switch
               :checked="setting.enableEmail"
-              color="#1989fa"
+              :color="switchColor"
               @change="handleToggle(setting, 'enableEmail', $event)"
             />
           </view>
 
           <view class="setting-item">
             <text class="setting-label">短信通知</text>
-            <switch :checked="setting.enableSms" color="#1989fa" @change="handleToggle(setting, 'enableSms', $event)" />
+            <switch
+              :checked="setting.enableSms"
+              :color="switchColor"
+              @change="handleToggle(setting, 'enableSms', $event)"
+            />
           </view>
         </view>
       </view>
@@ -71,9 +75,14 @@ definePage({
 
 import { ref, computed, onMounted } from 'vue';
 import { useNotificationStore } from '@/store/modules/notification';
+import { useGlobalStore } from '@/store/modules/global';
 import type { NotificationSetting } from '@/api';
+import themeConfig from '@/theme.json';
 
 const notificationStore = useNotificationStore();
+const globalStore = useGlobalStore();
+// 原生 switch 的颜色取主题配置色值
+const switchColor = computed(() => (globalStore.isDark ? themeConfig.dark : themeConfig.light).primaryColor);
 const loading = ref(false);
 const error = ref(false);
 const settings = computed(() => notificationStore.settings);

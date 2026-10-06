@@ -8,8 +8,6 @@ export default defineUniPages({
       '^uni-(.*)': '@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue',
       // 自定义组件 (U 前缀)
       '^U(.*)': '@/components/U$1/index.vue',
-      // 自定义组件 (kebab-case: u-xxx)
-      '^u-(.*)': '@/components/U$1/index.vue',
       // 布局组件
       '^AuthLayout$': '@/components/AuthLayout/index.vue',
     },
