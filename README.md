@@ -479,16 +479,16 @@ const getPhoneNumber = (e) => { /* 微信专属逻辑 */ };
 
 ## MCP 服务器配置
 
-项目配置了以下 MCP 服务器扩展 Claude 能力:
+项目级 `.mcp.json` 不内置服务器，按需在用户级配置中添加。常用服务器:
 
 | 服务器 | 功能 | 使用场景 |
 |--------|------|----------|
-| figma | Figma 设计稿读取 | 提取设计数据、下载资源 |
+| figma | Figma 设计稿读取 | 提取设计数据、下载资源（Figma 相关 Skill/Agent 依赖） |
 | context7 | 第三方库文档查询 | 获取最新库文档 |
 | eslint | ESLint 代码检查 | 文件级别的 lint 检查 |
 | chrome-devtools | Chrome 开发者工具 | 浏览器调试和性能分析 |
 
-配置文件: `.mcp.json`
+配置方式见 [.claude/README.md](.claude/README.md#mcp-服务器配置)
 
 ## 常见问题
 

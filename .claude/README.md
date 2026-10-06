@@ -280,10 +280,16 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 
 | 文件 | 用途 | 说明 |
 |------|------|------|
-| `.mcp.json` | Claude Code 配置 | 项目根目录，Claude Code 读取 |
-| `settings.json` | 启用控制 | `enabledMcpjsonServers` 字段控制启用哪些 |
+| `.mcp.json` | 项目级 MCP 服务器 | 项目根目录，当前为空（`"mcpServers": {}`） |
+| `settings.json` | 启用控制 | `enabledMcpjsonServers` 列出启用的 `.mcp.json` 服务器，当前未配置 |
 
-### 当前配置的 MCP 服务器
+项目不内置 MCP 服务器，按需在用户级配置中添加。`figma-extraction-guide`、`figma-to-component` 依赖 Figma MCP：
+
+```bash
+claude mcp add figma -s user -e FIGMA_API_KEY=figd_xxx -- npx -y figma-developer-mcp --stdio
+```
+
+### 常用 MCP 服务器（可选）
 
 | 服务器 | NPM 包 | 功能 | 使用场景 |
 |--------|--------|------|----------|
@@ -292,7 +298,7 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
 | `eslint` | `@eslint/mcp@latest` | ESLint 代码检查 | 文件级别的 lint 检查 |
 | `chrome-devtools` | `chrome-devtools-mcp@latest` | Chrome 开发者工具 | 浏览器调试和性能分析 |
 
-### 完整 MCP 配置 (.mcp.json)
+若要改为项目级配置，在 `.mcp.json` 中添加服务器，并在 `settings.json` 的 `enabledMcpjsonServers` 中列出对应名称：
 
 ```json
 {
@@ -303,28 +309,14 @@ MCP (Model Context Protocol) 服务器扩展 Claude 的能力。
       "env": {
         "FIGMA_API_KEY": "${FIGMA_API_KEY}"
       }
-    },
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
-    },
-    "eslint": {
-      "command": "npx",
-      "args": ["@eslint/mcp@latest"]
-    },
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
     }
   }
 }
 ```
 
-### 在 settings.json 中启用
-
 ```json
 {
-  "enabledMcpjsonServers": ["figma", "context7", "eslint", "chrome-devtools"]
+  "enabledMcpjsonServers": ["figma"]
 }
 ```
 
@@ -373,9 +365,9 @@ Permissions 控制 Claude 可以自动执行哪些命令（无需确认），配
 
 | 分类 | 命令 | 说明 |
 |------|------|------|
-| **开发脚本** | `pnpm start:*`, `pnpm build:*` | 启动和构建 |
+| **构建** | `pnpm build:*` | 各端构建 |
 | **代码生成** | `pnpm api:gen:*` | Orval API 生成 |
-| **代码质量** | `pnpm lint:*`, `pnpm lint:fix:*`, `pnpm lint:script:*`, `pnpm type-check:*` | ESLint 和 TypeScript 检查 |
+| **代码质量** | `pnpm lint:*`, `pnpm lint:script:*`, `pnpm type-check:*` | ESLint、Stylelint、markdownlint 和 TypeScript 检查 |
 | **测试** | `pnpm test:*` | 单元测试 |
 | **Git 操作** | `git status`, `git diff`, `git log` 等 | 常用 Git 命令 |
 | **提交** | `git add`, `git commit`, `pnpm commit:*` | 代码提交 |
@@ -386,7 +378,7 @@ Permissions 控制 Claude 可以自动执行哪些命令（无需确认），配
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm start:*)",
+      "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
       "Bash(git status:*)",
       "Bash(git commit:*)"

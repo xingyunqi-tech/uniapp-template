@@ -1,10 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm start:*)",
       "Bash(pnpm api:gen:*)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm lint:fix:*)",
       "Bash(pnpm lint:script:*)",
       "Bash(pnpm type-check:*)",
       "Bash(pnpm test:*)",
@@ -28,7 +26,6 @@
     ],
     "deny": []
   },
-  "enabledMcpjsonServers": ["figma", "context7", "eslint", "chrome-devtools"],
   "hooks": {
     "UserPromptSubmit": [
       {
