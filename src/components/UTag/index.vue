@@ -18,7 +18,9 @@
     @click="handleClick"
   >
     <!-- 左侧图标 -->
-    <text v-if="icon" :class="['u-tag__icon', icon]" />
+    <view v-if="icon" class="u-tag__icon">
+      <uni-icons :type="icon" color="inherit" size="inherit" />
+    </view>
 
     <!-- 文本内容 -->
     <text class="u-tag__text">
@@ -26,7 +28,9 @@
     </text>
 
     <!-- 关闭按钮 -->
-    <text v-if="closeable" class="u-tag__close i-carbon-close" @click.stop="handleClose" />
+    <view v-if="closeable" class="u-tag__close" @click.stop="handleClose">
+      <uni-icons type="closeempty" color="inherit" size="inherit" />
+    </view>
   </view>
 </template>
 
@@ -63,8 +67,8 @@ interface Props {
   round?: boolean;
   /** 是否可关闭 */
   closeable?: boolean;
-  /** 左侧图标 (UnoCSS 图标类名) */
-  icon?: string;
+  /** 左侧图标 (uni-icons 的 type) */
+  icon?: UniIconsType;
   /** 自定义颜色 */
   color?: string;
   /** 自定义背景色 */
@@ -78,7 +82,7 @@ const props = withDefaults(defineProps<Props>(), {
   plain: false,
   round: false,
   closeable: false,
-  icon: '',
+  icon: undefined,
   color: '',
   bgColor: '',
 });

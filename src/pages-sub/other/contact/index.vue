@@ -13,14 +13,14 @@
     <view class="contact-list">
       <UMenuGroup>
         <!-- 客服热线 -->
-        <UMenuItem icon="i-carbon-phone" title="客服热线" :right-text="phoneNumber" show-arrow @click="handleCall" />
+        <UMenuItem icon="phone" title="客服热线" :right-text="phoneNumber" show-arrow @click="handleCall" />
 
         <!-- 在线咨询 -->
         <!-- #ifdef MP-WEIXIN -->
-        <UMenuItem icon="i-carbon-chat" title="在线咨询" :border="false" show-arrow is-contact />
+        <UMenuItem icon="chat" title="在线咨询" :border="false" show-arrow is-contact />
         <!-- #endif -->
         <!-- #ifndef MP-WEIXIN -->
-        <UMenuItem icon="i-carbon-chat" title="在线咨询" :border="false" show-arrow @click="handleOnlineChat" />
+        <UMenuItem icon="chat" title="在线咨询" :border="false" show-arrow @click="handleOnlineChat" />
         <!-- #endif -->
       </UMenuGroup>
     </view>

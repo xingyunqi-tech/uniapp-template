@@ -41,26 +41,26 @@ type ErrorType = '404' | '403' | '500' | 'network';
 const errorCode = ref('404');
 
 // 错误信息配置
-const errorConfig: Record<ErrorType, { title: string; desc: string; icon: string }> = {
+const errorConfig: Record<ErrorType, { title: string; desc: string; icon: UniIconsType }> = {
   '404': {
     title: '页面不存在',
     desc: '抱歉，您访问的页面不存在或已被移除',
-    icon: 'i-carbon-warning-alt',
+    icon: 'help',
   },
   '403': {
     title: '没有权限',
     desc: '抱歉，您没有权限访问此页面',
-    icon: 'i-carbon-locked',
+    icon: 'locked',
   },
   '500': {
     title: '服务器错误',
     desc: '抱歉，服务器出现问题，请稍后重试',
-    icon: 'i-carbon-cloud-offline',
+    icon: 'info',
   },
   network: {
     title: '网络异常',
     desc: '请检查您的网络连接后重试',
-    icon: 'i-carbon-wifi-off',
+    icon: 'refresh',
   },
 };
 
@@ -74,7 +74,7 @@ const errorDesc = computed(() => {
 });
 
 const errorIcon = computed(() => {
-  return errorConfig[errorCode.value as ErrorType]?.icon || 'i-carbon-warning-alt';
+  return errorConfig[errorCode.value as ErrorType]?.icon || 'info';
 });
 
 const canGoBack = computed(() => checkCanGoBack());

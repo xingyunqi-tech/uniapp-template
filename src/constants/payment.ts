@@ -39,20 +39,19 @@ export const PAYMENT_METHOD_MAP: Record<
   PaymentMethod,
   {
     text: string;
-    icon?: string;
+    icon?: UniIconsType;
   }
 > = {
   [PaymentMethod.WECHAT]: {
     text: '微信支付',
-    icon: 'i-carbon-logo-wechat',
+    icon: 'weixin',
   },
   [PaymentMethod.ALIPAY]: {
     text: '支付宝',
-    icon: 'i-carbon-logo-alipay',
   },
   [PaymentMethod.BALANCE]: {
     text: '余额支付',
-    icon: 'i-carbon-wallet',
+    icon: 'wallet',
   },
 };
 

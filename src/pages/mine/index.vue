@@ -8,34 +8,36 @@
           <text class="username">{{ userInfo?.username || '未登录' }}</text>
           <text class="desc">{{ isLoggedIn ? userInfo?.phone || '完善个人信息' : '点击登录账号' }}</text>
         </view>
-        <text class="i-carbon-chevron-right arrow" />
+        <view class="arrow">
+          <uni-icons type="right" color="inherit" size="inherit" />
+        </view>
       </view>
     </view>
 
     <!-- 功能菜单 -->
     <view class="menu-section">
       <UMenuGroup>
-        <UMenuItem icon="i-carbon-document" title="我的订单" @click="handleMenuClick('order')" />
-        <UMenuItem icon="i-carbon-star" title="我的收藏" @click="handleMenuClick('favorite')" />
+        <UMenuItem icon="list" title="我的订单" @click="handleMenuClick('order')" />
+        <UMenuItem icon="star" title="我的收藏" @click="handleMenuClick('favorite')" />
         <UMenuItem
-          icon="i-carbon-notification"
+          icon="notification"
           title="消息通知"
           :badge="unreadCount"
           @click="handleMenuClick('notifications')"
         />
-        <UMenuItem icon="i-carbon-location" title="收货地址" :border="false" @click="handleMenuClick('address')" />
+        <UMenuItem icon="location" title="收货地址" :border="false" @click="handleMenuClick('address')" />
       </UMenuGroup>
 
       <UMenuGroup>
         <!-- #ifdef MP-WEIXIN -->
-        <UMenuItem icon="i-carbon-headset" title="在线客服" is-contact />
+        <UMenuItem icon="headphones" title="在线客服" is-contact />
         <!-- #endif -->
 
         <!-- #ifndef MP-WEIXIN -->
-        <UMenuItem icon="i-carbon-headset" title="联系客服" @click="handleMenuClick('contact')" />
+        <UMenuItem icon="headphones" title="联系客服" @click="handleMenuClick('contact')" />
         <!-- #endif -->
 
-        <UMenuItem icon="i-carbon-settings" title="设置" :border="false" @click="handleMenuClick('settings')" />
+        <UMenuItem icon="settings" title="设置" :border="false" @click="handleMenuClick('settings')" />
       </UMenuGroup>
     </view>
   </view>

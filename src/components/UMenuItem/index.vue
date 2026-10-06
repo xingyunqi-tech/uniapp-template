@@ -15,7 +15,7 @@
   >
     <!-- 左侧图标 -->
     <view v-if="icon" class="u-menu-item__icon">
-      <text :class="icon" :style="iconStyle" />
+      <uni-icons :type="icon" :size="`${iconSize}rpx`" :color="iconColorValue" />
     </view>
 
     <!-- 内容区域 -->
@@ -71,8 +71,8 @@ interface Props {
   label?: string;
   /** 右侧文字 */
   rightText?: string;
-  /** 左侧图标 (UnoCSS 图标类名，如 i-carbon-*) */
-  icon?: string;
+  /** 左侧图标 (uni-icons 的 type) */
+  icon?: UniIconsType;
   /** 图标颜色 */
   iconColor?: string;
   /** 图标大小 (rpx) */
@@ -116,11 +116,10 @@ const emit = defineEmits<{
   switchChange: [checked: boolean];
 }>();
 
-// 图标样式
-const iconStyle = computed(() => ({
-  color: props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
-  fontSize: `${props.iconSize}rpx`,
-}));
+// 图标颜色
+const iconColorValue = computed(() =>
+  props.danger ? 'var(--color-error)' : props.iconColor || 'var(--color-primary)',
+);
 
 // 处理点击
 function handleClick() {

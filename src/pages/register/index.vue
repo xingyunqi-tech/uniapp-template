@@ -62,7 +62,7 @@
     <!-- 用户协议 -->
     <view class="agreement">
       <view class="agreement-checkbox" :class="{ checked: agreed }" @click="agreed = !agreed">
-        <text v-if="agreed" class="i-carbon-checkmark" />
+        <uni-icons v-if="agreed" type="checkmarkempty" color="var(--color-text-inverse)" size="24rpx" />
       </view>
       <text class="agreement-text">
         注册即表示同意
@@ -311,11 +311,6 @@ function showAgreement(type: 'user' | 'privacy') {
     &.checked {
       border-color: var(--color-primary);
       background: var(--color-primary);
-    }
-
-    .i-carbon-checkmark {
-      color: var(--color-text-inverse);
-      font-size: 24rpx;
     }
   }
 

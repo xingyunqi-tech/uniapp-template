@@ -13,11 +13,11 @@
         </view>
         <view class="address-actions">
           <view class="action-item" @click.stop="handleSetDefault(item)">
-            <text :class="['i-carbon-checkbox', item.isDefault ? 'checked' : '']" />
+            <uni-icons type="checkbox" :color="item.isDefault ? 'var(--color-primary)' : 'inherit'" size="32rpx" />
             <text class="action-text">默认</text>
           </view>
           <view class="action-item" @click.stop="handleDelete(item)">
-            <text class="i-carbon-trash-can" />
+            <uni-icons type="trash" color="inherit" size="32rpx" />
             <text class="action-text">删除</text>
           </view>
         </view>
@@ -25,12 +25,12 @@
     </view>
 
     <!-- 空状态 -->
-    <UEmpty v-else icon="i-carbon-location" text="暂无收货地址" />
+    <UEmpty v-else icon="location" text="暂无收货地址" />
 
     <!-- 添加地址按钮 -->
     <view class="add-btn-wrapper">
       <button class="add-btn" @click="handleAdd">
-        <text class="i-carbon-add" />
+        <uni-icons type="plusempty" color="inherit" size="36rpx" />
         <text>添加新地址</text>
       </button>
     </view>
@@ -186,18 +186,6 @@ function handleDelete(item: Address) {
         align-items: center;
         color: var(--color-text-secondary);
         font-size: 26rpx;
-
-        .i-carbon-checkbox {
-          font-size: 32rpx;
-
-          &.checked {
-            color: var(--color-primary);
-          }
-        }
-
-        .i-carbon-trash-can {
-          font-size: 32rpx;
-        }
       }
     }
   }
@@ -226,10 +214,6 @@ function handleDelete(item: Address) {
     background: var(--color-primary);
     color: var(--color-text-inverse);
     font-size: 32rpx;
-
-    .i-carbon-add {
-      font-size: 36rpx;
-    }
 
     &::after {
       display: none;

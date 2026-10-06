@@ -12,11 +12,9 @@
             placeholder="请输入原密码"
             :maxlength="PASSWORD_MAX_LENGTH"
           />
-          <text
-            :class="showOldPassword ? 'i-carbon-view' : 'i-carbon-view-off'"
-            class="toggle-eye"
-            @click="showOldPassword = !showOldPassword"
-          />
+          <view class="toggle-eye" @click="showOldPassword = !showOldPassword">
+            <uni-icons :type="showOldPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
+          </view>
         </view>
 
         <view class="form-item">
@@ -28,11 +26,9 @@
             :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
             :maxlength="PASSWORD_MAX_LENGTH"
           />
-          <text
-            :class="showNewPassword ? 'i-carbon-view' : 'i-carbon-view-off'"
-            class="toggle-eye"
-            @click="showNewPassword = !showNewPassword"
-          />
+          <view class="toggle-eye" @click="showNewPassword = !showNewPassword">
+            <uni-icons :type="showNewPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
+          </view>
         </view>
 
         <view class="form-item">
@@ -44,11 +40,9 @@
             placeholder="请再次输入新密码"
             :maxlength="PASSWORD_MAX_LENGTH"
           />
-          <text
-            :class="showConfirmPassword ? 'i-carbon-view' : 'i-carbon-view-off'"
-            class="toggle-eye"
-            @click="showConfirmPassword = !showConfirmPassword"
-          />
+          <view class="toggle-eye" @click="showConfirmPassword = !showConfirmPassword">
+            <uni-icons :type="showConfirmPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
+          </view>
         </view>
       </view>
     </view>

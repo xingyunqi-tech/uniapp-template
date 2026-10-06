@@ -19,22 +19,22 @@
     <view v-if="showRules" class="rules-section">
       <text v-if="showRulesTitle" class="rules-title">密码要求：</text>
       <view :class="['rules-list', { horizontal: horizontal }]">
-        <text :class="['rule-item', { valid: isLengthValid }]">
-          <text :class="isLengthValid ? 'i-carbon-checkmark' : 'i-carbon-close'" />
-          长度{{ minLength }}-{{ maxLength }}位
-        </text>
-        <text v-if="requireLetter" :class="['rule-item', { valid: hasLetter }]">
-          <text :class="hasLetter ? 'i-carbon-checkmark' : 'i-carbon-close'" />
-          包含字母
-        </text>
-        <text v-if="requireNumber" :class="['rule-item', { valid: hasNumber }]">
-          <text :class="hasNumber ? 'i-carbon-checkmark' : 'i-carbon-close'" />
-          包含数字
-        </text>
-        <text v-if="requireSpecialChar" :class="['rule-item', { valid: hasSpecialChar }]">
-          <text :class="hasSpecialChar ? 'i-carbon-checkmark' : 'i-carbon-close'" />
-          包含特殊字符
-        </text>
+        <view :class="['rule-item', { valid: isLengthValid }]">
+          <uni-icons :type="isLengthValid ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <text>长度{{ minLength }}-{{ maxLength }}位</text>
+        </view>
+        <view v-if="requireLetter" :class="['rule-item', { valid: hasLetter }]">
+          <uni-icons :type="hasLetter ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <text>包含字母</text>
+        </view>
+        <view v-if="requireNumber" :class="['rule-item', { valid: hasNumber }]">
+          <uni-icons :type="hasNumber ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <text>包含数字</text>
+        </view>
+        <view v-if="requireSpecialChar" :class="['rule-item', { valid: hasSpecialChar }]">
+          <uni-icons :type="hasSpecialChar ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <text>包含特殊字符</text>
+        </view>
       </view>
     </view>
   </view>

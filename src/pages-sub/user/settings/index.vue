@@ -3,29 +3,23 @@
     <!-- 设置菜单 -->
     <view class="settings-section">
       <UMenuGroup title="账号设置">
-        <UMenuItem icon="i-carbon-user-avatar" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
-        <UMenuItem
-          icon="i-carbon-locked"
-          title="账号安全"
-          show-arrow
-          :border="false"
-          @click="handleMenuClick('security')"
-        />
+        <UMenuItem icon="person" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
+        <UMenuItem icon="locked" title="账号安全" show-arrow :border="false" @click="handleMenuClick('security')" />
       </UMenuGroup>
     </view>
 
     <view class="settings-section">
       <UMenuGroup title="通用设置">
         <UMenuItem
-          icon="i-carbon-clean"
+          icon="trash"
           title="清除缓存"
           :right-text="cacheSize"
           :show-arrow="false"
           @click="handleClearCache"
         />
-        <UMenuItem icon="i-carbon-edit" title="意见反馈" show-arrow @click="handleMenuClick('feedback')" />
+        <UMenuItem icon="compose" title="意见反馈" show-arrow @click="handleMenuClick('feedback')" />
         <UMenuItem
-          icon="i-carbon-information"
+          icon="info"
           title="关于我们"
           :right-text="`v${version}`"
           show-arrow
@@ -35,7 +29,7 @@
         <!-- 连续点击版本号 5 次显示 -->
         <UMenuItem
           v-if="showDevOptions"
-          icon="i-carbon-sun"
+          icon="color"
           :title="$t('settings.theme')"
           :right-text="isDarkMode ? $t('settings.dark') : $t('settings.light')"
           show-switch
@@ -44,7 +38,7 @@
         />
         <UMenuItem
           v-if="showDevOptions"
-          icon="i-carbon-translate"
+          icon="font"
           :title="$t('settings.international')"
           :right-text="isEnglish ? 'English' : '中文'"
           :border="false"

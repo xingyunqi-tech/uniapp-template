@@ -18,28 +18,28 @@ export const ORDER_STATUS_MAP: Record<
   {
     text: string;
     class: string;
-    icon?: string;
+    icon?: UniIconsType;
   }
 > = {
   [OrderStatus.UNPAID]: {
     text: '待付款',
     class: 'warning',
-    icon: 'i-carbon-time',
+    icon: 'calendar',
   },
   [OrderStatus.PAID]: {
     text: '已付款',
     class: 'success',
-    icon: 'i-carbon-checkmark',
+    icon: 'checkmarkempty',
   },
   [OrderStatus.REFUNDED]: {
     text: '已退款',
     class: 'info',
-    icon: 'i-carbon-undo',
+    icon: 'undo',
   },
   [OrderStatus.CLOSED]: {
     text: '已关闭',
     class: 'disabled',
-    icon: 'i-carbon-close',
+    icon: 'closeempty',
   },
 };
 

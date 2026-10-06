@@ -75,7 +75,7 @@ onLaunch(options => {
 });
 
 // 应用显示 (从后台进入前台)
-onShow(options => {
+onShow((options?: unknown) => {
   console.log('App Show', options);
 });
 

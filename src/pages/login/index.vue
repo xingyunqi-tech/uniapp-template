@@ -52,7 +52,7 @@
 
       <view class="social-login">
         <button class="social-btn wechat" open-type="getPhoneNumber" @getphonenumber="handleWechatLogin">
-          <text class="i-carbon-logo-wechat" />
+          <uni-icons type="weixin" color="var(--color-brand-wechat)" size="48rpx" />
         </button>
       </view>
     </view>
@@ -366,11 +366,6 @@ function goToForgotPassword() {
       &:active {
         transform: scale(0.95);
         border-color: var(--color-primary);
-      }
-
-      .i-carbon-logo-wechat {
-        color: var(--color-brand-wechat);
-        font-size: 48rpx;
       }
     }
   }

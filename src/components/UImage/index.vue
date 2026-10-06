@@ -10,7 +10,9 @@
         <!-- 有占位图时显示占位图 -->
         <image v-if="placeholder" class="u-image__placeholder" :src="placeholder" :mode="mode" />
         <!-- 无占位图时显示图标 -->
-        <text v-else class="i-carbon-image u-image__icon" />
+        <view v-else class="u-image__icon">
+          <uni-icons type="image" color="inherit" size="inherit" />
+        </view>
       </slot>
     </view>
 
@@ -21,7 +23,9 @@
         <image v-if="errorImage" class="u-image__error-img" :src="errorImage" :mode="mode" />
         <!-- 无错误图时显示图标 -->
         <template v-else>
-          <text class="i-carbon-warning-alt u-image__icon" />
+          <view class="u-image__icon">
+            <uni-icons type="info" color="inherit" size="inherit" />
+          </view>
           <text class="u-image__error-text">加载失败</text>
         </template>
       </slot>

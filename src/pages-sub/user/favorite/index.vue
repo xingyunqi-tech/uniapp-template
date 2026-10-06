@@ -1,7 +1,7 @@
 <template>
   <view class="favorite-page" :class="globalStore.themeClass">
     <!-- 空状态 -->
-    <UEmpty v-if="!loading && list.length === 0" icon="i-carbon-star" text="暂无收藏内容" />
+    <UEmpty v-if="!loading && list.length === 0" icon="star" text="暂无收藏内容" />
 
     <!-- 收藏列表 -->
     <view v-else class="favorite-list">
@@ -15,7 +15,7 @@
           </view>
         </view>
         <view class="item-action" @click.stop="handleRemove(item)">
-          <text class="i-carbon-close" />
+          <uni-icons type="closeempty" color="var(--color-text-secondary)" size="28rpx" />
         </view>
       </view>
     </view>
@@ -177,11 +177,6 @@ function handleRemove(item: Favorite) {
     height: 56rpx;
     border-radius: 50%;
     background: var(--color-bg-grey);
-
-    .i-carbon-close {
-      color: var(--color-text-secondary);
-      font-size: 28rpx;
-    }
   }
 }
 

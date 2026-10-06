@@ -29,7 +29,9 @@
           :class="getItemClasses(action)"
           @click="handleSelect(action, index)"
         >
-          <text v-if="action.icon" :class="['u-action-sheet__icon', action.icon]" />
+          <view v-if="action.icon" class="u-action-sheet__icon">
+            <uni-icons :type="action.icon" color="inherit" size="inherit" />
+          </view>
           <text class="u-action-sheet__text">{{ action.label }}</text>
           <text v-if="action.subLabel" class="u-action-sheet__sub-text">{{ action.subLabel }}</text>
         </view>
@@ -66,8 +68,8 @@ export interface ActionItem {
   value?: string | number;
   /** 副文本 */
   subLabel?: string;
-  /** 左侧图标 (UnoCSS 图标类名) */
-  icon?: string;
+  /** 左侧图标 (uni-icons 的 type) */
+  icon?: UniIconsType;
   /** 是否为危险操作 */
   danger?: boolean;
   /** 是否禁用 */

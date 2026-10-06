@@ -38,7 +38,7 @@
         <view v-for="(img, index) in formData.tempImages" :key="index" class="image-item">
           <image :src="img" mode="aspectFill" />
           <view class="remove-btn" @click="removeImage(index)">
-            <text class="i-carbon-close" />
+            <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
           </view>
           <!-- 上传中状态 -->
           <view v-if="index >= formData.images.length" class="uploading-mask">
@@ -46,7 +46,7 @@
           </view>
         </view>
         <view v-if="formData.tempImages.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
-          <text class="i-carbon-add" />
+          <uni-icons type="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
           <text class="upload-text">添加图片</text>
         </view>
       </view>
@@ -301,11 +301,6 @@ function handleSubmit() {
       height: 40rpx;
       border-radius: 50%;
       background: var(--color-error);
-
-      .i-carbon-close {
-        color: var(--color-text-inverse);
-        font-size: 24rpx;
-      }
     }
 
     .uploading-mask {
@@ -335,11 +330,6 @@ function handleSubmit() {
     border: 1px dashed var(--color-border);
     border-radius: var(--radius-base);
     background: var(--color-bg-grey);
-
-    .i-carbon-add {
-      color: var(--color-text-placeholder);
-      font-size: 48rpx;
-    }
 
     .upload-text {
       color: var(--color-text-placeholder);

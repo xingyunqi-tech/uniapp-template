@@ -98,7 +98,7 @@ export function usePayment() {
       }
       // #endif
 
-      // #ifdef APP-PLUS
+      // #ifndef MP-WEIXIN || H5
       reject(new Error('当前平台不支持微信支付'));
       // #endif
     });
@@ -139,7 +139,7 @@ export function usePayment() {
       }
       // #endif
 
-      // #ifdef APP-PLUS
+      // #ifndef MP-ALIPAY || H5
       reject(new Error('当前平台不支持支付宝支付'));
       // #endif
     });

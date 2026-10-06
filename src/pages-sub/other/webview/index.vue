@@ -199,10 +199,10 @@ function handleLoad() {
 /**
  * 处理加载错误
  */
-function handleError(e: { detail: { errMsg: string } }) {
-  console.error('[Webview] 加载失败:', e.detail.errMsg);
+function handleError(e: UniHelper.WebViewOnErrorEvent & { detail?: { errMsg?: string } }) {
+  console.error('[Webview] 加载失败:', e.detail?.errMsg);
   error.value = true;
-  errorMessage.value = e.detail.errMsg || '网络异常，请检查网络连接';
+  errorMessage.value = e.detail?.errMsg || '网络异常，请检查网络连接';
   finishProgress();
 }
 

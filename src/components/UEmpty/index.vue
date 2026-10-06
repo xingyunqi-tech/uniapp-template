@@ -6,7 +6,7 @@
   <view class="u-empty">
     <view class="u-empty__icon">
       <slot name="icon">
-        <text :class="iconClass" />
+        <uni-icons :type="iconType" size="128rpx" color="var(--color-text-placeholder)" />
       </slot>
     </view>
 
@@ -36,26 +36,26 @@ export interface Props {
   type?: 'default' | 'search' | 'network' | 'error' | 'cart' | 'message';
   /** 描述文字 */
   text?: string;
-  /** 自定义图标类名 */
-  icon?: string;
+  /** 自定义图标 (uni-icons 的 type) */
+  icon?: UniIconsType;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'default',
   text: '暂无数据',
-  icon: '',
+  icon: undefined,
 });
 
-const iconMap: Record<string, string> = {
-  default: 'i-carbon-no-image',
-  search: 'i-carbon-search',
-  network: 'i-carbon-wifi-off',
-  error: 'i-carbon-warning-alt',
-  cart: 'i-carbon-shopping-cart',
-  message: 'i-carbon-email',
+const iconMap: Record<NonNullable<Props['type']>, UniIconsType> = {
+  default: 'image',
+  search: 'search',
+  network: 'refresh',
+  error: 'info',
+  cart: 'cart',
+  message: 'email',
 };
 
-const iconClass = computed(() => {
+const iconType = computed(() => {
   return props.icon || iconMap[props.type] || iconMap.default;
 });
 </script>
@@ -71,8 +71,6 @@ const iconClass = computed(() => {
 
   &__icon {
     margin-bottom: var(--spacing-base);
-    color: var(--color-text-placeholder);
-    font-size: 128rpx;
   }
 
   &__text {
