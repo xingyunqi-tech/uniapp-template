@@ -6,7 +6,7 @@ import { SMS_CODE_LENGTH, SMS_COUNTDOWN_SECONDS } from '@/constants/form';
 export interface UseSendSmsOptions {
   /** 倒计时秒数，默认 60 */
   countdownSeconds?: number;
-  /** 发送验证码的 API 函数 */
+  /** 发送验证码的 API 函数，失败提示由请求层统一弹出 */
   sendApi?: (phone: string) => Promise<unknown>;
 }
 
@@ -118,11 +118,7 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
 
       return true;
     } catch (error) {
-      // 组件已卸载，不显示 toast
-      if (isUnmounted) return false;
-
       console.error('发送验证码失败:', error);
-      uni.showToast({ title: '发送失败，请重试', icon: 'none' });
       return false;
     } finally {
       if (!isUnmounted) {

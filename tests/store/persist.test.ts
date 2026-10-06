@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defineStore, setActivePinia } from 'pinia';
 import { createApp, nextTick, ref } from 'vue';
 import { createPersistedPinia } from '@/store/plugins/persist';
+import { useUserStore } from '@/store/modules/user';
 
 const useDemoStore = defineStore(
   'persist-demo',
@@ -32,5 +33,20 @@ describe('Pinia 持久化', () => {
     const restored = createStore();
     expect(restored.kept).toBe('value');
     expect(restored.dropped).toBe('');
+  });
+
+  it('resetUserState 后持久化的 userInfo 为空，新实例不恢复用户信息', async () => {
+    createStore();
+    const store = useUserStore();
+    store.userInfo = { id: 1 } as NonNullable<typeof store.userInfo>;
+    await nextTick();
+    expect(JSON.parse(uni.getStorageSync('user'))).toEqual({ userInfo: { id: 1 } });
+
+    store.resetUserState();
+    await nextTick();
+
+    expect(JSON.parse(uni.getStorageSync('user'))).toEqual({ userInfo: null });
+    createStore();
+    expect(useUserStore().userInfo).toBeNull();
   });
 });

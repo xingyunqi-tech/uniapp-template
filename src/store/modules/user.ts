@@ -281,9 +281,6 @@ export const useUserStore = defineStore(
       storage.remove('refreshToken');
       storage.remove('tokenExpires');
 
-      // 清除 Pinia 持久化的 userInfo (key 为 store id)
-      storage.remove('user');
-
       // 重置其他 Store 的用户相关数据
       useAddressStore().reset();
       useOrderStore().reset();

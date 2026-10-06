@@ -88,10 +88,6 @@ function handleRemove(item: Favorite) {
           });
         } catch (error) {
           console.error('取消收藏失败:', error);
-          uni.showToast({
-            title: '操作失败',
-            icon: 'none',
-          });
         }
       }
     },

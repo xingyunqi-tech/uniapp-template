@@ -192,7 +192,6 @@ async function handleReset() {
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('重置密码失败:', error);
-    uni.showToast({ title: '重置失败，请重试', icon: 'none' });
   } finally {
     submitting.value = false;
   }

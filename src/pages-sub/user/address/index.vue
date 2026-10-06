@@ -94,10 +94,6 @@ async function handleSetDefault(item: Address) {
     });
   } catch (error) {
     console.error('设置默认地址失败:', error);
-    uni.showToast({
-      title: '设置失败',
-      icon: 'none',
-    });
   }
 }
 
@@ -116,10 +112,6 @@ function handleDelete(item: Address) {
           });
         } catch (error) {
           console.error('删除地址失败:', error);
-          uni.showToast({
-            title: '删除失败',
-            icon: 'none',
-          });
         }
       }
     },

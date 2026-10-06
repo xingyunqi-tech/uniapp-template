@@ -165,11 +165,8 @@ async function handleSave() {
         url: PAGES.LOGIN,
       });
     }, DELAY_TIMES.LONG);
-  } catch {
-    uni.showToast({
-      title: '修改失败',
-      icon: 'none',
-    });
+  } catch (error) {
+    console.error('修改密码失败:', error);
   } finally {
     saving.value = false;
   }

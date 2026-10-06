@@ -194,10 +194,6 @@ async function handleRegister() {
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('注册失败:', error);
-    uni.showToast({
-      title: '注册失败，请重试',
-      icon: 'none',
-    });
   } finally {
     loading.value = false;
   }

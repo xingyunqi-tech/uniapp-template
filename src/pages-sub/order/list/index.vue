@@ -156,10 +156,6 @@ async function loadOrders(refresh = false) {
     noMore.value = !orderStore.hasMore;
   } catch (error) {
     console.error('加载订单列表失败:', error);
-    uni.showToast({
-      title: '加载失败',
-      icon: 'none',
-    });
   } finally {
     refreshing.value = false;
   }

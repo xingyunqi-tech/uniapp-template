@@ -144,10 +144,6 @@ async function loadAddressDetail(id: number) {
     }
   } catch (error) {
     console.error('加载地址详情失败:', error);
-    uni.showToast({
-      title: '加载失败',
-      icon: 'none',
-    });
   }
 }
 
@@ -230,10 +226,6 @@ async function handleSave() {
     }, 1500);
   } catch (error) {
     console.error('保存地址失败:', error);
-    uni.showToast({
-      title: '保存失败',
-      icon: 'none',
-    });
   } finally {
     saving.value = false;
   }
@@ -259,10 +251,6 @@ function handleDelete() {
           }, 1500);
         } catch (error) {
           console.error('删除地址失败:', error);
-          uni.showToast({
-            title: '删除失败',
-            icon: 'none',
-          });
         }
       }
     },

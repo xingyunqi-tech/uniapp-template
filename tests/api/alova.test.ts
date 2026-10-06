@@ -105,6 +105,32 @@ describe('Loading', () => {
     expect(uni.hideLoading).not.toHaveBeenCalled();
   });
 
+  it('错误提示顶替 Loading 后新开启的 Loading，只在新请求结束时关闭', async () => {
+    const held = new Map<string, () => void>();
+    requestMock.mockImplementation((options: RequestOptions) => {
+      const reply = options.url === '/bad' ? { statusCode: 200, data: { code: 500, message: '失败' } } : ok();
+      held.set(options.url, () => options.success({ data: reply.data, statusCode: reply.statusCode, header: {} }));
+      return { abort: vi.fn() };
+    });
+    const meta = { showLoading: true };
+
+    const bad = http.Get('/bad', { meta }).send();
+    const slow = http.Get('/slow', { meta }).send();
+    await vi.waitFor(() => expect(held.size).toBe(2));
+    held.get('/bad')!();
+    await expect(bad).rejects.toThrow('失败');
+
+    const next = http.Get('/next', { meta }).send();
+    await vi.waitFor(() => expect(held.has('/next')).toBe(true));
+    held.get('/slow')!();
+    await slow;
+    expect(uni.hideLoading).not.toHaveBeenCalled();
+
+    held.get('/next')!();
+    await next;
+    expect(uni.hideLoading).toHaveBeenCalledTimes(1);
+  });
+
   it('未开启 showLoading 的请求失败时不关闭 Loading', async () => {
     requestMock.mockImplementation((options: { fail: (err: { errMsg: string }) => void }) => {
       void Promise.resolve().then(() => options.fail({ errMsg: 'request:fail' }));

@@ -311,13 +311,27 @@ describe('401 跳转登录页', () => {
     expect(uni.redirectTo).toHaveBeenCalledWith(expect.objectContaining({ url: '/pages/login/index' }));
   });
 
-  it('已在登录页时只清理登录态，不提示也不跳转', async () => {
+  it('已在登录页时清理登录态并提示接口错误信息，不跳转', async () => {
     onPage('/pages/login/index?redirect=%2Fpages-sub%2Forder%2Flist%2Findex');
     (uni.showToast as Mock).mockClear();
 
     const clearAuth = await failWith401();
 
     expect(clearAuth).toHaveBeenCalledTimes(1);
+    expect(uni.showToast).toHaveBeenCalledWith({ title: 'Unauthorized', icon: 'none' });
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
+  it('已在登录页且 showError 为 false 时不提示', async () => {
+    onPage('/pages/login/index');
+    (uni.showToast as Mock).mockClear();
+    registerHandlers({});
+    mockServer(() => unauthorized);
+
+    await expect(customMutator({ url: '/login', method: 'POST' }, { showError: false })).rejects.toThrow(
+      'Unauthorized',
+    );
+
     expect(uni.showToast).not.toHaveBeenCalled();
     expect(uni.redirectTo).not.toHaveBeenCalled();
   });

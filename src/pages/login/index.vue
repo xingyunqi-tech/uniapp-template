@@ -112,9 +112,12 @@ const sms = useSendSms({
 let redirectUrl = '';
 
 onLoad(options => {
-  // 获取重定向地址
+  // 获取重定向地址（H5 与 App 已对 onLoad 参数解码，小程序需手动解码）
   if (options?.redirect) {
-    redirectUrl = decodeURIComponent(options.redirect);
+    redirectUrl = options.redirect;
+    // #ifdef MP
+    redirectUrl = decodeURIComponent(redirectUrl);
+    // #endif
   }
 
   // 如果已登录，直接跳转
@@ -188,10 +191,6 @@ async function handleLogin() {
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('登录失败:', error);
-    uni.showToast({
-      title: '登录失败，请重试',
-      icon: 'none',
-    });
   } finally {
     loading.value = false;
   }
@@ -202,12 +201,15 @@ async function handleWechatLogin() {
   loading.value = true;
 
   try {
-    // 先获取微信登录 code
+    // 先获取微信登录 code，失败时请求层不会提示，在此单独提示
     const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
       uni.login({
         provider: 'weixin',
         success: resolve,
-        fail: reject,
+        fail: err => {
+          uni.showToast({ title: '微信授权失败，请重试', icon: 'none' });
+          reject(err);
+        },
       });
     });
 
@@ -227,10 +229,6 @@ async function handleWechatLogin() {
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('微信登录失败:', error);
-    uni.showToast({
-      title: '微信登录失败，请重试',
-      icon: 'none',
-    });
   } finally {
     loading.value = false;
   }
