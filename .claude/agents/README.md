@@ -180,8 +180,8 @@ AI 会根据问题内容自动选择合适的 Agent,无需手动指定。
 
 **核心内容**:
 - 测试金字塔 (单元 > 集成 > E2E)
-- Vitest 配置 (覆盖率阈值 80%)
-- API 集成测试 (MSW Mock,Orval 架构)
+- Vitest 配置 (80% 为建议目标，未配置 thresholds)
+- API 测试 (vi.mock 模拟 API 模块或模拟 uni.request，Orval 架构)
 - Vue 组件测试 (@vue/test-utils)
 - Pinia Store 测试
 - 测试最佳实践 (命名规范/数据管理)

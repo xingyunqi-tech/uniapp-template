@@ -172,7 +172,7 @@ base64 -i private.wx.key | tr -d '\n'
 
 | 工作流 | 文件 | 触发条件 | 说明 |
 |--------|------|---------|------|
-| Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被部署工作流调用 | lint:check、type-check、test，以及 H5 / 微信 / 支付宝 / App 四端构建 |
+| Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被部署工作流调用 | lint:check、type-check、test |
 | Deploy H5 | `.github/workflows/deploy-h5.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器 |
 | Deploy MiniProgram | `.github/workflows/deploy-mp.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建并上传微信 / 支付宝小程序 |
 
@@ -269,7 +269,7 @@ MP_VERSION=1.2.0 MP_DESC="修复登录问题" pnpm mp:upload:weixin
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  1. Checkout 代码                                    │   │
 │  │  2. 安装依赖 (pnpm install)                         │   │
-│  │  3. Check 工作流: Lint + 类型检查 + 测试 + 四端构建  │   │
+│  │  3. Check 工作流: Lint + 类型检查 + 测试             │   │
 │  │  4. 构建小程序                                       │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘

@@ -384,16 +384,12 @@ export const PAGE_ROLES: Record<string, ROLE[]> = {
 ```typescript
 // src/utils/router-interceptor.ts
 export function setupRouterInterceptor(): void {
-  const interceptMethods = ['navigateTo', 'redirectTo', 'reLaunch'] as const;
+  const interceptMethods: InterceptMethod[] = ['navigateTo', 'redirectTo', 'reLaunch'];
 
   interceptMethods.forEach(method => {
     uni.addInterceptor(method, {
       invoke(args: { url: string }) {
-        const result = handleRouteIntercept(args);
-        if (result === false) {
-          return false;
-        }
-        return typeof result === 'object' ? result : args;
+        return handleRouteIntercept(method, args) ? args : false;
       },
     });
   });
@@ -403,11 +399,22 @@ export function setupRouterInterceptor(): void {
 }
 ```
 
-`handleRouteIntercept` 的检查顺序：
+拦截器与页面守卫共用 `checkRouteAccess` 的检查顺序：
 
 1. 白名单（`WHITE_LIST`）直接放行
-2. 未登录 → `redirectTo` 登录页并携带 `redirect` 参数
+2. 未登录 → 打开登录页并携带 `redirect` 参数（完整路径含查询参数）
 3. `PAGE_ROLES` 角色校验失败 → 提示"暂无权限访问"并跳转 `PAGES.FORBIDDEN`
+
+拦截器打开登录页时沿用原跳转方式：`navigateTo` 用 `navigateTo`（可返回原页面，页面栈满 10 层时改用 `redirectTo`），`redirectTo` 用 `redirectTo`，`reLaunch` 用 `reLaunch`。
+
+### 页面守卫（首次进入）
+
+`uni.addInterceptor` 只拦截路由 API 调用，H5 刷新/直接输入地址、小程序分享卡片/扫码、`<navigator>` 组件进入的页面不经过拦截器。`main.ts` 的全局 mixin 在页面 `onLoad` 时调用 `guardCurrentPage()`，按当前页面的 `$page.fullPath` 做同样的检查，不通过时 `redirectTo` 登录页或 403 页。
+
+### 401 与 404
+
+- 请求返回 401 且刷新 Token 失败：非 TabBar 页跳登录页时携带当前页面路径作为 `redirect`；已在登录页时只清理登录态并提示接口错误信息（见 `src/api/core/alova.ts`）
+- 页面不存在：`App.vue` 的 `onPageNotFound` 重定向到 `PAGES.ERROR?type=404`
 
 ---
 
@@ -712,10 +719,15 @@ function handleBack() {
 const currentUrl = useRoute().fullPath;
 router.push(PAGES.LOGIN, { redirect: currentUrl });
 
-// 登录成功后重定向
+// 登录成功后重定向（H5 与 App 运行时已对 onLoad 参数解码，小程序需手动解码）
 const { redirect } = useRouteQuery<{ redirect?: string }>();
 if (redirect) {
+  // #ifdef MP
   router.replace(decodeURIComponent(redirect));
+  // #endif
+  // #ifndef MP
+  router.replace(redirect);
+  // #endif
 } else {
   router.switchTab(PAGES.HOME);
 }

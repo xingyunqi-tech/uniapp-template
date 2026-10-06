@@ -19,7 +19,7 @@
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
-- **测试完善**: Vitest 单元测试，80% 覆盖率目标
+- **测试完善**: Vitest 单元测试，80% 覆盖率为建议目标（未配置阈值）
 
 ## 技术架构
 
@@ -35,7 +35,7 @@
 | **UI** | @dcloudio/uni-ui | 官方 UI 组件库 |
 | **HTTP** | Alova | 轻量级请求策略库 |
 | **API** | Orval | OpenAPI → 自动生成类型安全的 API |
-| **测试** | Vitest | 80% 覆盖率目标 |
+| **测试** | Vitest | 80% 覆盖率建议目标（未配置阈值） |
 | **国际化** | vue-i18n | 多语言支持 |
 
 ### 开发工具

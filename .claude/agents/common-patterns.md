@@ -418,6 +418,7 @@ const statsData = ref([
   background: var(--color-bg-hover);      // 悬浮背景 #f2f3f5
   background: var(--color-bg-active);     // 激活背景 #ededed
   background: var(--color-bg-mask);       // 遮罩背景 rgba(0 0 0 / 0.7)
+  background: var(--color-bg-mask-light); // 浅遮罩 rgba(0 0 0 / 0.5)（弹层遮罩、图片删除按钮）
   background: var(--color-bg-card);       // 卡片背景 #fff
   background: var(--color-bg-input);      // 输入框背景 #f7f8fa
 
@@ -484,6 +485,7 @@ const statsData = ref([
   box-shadow: var(--shadow-lg);     // 大阴影
   box-shadow: var(--shadow-xl);     // 特大阴影
   box-shadow: var(--shadow-light);  // 轻阴影
+  box-shadow: var(--shadow-top);    // 向上阴影（底部固定栏）
 
   // ❌ 错误：硬编码阴影
   box-shadow: 0 2rpx 8rpx rgba(0 0 0 / 0.08);

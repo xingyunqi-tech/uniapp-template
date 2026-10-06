@@ -132,7 +132,17 @@
 #### Scenario: Login interception
 - **GIVEN** 路由拦截器 `src/utils/router-interceptor.ts`
 - **WHEN** 跳转到不在 `src/constants/pages.ts` 的 `WHITE_LIST` 中的页面且未登录
-- **THEN** 重定向到登录页并携带 redirect 参数
+- **THEN** 按原跳转方式打开登录页并携带 redirect 参数
+
+#### Scenario: First entry guard
+- **GIVEN** 页面不经过路由 API 进入（H5 直接访问、小程序分享卡片/扫码、navigator 组件）
+- **WHEN** 页面 `onLoad` 时未登录且页面不在 `WHITE_LIST` 中
+- **THEN** `guardCurrentPage()` 重定向到登录页并携带当前页面完整路径作为 redirect 参数
+
+#### Scenario: Page not found
+- **GIVEN** 访问未注册的页面路径
+- **WHEN** `App.vue` 的 `onPageNotFound` 触发
+- **THEN** 重定向到 `/pages/error/index?type=404`
 
 #### Scenario: Default redirect
 - **GIVEN** 用户直接访问登录页（无 redirect 参数）

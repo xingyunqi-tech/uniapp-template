@@ -20,7 +20,7 @@ model: inherit
 ```
 .
 ├── .github/workflows/
-│   ├── check.yml        # lint / type-check / test + 四端构建
+│   ├── check.yml        # lint / type-check / test
 │   ├── deploy-h5.yml    # H5 构建并通过 SSH + rsync 部署到服务器
 │   └── deploy-mp.yml    # 微信 / 支付宝小程序构建并上传
 ├── scripts/
