@@ -41,7 +41,7 @@ definePage({
   },
 });
 
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, toRaw } from 'vue';
 
 defineOptions({
   name: 'UImageUpload',
@@ -172,14 +172,15 @@ const listStyleConfig = computed(() => ({
 
 // ==================== Watch ====================
 
-// 同步外部值到内部（仅当引用变化时）
+/** 最近一次 emit 出去的数组，父组件回写时据此跳过同步 */
+let lastEmitted: FileItem[] | undefined;
+
+// 同步外部值到内部
 watch(
   () => props.modelValue,
   newVal => {
-    // 简单的引用比较，避免不必要的更新
-    if (newVal !== fileList.value) {
-      fileList.value = [...newVal];
-    }
+    if (toRaw(newVal) === lastEmitted) return;
+    fileList.value = [...newVal];
   },
   { immediate: true },
 );
@@ -188,7 +189,8 @@ watch(
 watch(
   fileList,
   newVal => {
-    emit('update:modelValue', [...newVal]);
+    lastEmitted = [...newVal];
+    emit('update:modelValue', lastEmitted);
   },
   { deep: true },
 );

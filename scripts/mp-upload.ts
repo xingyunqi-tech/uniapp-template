@@ -579,7 +579,7 @@ async function main() {
     if (error instanceof Error && error.stack) {
       console.error(error.stack);
     }
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     // 清理临时文件
     cleanupTempFiles();

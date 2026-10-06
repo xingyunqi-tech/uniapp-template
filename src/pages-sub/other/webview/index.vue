@@ -28,8 +28,8 @@ definePage({
   },
 });
 
-import { ref, onMounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { ref } from 'vue';
+import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 
@@ -69,13 +69,11 @@ onLoad(options => {
   startProgress();
 });
 
-onMounted(() => {
-  // 组件卸载时清理定时器
-  return () => {
-    if (progressTimer) {
-      clearInterval(progressTimer);
-    }
-  };
+onUnload(() => {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
 });
 
 /**

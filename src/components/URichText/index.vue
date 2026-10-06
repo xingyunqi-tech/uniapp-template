@@ -46,11 +46,11 @@ const emit = defineEmits<Emits>();
 // 为标签添加 class 的辅助函数（小程序不支持标签选择器）
 function addClassToTag(html: string, tag: string, className: string): string {
   // 匹配已有 class 的情况
-  const withClassRegex = new RegExp(`<${tag}([^>]*?)\\sclass=["']([^"']*)["']`, 'gi');
+  const withClassRegex = new RegExp(`<${tag}(?=[\\s/>])([^>]*?)\\sclass=["']([^"']*)["']`, 'gi');
   html = html.replace(withClassRegex, `<${tag}$1 class="$2 ${className}"`);
 
   // 匹配没有 class 的情况
-  const withoutClassRegex = new RegExp(`<${tag}(?![^>]*class=)([^>]*)>`, 'gi');
+  const withoutClassRegex = new RegExp(`<${tag}(?=[\\s/>])(?![^>]*class=)([^>]*)>`, 'gi');
   html = html.replace(withoutClassRegex, `<${tag} class="${className}"$1>`);
 
   return html;
