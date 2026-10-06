@@ -12,7 +12,7 @@
 - **自动代码生成**: 从 OpenAPI 文档生成 TypeScript API 函数和类型
 - **类型安全**: 完整的 TypeScript 支持
 - **多端兼容**: 通过 `@alova/adapter-uniapp` 支持所有 UniApp 平台
-- **请求缓存**: GET 请求自动缓存 5 分钟
+- **请求合并**: 进行中的相同请求自动合并，响应结果默认不缓存
 - **统一拦截**: Token 注入、错误处理、Loading 状态
 - **灵活扩展**: 支持覆盖生成代码或添加自定义接口
 
@@ -151,7 +151,7 @@ export const postAuthLogin = async (data: LoginRequest) => {
 ```typescript
 import { http } from '@/api/core';
 
-// GET 请求（默认缓存 5 分钟）
+// GET 请求（默认不缓存）
 const data = await http.Get('/users');
 
 // POST 请求（不缓存）
@@ -165,7 +165,7 @@ const data = await http.Get('/users', {
     loadingText: '加载中...',
     showError: false,
   },
-  cacheFor: 0, // 禁用缓存
+  cacheFor: 5 * 60 * 1000, // 缓存 5 分钟（缓存键不含 Token，只用于与用户无关的数据）
 });
 ```
 
@@ -180,15 +180,8 @@ const data = await http.Get('/users', {
 ### 缓存配置
 
 ```typescript
-// 默认配置（alova.ts）
-cacheFor: {
-  GET: 5 * 60 * 1000,  // GET 缓存 5 分钟
-}
-
-// 单个请求禁用缓存
-http.Get('/users', { cacheFor: 0 })
-
-// 单个请求自定义缓存
+// 默认不缓存响应结果（alova.ts 中 cacheFor: null），进行中的相同请求自动合并
+// 缓存键不含 Token，只给与用户无关的数据单独开启缓存
 http.Get('/config', { cacheFor: 30 * 60 * 1000 }) // 30 分钟
 ```
 

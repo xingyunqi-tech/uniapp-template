@@ -237,7 +237,7 @@ export const useUserStore = defineStore(
     }
 
     /**
-     * 刷新 Token
+     * 刷新 Token，失败返回 null（登录态由请求拦截器统一清理）
      */
     async function refreshToken(): Promise<string | null> {
       if (!refreshTokenValue.value) {
@@ -245,20 +245,52 @@ export const useUserStore = defineStore(
       }
 
       try {
-        const response = await apiRefreshToken();
+        const response = await apiRefreshToken(refreshTokenValue.value);
         setToken(response.token);
         setRefreshToken(response.refreshToken, response.tokenExpires);
         return response.token;
       } catch {
-        // 刷新失败，清除登录状态
-        await logout();
         return null;
       }
     }
 
     /**
-     * 退出登录
-     * 清除所有用户相关状态，包括其他 Store 的数据
+     * 清除本地登录态（不调用登出接口），包括其他 Store 的用户相关数据
+     */
+    async function resetUserState(): Promise<void> {
+      // 清除用户状态
+      token.value = '';
+      refreshTokenValue.value = '';
+      tokenExpires.value = 0;
+      userInfo.value = null;
+
+      // 清除 storage
+      storage.remove(STORAGE_KEYS.TOKEN);
+      storage.remove('refreshToken');
+      storage.remove('tokenExpires');
+
+      // 清除 Pinia 持久化的 userInfo (key 为 store id)
+      storage.remove('user');
+
+      // 重置其他 Store 的用户相关数据
+      // 延迟导入避免循环依赖
+      const { useAddressStore } = await import('./address');
+      const { useOrderStore } = await import('./order');
+      const { useFavoriteStore } = await import('./favorite');
+      const { useNotificationStore } = await import('./notification');
+      const { useShareStore } = await import('./share');
+      const { useFeedbackStore } = await import('./feedback');
+
+      useAddressStore().reset();
+      useOrderStore().reset();
+      useFavoriteStore().reset();
+      useNotificationStore().reset();
+      useShareStore().clearState();
+      useFeedbackStore().reset();
+    }
+
+    /**
+     * 退出登录：调用登出接口后清除本地登录态，接口失败也会清除
      */
     async function logout(): Promise<void> {
       try {
@@ -268,35 +300,7 @@ export const useUserStore = defineStore(
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
-        // 清除用户状态
-        token.value = '';
-        refreshTokenValue.value = '';
-        tokenExpires.value = 0;
-        userInfo.value = null;
-
-        // 清除 storage
-        storage.remove(STORAGE_KEYS.TOKEN);
-        storage.remove('refreshToken');
-        storage.remove('tokenExpires');
-
-        // 清除 Pinia 持久化的 userInfo (key 为 store id)
-        storage.remove('user');
-
-        // 重置其他 Store 的用户相关数据
-        // 延迟导入避免循环依赖
-        const { useAddressStore } = await import('./address');
-        const { useOrderStore } = await import('./order');
-        const { useFavoriteStore } = await import('./favorite');
-        const { useNotificationStore } = await import('./notification');
-        const { useShareStore } = await import('./share');
-        const { useFeedbackStore } = await import('./feedback');
-
-        useAddressStore().reset();
-        useOrderStore().reset();
-        useFavoriteStore().reset();
-        useNotificationStore().reset();
-        useShareStore().clearState();
-        useFeedbackStore().reset();
+        await resetUserState();
       }
     }
 
@@ -371,6 +375,7 @@ export const useUserStore = defineStore(
       changePassword,
       resetPasswordByPhone,
       refreshToken,
+      resetUserState,
       logout,
       // 权限检查
       hasRole,

@@ -1,30 +1,26 @@
 /**
  * ==================== API 模块统一导出 ====================
  *
- * 本文件仅导出公共 API，内部实现细节不对外暴露
- *
- * 导出内容：
- * - API 调用函数：postAuthLogin, getAuthUserInfo 等
- * - 自定义工具函数：uploadWithProgress, downloadFile 等
- * - 公共类型定义：LoginRequest, LoginResponse, UserInfo
+ * ⚠️ 本文件由 `pnpm api:gen` 的 afterAllFilesWrite 钩子（scripts/api/update-api-exports.ts）
+ * 自动生成，请勿手写：下次生成会整份覆盖。要调整导出，改那个脚本。
  *
  * 使用指南：
- * - API 函数：import { postAuthLogin } from '@/api'
- * - 类型定义：import type { LoginRequest } from '@/api'
+ * - API 函数：import { getCurrentUser } from '@/api'
+ * - 类型定义：import type { User } from '@/api'
  */
 
 /**
  * ==================== 导出策略 ====================
  *
- * 1. 优先导出 model 中的类型定义 (接口、枚举等)
- * 2. 导出各模块的 API 函数 (只导出函数,不导出 *Result 类型别名)
- * 3. 导出自定义扩展和工具函数
- *
- * 为什么这样做：
- * - model 中的接口 (如 UploadCertificateResult) 是后端返回的数据结构
- * - API 模块中的类型别名 (如 UploadCertificateResult) 是整个响应的类型
- * - 两者同名但不同,会导致 TypeScript 报错,因此只导出函数
+ * 0. 先 star 导出 core（http 实例、mutator 与 alova hooks），绕过 Orval 直接发请求时从 @/api 取
+ * 1. 再导出 model 里的类型定义（接口、枚举等）
+ * 2. 再显式导出各 generated 模块的 API 函数（只导函数，不导 *Result 类型别名）
+ * 3. 最后 star 导出 custom/ 里的自定义扩展与工具函数
+ * 4. 被 custom/ 覆盖的 generated 函数不在第 2 步导出
  */
+
+// 0. HTTP 客户端与请求工具
+export * from './core';
 
 // 1. 从 model 目录导出所有类型定义 (优先导出)
 export * from './generated/model';
@@ -51,6 +47,7 @@ export {
 
 export { simpleHealthCheck } from './generated/api/api';
 
+// 以下函数由 custom/ 覆盖，故不从 generated 导出：refreshToken, logout
 export {
   loginWithEmail,
   registerWithEmail,
@@ -61,8 +58,6 @@ export {
   getCurrentUser,
   updateCurrentUser,
   deleteCurrentUser,
-  refreshToken,
-  logout,
   sendSmsCode,
   loginWithPhone,
   loginWithSms,

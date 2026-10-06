@@ -6,7 +6,6 @@ import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/errorReporter';
-import { useUserStore } from '@/store/modules/user';
 import { PAGES } from '@/constants';
 
 // ==================== 类型定义 ====================
@@ -27,15 +26,67 @@ export interface RequestMeta {
   loadingText?: string;
   /** 是否显示错误提示 */
   showError?: boolean;
+  /** 401 时不刷新 Token、不清理登录态，直接抛错（刷新、登出等认证接口使用） */
+  skipAuthHandling?: boolean;
 }
 
-// ==================== 401 防重复跳转 ====================
+/** 拦截器内部使用的 meta 字段 */
+interface InternalRequestMeta extends RequestMeta {
+  /** 已用刷新后的 Token 重发过一次 */
+  authRetried?: boolean;
+}
+
+// ==================== 401 处理 ====================
+
+/** 登录态处理回调，由 main.ts 在 pinia 安装后注册 */
+export interface AuthHandlers {
+  /** 用 Refresh Token 换新的 Token，失败返回 null */
+  refreshToken: () => Promise<string | null>;
+  /** 清理本地登录态（不调用登出接口） */
+  clearAuth: () => void;
+}
+
+let authHandlers: AuthHandlers | null = null;
+
+/** 注册登录态处理回调（在 main.ts 中调用一次） */
+export function setAuthHandlers(handlers: AuthHandlers | null): void {
+  authHandlers = handlers;
+}
+
+let refreshingToken: Promise<string | null> | null = null;
+
+/** 并发的 401 共用同一次刷新 */
+function refreshTokenOnce(): Promise<string | null> {
+  if (!authHandlers) return Promise.resolve(null);
+  if (!refreshingToken) {
+    refreshingToken = authHandlers
+      .refreshToken()
+      .catch(() => null)
+      .finally(() => {
+        refreshingToken = null;
+      });
+  }
+  return refreshingToken;
+}
 
 let isRedirectingToLogin = false;
 
-/** 重置登录跳转状态 */
-export function resetLoginRedirectState(): void {
-  isRedirectingToLogin = false;
+/** 清理登录态并跳转登录页，重复触发只执行一次 */
+function handleUnauthorized(): void {
+  if (isRedirectingToLogin) return;
+  isRedirectingToLogin = true;
+
+  authHandlers?.clearAuth();
+  uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
+
+  setTimeout(() => {
+    uni.redirectTo({
+      url: PAGES.LOGIN,
+      complete: () => {
+        isRedirectingToLogin = false;
+      },
+    });
+  }, 1500);
 }
 
 // ==================== 创建 Alova 实例 ====================
@@ -51,7 +102,7 @@ const alovaInstance = createAlova({
   beforeRequest(method) {
     // 1. 添加 Token
     const token = storage.get<string>(STORAGE_KEYS.TOKEN);
-    if (token) {
+    if (token && !method.config.headers.Authorization) {
       method.config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -70,52 +121,37 @@ const alovaInstance = createAlova({
     // 成功响应
     onSuccess: async (response, method) => {
       const { statusCode, data } = response as UniNamespace.RequestSuccessCallbackResult;
-      const meta = method.meta as RequestMeta | undefined;
+      const meta = method.meta as InternalRequestMeta | undefined;
 
       // 隐藏 Loading
       if (meta?.showLoading) {
         uni.hideLoading();
       }
 
-      // 401 未授权 - 尝试刷新 Token
+      // 401 未授权 - 换用最新 Token 重发一次
       if (statusCode === 401) {
-        const userStore = useUserStore();
+        if (meta?.skipAuthHandling) {
+          reportApiError(method.url, method.type, 'Unauthorized', 401);
+          throw new Error('Unauthorized');
+        }
 
-        // 如果有 refreshToken，尝试刷新
-        if (userStore.refreshTokenValue && !isRedirectingToLogin) {
-          try {
-            const newToken = await userStore.refreshToken();
-            if (newToken) {
-              // Token 刷新成功，重试原请求
-              method.config.headers.Authorization = `Bearer ${newToken}`;
-              const retryResponse = await method.send();
-              return retryResponse;
-            }
-          } catch {
-            // Token 刷新失败，继续执行登出逻辑
+        if (!meta?.authRetried) {
+          // 请求发出后 Token 已被其他请求刷新时，直接用当前 Token 重发
+          const currentToken = storage.get<string>(STORAGE_KEYS.TOKEN);
+          const sentToken = method.config.headers.Authorization;
+          const newToken =
+            currentToken && sentToken !== `Bearer ${currentToken}` ? currentToken : await refreshTokenOnce();
+          if (newToken) {
+            method.meta = { ...meta, authRetried: true };
+            method.config.headers.Authorization = `Bearer ${newToken}`;
+            // 重发请求不与进行中的同 key 请求合并
+            method.config.shareRequest = false;
+            return method.send();
           }
         }
 
-        // Token 刷新失败或无 refreshToken，执行登出
         reportApiError(method.url, method.type, 'Unauthorized', 401);
-
-        if (!isRedirectingToLogin) {
-          isRedirectingToLogin = true;
-
-          await userStore.logout();
-
-          uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' });
-
-          setTimeout(() => {
-            uni.redirectTo({
-              url: PAGES.LOGIN,
-              complete: () => {
-                isRedirectingToLogin = false;
-              },
-            });
-          }, 1500);
-        }
-
+        handleUnauthorized();
         throw new Error('Unauthorized');
       }
 
@@ -160,10 +196,8 @@ const alovaInstance = createAlova({
   },
 
   // ==================== 缓存配置 ====================
-  // GET 请求默认缓存 5 分钟
-  cacheFor: {
-    GET: 5 * 60 * 1000,
-  },
+  // 不缓存响应结果；进行中的相同请求由 alova 的 shareRequest 合并
+  cacheFor: null,
 });
 
 /** HTTP 客户端（对外导出，隐藏 alova 实现细节） */

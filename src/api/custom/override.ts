@@ -9,11 +9,35 @@
  *
  * ⚠️ 注意：
  * - 覆盖时保持函数名和生成的 API 一致
- * - src/api/index.ts 会优先导出 custom 中的覆盖版本
+ * - src/api/index.ts 由 scripts/api/update-api-exports.ts 生成，会剔除 generated 中的同名导出，请勿手改
+ * - 本目录不要 import Store（会形成循环依赖）
  */
 
 import { storage, STORAGE_KEYS } from '@/utils/storage';
-import type { FileType } from '../generated/model';
+import { customMutator } from '../core/mutator';
+import type { FileType, RefreshResponseDto } from '../generated/model';
+
+/**
+ * 刷新 Token：以 Refresh Token 作为 Bearer 凭证
+ *
+ * @param refreshTokenValue 登录时下发的 Refresh Token
+ */
+export const refreshToken = (refreshTokenValue: string) => {
+  return customMutator<RefreshResponseDto>(
+    { url: `/api/v1/auth/refresh`, method: 'POST' },
+    { headers: { Authorization: `Bearer ${refreshTokenValue}` }, skipAuthHandling: true, showError: false },
+  );
+};
+
+/**
+ * 退出登录：Token 失效时直接抛错，不触发刷新与登录跳转
+ */
+export const logout = () => {
+  return customMutator<void>(
+    { url: `/api/v1/auth/logout`, method: 'POST' },
+    { skipAuthHandling: true, showError: false },
+  );
+};
 
 /**
  * 上传文件响应结构

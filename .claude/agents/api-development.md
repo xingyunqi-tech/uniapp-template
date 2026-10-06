@@ -171,7 +171,7 @@ export const getWeather = async (city: string): Promise<WeatherResponse> => {
 ```typescript
 import { http } from '@/api/core';
 
-// GET 请求（默认缓存 5 分钟）
+// GET 请求（默认不缓存）
 const data = await http.Get('/users');
 
 // POST 请求（不缓存）
@@ -185,7 +185,7 @@ const data = await http.Get('/users', {
     loadingText: '加载中...',
     showError: false,
   },
-  cacheFor: 0, // 禁用缓存
+  cacheFor: 5 * 60 * 1000, // 缓存 5 分钟（缓存键不含 Token，只用于与用户无关的数据）
 });
 ```
 
@@ -200,13 +200,8 @@ const data = await http.Get('/users', {
 ### 缓存配置
 
 ```typescript
-// 默认：GET 缓存 5 分钟
-cacheFor: { GET: 5 * 60 * 1000 }
-
-// 禁用缓存
-http.Get('/users', { cacheFor: 0 })
-
-// 自定义缓存时间
+// 默认：不缓存响应结果（全局 cacheFor: null），进行中的相同请求自动合并
+// 缓存键不含 Token，只给与用户无关的数据单独开启缓存
 http.Get('/config', { cacheFor: 30 * 60 * 1000 })
 ```
 
