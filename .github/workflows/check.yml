@@ -1,5 +1,5 @@
 # 代码质量检查工作流
-# 职责: lint、type-check、test
+# 职责: lint、type-check、test，以及 H5 / 微信 / 支付宝 / App 四端构建
 #
 # 触发条件:
 #   1. push 到 master/main 分支
@@ -25,10 +25,6 @@ jobs:
     name: Lint & Type Check & Test
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [22]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,10 +34,10 @@ jobs:
         with:
           version: 11
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: .nvmrc
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -55,3 +51,36 @@ jobs:
 
       - name: Run tests
         run: pnpm run test
+
+  build:
+    name: Build (${{ matrix.platform }})
+    needs: check
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [h5, mp-weixin, mp-alipay, app]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build ${{ matrix.platform }}
+        run: pnpm build:${{ matrix.platform }}
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192

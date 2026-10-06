@@ -5,8 +5,8 @@
 import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
-import { reportApiError } from '@/utils/errorReporter';
-import { PAGES } from '@/constants';
+import { reportApiError } from '@/utils/error-reporter';
+import { PAGES } from '@/constants/pages';
 
 // ==================== 类型定义 ====================
 

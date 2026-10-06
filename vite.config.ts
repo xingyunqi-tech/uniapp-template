@@ -1,17 +1,22 @@
 import { defineConfig } from 'vitest/config';
-import uni from '@dcloudio/vite-plugin-uni';
+import uniModule from '@dcloudio/vite-plugin-uni';
 import { resolve } from 'node:path';
 import { loadEnv } from 'vite';
-import type { PluginOption } from 'vite';
+import type { ConfigEnv, PluginOption } from 'vite';
 import legacy from '@vitejs/plugin-legacy';
 import UniPages from '@uni-helper/vite-plugin-uni-pages';
 import UniLayouts from '@uni-helper/vite-plugin-uni-layouts';
 import UniManifest from '@uni-helper/vite-plugin-uni-manifest';
-import { devServer } from './config';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { compression } from 'vite-plugin-compression2';
+import { devServer } from './config/devServer';
+
+// @dcloudio/vite-plugin-uni 是 CJS 包，ESM 下默认导入拿到的是 module.exports
+const uni = (uniModule as unknown as { default?: typeof uniModule }).default ?? uniModule;
 
 /**
- * Legacy polyfills 配置
- * 用于兼容老设备 (iOS 12+, Android 7+)
+ * legacy / modern 包都需要补的 core-js 补丁
+ * plugin-legacy 的用量探测只覆盖语法特性，较新的内置方法需显式列出
  */
 const modernLegacyPolyfills = [
   'core-js/es/array/at',
@@ -40,8 +45,8 @@ function isH5Platform(): boolean {
 /**
  * 生成插件配置
  */
-function generatePlugins(mode: string): PluginOption[] {
-  const isProd = mode === 'production';
+function generatePlugins(command: ConfigEnv['command']): PluginOption[] {
+  const isProd = command === 'build';
   const isH5 = isH5Platform();
 
   let plugins: PluginOption[] = [
@@ -56,31 +61,58 @@ function generatePlugins(mode: string): PluginOption[] {
     uni(),
   ];
 
-  // H5 生产环境添加 legacy 兼容 (仅 H5，小程序和 App 不支持)
-  if (isProd && isH5) {
+  // VITE_LEGACY=true 时为 H5 额外产出 legacy 包，目标浏览器读 .browserslistrc（小程序和 App 不支持）
+  if (isProd && isH5 && process.env.VITE_LEGACY === 'true') {
     plugins = [
       ...plugins,
       legacy({
-        targets: ['defaults', 'not IE 11'],
         additionalLegacyPolyfills: modernLegacyPolyfills,
         additionalModernPolyfills: modernLegacyPolyfills,
       }),
     ];
   }
 
+  // H5 产物额外输出 gzip / brotli 压缩文件（小程序和 App 不需要，会增大包体积）
+  if (isProd && isH5) {
+    plugins.push(
+      compression({
+        algorithms: ['gzip', 'brotliCompress'],
+        threshold: 10240,
+        include: [/assets\/.*\.(js|css)$/i],
+      }),
+    );
+  }
+
+  // VITE_ENABLE_ANALYZER=true 时生成包体积分析报告，放在 dist 之外避免随产物发布
+  if (isProd && process.env.VITE_ENABLE_ANALYZER === 'true') {
+    plugins.push(
+      visualizer({
+        title: 'Vite Bundle Visualizer',
+        open: true,
+        brotliSize: true,
+        gzipSize: true,
+        template: 'treemap',
+        filename: 'reports/analyzer.html',
+      }),
+    );
+  }
+
   return plugins;
 }
 
 // https://vitejs.dev/config/
-export default ({ mode }: { mode: string }) => {
-  process.env = { ...process.env, ...loadEnv(mode, process.cwd()) };
+export default ({ mode, command }: Pick<ConfigEnv, 'mode' | 'command'>) => {
+  // .env 文件里的变量补进 process.env，命令行显式传入的优先
+  for (const [key, value] of Object.entries(loadEnv(mode, process.cwd()))) {
+    process.env[key] ??= value;
+  }
 
   return defineConfig({
     /** 开发服务器配置 */
     server: devServer(),
 
     /** 插件配置 */
-    plugins: generatePlugins(mode),
+    plugins: generatePlugins(command),
 
     /** 路径别名配置 */
     resolve: {

@@ -11,7 +11,7 @@
 #   1. 在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中添加以下 secrets:
 #      - WEIXIN_APPID: 微信小程序 AppID
 #      - WEIXIN_PRIVATE_KEY: 微信小程序上传密钥 (base64 编码)
-#      - ALIPAY_APPID: 支付宝小程序 AppID (可选)
+#      - ALIPAY_APPID: 支付宝小程序 AppID (可选，tag 触发时未配置则跳过支付宝上传)
 #      - ALIPAY_PRIVATE_KEY: 支付宝小程序私钥 (可选)
 #      - ALIPAY_TOOL_ID: 支付宝小程序工具 ID (可选)
 #
@@ -61,7 +61,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22'
   PNPM_VERSION: '11'
 
 jobs:
@@ -91,7 +90,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -178,20 +177,23 @@ jobs:
                 echo "   ✅ 总包大小正常"
               fi
 
-              # 检查主包大小 (如果存在分包配置)
-              if [[ -d "$path/pages" ]]; then
-                # 简化检查：计算非分包目录的大小
-                main_size=0
-                for item in "$path"/*; do
-                  if [[ -f "$item" ]] || [[ "$(basename "$item")" != "pages-sub"* ]]; then
-                    if [[ -e "$item" ]]; then
-                      item_size=$(du -sb "$item" 2>/dev/null | cut -f1 || echo 0)
-                      main_size=$((main_size + item_size))
-                    fi
-                  fi
-                done
-                main_size_mb=$(echo "scale=2; $main_size / 1048576" | bc)
-                echo "   主包大小: ~${main_size_mb}MB (估算)"
+              # 检查主包大小：分包目录 pages-sub 之外的全部内容
+              main_size=0
+              for item in "$path"/*; do
+                if [[ "$(basename "$item")" != "pages-sub" ]]; then
+                  item_size=$(du -sb "$item" 2>/dev/null | cut -f1 || echo 0)
+                  main_size=$((main_size + item_size))
+                fi
+              done
+              main_size_mb=$(echo "scale=2; $main_size / 1048576" | bc)
+              echo "   主包大小: ${main_size_mb}MB"
+
+              if [[ $main_size -gt $main_limit ]]; then
+                main_limit_mb=$(echo "scale=0; $main_limit / 1048576" | bc)
+                echo "   ❌ 错误: 主包超出限制 (${main_limit_mb}MB)"
+                return 1
+              else
+                echo "   ✅ 主包大小正常"
               fi
               echo ""
             fi
@@ -274,7 +276,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -319,46 +321,61 @@ jobs:
       github.event.inputs.platform == 'all'
 
     steps:
+      # tag 触发时未配置支付宝 secrets 则跳过后续步骤；手动选择支付宝时缺失直接失败
       - name: Check secrets
+        id: secrets
+        env:
+          ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
+          ALIPAY_PRIVATE_KEY: ${{ secrets.ALIPAY_PRIVATE_KEY }}
+          ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
         run: |
-          if [[ -z "${{ secrets.ALIPAY_APPID }}" ]]; then
-            echo "::error::缺少 ALIPAY_APPID secret，请在仓库 Settings -> Secrets 中配置"
+          missing=()
+          [[ -z "$ALIPAY_APPID" ]] && missing+=(ALIPAY_APPID)
+          [[ -z "$ALIPAY_PRIVATE_KEY" ]] && missing+=(ALIPAY_PRIVATE_KEY)
+          [[ -z "$ALIPAY_TOOL_ID" ]] && missing+=(ALIPAY_TOOL_ID)
+
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            if [[ "${{ github.event_name }}" == "push" ]]; then
+              echo "::notice::未配置支付宝小程序 secrets（${missing[*]}），跳过支付宝上传"
+              echo "configured=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "::error::缺少支付宝小程序 secrets: ${missing[*]}，请在仓库 Settings -> Secrets 中配置"
             exit 1
           fi
-          if [[ -z "${{ secrets.ALIPAY_PRIVATE_KEY }}" ]]; then
-            echo "::error::缺少 ALIPAY_PRIVATE_KEY secret，请在仓库 Settings -> Secrets 中配置"
-            exit 1
-          fi
-          if [[ -z "${{ secrets.ALIPAY_TOOL_ID }}" ]]; then
-            echo "::error::缺少 ALIPAY_TOOL_ID secret，请在仓库 Settings -> Secrets 中配置"
-            exit 1
-          fi
+          echo "configured=true" >> $GITHUB_OUTPUT
           echo "✅ 支付宝小程序 secrets 配置正确"
 
       - name: Checkout code
+        if: steps.secrets.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Install pnpm
+        if: steps.secrets.outputs.configured == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
+        if: steps.secrets.outputs.configured == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: 'pnpm'
 
       - name: Install dependencies
+        if: steps.secrets.outputs.configured == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Download build artifact
+        if: steps.secrets.outputs.configured == 'true'
         uses: actions/download-artifact@v4
         with:
           name: mp-alipay-build
           path: dist/build/mp-alipay
 
       - name: Upload to Alipay
+        if: steps.secrets.outputs.configured == 'true'
         env:
           ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
           ALIPAY_PRIVATE_KEY: ${{ secrets.ALIPAY_PRIVATE_KEY }}
@@ -372,7 +389,7 @@ jobs:
           pnpm tsx scripts/mp-upload.ts alipay $ACTION
 
       - name: Upload result notification
-        if: success()
+        if: success() && steps.secrets.outputs.configured == 'true'
         run: |
           echo "✅ 支付宝小程序上传成功!"
           echo "📦 版本: ${{ needs.build.outputs.version }}"

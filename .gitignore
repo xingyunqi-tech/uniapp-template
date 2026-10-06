@@ -9,9 +9,11 @@ lerna-debug.log*
 
 # node_modules
 node_modules
+.pnpm-store
 
-# dist
+# dist / 构建分析报告（pnpm analyzer）
 dist
+reports
 coverage
 unpackage
 
@@ -22,8 +24,10 @@ components.d.ts
 
 # env (保留 .env.development 和 .env.production 用于远程打包)
 .env
-.env.local
-.env.*.local
+*.local
+
+# Claude Code 个人本地配置
+.claude/settings.local.json
 
 # Playwright
 playwright-report/

@@ -89,8 +89,9 @@ EXPOSE 80
 
 ```bash
 # .env.production
-VITE_APP_BASE_API=https://api.example.com
-VITE_APP_TITLE=我的应用
+VITE_API_BASE_URL=https://api.example.com
+VITE_ERROR_REPORT_URL=https://report.example.com
+VITE_LEGACY=true
 ```
 
 ---

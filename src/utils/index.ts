@@ -3,14 +3,14 @@
  */
 
 export * from './router';
-export * from './routerInterceptor';
+export * from './router-interceptor';
 export * from './storage';
 export * from './datetime';
 export * from './formatters';
 export * from './validator';
 export * from './update';
 export * from './network';
-export * from './errorReporter';
+export * from './error-reporter';
 export * from './platform';
 export * from './locale';
 export * from './debounce';

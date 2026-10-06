@@ -6,7 +6,7 @@ if (!COMMIT_MESSAGE_FILE) {
   console.error(chalk.red('❌ 没有提供 commit message 文件路径'));
   process.exit(1);
 }
-// commitlint校验（规则见 commitlint.config.cjs）
+// commitlint校验（规则见 commitlint.config.ts）
 try {
   execSync(`pnpm exec commitlint --edit "${COMMIT_MESSAGE_FILE}"`, { stdio: 'inherit' });
   console.log(chalk.green('✅ Commitlint 检查通过'));

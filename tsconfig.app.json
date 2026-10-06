@@ -15,9 +15,8 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     /* UniApp Types */

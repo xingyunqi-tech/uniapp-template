@@ -8,6 +8,11 @@ export default defineConfig({
     include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/unpackage/**'],
     setupFiles: ['./tests/setup.ts'],
+    server: {
+      deps: {
+        inline: ['@alova/adapter-uniapp'],
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

@@ -4,6 +4,12 @@ import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLogin
 import { ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { encryptPassword } from '@/utils/crypto';
+import { useAddressStore } from './address';
+import { useFavoriteStore } from './favorite';
+import { useFeedbackStore } from './feedback';
+import { useNotificationStore } from './notification';
+import { useOrderStore } from './order';
+import { useShareStore } from './share';
 import {
   loginWithPhone,
   loginWithSms,
@@ -257,7 +263,7 @@ export const useUserStore = defineStore(
     /**
      * 清除本地登录态（不调用登出接口），包括其他 Store 的用户相关数据
      */
-    async function resetUserState(): Promise<void> {
+    function resetUserState(): void {
       // 清除用户状态
       token.value = '';
       refreshTokenValue.value = '';
@@ -273,14 +279,6 @@ export const useUserStore = defineStore(
       storage.remove('user');
 
       // 重置其他 Store 的用户相关数据
-      // 延迟导入避免循环依赖
-      const { useAddressStore } = await import('./address');
-      const { useOrderStore } = await import('./order');
-      const { useFavoriteStore } = await import('./favorite');
-      const { useNotificationStore } = await import('./notification');
-      const { useShareStore } = await import('./share');
-      const { useFeedbackStore } = await import('./feedback');
-
       useAddressStore().reset();
       useOrderStore().reset();
       useFavoriteStore().reset();
@@ -300,7 +298,7 @@ export const useUserStore = defineStore(
       } catch {
         // 即使接口调用失败，也要清除本地状态
       } finally {
-        await resetUserState();
+        resetUserState();
       }
     }
 

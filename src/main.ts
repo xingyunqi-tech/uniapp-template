@@ -4,7 +4,7 @@ import AppComponent from './App.vue';
 import { setAuthHandlers } from './api';
 import pinia, { useUserStore } from './store';
 import { i18n } from './utils/locale';
-import { setupRouterInterceptor } from './utils/routerInterceptor';
+import { setupRouterInterceptor } from './utils/router-interceptor';
 
 /**
  * UniApp 应用入口
@@ -19,7 +19,7 @@ export function createApp() {
   // 401 时的刷新与清理回调
   setAuthHandlers({
     refreshToken: () => useUserStore(pinia).refreshToken(),
-    clearAuth: () => void useUserStore(pinia).resetUserState(),
+    clearAuth: () => useUserStore(pinia).resetUserState(),
   });
 
   // 设置路由拦截器

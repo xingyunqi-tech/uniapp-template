@@ -1,10 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { RuleConfigSeverity } = require('@commitlint/types');
+import { RuleConfigSeverity } from '@commitlint/types';
+import { defineConfig } from 'cz-git';
 
-const config = {
+const config = defineConfig({
   extends: ['@commitlint/config-conventional'],
-  parserPreset: 'conventional-changelog-conventionalcommits',
-  formatter: '@commitlint/format',
   rules: {
     'type-enum': [
       RuleConfigSeverity.Error,
@@ -53,11 +51,12 @@ const config = {
       { value: 'chore', name: 'chore:     构建过程或辅助工具的变动' },
       { value: 'revert', name: 'revert:    回退' },
       { value: 'build', name: 'build:     打包' },
+      { value: 'ci', name: 'ci:        CI/CD 配置' },
     ],
     allowCustomScopes: true,
     allowEmptyScopes: true,
     skipQuestions: ['body', 'scope'],
   },
-};
+});
 
-module.exports = config;
+export default config;

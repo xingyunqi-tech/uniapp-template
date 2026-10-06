@@ -1,4 +1,4 @@
-# 移动端浏览器配置 - 优化 core-js 体积
+# 目标浏览器：autoprefixer 与 VITE_LEGACY 产出的 legacy 包都读这里
 [production staging]
 # iOS Safari 10+ (2016年发布)
 iOS >= 10

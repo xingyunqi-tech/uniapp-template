@@ -63,7 +63,7 @@ interface AlipayConfig {
 
 // ==================== 常量 ====================
 
-const ROOT_DIR = resolve(__dirname, '..');
+const ROOT_DIR = resolve(import.meta.dirname, '..');
 const DIST_DIR = resolve(ROOT_DIR, 'dist/build');
 const TEMP_DIR = resolve(ROOT_DIR, '.temp');
 

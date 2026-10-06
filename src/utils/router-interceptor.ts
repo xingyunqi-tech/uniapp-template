@@ -102,10 +102,14 @@ export function setupRouterInterceptor(): void {
     });
   });
 
-  // switchTab 单独处理 (TabBar 页面通常都需要登录)
+  // switchTab 单独处理：白名单放行，未登录跳登录页（不携带 redirect）
   uni.addInterceptor('switchTab', {
     invoke(args: { url: string }) {
       const userStore = useUserStore();
+
+      if (isInWhiteList(args.url, WHITE_LIST)) {
+        return args;
+      }
 
       // 未登录跳转登录页
       if (!userStore.isLoggedIn) {

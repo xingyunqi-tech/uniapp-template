@@ -1,5 +1,6 @@
 import jseslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import checkFile from 'eslint-plugin-check-file';
 import eslintPluginVue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -125,6 +126,34 @@ export default [
           ],
         },
       ],
+    },
+  },
+
+  // ==================== 文件命名规范 ====================
+  // Vue 组件：PascalCase（index.vue / App.vue 除外）
+  {
+    files: ['src/**/*.vue'],
+    ignores: ['src/**/index.vue', 'src/App.vue'],
+    plugins: { 'check-file': checkFile },
+    rules: {
+      'check-file/filename-naming-convention': ['error', { '**/*.vue': 'PASCAL_CASE' }],
+    },
+  },
+  // Composables：camelCase（use 开头的文件，如 useXxx.ts）
+  {
+    files: ['src/**/use[A-Z]*.{ts,js}'],
+    plugins: { 'check-file': checkFile },
+    rules: {
+      'check-file/filename-naming-convention': ['error', { '**/*.{ts,js}': 'CAMEL_CASE' }],
+    },
+  },
+  // 其余 TS/JS 文件：kebab-case（排除 use 开头的文件、类型声明文件、自动生成文件）
+  {
+    files: ['src/**/*.{ts,tsx,js,jsx}'],
+    ignores: ['src/**/use[A-Z]*.{ts,js}', 'src/**/*.d.ts', 'src/api/generated/**/*'],
+    plugins: { 'check-file': checkFile },
+    rules: {
+      'check-file/filename-naming-convention': ['error', { '**/*.{ts,tsx,js,jsx}': 'KEBAB_CASE' }],
     },
   },
 

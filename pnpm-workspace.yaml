@@ -13,3 +13,7 @@ allowBuilds:
   less: false
   minidev: false
   protobufjs: false
+peerDependencyRules:
+  allowedVersions:
+    # 插件运行时只用到 pinia 2 已有的插件上下文，见 tests/store/persist.test.ts
+    pinia-plugin-persistedstate>pinia: '2'

@@ -149,7 +149,7 @@ uniapp-template/
 │   │   └── index.scss         # 样式入口
 │   ├── utils/                 # 工具函数
 │   │   ├── router.ts          # 路由工具
-│   │   ├── routerInterceptor.ts # 路由拦截
+│   │   ├── router-interceptor.ts # 路由拦截
 │   │   ├── storage.ts         # 存储封装
 │   │   ├── toast.ts           # 提示封装
 │   │   ├── modal.ts           # 弹窗封装
@@ -161,7 +161,7 @@ uniapp-template/
 │   │   ├── throttle.ts        # 节流函数
 │   │   ├── locale.ts          # 语言工具
 │   │   ├── update.ts          # 热更新
-│   │   └── errorReporter.ts   # 错误上报
+│   │   └── error-reporter.ts  # 错误上报
 │   ├── App.vue                # 根组件
 │   ├── main.ts                # 应用入口
 │   ├── pages.json             # 路由配置
@@ -179,7 +179,7 @@ uniapp-template/
 
 ### 环境要求
 
-- **Node.js**: >= 22.0.0
+- **Node.js**: >= 22.22.2
 - **包管理器**: pnpm (推荐)
 
 ### 安装依赖
@@ -483,7 +483,7 @@ pnpm install
 ### Node 版本不匹配
 
 ```bash
-# 检查 Node 版本 (需要 >= 22)
+# 检查 Node 版本 (需要 >= 22.22.2)
 node -v
 
 # 使用 nvm 切换版本

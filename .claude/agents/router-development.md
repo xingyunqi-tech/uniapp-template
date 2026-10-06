@@ -401,7 +401,7 @@ export const PAGE_ROLES: Record<string, ROLE[]> = {
 ### 路由拦截器
 
 ```typescript
-// src/utils/routerInterceptor.ts
+// src/utils/router-interceptor.ts
 import { useUserStore } from '@/store';
 import { WHITE_LIST, PAGES, PAGE_ROLES } from '@/constants/pages';
 import { isInWhiteList, getPathFromUrl } from '@/utils/router';

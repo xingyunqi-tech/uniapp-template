@@ -351,7 +351,7 @@ function stopReportTimer(): void {
  * @example
  * ```ts
  * // App.vue
- * import { setupErrorReporter } from '@/utils/errorReporter';
+ * import { setupErrorReporter } from '@/utils/error-reporter';
  * import { useUserStore } from '@/store/modules/user';
  *
  * onLaunch(() => {
@@ -615,7 +615,7 @@ export interface GlobalErrorHandlers {
  * ```ts
  * // App.vue
  * import { onError, onUnhandledRejection, onHide } from '@dcloudio/uni-app';
- * import { getGlobalErrorHandlers } from '@/utils/errorReporter';
+ * import { getGlobalErrorHandlers } from '@/utils/error-reporter';
  *
  * const handlers = getGlobalErrorHandlers();
  * onError(handlers.onError);
@@ -675,7 +675,7 @@ export function setupGlobalErrorListeners(): void {
  * ```ts
  * // App.vue - 简化用法
  * import { onError, onUnhandledRejection, onHide } from '@dcloudio/uni-app';
- * import { initErrorReporter } from '@/utils/errorReporter';
+ * import { initErrorReporter } from '@/utils/error-reporter';
  *
  * onLaunch(() => {
  *   const handlers = initErrorReporter({
