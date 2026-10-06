@@ -23,10 +23,18 @@
           title="关于我们"
           :right-text="`v${version}`"
           show-arrow
-          :border="!showDevOptions"
+          :border="showDevOptions"
           @click="handleAboutClick"
         />
         <!-- 连续点击版本号 5 次显示 -->
+        <UMenuItem
+          v-if="showDevOptions"
+          icon="loop"
+          :title="$t('settings.followSystem')"
+          show-switch
+          :switch-checked="globalStore.followSystemTheme"
+          @switch-change="handleToggleFollowSystem"
+        />
         <UMenuItem
           v-if="showDevOptions"
           icon="color"
@@ -199,6 +207,13 @@ function handleAboutClick() {
  */
 function handleToggleTheme(checked: boolean) {
   globalStore.setTheme(checked ? THEME_TYPE.DARK : THEME_TYPE.LIGHT);
+}
+
+/**
+ * 切换是否跟随系统主题
+ */
+function handleToggleFollowSystem(checked: boolean) {
+  globalStore.setFollowSystemTheme(checked);
 }
 
 /**

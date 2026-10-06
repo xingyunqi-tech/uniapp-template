@@ -126,6 +126,16 @@ export const useGlobalStore = defineStore(
     }
 
     /**
+     * 设置是否跟随系统主题，开启时立即同步系统主题
+     */
+    function setFollowSystemTheme(follow: boolean) {
+      followSystemTheme.value = follow;
+      if (follow) {
+        initTheme();
+      }
+    }
+
+    /**
      * 系统主题变化时调用，仅在跟随系统时生效
      */
     function syncSystemTheme(theme: ThemeType) {
@@ -216,6 +226,7 @@ export const useGlobalStore = defineStore(
       isDark,
       themeClass,
       initTheme,
+      setFollowSystemTheme,
       syncSystemTheme,
       setTheme,
       toggleTheme,

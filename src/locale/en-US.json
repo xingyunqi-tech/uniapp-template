@@ -19,6 +19,7 @@
 
   "common.setting": "Setting",
   "settings.theme": "Theme",
+  "settings.followSystem": "Follow system",
   "settings.light": "Light",
   "settings.dark": "Dark",
   "settings.international": "Internationalization"

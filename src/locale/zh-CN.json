@@ -19,6 +19,7 @@
 
   "common.setting": "设置",
   "settings.theme": "主题模式",
+  "settings.followSystem": "跟随系统",
   "settings.light": "亮色",
   "settings.dark": "暗黑",
   "settings.international": "国际化"

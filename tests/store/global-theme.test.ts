@@ -61,6 +61,16 @@ describe('useGlobalStore 主题', () => {
     expect(store.currentTheme).toBe('dark');
   });
 
+  it('重新开启跟随系统时立即同步系统主题', () => {
+    const store = createStore();
+    store.setTheme('dark');
+
+    store.setFollowSystemTheme(true);
+
+    expect(store.followSystemTheme).toBe(true);
+    expect(store.currentTheme).toBe('light');
+  });
+
   it('TabBar 页面重复应用同一主题时只设置一次 TabBar 样式', () => {
     const store = createStore();
 
