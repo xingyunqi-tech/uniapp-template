@@ -17,7 +17,7 @@ Hooks 是 Claude Code 的自动化执行机制,在特定事件触发时自动运
 
 ---
 
-## 🎯 当前配置的 Hooks（4 个）
+## 🎯 当前配置的 Hooks（5 个）
 
 ### 1. UserPromptSubmit - 提交前显示 Git 状态
 
@@ -27,12 +27,13 @@ Hooks 是 Claude Code 的自动化执行机制,在特定事件触发时自动运
 
 **命令:**
 ```bash
-git status --short || true
+n=$(git status --short 2>/dev/null | wc -l | tr -d ' '); [ "$n" -gt 0 ] && { git status --short 2>/dev/null | head -10; [ "$n" -gt 10 ] && printf '... 共 %s 个变更文件\n' "$n"; }; exit 0
 ```
 
-**为什么使用 `|| true`？**
-- 确保命令失败时不阻塞 Claude Code
-- 即使不在 Git 仓库中也能正常运行
+**说明:**
+- 工作区干净时不输出
+- 最多显示 10 行，超出时提示变更文件总数
+- 始终 `exit 0`，不阻塞提交
 
 **输出示例:**
 ```bash
@@ -56,16 +57,35 @@ A  src/pages/index/index.vue
 
 **命令:**
 ```bash
-printf '✅ 文件已写入: %s\n' "$CLAUDE_FILE_PATH"
+input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty'); else fp=''; fi; [ -n "$fp" ] && printf '✅ 文件已写入: %s\n' "$fp"; exit 0
 ```
 
 **说明:**
+- Hook 的输入通过 stdin 以 JSON 传入，文件路径在 `tool_input.file_path`
 - `matcher: "Write"` 只在 `Write` 工具调用后触发
 - `timeout: 5` 设置超时时间（秒）
+- 未安装 jq 时不输出
 
 ---
 
-### 3. SessionStart - 会话开始提醒
+### 3. PreToolUse(Edit|Write) - 禁止修改生成目录
+
+**触发时机:** Claude 调用 `Edit` 或 `Write` 工具之前
+
+**作用:** 目标路径位于 `src/api/generated/` 时拦截，提示改到 `src/api/custom/`
+
+**命令:**
+```bash
+input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty'); else fp="$input"; fi; case "$fp" in *src/api/generated/*) printf '🚫 禁止修改 src/api/generated/（...）\n' >&2; exit 2;; esac; exit 0
+```
+
+**说明:**
+- `exit 2` 阻止本次工具调用，stderr 内容反馈给 Claude
+- 未安装 jq 时退化为在整段输入中匹配路径
+
+---
+
+### 4. SessionStart - 会话开始提醒
 
 **触发时机:** Claude Code 会话开始时
 
@@ -89,7 +109,7 @@ printf '🚀 Uni-app Template\n📊 分支: %s\n📝 未提交: %s 个文件\n\n
 
 ---
 
-### 4. SessionEnd - 会话结束提醒
+### 5. SessionEnd - 会话结束提醒
 
 **触发时机:** Claude Code 会话结束时
 
@@ -182,7 +202,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "command": "input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' \"$input\" | jq -r '.tool_input.file_path // empty'); else fp=''; fi; [ -n \"$fp\" ] && printf '✅ 文件已写入: %s\\n' \"$fp\"; exit 0",
             "timeout": 5
           }
         ]
@@ -407,7 +427,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "command": "input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' \"$input\" | jq -r '.tool_input.file_path // empty'); else fp=''; fi; [ -n \"$fp\" ] && printf '✅ 文件已写入: %s\\n' \"$fp\"; exit 0",
             "timeout": 5
           }
         ]
@@ -469,7 +489,7 @@ A  src/pages/index/index.vue
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "command": "input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' \"$input\" | jq -r '.tool_input.file_path // empty'); else fp=''; fi; [ -n \"$fp\" ] && printf '✅ 文件已写入: %s\\n' \"$fp\"; exit 0",
             "timeout": 5
           }
         ]

@@ -205,8 +205,9 @@ Hooks 是自动化执行机制，在特定事件触发时自动运行，配置�
 | Hook | 触发时机 | 作用 | 命令 |
 |------|----------|------|------|
 | `SessionStart` | 会话开始 | 显示欢迎信息、分支、未提交文件数、规范提醒 | `printf` 输出信息 |
-| `UserPromptSubmit` | 提交提示时 | 显示 Git 状态，了解当前改动 | `git status --short` |
-| `PostToolUse(Write)` | 写文件后 | 确认文件路径，避免写错位置 | `printf '✅ 文件已写入'` |
+| `PreToolUse(Edit\|Write)` | 编辑/写文件前 | 拦截对 `src/api/generated/` 的修改（exit 2） | 从 stdin 读取 `tool_input.file_path` |
+| `UserPromptSubmit` | 提交提示时 | 有改动时显示 Git 状态（最多 10 行） | `git status --short` |
+| `PostToolUse(Write)` | 写文件后 | 确认文件路径，避免写错位置 | 从 stdin 读取 `tool_input.file_path` 并输出 |
 | `SessionEnd` | 会话结束 | 显示 Git 状态提醒，避免遗漏提交 | `git status --short` |
 
 ### 可用的 Hook 事件
@@ -241,7 +242,7 @@ Hooks 是自动化执行机制，在特定事件触发时自动运行，配置�
         "hooks": [
           {
             "type": "command",
-            "command": "printf '✅ 文件已写入: %s\\n' \"$CLAUDE_FILE_PATH\"",
+            "command": "input=$(cat); if command -v jq >/dev/null 2>&1; then fp=$(printf '%s' \"$input\" | jq -r '.tool_input.file_path // empty'); else fp=''; fi; [ -n \"$fp\" ] && printf '✅ 文件已写入: %s\\n' \"$fp\"; exit 0",
             "timeout": 5
           }
         ]
@@ -365,12 +366,15 @@ Permissions 控制 Claude 可以自动执行哪些命令（无需确认），配
 
 | 分类 | 命令 | 说明 |
 |------|------|------|
-| **构建** | `pnpm build:*` | 各端构建 |
-| **代码生成** | `pnpm api:gen:*` | Orval API 生成 |
-| **代码质量** | `pnpm lint:*`, `pnpm lint:script:*`, `pnpm type-check:*` | ESLint、Stylelint、markdownlint 和 TypeScript 检查 |
+| **只读命令** | `ls`, `rg`, `grep`, `cat`, `head`, `tail`, `wc`, `echo` | 查看文件与搜索 |
+| **开发与构建** | `pnpm dev:*`, `pnpm build:*` | 各端开发与构建 |
+| **代码生成** | `pnpm api:gen` | Orval API 生成 |
+| **代码质量** | `pnpm lint:*`, `pnpm type-check:*`, `pnpm checkCssVars`, `pnpm cspell:*` | ESLint、Stylelint、markdownlint、TypeScript、CSS 变量与拼写检查 |
 | **测试** | `pnpm test:*` | 单元测试 |
-| **Git 操作** | `git status`, `git diff`, `git log` 等 | 常用 Git 命令 |
+| **Git 操作** | `git status`, `git diff`, `git log`, `git branch`, `git checkout -b`, `git switch`, `git pull`, `git fetch`, `git stash push/list/pop`, `git mv` | 常用 Git 命令 |
 | **提交** | `git add`, `git commit`, `pnpm commit:*` | 代码提交 |
+
+`git push`、`git merge`、`git rebase` 等改写远端或历史的命令不在允许列表中，每次执行都需要确认。
 
 ### 配置示例
 
