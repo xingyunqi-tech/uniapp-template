@@ -22,15 +22,7 @@
     "noUncheckedSideEffectImports": true,
 
     /* Types */
-    "types": ["node", "vitest", "vitest/globals"]
+    "types": ["node"]
   },
-  "include": [
-    "config",
-    "scripts",
-    "tests",
-    "vite.config.ts",
-    "vitest.config.ts",
-    "eslint.config.ts",
-    "stylelint.config.mjs"
-  ]
+  "include": ["config", "scripts", "*.config.ts"]
 }

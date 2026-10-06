@@ -1,0 +1,15 @@
+# pnpm hoisting 配置 - 解决 @dcloudio/uni-app alpha 版本的模块解析问题
+shamefullyHoist: true
+# 允许执行构建脚本的依赖（pnpm 11 默认全部拒绝，未列出会报 ERR_PNPM_IGNORED_BUILDS）
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+  vue-demi: true
+  # 仅提示信息、可选原生加速或本项目不需要的资源下载
+  bufferutil: false
+  core-js-pure: false
+  less: false
+  minidev: false
+  protobufjs: false

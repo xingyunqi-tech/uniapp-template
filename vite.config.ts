@@ -93,8 +93,6 @@ export default ({ mode }: { mode: string }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          // 使用新版 Sass API，抑制废弃警告
-          api: 'modern-compiler',
           // 抑制第三方库（如 uni-ui）的废弃警告
           silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin'],
         },

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo",
+    "types": [
+      "@dcloudio/types",
+      "@uni-helper/uni-app-types",
+      "@uni-helper/uni-ui-types",
+      "@uni-helper/vite-plugin-uni-pages/client",
+      "miniprogram-api-typings",
+      "node",
+      "vitest/globals"
+    ]
+  },
+  "include": ["src", "typings", "tests"]
+}

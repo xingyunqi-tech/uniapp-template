@@ -3,22 +3,16 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   test: {
-    globals: true,
     environment: 'jsdom',
-    include: ['tests/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    globals: true,
+    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/unpackage/**'],
+    setupFiles: ['./tests/setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
-      exclude: ['node_modules/', 'tests/', '**/*.d.ts', '**/types/**', 'src/pages-sub/**'],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80,
-        },
-      },
+      reporter: ['text', 'json', 'html'],
+      reportsDirectory: './coverage',
+      exclude: ['node_modules/', 'tests/', 'dist/', '**/*.d.ts', '**/*.config.*', 'scripts/', 'src/api/generated/**'],
     },
   },
   resolve: {

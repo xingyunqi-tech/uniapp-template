@@ -11,6 +11,26 @@ config.global.stubs = {
   // 全局组件存根
 };
 
+// Mock uni 全局对象：存储为内存实现，交互与网络 API 打桩，单个测试按需 mockImplementation
+const uniStorage = new Map<string, unknown>();
+
+vi.stubGlobal('uni', {
+  getStorageSync: vi.fn((key: string) => (uniStorage.has(key) ? uniStorage.get(key) : '')),
+  setStorageSync: vi.fn((key: string, value: unknown) => {
+    uniStorage.set(key, value);
+  }),
+  removeStorageSync: vi.fn((key: string) => {
+    uniStorage.delete(key);
+  }),
+  request: vi.fn(),
+  showToast: vi.fn(),
+  showLoading: vi.fn(),
+  hideLoading: vi.fn(),
+  redirectTo: vi.fn(),
+  getDeviceInfo: vi.fn(() => ({})),
+  getAppBaseInfo: vi.fn(() => ({})),
+});
+
 // Mock全局对象
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -130,4 +150,5 @@ process.on('unhandledRejection', (reason: unknown) => {
 afterEach(() => {
   // 清理 localStorage
   localStorageMock.clear();
+  uniStorage.clear();
 });

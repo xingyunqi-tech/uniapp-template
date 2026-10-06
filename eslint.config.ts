@@ -52,18 +52,6 @@ export default [
       // 报告未使用的 eslint-disable 指令
       reportUnusedDisableDirectives: true,
     },
-    // 插件设置
-    settings: {
-      // 配置 import 解析器，支持 TypeScript 路径映射
-      'import/resolver': {
-        typescript: {
-          // 总是尝试解析类型文件
-          alwaysTryTypes: true,
-          // 指定 TypeScript 配置文件路径
-          project: './tsconfig.json',
-        },
-      },
-    },
     // 自定义规则配置
     rules: {
       // 允许使用 any 类型（在某些场景下必要）
@@ -117,6 +105,26 @@ export default [
     rules: {
       // 允许 Orval 生成的 type/const 同名声明（枚举模式）
       '@typescript-eslint/no-redeclare': 'off',
+    },
+  },
+
+  // ==================== 导入限制 ====================
+  // api 层之外禁止直接引用 generated，统一从 @/api 导入，custom/ 的覆盖才能生效
+  {
+    files: ['src/**/*.{ts,tsx,js,jsx,vue,mts,cts}'],
+    ignores: ['src/api/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/api/generated', '@/api/generated/**', '**/api/generated', '**/api/generated/**'],
+              message: '禁止直接从 api/generated/ 导入，请通过 @/api 统一入口导入。',
+            },
+          ],
+        },
+      ],
     },
   },
 

@@ -11,7 +11,7 @@ model: inherit
 专门负责 Uni-app 项目的 Pinia 状态管理开发指导，包括 Store 设计原则、状态组织、最佳实践和性能优化。
 
 > **重要**: Uni-app 项目使用 `uni.setStorageSync` / `uni.getStorageSync` 进行存储，而非 `localStorage`。
-
+>
 > **通用模式参考**: 本文档中使用的通用开发模式详见 [common-patterns.md](common-patterns.md)，包括:
 > - [Props 定义规范](common-patterns.md#props-定义规范) - TypeScript 类型定义模式
 > - [错误处理模式](common-patterns.md#错误处理模式) - 异步函数错误处理

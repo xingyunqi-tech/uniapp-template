@@ -3,6 +3,7 @@ dist
 deploy
 coverage
 unpackage
+pnpm-lock.yaml
 
 # Auto-generated files (by @uni-helper plugins)
 auto-imports.d.ts

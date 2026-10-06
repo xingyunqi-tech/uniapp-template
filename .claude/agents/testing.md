@@ -57,9 +57,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      thresholds: {
-        global: { branches: 80, functions: 80, lines: 80, statements: 80 },
-      },
+      thresholds: { branches: 80, functions: 80, lines: 80, statements: 80 },
     },
   },
   resolve: {
@@ -458,8 +456,11 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       thresholds: {
-        global: { branches: 80, functions: 80, lines: 80, statements: 80 },
-        'src/utils/': { branches: 90, functions: 90, lines: 90, statements: 90 },
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        statements: 80,
+        'src/utils/**': { branches: 90, functions: 90, lines: 90, statements: 90 },
       },
       exclude: ['coverage/**', 'dist/**', '**/*.d.ts', 'src/main.ts', '**/*.config.*'],
     },
