@@ -240,18 +240,18 @@ export const useUserStore = defineStore(
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { DEFAULT_LOCALE, DEFAULT_THEME_STYLE } from '@/constants/system';
-import type { LocaleKey, ThemeStyleKey } from '@/interface/system';
+import type { LocaleType, ThemeType } from '@/constants';
 
 export const useGlobalStore = defineStore(
   'global',
   () => {
     // ==================== 语言相关 ====================
-    const currentLocale = ref<LocaleKey>(DEFAULT_LOCALE as LocaleKey);
+    const currentLocale = ref<LocaleType>(DEFAULT_LOCALE as LocaleType);
 
     /**
      * 切换语言
      */
-    const switchLocale = (locale: LocaleKey) => {
+    const switchLocale = (locale: LocaleType) => {
       currentLocale.value = locale;
     };
 
@@ -260,25 +260,25 @@ export const useGlobalStore = defineStore(
      */
     const initLocale = () => {
       if (!currentLocale.value) {
-        currentLocale.value = DEFAULT_LOCALE as LocaleKey;
+        currentLocale.value = DEFAULT_LOCALE as LocaleType;
       }
     };
 
     // ==================== 主题相关 ====================
-    const currentTheme = ref<ThemeStyleKey>(DEFAULT_THEME_STYLE as ThemeStyleKey);
+    const currentTheme = ref<ThemeType>(DEFAULT_THEME_STYLE as ThemeType);
 
     /**
      * 切换主题
      */
     const toggleTheme = () => {
-      const newTheme: ThemeStyleKey = currentTheme.value === 'dark' ? 'light' : 'dark';
+      const newTheme: ThemeType = currentTheme.value === 'dark' ? 'light' : 'dark';
       setTheme(newTheme);
     };
 
     /**
      * 设置主题
      */
-    const setTheme = (theme: ThemeStyleKey) => {
+    const setTheme = (theme: ThemeType) => {
       currentTheme.value = theme;
     };
 
@@ -287,7 +287,7 @@ export const useGlobalStore = defineStore(
      */
     const initTheme = () => {
       if (!currentTheme.value) {
-        currentTheme.value = DEFAULT_THEME_STYLE as ThemeStyleKey;
+        currentTheme.value = DEFAULT_THEME_STYLE as ThemeType;
       }
     };
 

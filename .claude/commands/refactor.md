@@ -270,6 +270,8 @@ export const useAsync = <T>(fn: () => Promise<T>) => {
 const { loading, error, data, execute } = useAsync(() => getUserInfo());
 ```
 
+> 带成功/失败提示的提交类操作，优先复用项目已有的 `src/composables/useAsyncAction.ts`。
+
 ---
 
 ### 模式 3: 状态提升到 Pinia Store

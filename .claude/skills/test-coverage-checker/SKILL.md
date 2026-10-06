@@ -400,7 +400,7 @@ describe('useProductStore', () => {
    | src/store/ | 85.3% | ✅ 达标 |
    | src/utils/ | 92.1% | ✅ 优秀 |
    | src/api/ | 88.5% | ✅ 达标 |
-   | src/router/ | 90.2% | ✅ 优秀 |
+   | src/composables/ | 90.2% | ✅ 优秀 |
 
 4️⃣ 优先级任务
    - 高优先级: 2 个文件 (严重不足)

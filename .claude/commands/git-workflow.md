@@ -12,7 +12,7 @@ description: Git 工作流最佳实践，包括分支管理、提交规范、PR 
 
 | 分支 | 用途 | 命名规范 | 示例 |
 |------|------|---------|------|
-| **main/master** | 主分支（生产环境） | `main` | `main` |
+| **master** | 主分支（生产环境） | `master` | `master` |
 | **develop** | 开发分支（可选） | `develop` | `develop` |
 | **feature** | 新功能开发 | `feature/功能名` | `feature/user-login` |
 | **fix** | Bug 修复 | `fix/问题描述` | `fix/login-error` |
@@ -96,8 +96,8 @@ git commit -m "chore: 更新"
 
 ```bash
 # 1. 创建功能分支
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 git checkout -b feature/user-profile
 
 # 2. 开发功能
@@ -120,8 +120,8 @@ git push origin feature/user-profile
 # - 请求代码审查
 
 # 6. 合并后删除分支
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 git branch -d feature/user-profile
 ```
 
@@ -131,8 +131,8 @@ git branch -d feature/user-profile
 
 ```bash
 # 1. 创建修复分支
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 git checkout -b fix/api-error
 
 # 2. 修复 Bug
@@ -148,8 +148,8 @@ git commit -m "fix(api): 修复 API 超时重试逻辑"
 git push origin fix/api-error
 
 # 5. 合并后删除分支
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 git branch -d fix/api-error
 ```
 
@@ -200,7 +200,7 @@ pnpm test
 pnpm build:h5
 
 # 5. 查看变更
-git diff main...HEAD
+git diff master...HEAD
 ```
 
 ### PR 描述模板
@@ -240,8 +240,8 @@ Closes #123
 
 ```bash
 # 1. 从主分支创建 hotfix 分支
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 git checkout -b hotfix/security-patch
 
 # 2. 快速修复问题
@@ -302,13 +302,13 @@ git reset --hard HEAD~1
 ```bash
 # 同步远程分支
 git fetch origin
-git pull origin main
+git pull origin master
 
 # 合并分支
 git merge feature/user-profile
 
 # 变基（保持线性历史）
-git rebase main
+git rebase master
 
 # 解决冲突后继续
 git add .

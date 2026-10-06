@@ -74,11 +74,21 @@
 
 系统 SHALL 通过 Pinia Store 管理主题切换。
 
+#### Scenario: Follow system theme by default
+- **GIVEN** 用户未手动设置主题（`followSystemTheme` 为 `true`）
+- **WHEN** 应用启动、页面显示或系统主题变化（`onThemeChange`）
+- **THEN** `currentTheme` 跟随 `uni.getAppBaseInfo().theme`
+
 #### Scenario: Set theme
 - **GIVEN** 使用 `useGlobalStore()`
 - **WHEN** 调用 `setTheme('dark')` 或 `setTheme('light')`
 - **THEN** 更新 Store 中的 `currentTheme` 状态
+- **AND** `followSystemTheme` 置为 `false`，此后系统主题变化不再生效
 - **AND** 应用主题到页面
+
+#### Scenario: Re-enable follow system
+- **WHEN** 调用 `setFollowSystemTheme(true)`（设置页「跟随系统」开关）
+- **THEN** 立即按当前系统主题更新 `currentTheme`
 
 #### Scenario: Toggle theme
 - **GIVEN** 当前主题为浅色
@@ -89,8 +99,9 @@
 #### Scenario: Theme persistence
 - **GIVEN** 用户切换了主题
 - **WHEN** 用户关闭并重新打开应用
-- **THEN** 主题设置从 Pinia persist 恢复
+- **THEN** `currentTheme` 与 `followSystemTheme` 从 Pinia persist 恢复
 - **AND** 保持用户上次选择的主题
+- **AND** 已保存主题但缺少 `followSystemTheme` 的旧数据视为手动设置
 
 ---
 
@@ -106,13 +117,14 @@
 
 #### Scenario: Navigation bar theme
 - **GIVEN** 任意平台
-- **WHEN** 主题切换
+- **WHEN** 主题切换或页面显示
+- **THEN** 调用 `uni.setNavigationBarColor()` 更新当前页导航栏
 - **AND** 浅色主题：黑色文字 + 白色背景
 - **AND** 深色主题：白色文字 + 深色背景
 
 #### Scenario: TabBar theme
 - **GIVEN** 任意平台
-- **WHEN** 主题切换
+- **WHEN** 当前页为 TabBar 页面，且主题与上次应用到 TabBar 的不同
 - **THEN** 调用 `uni.setTabBarStyle()` 更新 TabBar 样式
 - **AND** 更新背景色、文字色、选中色
 

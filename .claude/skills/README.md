@@ -68,7 +68,7 @@ Skills 是 Claude Code 的命令式工具，可以快速完成重复性开发任
 |-------|----------|----------|
 | **store-generator** | 🆕 智能 Store 生成,自动集成 API | `/store-generator UserStore --smart` |
 | **page-assembler** | 🆕 页面拼装器,自动集成组件和 Store | `/page-assembler src/pages-sub/user/index.vue` |
-| **api-generator** | 🆕 自定义 API 生成 (20% 场景) | `/api-generator uploadFile --type upload` |
+| **api-generator** | 🆕 自定义 API 生成 (20% 场景) | `/api-generator uploadAttachment --type custom` |
 | **test-coverage-checker** | 测试覆盖率检查 + 🆕 自动生成测试 | `/test-coverage-checker --auto-generate` |
 | **implementation-validator** | 🆕 代码实现一致性校验 | `/implementation-validator --all docs/prd/feature.md src/pages-sub/feature/` |
 

@@ -80,26 +80,24 @@ export default defineConfig({
 
 ### 工具函数测试
 ```typescript
-// tests/utils/date.test.ts
+// tests/utils/datetime.test.ts
 import { describe, it, expect } from 'vitest';
-import { DateUtils } from '@/utils/date';
+import { formatDateTime, str2Date } from '@/utils/datetime';
 
-describe('DateUtils', () => {
-  describe('format', () => {
-    it('应该正确格式化日期', () => {
-      const date = new Date('2023-12-25 15:30:45');
-      expect(DateUtils.format(date, 'YYYY-MM-DD HH:mm:ss')).toBe('2023-12-25 15:30:45');
-    });
-
-    it('应该处理字符串日期和时间戳', () => {
-      expect(DateUtils.format('2023-12-25', 'YYYY-MM-DD')).toBe('2023-12-25');
-    });
+describe('formatDateTime', () => {
+  it('按格式输出日期', () => {
+    const date = new Date('2023-12-25 15:30:45');
+    expect(formatDateTime(date, 'YYYY-MM-DD HH:mm:ss')).toBe('2023-12-25 15:30:45');
   });
 
-  describe('isToday', () => {
-    it('应该正确判断今天', () => {
-      expect(DateUtils.isToday(new Date())).toBe(true);
-    });
+  it('支持字符串日期', () => {
+    expect(formatDateTime('2023-12-25', 'YYYY-MM-DD')).toBe('2023-12-25');
+  });
+});
+
+describe('str2Date', () => {
+  it('无法解析时返回 null', () => {
+    expect(str2Date('invalid')).toBeNull();
   });
 });
 ```
@@ -110,10 +108,13 @@ describe('DateUtils', () => {
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useUserStore } from '@/store/modules/user';
-import { UserApi } from '@/api/modules/user';
+import { loginWithPhone, type User } from '@/api';
 
-vi.mock('@/api/modules/user');
-const mockedUserApi = vi.mocked(UserApi);
+vi.mock('@/api', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/api')>()),
+  loginWithPhone: vi.fn(),
+}));
+const mockedLogin = vi.mocked(loginWithPhone);
 
 describe('useUserStore', () => {
   beforeEach(() => {
@@ -130,13 +131,15 @@ describe('useUserStore', () => {
   });
 
   it('应该成功登录并更新状态', async () => {
-    mockedUserApi.login.mockResolvedValueOnce({
-      code: 200,
-      data: { token: 'mock-token', userInfo: {}, permissions: [] },
+    mockedLogin.mockResolvedValueOnce({
+      token: 'mock-token',
+      refreshToken: 'mock-refresh',
+      tokenExpires: Date.now() + 3600_000,
+      user: { id: 1, phone: '13800000000', nickname: 'test' } as User,
     });
 
     const store = useUserStore();
-    await store.login({ username: 'test', password: '123' });
+    await store.login({ phone: '13800000000', password: '123456' });
 
     expect(store.token).toBe('mock-token');
     expect(store.isLoggedIn).toBe(true);
@@ -545,14 +548,14 @@ export const createMockUser = (overrides: Partial<IUserInfo> = {}): IUserInfo =>
 ```typescript
 // ✅ 异步测试
 it('应该正确处理异步操作', async () => {
-  const result = await UserApi.getUserList();
-  expect(result.code).toBe(200);
+  const result = await getUsers({ page: 1, limit: 10 });
+  expect(result.data).toBeDefined();
 });
 
 // ✅ 测试Promise拒绝
 it('应该处理错误', async () => {
-  mockedApi.getUserList.mockRejectedValueOnce(new Error('错误'));
-  await expect(UserApi.getUserList()).rejects.toThrow('错误');
+  vi.mocked(getUsers).mockRejectedValueOnce(new Error('错误'));
+  await expect(getUsers()).rejects.toThrow('错误');
 });
 
 // ✅ Mock使用

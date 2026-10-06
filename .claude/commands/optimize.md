@@ -190,7 +190,7 @@ const visibleItems = computed(() => {
 const imageUrl = 'https://cdn.example.com/images/banner.webp';
 
 // ❌ 避免将大图片打包到项目中
-import banner from '@/assets/images/large-banner.png';
+import banner from '@/static/images/large-banner.png';
 ```
 
 ---

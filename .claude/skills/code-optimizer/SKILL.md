@@ -21,7 +21,7 @@ metadata:
 | **函数** | `src/utils/` | 工具函数、格式化函数 |
 | **Composables** | `src/composables/` | Vue 逻辑复用 |
 | **组件** | `src/components/` | 可复用 UI 组件 |
-| **指令** | `src/directives/` | 自定义 Vue 指令 |
+| **指令** | `src/directives/` | 自定义 Vue 指令（仅 H5，小程序不支持） |
 | **类型** | `src/interface/` | 公共 TypeScript 类型 |
 
 ---
@@ -365,32 +365,21 @@ export function maskPhone(phone: string | undefined): string {
 }
 ```
 
-### 自定义指令模板
+### 权限判断模板
 
-```typescript
-// src/directives/permission.ts
-import type { Directive, DirectiveBinding } from 'vue';
-import { useUserStore } from '@/store/modules/user';
+小程序不支持自定义指令，按角色控制显示使用 `v-if` + user store：
 
-/**
- * 权限指令
- * @example v-permission="'admin'" 或 v-permission="['admin', 'editor']"
- */
-export const vPermission: Directive = {
-  mounted(el: HTMLElement, binding: DirectiveBinding<string | string[]>) {
-    const userStore = useUserStore();
-    const { value } = binding;
+```vue
+<template>
+  <UMenuItem v-if="userStore.hasRoleOrAbove(ROLE.ADMIN)" title="后台管理" />
+</template>
 
-    if (!value) return;
+<script setup lang="ts">
+import { useUserStore } from '@/store';
+import { ROLE } from '@/constants';
 
-    const roles = Array.isArray(value) ? value : [value];
-    const hasPermission = roles.some((role) => userStore.roles.includes(role));
-
-    if (!hasPermission) {
-      el.parentNode?.removeChild(el);
-    }
-  },
-};
+const userStore = useUserStore();
+</script>
 ```
 
 ### 公共类型模板

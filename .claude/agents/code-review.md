@@ -652,45 +652,19 @@ const createUser = async (userData: CreateUserRequest): Promise<UserInfo> => {
 
 ### XSS防护
 
-**项目已封装**: 使用 `src/utils/sanitize.ts` 中的工具函数
+**项目约定**: 富文本使用 `URichText` 组件（基于 `<rich-text>`，不执行脚本），纯文本直接插值；小程序不支持 `v-html`
 
 ```vue
 <template>
-  <!-- ❌ 问题：直接输出HTML -->
-  <div v-html="userContent"></div>
+  <!-- ❌ 问题：直接输出 HTML，小程序不可用且 H5 有 XSS 风险 -->
+  <view v-html="userContent"></view>
 
-  <!-- ✅ 改进：文本输出或使用项目封装的 sanitize 函数 -->
-  <div>{{ userContent }}</div>
-  <!-- 或者 -->
-  <div v-html="sanitizedContent"></div>
+  <!-- ✅ 纯文本：插值输出 -->
+  <text>{{ userContent }}</text>
+
+  <!-- ✅ 富文本：URichText 渲染 HTML 字符串或 nodes -->
+  <URichText :content="richContent" />
 </template>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { sanitizeHtml, sanitizeHtmlStrict, sanitizeText } from '@/utils/sanitize';
-
-interface Props {
-  /** 用户输入的 HTML 内容 */
-  userContent: string;
-}
-
-const props = defineProps<Props>();
-
-// ✅ 富文本场景：允许基础格式化标签
-const sanitizedContent = computed(() => {
-  return sanitizeHtml(props.userContent, { allowImages: true, allowLinks: true });
-});
-
-// ✅ 评论场景：严格模式，只允许文本格式化
-const strictContent = computed(() => {
-  return sanitizeHtmlStrict(props.userContent);
-});
-
-// ✅ 纯文本场景：移除所有 HTML 标签
-const plainText = computed(() => {
-  return sanitizeText(props.userContent);
-});
-</script>
 ```
 
 ### 权限控制

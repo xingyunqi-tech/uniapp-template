@@ -31,7 +31,7 @@ model: inherit
 <text class="iconfont icon-home" />
 
 <!-- ❌ 错误: 小程序不支持 img 标签 -->
-<img src="@/assets/icons/home.svg" />
+<img src="@/static/icons/home.svg" />
 
 <!-- ❌ 错误: 内联 SVG -->
 <svg><path d="M..." /></svg>

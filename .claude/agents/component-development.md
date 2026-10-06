@@ -265,7 +265,7 @@ easycom: {
 <template>
   <!-- ✅ 正确：使用 image 标签 -->
   <image
-    src="@/assets/icons/[project]/icon-name.svg"
+    src="@/static/icons/[project]/icon-name.svg"
     class="icon"
     mode="aspectFit"
   />
@@ -289,7 +289,7 @@ easycom: {
 ### 3. 图片资源规范
 
 ```
-src/assets/
+src/static/
 ├── icons/[project-name]/    # SVG 图标（kebab-case 命名）
 │   ├── icon-home.svg
 │   └── icon-user.svg
@@ -303,7 +303,7 @@ src/assets/
 <template>
   <!-- 使用 UImage 组件（支持懒加载） -->
   <UImage
-    src="@/assets/images/home/banner.png"
+    src="@/static/images/home/banner.png"
     width="750rpx"
     height="300rpx"
     mode="aspectFill"
@@ -311,7 +311,7 @@ src/assets/
 
   <!-- 或使用原生 image -->
   <image
-    src="@/assets/images/home/banner.png"
+    src="@/static/images/home/banner.png"
     mode="aspectFill"
     lazy-load
   />

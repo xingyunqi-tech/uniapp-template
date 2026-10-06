@@ -249,10 +249,10 @@ function hasImageRef(node, globalVars) {
 
 ### 4.2 下载 SVG 图标
 
-**SVG 文件下载后使用 `<img>` 标签引用，不是内联 SVG 内容**
+**SVG 文件下载后使用 `<image>` 标签引用，不是内联 SVG 内容**
 
 **路径规范**：
-- SVG 图标统一下载到 `src/assets/icons/[project-name]/` 目录
+- SVG 图标统一下载到 `src/static/icons/[project-name]/` 目录
 - 必须为项目创建独立目录（使用小写短横线格式 kebab-case，如 `ai-home-page`）进行分类
 
 **批量下载建议**：
@@ -262,7 +262,7 @@ function hasImageRef(node, globalVars) {
 ```typescript
 mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/absolute/path/to/src/assets/icons/ai-home-page",  // ⭐ 注意路径规范
+  localPath: "/absolute/path/to/src/static/icons/ai-home-page",  // ⭐ 注意路径规范
   nodes: [
     { nodeId: "1:334", fileName: "icon-chat.svg" },
     { nodeId: "1:335", fileName: "icon-search.svg" },
@@ -277,7 +277,7 @@ mcp__figma__download_figma_images({
 ```vue
 <!-- ✅ 正确：下载为文件，使用 img 标签引用 -->
 <template>
-  <img src="@/assets/icons/ai-home-page/icon-name.svg" alt="Icon" class="w-6 h-6" />
+  <image src="@/static/icons/ai-home-page/icon-name.svg" mode="aspectFit" class="icon" />
 </template>
 
 <!-- ❌ 错误：不要使用内联 SVG -->
@@ -289,7 +289,7 @@ mcp__figma__download_figma_images({
 ### 4.3 下载 PNG 图片
 
 **路径规范**：
-- PNG/JPG 图片统一下载到 `src/assets/images/[project-name]/` 目录
+- PNG/JPG 图片统一下载到 `src/static/images/[project-name]/` 目录
 - 必须为项目创建独立目录（使用小写短横线格式 kebab-case，如 `ai-home-page`）
 - 根据用途进一步分类子目录：`logos/`、`backgrounds/`、`avatars/` 等
 
@@ -301,7 +301,7 @@ mcp__figma__download_figma_images({
 // 下载背景图片到 backgrounds/ 目录
 mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/absolute/path/to/src/assets/images/AIHomePage/backgrounds",  // ⭐ 注意路径规范
+  localPath: "/absolute/path/to/src/static/images/AIHomePage/backgrounds",  // ⭐ 注意路径规范
   nodes: [
     {
       imageRef: "8cbab0fd7dce9c8ace650171a6c00e13bf27c68f",  // ⭐ 从 Figma 数据提取
@@ -322,7 +322,7 @@ mcp__figma__download_figma_images({
 // 下载头像到 avatars/ 目录
 mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/absolute/path/to/src/assets/images/AIHomePage/avatars",
+  localPath: "/absolute/path/to/src/static/images/AIHomePage/avatars",
   nodes: [
     { imageRef: "d8436d1a...", fileName: "user-avatar.png" },
     // ... 更多头像
@@ -334,9 +334,9 @@ mcp__figma__download_figma_images({
 **使用方式**：
 
 ```vue
-<!-- ✅ 正确：从 src/assets/images 引用 -->
+<!-- ✅ 正确：从 src/static/images 引用 -->
 <template>
-  <img src="@/assets/images/AIHomePage/backgrounds/logo.png" alt="Logo" />
+  <image src="@/static/images/AIHomePage/backgrounds/logo.png" mode="aspectFit" />
 </template>
 ```
 
@@ -547,8 +547,8 @@ Figma 提取完成
    详见：@component-development.md#页面布局约定
    ↓
 4. 引用下载的资源
-   ├─ SVG: <img src="@/assets/icons/[project-name]/xxx.svg" />
-   └─ PNG: <img src="@/assets/images/[project-name]/xxx.png" />
+   ├─ SVG: <image src="@/static/icons/[project-name]/xxx.svg" />
+   └─ PNG: <image src="@/static/images/[project-name]/xxx.png" />
    ↓
 5. 实现交互和逻辑
    ├─ Props/Emits 类型定义
@@ -576,8 +576,8 @@ Figma 提取完成
    └─ 特效: boxShadow, backdropFilter, borderRadius
    ↓
 4. 分类图片资源
-   ├─ SVG: imageRef 为空 → src/assets/icons/[project-name]/
-   └─ PNG: 有 imageRef → src/assets/images/[project-name]/
+   ├─ SVG: imageRef 为空 → src/static/icons/[project-name]/
+   └─ PNG: 有 imageRef → src/static/images/[project-name]/
    ↓
 5. 批量下载图片 (mcp__figma__download_figma_images)
    ├─ SVG: 使用 nodeId，imageRef 留空
@@ -599,8 +599,8 @@ Figma 提取完成
    - 映射到项目 CSS 变量
 
 3. **下载资源时**：
-   - SVG: `imageRef: ""` → `src/assets/icons/[project-name]/`
-   - PNG: 从 `fills` 提取完整 `imageRef` → `src/assets/images/[project-name]/`
+   - SVG: `imageRef: ""` → `src/static/icons/[project-name]/`
+   - PNG: 从 `fills` 提取完整 `imageRef` → `src/static/images/[project-name]/`
    - 必须使用绝对路径
    - PNG 使用 `pngScale: 2`
    - 必须为项目创建独立目录（使用小写短横线格式 kebab-case）进行分类
@@ -635,8 +635,8 @@ Figma 提取完成
 - `src/styles/theme.scss` - CSS 变量定义（颜色、字体、间距等）
 
 **资源目录**:
-- `src/assets/icons/[project-name]/` - SVG 图标存放目录（使用小写短横线格式 kebab-case）
-- `src/assets/images/[project-name]/` - PNG/JPG 图片存放目录（使用小写短横线格式 kebab-case）
+- `src/static/icons/[project-name]/` - SVG 图标存放目录（使用小写短横线格式 kebab-case）
+- `src/static/images/[project-name]/` - PNG/JPG 图片存放目录（使用小写短横线格式 kebab-case）
 
 **组件目录**:
 - `src/components/` - 全局公用组件（基础组件）
@@ -704,7 +704,7 @@ PNG 图片: 9 个 (有 imageRef)
 // 下载 SVG 图标
 await mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/path/to/src/assets/icons/AIHomePage",
+  localPath: "/path/to/src/static/icons/AIHomePage",
   nodes: [
     { nodeId: "1:334", fileName: "icon-chat.svg" },
     { nodeId: "1:335", fileName: "icon-search.svg" },
@@ -715,7 +715,7 @@ await mcp__figma__download_figma_images({
 // 下载 PNG 图片（分目录）
 await mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/path/to/src/assets/images/AIHomePage/backgrounds",
+  localPath: "/path/to/src/static/images/AIHomePage/backgrounds",
   nodes: [
     { imageRef: "8cbab0fd...", fileName: "home-bg-1.png" },
     { imageRef: "1ee28f1d...", fileName: "home-bg-2.png" },
@@ -726,7 +726,7 @@ await mcp__figma__download_figma_images({
 
 await mcp__figma__download_figma_images({
   fileKey: "uQThu1lq4c1jqkQ2lGeqaN",
-  localPath: "/path/to/src/assets/images/AIHomePage/avatars",
+  localPath: "/path/to/src/static/images/AIHomePage/avatars",
   nodes: [
     { imageRef: "d8436d1a...", fileName: "user-avatar.png" }
   ],
@@ -744,8 +744,8 @@ await mcp__figma__download_figma_images({
    └─ 特效信息: 完整
 
 ✅ 资源下载完成
-   ├─ SVG 图标: 15 个 → src/assets/icons/AIHomePage/
-   └─ PNG 图片: 9 个 → src/assets/images/AIHomePage/
+   ├─ SVG 图标: 15 个 → src/static/icons/AIHomePage/
+   └─ PNG 图片: 9 个 → src/static/images/AIHomePage/
        ├─ backgrounds: 8 个
        └─ avatars: 1 个
 

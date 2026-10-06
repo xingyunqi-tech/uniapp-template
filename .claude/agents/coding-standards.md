@@ -54,7 +54,7 @@ model: inherit
 <template>
   <view class="container">
     <text class="title">标题</text>
-    <image src="@/assets/logo.png" mode="aspectFit" />
+    <image src="@/static/logo.png" mode="aspectFit" />
     <navigator url="/pages/detail/index">跳转</navigator>
   </view>
 </template>
@@ -63,7 +63,7 @@ model: inherit
 <template>
   <div class="container">
     <span class="title">标题</span>
-    <img src="@/assets/logo.png" />
+    <img src="@/static/logo.png" />
     <a href="/pages/detail/index">跳转</a>
   </div>
 </template>
