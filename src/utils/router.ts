@@ -146,6 +146,15 @@ export function getCurrentRoute(): string {
 }
 
 /**
+ * 获取当前页面完整路径（含查询参数），读取失败返回空串
+ */
+export function getCurrentFullPath(): string {
+  const pages = getCurrentPages();
+  const currentPage = pages[pages.length - 1] as { $page?: { fullPath?: string } } | undefined;
+  return currentPage?.$page?.fullPath ?? '';
+}
+
+/**
  * 获取当前页面参数
  */
 export function getCurrentQuery(): QueryParams {
@@ -169,11 +178,11 @@ export function canGoBack(): boolean {
 }
 
 /**
- * 提取路径（去除查询参数）
+ * 提取路径（去除查询参数与 hash）
  * @param url 完整 URL
  */
 export function getPathFromUrl(url: string): string {
-  return url.split('?')[0];
+  return url.split(/[?#]/)[0];
 }
 
 /**

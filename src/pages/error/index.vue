@@ -84,6 +84,7 @@ onLoad(options => {
   if (options?.type && options.type in errorConfig) {
     errorCode.value = options.type;
   }
+  uni.setNavigationBarTitle({ title: errorTitle.value });
 });
 
 // 返回首页

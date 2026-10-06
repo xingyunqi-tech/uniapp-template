@@ -9,7 +9,7 @@
  */
 import { useUserStore } from '@/store/modules/user';
 import { PAGES, WHITE_LIST, PAGE_ROLES } from '@/constants';
-import { isInWhiteList, getPathFromUrl } from '@/utils/router';
+import { isInWhiteList, getPathFromUrl, getCurrentFullPath, getPageStackLength } from '@/utils/router';
 
 /**
  * 检查页面角色权限
@@ -32,37 +32,59 @@ function checkPageRole(url: string): boolean {
   return requiredRoles.some(role => userStore.hasRole(role));
 }
 
+type RouteAccess = 'allow' | 'login' | 'forbidden';
+
+/**
+ * 检查页面访问权限
+ * @param url 页面路径（可带查询参数）
+ */
+function checkRouteAccess(url: string): RouteAccess {
+  if (isInWhiteList(url, WHITE_LIST)) return 'allow';
+  if (!useUserStore().isLoggedIn) return 'login';
+  return checkPageRole(url) ? 'allow' : 'forbidden';
+}
+
+/** 登录页地址，登录后跳回 redirect */
+function getLoginUrl(redirect: string): string {
+  return `${PAGES.LOGIN}?redirect=${encodeURIComponent(redirect)}`;
+}
+
+/** 小程序页面栈最大层数 */
+const MAX_PAGE_STACK = 10;
+
+type InterceptMethod = 'navigateTo' | 'redirectTo' | 'reLaunch';
+
+/**
+ * 打开登录页，沿用原跳转方式；navigateTo 在页面栈已满时改用 redirectTo
+ */
+function openLogin(method: InterceptMethod, url: string): void {
+  if (method === 'reLaunch') {
+    uni.reLaunch({ url });
+  } else if (method === 'navigateTo' && getPageStackLength() < MAX_PAGE_STACK) {
+    uni.navigateTo({ url });
+  } else {
+    uni.redirectTo({ url });
+  }
+}
+
 /**
  * 路由拦截处理
+ * @param method 被拦截的路由方法
  * @param args 路由参数
  * @returns 是否允许跳转
  */
-function handleRouteIntercept(args: { url: string }): boolean | { url: string } {
-  const userStore = useUserStore();
-  const url = args.url;
+function handleRouteIntercept(method: InterceptMethod, args: { url: string }): boolean {
+  const access = checkRouteAccess(args.url);
 
-  // 1. 白名单路由直接放行
-  if (isInWhiteList(url, WHITE_LIST)) {
-    return true;
-  }
-
-  // 2. 未登录跳转登录页
-  if (!userStore.isLoggedIn) {
-    // 保存原始路径，登录后跳转
-    const redirectUrl = encodeURIComponent(url);
-
+  if (access === 'login') {
     // 使用 setTimeout 确保在当前路由操作完成后再执行
     setTimeout(() => {
-      uni.redirectTo({
-        url: `${PAGES.LOGIN}?redirect=${redirectUrl}`,
-      });
+      openLogin(method, getLoginUrl(args.url));
     }, 0);
-
     return false;
   }
 
-  // 3. 检查角色权限
-  if (!checkPageRole(url)) {
+  if (access === 'forbidden') {
     uni.showToast({
       title: '暂无权限访问',
       icon: 'none',
@@ -81,20 +103,32 @@ function handleRouteIntercept(args: { url: string }): boolean | { url: string } 
 }
 
 /**
+ * 校验当前页面的访问权限
+ * 覆盖不经过路由 API 的进入方式：H5 刷新/直接访问、小程序分享卡片/扫码、navigator 组件
+ */
+export function guardCurrentPage(): void {
+  const fullPath = getCurrentFullPath();
+  if (!fullPath) return;
+
+  const access = checkRouteAccess(fullPath);
+  if (access === 'login') {
+    uni.redirectTo({ url: getLoginUrl(fullPath) });
+  } else if (access === 'forbidden') {
+    uni.redirectTo({ url: `${PAGES.FORBIDDEN}?type=403` });
+  }
+}
+
+/**
  * 设置路由拦截器
  */
 export function setupRouterInterceptor(): void {
   // 需要拦截的路由方法
-  const interceptMethods = ['navigateTo', 'redirectTo', 'reLaunch'] as const;
+  const interceptMethods: InterceptMethod[] = ['navigateTo', 'redirectTo', 'reLaunch'];
 
   interceptMethods.forEach(method => {
     uni.addInterceptor(method, {
       invoke(args: { url: string }) {
-        const result = handleRouteIntercept(args);
-        if (result === false) {
-          return false;
-        }
-        return typeof result === 'object' ? result : args;
+        return handleRouteIntercept(method, args) ? args : false;
       },
       fail(err) {
         console.error(`路由跳转失败 [${method}]:`, err);

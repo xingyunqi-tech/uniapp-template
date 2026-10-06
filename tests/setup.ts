@@ -27,9 +27,16 @@ vi.stubGlobal('uni', {
   showLoading: vi.fn(),
   hideLoading: vi.fn(),
   redirectTo: vi.fn(),
+  navigateTo: vi.fn(),
+  addInterceptor: vi.fn(),
   getDeviceInfo: vi.fn(() => ({})),
   getAppBaseInfo: vi.fn(() => ({})),
 });
+
+vi.stubGlobal(
+  'getCurrentPages',
+  vi.fn(() => []),
+);
 
 // Mock全局对象
 Object.defineProperty(window, 'matchMedia', {

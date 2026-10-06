@@ -5,7 +5,15 @@
 </template>
 
 <script setup lang="ts">
-import { onLaunch, onShow, onHide, onError, onUnhandledRejection, onThemeChange } from '@dcloudio/uni-app';
+import {
+  onLaunch,
+  onShow,
+  onHide,
+  onError,
+  onUnhandledRejection,
+  onThemeChange,
+  onPageNotFound,
+} from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
 import {
@@ -15,7 +23,7 @@ import {
   initErrorReporter,
   resetReportFailureCount,
 } from '@/utils';
-import type { ThemeType } from '@/constants';
+import { PAGES, type ThemeType } from '@/constants';
 
 // 错误处理器 (在 onLaunch 中初始化后使用)
 let errorHandlers: ReturnType<typeof initErrorReporter>;
@@ -95,6 +103,11 @@ onError(error => {
 // 文档: https://uniapp.dcloud.net.cn/collocation/App.html#onunhandledrejection
 onUnhandledRejection(event => {
   errorHandlers?.onUnhandledRejection(event);
+});
+
+// 页面不存在 (小程序要求在回调中同步重定向)
+onPageNotFound(() => {
+  uni.redirectTo({ url: `${PAGES.ERROR}?type=404` });
 });
 
 // 系统主题变化监听 (跟随系统时自动切换)

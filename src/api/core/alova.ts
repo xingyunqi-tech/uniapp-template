@@ -6,7 +6,8 @@ import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/error-reporter';
-import { PAGES } from '@/constants/pages';
+import { PAGES, TAB_BAR_PAGES } from '@/constants/pages';
+import { getCurrentFullPath, getPathFromUrl } from '@/utils/router';
 
 // ==================== 类型定义 ====================
 
@@ -71,17 +72,25 @@ function refreshTokenOnce(): Promise<string | null> {
 
 let isRedirectingToLogin = false;
 
-/** 清理登录态并跳转登录页，重复触发只执行一次 */
+/** 清理登录态并跳转登录页（非 TabBar 页登录后跳回），重复触发只执行一次 */
 function handleUnauthorized(): void {
   if (isRedirectingToLogin) return;
-  isRedirectingToLogin = true;
 
+  const currentPath = getCurrentFullPath();
+  const currentRoute = getPathFromUrl(currentPath);
   authHandlers?.clearAuth();
+  if (currentRoute === PAGES.LOGIN) return;
+
+  isRedirectingToLogin = true;
   showRequestToast('登录已过期，请重新登录');
+
+  const isTabBarPage = (TAB_BAR_PAGES as readonly string[]).includes(currentRoute);
+  const loginUrl =
+    currentPath && !isTabBarPage ? `${PAGES.LOGIN}?redirect=${encodeURIComponent(currentPath)}` : PAGES.LOGIN;
 
   setTimeout(() => {
     uni.redirectTo({
-      url: PAGES.LOGIN,
+      url: loginUrl,
       complete: () => {
         isRedirectingToLogin = false;
       },

@@ -260,3 +260,65 @@ describe('@/api 导出', () => {
     expect(api.logout).toBe(override.logout);
   });
 });
+
+describe('401 跳转登录页', () => {
+  const getCurrentPagesMock = getCurrentPages as unknown as Mock;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    (uni.redirectTo as Mock)
+      .mockReset()
+      .mockImplementation((options: { complete?: () => void }) => options.complete?.());
+    storage.set(STORAGE_KEYS.TOKEN, 'expired');
+  });
+
+  function onPage(fullPath: string) {
+    getCurrentPagesMock.mockReturnValue([{ $page: { fullPath } }]);
+  }
+
+  afterEach(() => {
+    vi.useRealTimers();
+    requestMock.mockReset();
+    setAuthHandlers(null);
+    getCurrentPagesMock.mockReset().mockReturnValue([]);
+  });
+
+  async function failWith401() {
+    const clearAuth = registerHandlers({});
+    mockServer(() => unauthorized);
+    await expect(http.Get('/profile')).rejects.toThrow('Unauthorized');
+    vi.runAllTimers();
+    return clearAuth;
+  }
+
+  it('非 TabBar 页携带当前页面完整路径作为 redirect', async () => {
+    onPage('/pages-sub/order/detail/index?id=1');
+
+    await failWith401();
+
+    expect(uni.redirectTo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: `/pages/login/index?redirect=${encodeURIComponent('/pages-sub/order/detail/index?id=1')}`,
+      }),
+    );
+  });
+
+  it('TabBar 页不携带 redirect', async () => {
+    onPage('/pages/mine/index');
+
+    await failWith401();
+
+    expect(uni.redirectTo).toHaveBeenCalledWith(expect.objectContaining({ url: '/pages/login/index' }));
+  });
+
+  it('已在登录页时只清理登录态，不提示也不跳转', async () => {
+    onPage('/pages/login/index?redirect=%2Fpages-sub%2Forder%2Flist%2Findex');
+    (uni.showToast as Mock).mockClear();
+
+    const clearAuth = await failWith401();
+
+    expect(clearAuth).toHaveBeenCalledTimes(1);
+    expect(uni.showToast).not.toHaveBeenCalled();
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+});
