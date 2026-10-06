@@ -34,6 +34,7 @@ definePage({
 });
 
 import { computed, ref, watch } from 'vue';
+import { NATIVE_COLOR } from '@/constants';
 
 defineOptions({
   name: 'UBanner',
@@ -74,8 +75,8 @@ const props = withDefaults(defineProps<Props>(), {
   height: 300,
   imageMode: 'aspectFill',
   indicatorDots: true,
-  indicatorColor: 'rgba(255, 255, 255, 0.5)',
-  indicatorActiveColor: '#fff',
+  indicatorColor: NATIVE_COLOR.INDICATOR,
+  indicatorActiveColor: NATIVE_COLOR.INDICATOR_ACTIVE,
   autoplay: true,
   interval: 3000,
   duration: 500,

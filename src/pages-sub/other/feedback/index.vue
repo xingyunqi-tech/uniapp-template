@@ -310,7 +310,7 @@ function handleSubmit() {
       align-items: center;
       justify-content: center;
       border-radius: var(--radius-base);
-      background: rgb(0 0 0 / 0.5);
+      background: var(--color-bg-mask-light);
 
       .uploading-text {
         color: var(--color-text-inverse);

@@ -129,20 +129,20 @@
  * 1px 边框解决方案
  * 用于解决高分屏（devicePixelRatio > 1）下，1px 边框显示为 2px 物理像素的问题
  *
- * @param {string} $color - 边框颜色，默认使用 CSS 变量 var(--colorBorder)
+ * @param {string} $color - 边框颜色，默认使用 CSS 变量 var(--color-border)
  * @param {string} $direction - 边框方向: 'top' | 'right' | 'bottom' | 'left' | 'all'
  * @param {number} $radius - 圆角半径，默认 0
  *
  * @example
  * .element {
- *   @include hairline-border(var(--colorBorder), 'top');
+ *   @include hairline-border(var(--color-border), 'top');
  * }
  *
  * .element {
- *   @include hairline-border(var(--colorPrimary), 'all', 8px);
+ *   @include hairline-border(var(--color-primary), 'all', 8px);
  * }
  */
-@mixin hairline-border($color: var(--colorBorder), $direction: 'all', $radius: 0) {
+@mixin hairline-border($color: var(--color-border), $direction: 'all', $radius: 0) {
   position: relative;
 
   &::after {

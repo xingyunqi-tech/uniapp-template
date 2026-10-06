@@ -72,7 +72,7 @@ const props = withDefaults(defineProps<ULoadingProps>(), {
   fullscreen: true,
   color: '',
   size: 64,
-  maskBackground: 'rgba(0, 0, 0, 0.5)',
+  maskBackground: 'var(--color-bg-mask-light)',
   closeOnClickMask: false,
   global: false,
 });

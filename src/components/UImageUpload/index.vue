@@ -277,6 +277,6 @@ defineExpose({
 }
 
 :deep(.icon-del-box) {
-  background-color: rgb(0 0 0 / 0.5) !important;
+  background-color: var(--color-bg-mask-light) !important;
 }
 </style>

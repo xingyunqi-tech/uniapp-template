@@ -77,7 +77,7 @@
     },
     {
       "name": "uni-events",
-      "pattern": "/(?:refresherrefresh|checkmarkempty|closeempty|dividline|itemclick)/g"
+      "pattern": "/(?:refresherrefresh|checkmarkempty|closeempty|plusempty|dividline|itemclick)/g"
     }
   ],
   "ignoreRegExpList": ["jwt-token", "css-var", "import-path", "uni-events"],

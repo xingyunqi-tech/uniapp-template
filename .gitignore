@@ -21,7 +21,6 @@ unpackage
 .temp
 
 # UniApp auto-generated files
-typings/uni-pages.d.ts
 auto-imports.d.ts
 components.d.ts
 

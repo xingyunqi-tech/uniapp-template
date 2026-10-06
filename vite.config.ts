@@ -5,7 +5,6 @@ import { loadEnv } from 'vite';
 import type { ConfigEnv, PluginOption } from 'vite';
 import legacy from '@vitejs/plugin-legacy';
 import UniPages from '@uni-helper/vite-plugin-uni-pages';
-import UniLayouts from '@uni-helper/vite-plugin-uni-layouts';
 import UniManifest from '@uni-helper/vite-plugin-uni-manifest';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
@@ -55,7 +54,6 @@ function generatePlugins(command: ConfigEnv['command']): PluginOption[] {
       dts: 'typings/uni-pages.d.ts',
       subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other'],
     }),
-    UniLayouts(),
     UniManifest(),
     // uni() 插件
     uni(),

@@ -362,7 +362,7 @@ async function handleDelete() {
   padding: 24rpx;
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
-  box-shadow: 0 -4rpx 16rpx rgb(0 0 0 / 0.05);
+  box-shadow: var(--shadow-top);
 
   .action-btn {
     flex: 1;

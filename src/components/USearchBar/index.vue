@@ -341,7 +341,7 @@ defineExpose({
     height: 72rpx;
     padding: 0 var(--spacing-sm);
     border-radius: var(--radius-lg);
-    background-color: var(--color-input-bg);
+    background-color: var(--color-bg-input);
   }
 
   &__icon {

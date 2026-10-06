@@ -17,3 +17,5 @@ peerDependencyRules:
   allowedVersions:
     # 插件运行时只用到 pinia 2 已有的插件上下文，见 tests/store/persist.test.ts
     pinia-plugin-persistedstate>pinia: '2'
+    # vue 锁定为 uni 运行时内置的 3.4.21，各端运行时实际使用的都是这个版本
+    pinia>vue: '3.4'

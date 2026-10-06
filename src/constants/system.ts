@@ -61,3 +61,11 @@ export const ICP_LICENSE = '沪ICP备2025155741号-1';
  * 工信部备案管理系统链接
  */
 export const ICP_LINK = 'https://beian.miit.gov.cn/';
+
+/**
+ * 原生组件属性颜色（swiper 指示点等原生属性不支持 CSS 变量）
+ */
+export const NATIVE_COLOR = {
+  INDICATOR: 'rgba(255, 255, 255, 0.5)',
+  INDICATOR_ACTIVE: '#ffffff',
+} as const;

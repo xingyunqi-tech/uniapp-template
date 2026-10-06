@@ -342,7 +342,7 @@ function formatTime(time: string): string {
   background: var(--color-bg);
 
   &.unread {
-    background: var(--color-primary-bg-light);
+    background: var(--color-primary-bg);
   }
 
   .unread-dot {

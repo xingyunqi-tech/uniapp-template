@@ -125,7 +125,7 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'center',
   animation: true,
   maskClosable: true,
-  maskBackground: 'rgba(0, 0, 0, 0.5)',
+  maskBackground: 'var(--color-bg-mask-light)',
   backgroundColor: 'var(--color-bg)',
   safeArea: true,
   title: '',
