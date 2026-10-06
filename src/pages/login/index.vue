@@ -84,7 +84,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, DELAY_TIMES } from '@/constants';
-import { encryptPassword } from '@/utils';
+import { decodeQueryValue, encryptPassword } from '@/utils';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -112,12 +112,9 @@ const sms = useSendSms({
 let redirectUrl = '';
 
 onLoad(options => {
-  // 获取重定向地址（H5 与 App 已对 onLoad 参数解码，小程序需手动解码）
+  // 获取重定向地址
   if (options?.redirect) {
-    redirectUrl = options.redirect;
-    // #ifdef MP
-    redirectUrl = decodeURIComponent(redirectUrl);
-    // #endif
+    redirectUrl = decodeQueryValue(options.redirect);
   }
 
   // 如果已登录，直接跳转

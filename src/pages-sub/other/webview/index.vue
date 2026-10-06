@@ -32,6 +32,7 @@ import { ref } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { decodeQueryValue } from '@/utils/router';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -55,13 +56,12 @@ let progressTimer: ReturnType<typeof setInterval> | null = null;
  */
 onLoad(options => {
   if (options?.url) {
-    // URL 需要解码
-    originalUrl = decodeURIComponent(options.url);
+    originalUrl = decodeQueryValue(options.url);
     url.value = originalUrl;
   }
 
   if (options?.title) {
-    title.value = decodeURIComponent(options.title);
+    title.value = decodeQueryValue(options.title);
     uni.setNavigationBarTitle({ title: title.value });
   }
 

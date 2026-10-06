@@ -155,6 +155,20 @@ export function getCurrentFullPath(): string {
 }
 
 /**
+ * 解码页面 onLoad 参数值：H5 与 App 运行时已解码，小程序需手动解码
+ */
+export function decodeQueryValue(value: string): string {
+  // #ifdef MP
+  return decodeURIComponent(value);
+  // #endif
+
+  // #ifndef MP
+
+  return value;
+  // #endif
+}
+
+/**
  * 获取当前页面参数
  */
 export function getCurrentQuery(): QueryParams {
