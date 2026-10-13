@@ -42,6 +42,7 @@
       "minified": true
     },
     "usingComponents": true,
+    "__usePrivacyCheck__": true,
     "darkmode": true,
     "themeLocation": "theme.json",
     "lazyCodeLoading": "requiredComponents",

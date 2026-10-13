@@ -5,6 +5,8 @@ import { setAuthHandlers } from './api';
 import pinia, { useGlobalStore, useUserStore } from './store';
 import { i18n } from './utils/locale';
 import { guardCurrentPage, setupRouterInterceptor } from './utils/router-interceptor';
+import { getShareTarget } from './utils/router';
+import { APP_NAME } from './constants';
 
 /** 是否为当前栈顶页面的实例（排除组件） */
 function isCurrentPageVm(vm: unknown): boolean {
@@ -42,6 +44,13 @@ export function createApp() {
     onShow(this: unknown) {
       if (!isCurrentPageVm(this)) return;
       useGlobalStore(pinia).initTheme();
+    },
+    // 默认开启转发与分享到朋友圈，页面自行注册时以页面为准
+    onShareAppMessage() {
+      return { title: APP_NAME, path: getShareTarget().path };
+    },
+    onShareTimeline() {
+      return { title: APP_NAME, query: getShareTarget().query };
     },
   });
 

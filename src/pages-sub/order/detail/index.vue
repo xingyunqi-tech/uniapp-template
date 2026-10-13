@@ -77,6 +77,8 @@
       <button v-if="canCancel" class="action-btn cancel" @click="handleCancel">取消订单</button>
       <button v-if="canPay" class="action-btn primary" @click="handlePay">立即支付</button>
     </view>
+
+    <UPrivacyPopup />
   </view>
 </template>
 

@@ -3,6 +3,17 @@
     <!-- 头像区域 -->
     <view class="avatar-section">
       <view class="avatar-upload-wrapper">
+        <!-- #ifdef MP-WEIXIN -->
+        <button
+          class="avatar-choose-btn"
+          open-type="chooseAvatar"
+          :disabled="avatarUploading"
+          @chooseavatar="handleChooseAvatar"
+        >
+          <image class="avatar-image" :src="formData.avatar || DEFAULT_AVATAR" mode="aspectFill" />
+        </button>
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
         <UImageUpload
           v-model="avatarList"
           :max-count="1"
@@ -11,6 +22,7 @@
           @select="handleAvatarSelect"
           @delete="handleAvatarDelete"
         />
+        <!-- #endif -->
       </view>
       <text class="avatar-tip">点击更换头像</text>
     </view>
@@ -19,7 +31,18 @@
     <view class="form-section">
       <UMenuGroup>
         <UFormItem label="昵称">
+          <!-- #ifdef MP-WEIXIN -->
+          <input
+            v-model="formData.username"
+            type="nickname"
+            placeholder="请输入昵称"
+            :maxlength="NICKNAME_MAX_LENGTH"
+            @blur="handleNicknameBlur"
+          />
+          <!-- #endif -->
+          <!-- #ifndef MP-WEIXIN -->
           <input v-model="formData.username" placeholder="请输入昵称" :maxlength="NICKNAME_MAX_LENGTH" />
+          <!-- #endif -->
         </UFormItem>
 
         <UFormItem label="手机号">
@@ -50,6 +73,8 @@
       :disabled="avatarUploading"
       @click="handleSave"
     />
+
+    <UPrivacyPopup />
   </view>
 </template>
 
@@ -69,6 +94,8 @@ import { formatDateTime } from '@/utils/datetime';
 import { AVATAR_MAX_SIZE_MB, GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
 import { uploadFileByPath } from '@/api';
 import type { FileItem, SelectResult } from '@/components';
+
+const DEFAULT_AVATAR = '/static/images/default-avatar.png';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
@@ -172,13 +199,9 @@ function resetAvatarList() {
     : [];
 }
 
-// 选择头像后上传
-async function handleAvatarSelect(result: SelectResult) {
-  const file = result.tempFiles[0];
-  const path = result.tempFilePaths[0];
-  if (!path) return;
-
-  if (file?.size && file.size > AVATAR_MAX_SIZE_MB * 1024 * 1024) {
+// 上传头像临时文件，size 未知时不校验大小
+async function uploadAvatar(path: string, size?: number) {
+  if (size && size > AVATAR_MAX_SIZE_MB * 1024 * 1024) {
     uni.showToast({ title: `头像不能超过${AVATAR_MAX_SIZE_MB}MB`, icon: 'none' });
     resetAvatarList();
     return;
@@ -205,6 +228,22 @@ async function handleAvatarSelect(result: SelectResult) {
   } finally {
     avatarUploading.value = false;
   }
+}
+
+// 选择头像后上传
+function handleAvatarSelect(result: SelectResult) {
+  const path = result.tempFilePaths[0];
+  if (path) uploadAvatar(path, result.tempFiles[0]?.size);
+}
+
+// 微信头像选择
+function handleChooseAvatar(e: UniHelper.ButtonOnChooseavatarEvent) {
+  uploadAvatar((e.detail as { avatarUrl: string }).avatarUrl);
+}
+
+// 微信昵称：选择微信昵称时不一定触发 input，失焦时同步
+function handleNicknameBlur(e: { detail: { value: string } }) {
+  formData.username = e.detail.value;
 }
 
 // 删除头像
@@ -259,6 +298,25 @@ function handleSave() {
   background: var(--color-bg);
 
   .avatar-upload-wrapper {
+    .avatar-choose-btn {
+      width: 160rpx;
+      height: 160rpx;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 50%;
+      background: transparent;
+
+      &::after {
+        border: none;
+      }
+    }
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+    }
+
     // 覆盖 uni-file-picker 样式，使其显示为圆形头像
     :deep(.uni-file-picker) {
       .file-picker__box {

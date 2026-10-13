@@ -72,6 +72,8 @@
       :loading="submitAction.loading.value"
       @click="handleSubmit"
     />
+
+    <UPrivacyPopup />
   </view>
 </template>
 

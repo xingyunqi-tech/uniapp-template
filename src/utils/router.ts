@@ -191,6 +191,22 @@ export function getCurrentQuery(): QueryParams {
   return (currentPage?.options as QueryParams) || {};
 }
 
+/** 不作为分享落地页的页面，分享时改为首页 */
+const UNSHAREABLE_PAGES: string[] = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.ERROR];
+
+/**
+ * 当前页面的分享路径与参数，小程序 options 为原始编码值，直接拼接
+ */
+export function getShareTarget(): { path: string; query: string } {
+  const route = getCurrentRoute();
+  if (!route || UNSHAREABLE_PAGES.includes(route)) return { path: PAGES.HOME, query: '' };
+  const query = Object.entries(getCurrentQuery())
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  return { path: query ? `${route}?${query}` : route, query };
+}
+
 /**
  * 获取页面栈长度
  */

@@ -11,6 +11,7 @@ export default defineManifestConfig({
   /* 微信小程序配置 */
   'mp-weixin': {
     appid: 'wx527069a3e01ad680',
+    __usePrivacyCheck__: true,
     darkmode: true,
     themeLocation: 'theme.json',
     setting: {

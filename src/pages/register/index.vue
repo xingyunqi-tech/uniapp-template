@@ -61,15 +61,7 @@
 
     <!-- 用户协议 -->
     <view class="agreement">
-      <view class="agreement-checkbox" :class="{ checked: agreed }" @click="agreed = !agreed">
-        <uni-icons v-if="agreed" type="checkmarkempty" color="var(--color-text-inverse)" size="24rpx" />
-      </view>
-      <text class="agreement-text">
-        注册即表示同意
-        <text class="agreement-link" @click.stop="showAgreement('user')">《用户协议》</text>
-        和
-        <text class="agreement-link" @click.stop="showAgreement('privacy')">《隐私政策》</text>
-      </text>
+      <UAgreementCheck v-model="agreed" prefix="注册即表示同意" />
     </view>
   </AuthLayout>
 </template>
@@ -204,11 +196,6 @@ async function handleRegister() {
 function goToLogin() {
   backToLogin();
 }
-
-// 显示协议页面
-function showAgreement(type: 'user' | 'privacy') {
-  router.push(`${PAGES.AGREEMENT}?type=${type}`);
-}
 </script>
 
 <style scoped lang="scss">
@@ -288,42 +275,6 @@ function showAgreement(type: 'user' | 'privacy') {
 
 // 用户协议
 .agreement {
-  display: flex;
-  gap: 12rpx;
-  align-items: flex-start;
   margin-top: 48rpx;
-
-  .agreement-checkbox {
-    display: flex;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    width: 36rpx;
-    height: 36rpx;
-    margin-top: 4rpx;
-    transition: all var(--duration-fast);
-    border: 2rpx solid var(--color-border);
-    border-radius: 8rpx;
-
-    &.checked {
-      border-color: var(--color-primary);
-      background: var(--color-primary);
-    }
-  }
-
-  .agreement-text {
-    flex: 1;
-    color: var(--color-text-secondary);
-    font-size: 24rpx;
-    line-height: 1.6;
-
-    .agreement-link {
-      color: var(--color-primary);
-
-      &:active {
-        opacity: 0.8;
-      }
-    }
-  }
 }
 </style>

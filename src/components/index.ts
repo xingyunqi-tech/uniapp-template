@@ -72,6 +72,12 @@ export { default as USmsInput } from './USmsInput/index.vue';
 export { default as UImageUpload } from './UImageUpload/index.vue';
 export type { FileItem, FileUploadStatus, UploadMode, MediaType, SelectResult } from './UImageUpload/index.vue';
 
+// 协议勾选组件 (用户协议 + 隐私政策)
+export { default as UAgreementCheck } from './UAgreementCheck/index.vue';
+
+// 微信隐私授权弹窗 (仅微信小程序渲染)
+export { default as UPrivacyPopup } from './UPrivacyPopup/index.vue';
+
 // 搜索栏组件 (支持搜索历史、热门搜索)
 export { default as USearchBar } from './USearchBar/index.vue';
 

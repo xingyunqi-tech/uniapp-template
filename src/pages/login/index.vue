@@ -41,6 +41,10 @@
       <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleLogin">
         {{ loading ? '登录中...' : '登录' }}
       </button>
+
+      <view class="login-agreement">
+        <UAgreementCheck v-model="agreed" prefix="登录即表示同意" />
+      </view>
     </view>
 
     <!-- 其他登录方式 (仅小程序显示) -->
@@ -198,15 +202,26 @@ const loginAction = useAsyncAction({
 
 const loading = computed(() => !!loginAction.loading.value);
 
+/** 是否已同意用户协议与隐私政策 */
+const agreed = ref(false);
+
+function checkAgreed(): boolean {
+  if (!agreed.value) {
+    uni.showToast({ title: '请阅读并同意用户协议和隐私政策', icon: 'none' });
+  }
+  return agreed.value;
+}
+
 // 处理登录
 function handleLogin() {
-  if (!validateForm()) return;
+  if (!validateForm() || !checkAgreed()) return;
   loginMethod = loginWithForm;
   loginAction.execute();
 }
 
 // 处理微信登录（小程序）
 function handleWechatLogin() {
+  if (!checkAgreed()) return;
   loginMethod = loginWithWechat;
   loginAction.execute();
 }
@@ -359,5 +374,9 @@ function goToForgotPassword() {
       opacity: 0.8;
     }
   }
+}
+
+.login-agreement {
+  margin-top: 8rpx;
 }
 </style>
