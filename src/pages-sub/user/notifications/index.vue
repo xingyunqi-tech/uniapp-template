@@ -37,7 +37,7 @@
         @scrolltolower="onLoadMore"
       >
         <!-- 加载中 -->
-        <ULoading v-if="loading && notifications.length === 0" />
+        <ULoading v-if="loading && notifications.length === 0" visible />
 
         <!-- 空状态 -->
         <UEmpty v-else-if="notifications.length === 0" description="暂无通知" />
@@ -140,7 +140,7 @@ onShow(() => {
  */
 async function loadNotifications() {
   const params = activeTab.value === 'all' ? {} : { category: activeTab.value as any };
-  await notificationStore.fetchNotifications(params);
+  await notificationStore.refresh(params);
 }
 
 /**
@@ -168,7 +168,6 @@ async function onLoadMore() {
 async function handleTabChange(value: string) {
   if (activeTab.value === value) return;
   activeTab.value = value;
-  notificationStore.currentPage = 1;
   await loadNotifications();
 }
 

@@ -1,6 +1,6 @@
 <template>
   <view class="order-detail-page" :class="globalStore.themeClass">
-    <ULoading v-if="loading" />
+    <ULoading v-if="loading" visible />
 
     <scroll-view v-else-if="order" scroll-y class="detail-content">
       <!-- 订单状态 -->
@@ -73,10 +73,9 @@
     </scroll-view>
 
     <!-- 底部操作栏 -->
-    <view v-if="order" class="footer-actions">
+    <view v-if="order && (canCancel || canPay)" class="footer-actions">
       <button v-if="canCancel" class="action-btn cancel" @click="handleCancel">取消订单</button>
       <button v-if="canPay" class="action-btn primary" @click="handlePay">立即支付</button>
-      <button v-if="canDelete" class="action-btn" @click="handleDelete">删除订单</button>
     </view>
   </view>
 </template>
@@ -109,11 +108,6 @@ const canCancel = computed(() => order.value?.status === OrderStatus.UNPAID);
 
 // 是否可以支付
 const canPay = computed(() => order.value?.status === OrderStatus.UNPAID);
-
-// 是否可以删除（已关闭或已退款的订单）
-const canDelete = computed(
-  () => order.value?.status === OrderStatus.CLOSED || order.value?.status === OrderStatus.REFUNDED,
-);
 
 onLoad(options => {
   if (options?.id) {
@@ -190,24 +184,6 @@ function handlePay() {
     icon: 'none',
   });
   // TODO: 跳转到支付页面
-}
-
-// 删除订单
-async function handleDelete() {
-  const confirmed = await confirm({
-    title: '提示',
-    content: '确定要删除该订单吗？删除后无法恢复。',
-  });
-
-  if (confirmed) {
-    try {
-      await orderStore.remove(orderId.value);
-      uni.showToast({ title: '订单已删除', icon: 'success' });
-      uni.navigateBack();
-    } catch (error) {
-      console.error('删除订单失败:', error);
-    }
-  }
 }
 </script>
 

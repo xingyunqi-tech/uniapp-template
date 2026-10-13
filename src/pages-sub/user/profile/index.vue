@@ -6,10 +6,10 @@
         <UImageUpload
           v-model="avatarList"
           :max-count="1"
-          :max-size="5"
           :auto-upload="false"
           add-text="更换头像"
-          @change="handleAvatarChange"
+          @select="handleAvatarSelect"
+          @delete="handleAvatarDelete"
         />
       </view>
       <text class="avatar-tip">点击更换头像</text>
@@ -66,9 +66,9 @@ import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { formatDateTime } from '@/utils/datetime';
-import { GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
+import { AVATAR_MAX_SIZE_MB, GENDER_OPTIONS, NICKNAME_MAX_LENGTH } from '@/constants';
 import { uploadFileByPath } from '@/api';
-import type { FileItem } from '@/components';
+import type { FileItem, SelectResult } from '@/components';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
@@ -148,10 +148,7 @@ function initFormData() {
     const genderOptionIndex = GENDER_OPTIONS.findIndex(item => item.value === formData.gender);
     genderIndex.value = genderOptionIndex >= 0 ? genderOptionIndex : 0;
 
-    // 初始化头像列表
-    if (formData.avatar) {
-      avatarList.value = [{ name: 'avatar', extname: 'png', url: formData.avatar, status: 'success' }];
-    }
+    resetAvatarList();
   }
 }
 
@@ -169,46 +166,52 @@ onLoad(async () => {
   }
 });
 
-// 头像变化
-async function handleAvatarChange(files: FileItem[]) {
-  if (files.length > 0) {
-    const file = files[0];
+// 按当前头像重置上传组件
+function resetAvatarList() {
+  avatarList.value = formData.avatar
+    ? [{ name: 'avatar', extname: 'png', url: formData.avatar, status: 'success' }]
+    : [];
+}
 
-    // 如果是新选择的图片（状态为 ready），需要上传
-    // FileItem.url 在选择时是临时路径
-    if (file.status === 'ready' && file.url) {
-      avatarUploading.value = true;
-      try {
-        const fileInfo = await uploadFileByPath(file.url);
-        uploadedPhotoId.value = fileInfo.id;
-        formData.avatar = fileInfo.path;
+// 选择头像后上传
+async function handleAvatarSelect(result: SelectResult) {
+  const file = result.tempFiles[0];
+  const path = result.tempFilePaths[0];
+  if (!path) return;
 
-        // 更新 avatarList 的状态
-        avatarList.value = [{ ...file, url: fileInfo.path, status: 'success' }];
-
-        uni.showToast({
-          title: '头像已上传',
-          icon: 'success',
-        });
-      } catch (error) {
-        console.error('头像上传失败:', error);
-        uni.showToast({
-          title: '头像上传失败',
-          icon: 'none',
-        });
-        // 重置
-        avatarList.value = [];
-      } finally {
-        avatarUploading.value = false;
-      }
-    } else {
-      // 已存在的头像
-      formData.avatar = file.url;
-    }
-  } else {
-    formData.avatar = '';
-    uploadedPhotoId.value = null;
+  if (file?.size && file.size > AVATAR_MAX_SIZE_MB * 1024 * 1024) {
+    uni.showToast({ title: `头像不能超过${AVATAR_MAX_SIZE_MB}MB`, icon: 'none' });
+    resetAvatarList();
+    return;
   }
+
+  avatarUploading.value = true;
+  try {
+    const fileInfo = await uploadFileByPath(path);
+    uploadedPhotoId.value = fileInfo.id;
+    formData.avatar = fileInfo.path;
+    resetAvatarList();
+
+    uni.showToast({
+      title: '头像已上传',
+      icon: 'success',
+    });
+  } catch (error) {
+    console.error('头像上传失败:', error);
+    uni.showToast({
+      title: '头像上传失败',
+      icon: 'none',
+    });
+    resetAvatarList();
+  } finally {
+    avatarUploading.value = false;
+  }
+}
+
+// 删除头像
+function handleAvatarDelete() {
+  formData.avatar = '';
+  uploadedPhotoId.value = null;
 }
 
 // 性别变化

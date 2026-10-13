@@ -159,8 +159,8 @@ async function handleSave() {
     });
 
     // 清除登录状态，让用户重新登录
-    setTimeout(() => {
-      userStore.logout();
+    setTimeout(async () => {
+      await userStore.logout();
       uni.reLaunch({
         url: PAGES.LOGIN,
       });

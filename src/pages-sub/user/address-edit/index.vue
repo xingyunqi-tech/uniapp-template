@@ -110,15 +110,23 @@ const regionPickerValue = computed((): UniDataPickerValueArray => {
 });
 
 onLoad(async options => {
-  // 预加载地区树形数据（所有平台统一）
-  await regionStore.fetchRegionTree();
-
   if (options?.id) {
     isEdit.value = true;
-    loadAddressDetail(Number(options.id));
+    formData.id = Number(options.id);
     uni.setNavigationBarTitle({ title: '编辑地址' });
   } else {
     uni.setNavigationBarTitle({ title: '新增地址' });
+  }
+
+  // 预加载地区树形数据（所有平台统一）
+  try {
+    await regionStore.fetchRegionTree();
+  } catch (error) {
+    console.error('加载地区数据失败:', error);
+  }
+
+  if (isEdit.value) {
+    loadAddressDetail(formData.id);
   }
 });
 

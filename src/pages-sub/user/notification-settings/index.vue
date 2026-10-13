@@ -1,7 +1,7 @@
 <template>
   <view class="notification-settings-page" :class="globalStore.themeClass">
     <!-- 加载中 -->
-    <ULoading v-if="loading" />
+    <ULoading v-if="loading" visible />
 
     <!-- 错误状态 -->
     <UEmpty v-else-if="error" type="error" text="加载失败，请重试">

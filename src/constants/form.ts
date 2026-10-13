@@ -34,6 +34,11 @@ export const PASSWORD_RULES = {
 } as const;
 
 /**
+ * 头像大小上限（MB）
+ */
+export const AVATAR_MAX_SIZE_MB = 5;
+
+/**
  * 手机号长度
  */
 export const PHONE_LENGTH = 11;

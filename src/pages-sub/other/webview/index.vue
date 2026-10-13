@@ -6,13 +6,13 @@
     </view>
 
     <!-- Webview 容器 -->
-    <web-view :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
+    <web-view v-if="url" :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
 
     <!-- 加载失败状态 -->
     <view v-if="error" class="error-state">
       <UEmpty type="error" text="页面加载失败">
         <view class="error-actions">
-          <button class="retry-btn" @click="handleRetry">重新加载</button>
+          <button v-if="url" class="retry-btn" @click="handleRetry">重新加载</button>
           <button class="back-btn" @click="handleBack">返回上一页</button>
         </view>
       </UEmpty>
@@ -33,6 +33,7 @@ import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { decodeQueryValue } from '@/utils/router';
+import { isUrl } from '@/utils/validator';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -55,10 +56,15 @@ let progressTimer: ReturnType<typeof setInterval> | null = null;
  * 页面加载
  */
 onLoad(options => {
-  if (options?.url) {
-    originalUrl = decodeQueryValue(options.url);
-    url.value = originalUrl;
+  const targetUrl = options?.url ? decodeQueryValue(options.url) : '';
+  if (!isUrl(targetUrl)) {
+    loading.value = false;
+    error.value = true;
+    errorMessage.value = '无效的页面地址';
+    return;
   }
+  originalUrl = targetUrl;
+  url.value = originalUrl;
 
   if (options?.title) {
     title.value = decodeQueryValue(options.title);
@@ -124,7 +130,7 @@ function handleMessage(e: { detail: { data: unknown[] } }) {
       }
 
       // 跳转页面
-      if (data.type === 'navigateTo' && typeof data.url === 'string') {
+      if (data.type === 'navigateTo' && typeof data.url === 'string' && /^\/(?!\/)/.test(data.url)) {
         router.push(data.url);
       }
 

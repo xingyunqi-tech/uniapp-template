@@ -55,6 +55,10 @@ const props = withDefaults(
     countdownTemplate?: string;
     /** 是否点击后自动开始倒计时 (默认 false，需外部调用 startCountdown) */
     autoStart?: boolean;
+    /** 外部倒计时秒数，传入后由 countdown/isCounting 控制按钮状态 */
+    countdown?: number;
+    /** 外部是否正在倒计时，与 countdown 一起传入 */
+    isCounting?: boolean;
   }>(),
   {
     countdownSeconds: 60,
@@ -82,13 +86,17 @@ const {
   seconds: props.countdownSeconds,
 });
 
+const isControlled = computed(() => props.countdown !== undefined);
+const counting = computed(() => (isControlled.value ? props.isCounting : isCounting.value));
+const remainingSeconds = computed(() => (isControlled.value ? props.countdown : countdown.value));
+
 // 按钮是否禁用
-const isButtonDisabled = computed(() => props.disabled || isCounting.value);
+const isButtonDisabled = computed(() => props.disabled || counting.value);
 
 // 按钮文案
 const buttonText = computed(() => {
-  if (isCounting.value) {
-    return props.countdownTemplate.replace('{s}', String(countdown.value));
+  if (counting.value) {
+    return props.countdownTemplate.replace('{s}', String(remainingSeconds.value));
   }
   return props.defaultText;
 });
