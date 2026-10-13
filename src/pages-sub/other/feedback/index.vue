@@ -83,9 +83,10 @@ definePage({
 });
 
 import { reactive, computed, ref } from 'vue';
-import { useAsyncAction } from '@/composables';
+import { useAsyncAction, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFeedbackStore } from '@/store/modules/feedback';
+import { PAGES } from '@/constants';
 import { uploadFileByPath } from '@/api';
 import {
   FEEDBACK_TYPES,
@@ -97,6 +98,7 @@ import type { CreateFeedbackDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
 const feedbackStore = useFeedbackStore();
+const goBack = useSafeBack(PAGES.MINE);
 
 // 图片上传状态
 const uploading = ref(false);
@@ -132,7 +134,7 @@ const submitAction = useAsyncAction({
   },
   successText: '提交成功',
   onSuccess: () => {
-    uni.navigateBack();
+    goBack();
   },
 });
 

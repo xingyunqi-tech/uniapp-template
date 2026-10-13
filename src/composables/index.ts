@@ -2,6 +2,7 @@
  * Composables 统一导出
  */
 export * from './useRouter';
+export * from './useSafeBack';
 export * from './useList';
 export * from './useCountdown';
 export * from './usePasswordStrength';

@@ -84,7 +84,7 @@ definePage({
 
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms } from '@/composables';
+import { useRouter, useSafeBack, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import { encryptPassword } from '@/utils';
@@ -93,6 +93,7 @@ import { AuthSendCodeDtoType } from '@/api';
 const globalStore = useGlobalStore();
 
 const router = useRouter();
+const backToLogin = useSafeBack(PAGES.LOGIN);
 const userStore = useUserStore();
 
 // 注册方式: password | sms
@@ -201,7 +202,7 @@ async function handleRegister() {
 
 // 跳转登录页
 function goToLogin() {
-  router.back();
+  backToLogin();
 }
 
 // 显示协议页面

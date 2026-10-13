@@ -2,6 +2,7 @@
  * UniApp 路由工具函数
  * 封装 uni-app 路由 API，提供类似 vue-router 的使用体验
  */
+import { PAGES, TAB_BAR_PAGES } from '@/constants/pages';
 
 /** 动画类型 */
 export type AnimationType =
@@ -105,6 +106,19 @@ export function navigateBack(delta = 1): Promise<void> {
       fail: err => reject(err),
     });
   });
+}
+
+/**
+ * 安全返回：页面栈中有上一页时返回，否则打开兜底页（TabBar 页用 switchTab，其余用 redirectTo）
+ * @param fallback 无上一页时打开的页面，默认首页
+ * @param delta 返回的页面数
+ */
+export function safeBack(fallback: string = PAGES.HOME, delta = 1): Promise<void> {
+  if (getPageStackLength() > delta) {
+    return navigateBack(delta);
+  }
+  const isTabBar = (TAB_BAR_PAGES as readonly string[]).includes(getPathFromUrl(fallback));
+  return isTabBar ? switchTab(fallback) : redirectTo(fallback);
 }
 
 /**

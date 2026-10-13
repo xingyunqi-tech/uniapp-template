@@ -47,7 +47,7 @@ definePage({
 
 import { ref, computed, onMounted } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES } from '@/constants';
+import { safeBack } from '@/utils/router';
 
 defineOptions({
   name: 'UNavBar',
@@ -76,7 +76,7 @@ interface Props {
   textColor?: 'light' | 'dark';
   /** 是否显示底部边框 */
   border?: boolean;
-  /** 自定义返回事件 (默认调用 uni.navigateBack) */
+  /** 自定义返回事件 (默认返回上一页，无上一页时回到首页) */
   customBack?: boolean;
 }
 
@@ -177,12 +177,7 @@ function handleLeftClick() {
     if (props.customBack) {
       emit('back');
     } else {
-      uni.navigateBack({
-        fail: () => {
-          // 返回失败时跳转首页
-          uni.switchTab({ url: PAGES.HOME });
-        },
-      });
+      safeBack();
     }
   }
 }

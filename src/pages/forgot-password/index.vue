@@ -87,14 +87,14 @@ definePage({
 
 import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms, usePasswordStrength } from '@/composables';
+import { useSafeBack, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
 import { AuthSendCodeDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
 
-const router = useRouter();
+const backToLogin = useSafeBack(PAGES.LOGIN);
 const userStore = useUserStore();
 
 // 当前步骤: 1-验证手机号, 2-设置新密码
@@ -188,7 +188,7 @@ async function handleReset() {
 
     // 跳转到登录页
     setTimeout(() => {
-      router.replace(PAGES.LOGIN);
+      backToLogin();
     }, DELAY_TIMES.LONG);
   } catch (error) {
     console.error('重置密码失败:', error);
@@ -199,7 +199,7 @@ async function handleReset() {
 
 // 返回登录
 function goBack() {
-  router.back();
+  backToLogin();
 }
 </script>
 

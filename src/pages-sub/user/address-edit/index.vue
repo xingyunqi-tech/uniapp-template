@@ -66,13 +66,15 @@ definePage({
 
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { useAsyncAction } from '@/composables';
+import { useAsyncAction, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { useRegionStore } from '@/store/modules/region';
+import { PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
+const goBack = useSafeBack(PAGES.ADDRESS);
 const regionStore = useRegionStore();
 
 // 表单数据（province/city/district 存储行政区划代码）
@@ -219,7 +221,7 @@ const saveAction = useAsyncAction({
   },
   successText: '保存成功',
   onSuccess: () => {
-    uni.navigateBack();
+    goBack();
   },
 });
 
@@ -244,7 +246,7 @@ function handleDelete() {
           });
 
           setTimeout(() => {
-            uni.navigateBack();
+            goBack();
           }, 1500);
         } catch (error) {
           console.error('删除地址失败:', error);

@@ -30,13 +30,14 @@ definePage({
 
 import { ref } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables';
+import { useRouter, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { decodeQueryValue } from '@/utils/router';
 import { isUrl } from '@/utils/validator';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
+const goBack = useSafeBack();
 
 // 状态
 const url = ref('');
@@ -136,7 +137,7 @@ function handleMessage(e: { detail: { data: unknown[] } }) {
 
       // 返回上一页
       if (data.type === 'navigateBack') {
-        router.back();
+        goBack();
       }
 
       // 分享
@@ -160,7 +161,7 @@ function handleMessage(e: { detail: { data: unknown[] } }) {
 
       // 关闭 Webview
       if (data.type === 'close') {
-        router.back();
+        goBack();
       }
     }
   });
@@ -228,7 +229,7 @@ function handleRetry() {
  * 返回上一页
  */
 function handleBack() {
-  router.back();
+  goBack();
 }
 </script>
 

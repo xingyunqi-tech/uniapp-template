@@ -47,8 +47,10 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
+import { useSafeBack } from '@/composables';
 
 const globalStore = useGlobalStore();
+const goBack = useSafeBack(PAGES.ORDER);
 
 // ==================== 状态 ====================
 const isSuccess = ref(false);
@@ -68,7 +70,7 @@ onLoad(options => {
  * 重新支付
  */
 function handleRetry() {
-  uni.navigateBack();
+  goBack();
 }
 
 /**
