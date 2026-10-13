@@ -31,6 +31,25 @@ export const STORAGE_KEYS = {
 } as const;
 
 /**
+ * 可由用户清除的业务缓存，不含登录态与偏好设置
+ */
+export const CACHE_KEYS: readonly string[] = [
+  STORAGE_KEYS.SEARCH_HISTORY,
+  STORAGE_KEYS.VIEW_HISTORY,
+  STORAGE_KEYS.DRAFT,
+];
+
+/** 字符串按 UTF-8 编码后的字节数 */
+function utf8ByteLength(text: string): number {
+  let bytes = 0;
+  for (const char of text) {
+    const code = char.codePointAt(0) ?? 0;
+    bytes += code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+  }
+  return bytes;
+}
+
+/**
  * 检查是否为带过期时间的数据格式
  */
 function isStorageDataWithExpiry<T>(data: unknown): data is StorageDataWithExpiry<T> {
@@ -170,6 +189,33 @@ class UniStorage {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * 指定键占用的字节数，按序列化后的 UTF-8 长度估算
+   */
+  size(key: string): number {
+    try {
+      const rawData = uni.getStorageSync(this.getKey(key));
+      if (rawData === '' || rawData === null || rawData === undefined) return 0;
+      return utf8ByteLength(typeof rawData === 'string' ? rawData : JSON.stringify(rawData));
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * 业务缓存占用的字节数
+   */
+  getCacheSize(): number {
+    return CACHE_KEYS.reduce((total, key) => total + this.size(key), 0);
+  }
+
+  /**
+   * 清除业务缓存，保留登录态与偏好设置
+   */
+  clearCache(): void {
+    CACHE_KEYS.forEach(key => this.remove(key));
   }
 
   /**

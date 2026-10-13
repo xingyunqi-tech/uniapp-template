@@ -48,6 +48,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
 import { useSafeBack } from '@/composables';
+import { decodeQueryValue } from '@/utils/router';
 
 const globalStore = useGlobalStore();
 const goBack = useSafeBack(PAGES.ORDER);
@@ -60,7 +61,7 @@ const outTradeNo = ref('');
 // ==================== 生命周期 ====================
 onLoad(options => {
   isSuccess.value = options?.success === 'true';
-  message.value = options?.message || '';
+  message.value = options?.message ? decodeQueryValue(options.message) : '';
   outTradeNo.value = options?.outTradeNo || '';
 });
 

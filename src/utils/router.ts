@@ -169,11 +169,15 @@ export function getCurrentFullPath(): string {
 }
 
 /**
- * 解码页面 onLoad 参数值：H5 与 App 运行时已解码，小程序需手动解码
+ * 解码页面 onLoad 参数值：H5 与 App 运行时已解码，小程序需手动解码，编码格式错误时返回原值
  */
 export function decodeQueryValue(value: string): string {
   // #ifdef MP
-  return decodeURIComponent(value);
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
   // #endif
 
   // #ifndef MP

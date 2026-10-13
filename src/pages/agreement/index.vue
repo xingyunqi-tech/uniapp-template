@@ -26,9 +26,7 @@ interface Query {
 const agreementType = ref<'user' | 'privacy'>('user');
 
 onLoad((query?: Query) => {
-  if (query?.type) {
-    agreementType.value = query.type;
-  }
+  agreementType.value = query?.type === 'privacy' ? 'privacy' : 'user';
 
   // 设置导航栏标题
   uni.setNavigationBarTitle({

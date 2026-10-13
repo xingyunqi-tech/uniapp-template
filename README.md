@@ -15,7 +15,7 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 22 个组件（21 个 `U` 前缀组件 + `AuthLayout`）
+- **自定义组件库**: 24 个组件（23 个 `U` 前缀组件 + `AuthLayout`）
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
@@ -97,6 +97,8 @@ uniapp-template/
 │   │   ├── ULoadMore/         # 加载更多
 │   │   ├── USearchBar/        # 搜索栏
 │   │   ├── UTag/              # 标签
+│   │   ├── UAgreementCheck/   # 协议勾选
+│   │   ├── UPrivacyPopup/     # 微信隐私授权弹窗
 │   │   └── AuthLayout/        # 认证布局
 │   ├── composables/           # Composition API
 │   │   ├── useRouter.ts       # 路由导航封装
@@ -235,6 +237,8 @@ pnpm build:mp-alipay
 # App 构建
 pnpm build:app
 ```
+
+微信小程序上线前需在微信公众平台填写「用户隐私保护指引」，否则隐私授权弹窗 `UPrivacyPopup` 不会触发，选图、剪贴板等隐私接口无法使用。
 
 ## 脚本命令
 

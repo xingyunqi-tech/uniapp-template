@@ -285,7 +285,7 @@ async function doReport(): Promise<void> {
 
     // 使用默认 HTTP 上报 (需要配置 reportUrl)
     if (globalOptions.reportUrl) {
-      await uni.request({
+      const response = await uni.request({
         url: globalOptions.reportUrl,
         method: 'POST',
         data: { errors },
@@ -293,6 +293,9 @@ async function doReport(): Promise<void> {
           'Content-Type': 'application/json',
         },
       });
+      if (response.statusCode >= 400) {
+        throw new Error(`上报接口返回 ${response.statusCode}`);
+      }
       // 上报成功，重置失败计数
       reportFailureCount = 0;
     }

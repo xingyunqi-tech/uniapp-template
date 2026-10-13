@@ -60,6 +60,7 @@
     <!-- 退出登录按钮 -->
     <view v-if="isLoggedIn" class="logout-section">
       <button class="logout-btn" @click="handleLogout">退出登录</button>
+      <text class="delete-account" @click="handleDeleteAccount">注销账号</text>
     </view>
   </view>
 </template>
@@ -75,8 +76,9 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useRouter } from '@/composables';
+import { useAsyncAction, useRouter } from '@/composables';
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
+import { confirm, formatFileSize, storage } from '@/utils';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -106,29 +108,17 @@ onShow(() => {
 
 // 计算缓存大小
 function calculateCacheSize() {
-  // TODO: 实际计算缓存大小
-  cacheSize.value = '12.5 MB';
+  cacheSize.value = formatFileSize(storage.getCacheSize());
 }
 
-// 清除缓存
-function handleClearCache() {
-  uni.showModal({
-    title: '提示',
-    content: '确定要清除缓存吗？',
-    success: res => {
-      if (res.confirm) {
-        uni.showLoading({ title: '清除中...' });
-        setTimeout(() => {
-          uni.hideLoading();
-          cacheSize.value = '0 MB';
-          uni.showToast({
-            title: '清除成功',
-            icon: 'success',
-          });
-        }, 1000);
-      }
-    },
-  });
+// 清除缓存（搜索历史、浏览记录、草稿），不影响登录状态与偏好设置
+async function handleClearCache() {
+  const confirmed = await confirm('确定要清除缓存吗？');
+  if (!confirmed) return;
+
+  storage.clearCache();
+  calculateCacheSize();
+  uni.showToast({ title: '清除成功', icon: 'success' });
 }
 
 // 点击菜单项
@@ -166,6 +156,24 @@ function handleLogout() {
       }
     },
   });
+}
+
+// 注销账号
+const deleteAccountAction = useAsyncAction({
+  action: () => userStore.deleteAccount(),
+  successText: '账号已注销',
+  onSuccess: () => {
+    uni.switchTab({ url: PAGES.HOME });
+  },
+});
+
+async function handleDeleteAccount() {
+  const confirmed = await confirm({
+    title: '注销账号',
+    content: '注销后账号及相关数据将被删除且无法恢复，确定要注销吗？',
+    confirmText: '确认注销',
+  });
+  if (confirmed) deleteAccountAction.execute();
 }
 
 // ==================== 隐藏开发者选项功能 ====================
@@ -239,7 +247,16 @@ function handleToggleLocale(checked: boolean) {
 
 // 退出登录
 .logout-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 48rpx 24rpx;
+
+  .delete-account {
+    margin-top: 32rpx;
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
 
   .logout-btn {
     width: 100%;

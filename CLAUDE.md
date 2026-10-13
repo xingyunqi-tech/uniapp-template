@@ -56,7 +56,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. **分包优化** - `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 4. **easycom 自动注册** - 组件无需手动导入
 5. **主题系统** - CSS 变量支持 Light/Dark 主题切换
-6. **自定义组件库** - 22 个组件（21 个 `U` 前缀组件 + `AuthLayout`）
+6. **自定义组件库** - 24 个组件（23 个 `U` 前缀组件 + `AuthLayout`）
 
 ---
 
@@ -232,6 +232,7 @@ easycom: {
 | `UImageUpload` | 图片上传 | `UPasswordStrength` | 密码强度 |
 | `URichText` | 富文本 | `UFixedButton` | 固定按钮 |
 | `ULoadMore` | 加载更多 | `USearchBar` | 搜索栏 |
+| `UAgreementCheck` | 协议勾选 | `UPrivacyPopup` | 微信隐私授权弹窗 |
 | `UTag` | 标签 | `AuthLayout` | 认证布局 |
 
 **详细文档**: [.claude/agents/component-development.md](.claude/agents/component-development.md)
@@ -459,6 +460,10 @@ const token = uni.getStorageSync('token');
 // ❌ 错误: 使用 localStorage (小程序不存在)
 localStorage.setItem('token', 'xxx');  // 禁止!
 ```
+
+### 5. 微信隐私授权
+
+调用选图、剪贴板、定位、头像昵称等隐私接口的页面，需在页面模板中放置 `<UPrivacyPopup />`（仅微信小程序渲染），并在微信公众平台填写「用户隐私保护指引」。
 
 ---
 

@@ -79,7 +79,7 @@ const unreadCount = computed(() => {
 onShow(() => {
   // 刷新用户信息
   if (isLoggedIn.value) {
-    userStore.getUserInfo();
+    userStore.getUserInfo().catch(error => console.error('刷新用户信息失败:', error));
     // 刷新未读通知数量
     notificationStore.fetchUnreadCount();
   }

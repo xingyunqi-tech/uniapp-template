@@ -112,6 +112,7 @@ const canCancel = computed(() => order.value?.status === OrderStatus.UNPAID);
 const canPay = computed(() => order.value?.status === OrderStatus.UNPAID);
 
 onLoad(options => {
+  orderStore.clearCurrentOrder();
   if (options?.id) {
     orderId.value = options.id as string;
   }

@@ -21,6 +21,7 @@ import {
   changePassword as apiChangePassword,
   resetPasswordByPhone as apiResetPasswordByPhone,
   logout as apiLogout,
+  deleteCurrentUser,
   refreshToken as apiRefreshToken,
   isTransientError,
   type User,
@@ -310,6 +311,14 @@ export const useUserStore = defineStore(
       }
     }
 
+    /**
+     * 注销账号：接口成功后清除本地登录态
+     */
+    async function deleteAccount(): Promise<void> {
+      await deleteCurrentUser();
+      resetUserState();
+    }
+
     // ==================== 权限检查方法 ====================
     /**
      * 检查是否拥有指定角色
@@ -383,6 +392,7 @@ export const useUserStore = defineStore(
       refreshToken,
       resetUserState,
       logout,
+      deleteAccount,
       // 权限检查
       hasRole,
       hasRoleOrAbove,

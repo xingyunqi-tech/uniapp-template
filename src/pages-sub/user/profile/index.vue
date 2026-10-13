@@ -53,7 +53,7 @@
 
         <UFormItem label="性别" show-arrow>
           <picker mode="selector" :range="genderLabels" :value="genderIndex" @change="handleGenderChange">
-            <text>{{ genderLabels[genderIndex] }}</text>
+            <text>{{ genderText }}</text>
           </picker>
         </UFormItem>
 
@@ -121,6 +121,8 @@ const formData = reactive({
   birthday: '',
 });
 
+const genderText = computed(() => GENDER_OPTIONS.find(item => item.value === formData.gender)?.label ?? '请选择');
+
 // 今天日期（用于限制生日选择）
 const today = computed(() => formatDateTime(new Date(), 'YYYY-MM-DD'));
 
@@ -136,7 +138,7 @@ const saveAction = useAsyncAction({
       gender?: number;
       birthday?: string;
     } = {
-      nickname: formData.username,
+      nickname: formData.username.trim() || undefined,
       gender: formData.gender,
     };
 
@@ -165,7 +167,7 @@ const saveAction = useAsyncAction({
 function initFormData() {
   if (userStore.userInfo) {
     formData.avatar = userStore.userInfo.avatar || '';
-    formData.username = userStore.userInfo.username || '';
+    formData.username = userStore.userInfo.nickname || '';
     formData.phone = userStore.userInfo.phone || '';
     formData.gender = userStore.userInfo.gender ?? 0;
     formData.birthday = userStore.userInfo.birthday || '';

@@ -153,6 +153,8 @@ easycom: {
 | `ULoadMore` | 加载更多 |
 | `USearchBar` | 搜索栏 |
 | `UTag` | 标签 |
+| `UAgreementCheck` | 协议勾选 |
+| `UPrivacyPopup` | 微信隐私授权弹窗 |
 
 另有布局组件 `AuthLayout`（认证页面布局），同样通过 easycom 自动导入。
 
