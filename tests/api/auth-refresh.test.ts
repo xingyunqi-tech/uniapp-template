@@ -123,6 +123,23 @@ describe('401 刷新 Token', () => {
     expect(clearAuth).toHaveBeenCalledTimes(1);
   });
 
+  it('刷新遇到网络错误时保留登录态，原请求失败并提示错误', async () => {
+    const clearAuth = registerHandlers({
+      refreshToken: async () => {
+        throw new Error('request:fail timeout');
+      },
+    });
+    mockServer(() => unauthorized);
+    (uni.showToast as Mock).mockClear();
+
+    await expect(http.Get('/profile')).rejects.toThrow('request:fail timeout');
+    vi.runAllTimers();
+
+    expect(clearAuth).not.toHaveBeenCalled();
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+    expect(uni.showToast).toHaveBeenCalledWith({ title: 'request:fail timeout', icon: 'none' });
+  });
+
   it('skipAuthHandling 的请求 401 时直接抛错，不刷新也不清理登录态', async () => {
     const refreshToken = vi.fn(async () => 'fresh');
     const clearAuth = registerHandlers({ refreshToken });
@@ -320,6 +337,28 @@ describe('401 跳转登录页', () => {
     expect(clearAuth).toHaveBeenCalledTimes(1);
     expect(uni.showToast).toHaveBeenCalledWith({ title: 'Unauthorized', icon: 'none' });
     expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
+  it('受保护页发起的未登录请求 401 时不提示也不跳转', async () => {
+    storage.remove(STORAGE_KEYS.TOKEN);
+    onPage('/pages-sub/user/favorite/index');
+    (uni.showToast as Mock).mockClear();
+
+    await failWith401();
+
+    expect(uni.showToast).not.toHaveBeenCalled();
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
+  it('白名单页发起的未登录请求 401 时提示请先登录并跳转登录页', async () => {
+    storage.remove(STORAGE_KEYS.TOKEN);
+    onPage('/pages/index/index');
+    (uni.showToast as Mock).mockClear();
+
+    await failWith401();
+
+    expect(uni.showToast).toHaveBeenCalledWith({ title: '请先登录', icon: 'none' });
+    expect(uni.redirectTo).toHaveBeenCalledWith(expect.objectContaining({ url: '/pages/login/index' }));
   });
 
   it('已在登录页且 showError 为 false 时不提示', async () => {

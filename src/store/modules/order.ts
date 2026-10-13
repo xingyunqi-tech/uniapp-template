@@ -64,45 +64,42 @@ export const useOrderStore = defineStore('order', () => {
 
   // ==================== Actions ====================
 
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
-   * 获取订单列表
+   * 获取订单列表，refresh 为 true 时从第 1 页重新加载并作废进行中的请求
    */
   async function fetchOrderList(params: GetOrdersParams = {}, refresh = false) {
+    if (!refresh && (loading.value || !hasMore.value)) {
+      return { data: orderList.value, total: total.value };
+    }
+
+    const id = ++listRequestId;
     if (refresh) {
       currentPage.value = 1;
       hasMore.value = true;
     }
-
-    if (!hasMore.value && !refresh) {
-      return { data: orderList.value, total: total.value };
-    }
-
+    const page = currentPage.value;
     loading.value = true;
     try {
       const response = (await getOrders({
         ...params,
-        page: currentPage.value,
+        page,
         limit: params.limit ?? 10,
       })) as unknown as PaginatedOrderResponse;
 
+      if (id !== listRequestId) return response;
+
       const newOrders = response.data || [];
-
-      if (refresh || currentPage.value === 1) {
-        orderList.value = newOrders;
-      } else {
-        orderList.value = [...orderList.value, ...newOrders];
-      }
-
+      orderList.value = page === 1 ? newOrders : [...orderList.value, ...newOrders];
       total.value = response.total || 0;
-      hasMore.value = currentPage.value < (response.totalPages || 1);
-
-      if (hasMore.value) {
-        currentPage.value++;
-      }
+      hasMore.value = page < (response.totalPages || 1);
+      currentPage.value = hasMore.value ? page + 1 : page;
 
       return response;
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -202,6 +199,8 @@ export const useOrderStore = defineStore('order', () => {
    * 清空订单列表
    */
   function clearOrderList() {
+    listRequestId++;
+    loading.value = false;
     orderList.value = [];
     total.value = 0;
     currentPage.value = 1;

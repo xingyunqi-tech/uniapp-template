@@ -65,7 +65,7 @@
     <UFixedButton
       text="确认修改"
       loading-text="提交中..."
-      :loading="saving"
+      :loading="saveAction.loading.value"
       :disabled="!canSubmit"
       @click="handleSave"
     />
@@ -81,9 +81,9 @@ definePage({
 
 import { ref, reactive, computed, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { usePasswordStrength } from '@/composables';
+import { useAsyncAction, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES, PAGES } from '@/constants';
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 
@@ -101,8 +101,17 @@ const showOldPassword = ref(false);
 const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
 
-// 保存状态
-const saving = ref(false);
+// 修改成功后清除登录状态，让用户重新登录
+const saveAction = useAsyncAction({
+  action: async () => {
+    await userStore.changePassword(formData.oldPassword, formData.newPassword);
+    await userStore.logout();
+  },
+  successText: '密码修改成功',
+  onSuccess: () => {
+    uni.reLaunch({ url: PAGES.LOGIN });
+  },
+});
 
 // 密码强度
 const pwdStrength = usePasswordStrength(toRef(formData, 'newPassword'));
@@ -120,7 +129,7 @@ const canSubmit = computed(() => {
 });
 
 // 保存密码
-async function handleSave() {
+function handleSave() {
   // 验证
   if (!formData.oldPassword) {
     uni.showToast({ title: '请输入原密码', icon: 'none' });
@@ -147,29 +156,7 @@ async function handleSave() {
     return;
   }
 
-  saving.value = true;
-
-  try {
-    // 调用修改密码 API
-    await userStore.changePassword(formData.oldPassword, formData.newPassword);
-
-    uni.showToast({
-      title: '密码修改成功',
-      icon: 'success',
-    });
-
-    // 清除登录状态，让用户重新登录
-    setTimeout(async () => {
-      await userStore.logout();
-      uni.reLaunch({
-        url: PAGES.LOGIN,
-      });
-    }, DELAY_TIMES.LONG);
-  } catch (error) {
-    console.error('修改密码失败:', error);
-  } finally {
-    saving.value = false;
-  }
+  saveAction.execute();
 }
 </script>
 

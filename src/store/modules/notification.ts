@@ -29,7 +29,8 @@ export const useNotificationStore = defineStore('notification', () => {
   const settings = ref<NotificationSetting[]>([]);
   const loading = ref(false);
   const hasMore = ref(true);
-  const currentPage = ref(1);
+  /** 已加载到的页码，0 表示尚未加载 */
+  const currentPage = ref(0);
   const pageSize = ref(20);
 
   // ==================== 计算属性 ====================
@@ -37,32 +38,32 @@ export const useNotificationStore = defineStore('notification', () => {
 
   // ==================== Actions ====================
 
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
-   * 获取通知列表
+   * 获取指定页的通知列表，第 1 页替换列表，其余页追加；成功后才更新当前页码
    */
-  async function fetchNotifications(params?: GetNotificationsParams) {
+  async function fetchNotifications(params?: GetNotificationsParams, page = 1) {
+    const id = ++listRequestId;
+    loading.value = true;
     try {
-      loading.value = true;
       const response = await getNotifications({
-        page: currentPage.value,
-        limit: pageSize.value,
         ...params,
+        page,
+        limit: pageSize.value,
       });
 
-      if (response) {
-        const data = response as PaginationNotificationResponseDto;
-        if (currentPage.value === 1) {
-          notifications.value = data.list;
-        } else {
-          notifications.value.push(...data.list);
-        }
-        hasMore.value = currentPage.value < data.totalPages;
-      }
+      if (id !== listRequestId || !response) return;
+
+      const data = response as PaginationNotificationResponseDto;
+      notifications.value = page === 1 ? data.list : [...notifications.value, ...data.list];
+      currentPage.value = page;
+      hasMore.value = page < data.totalPages;
     } catch (error) {
       console.error('获取通知列表失败:', error);
-      uni.showToast({ title: '获取通知失败', icon: 'none' });
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -71,17 +72,16 @@ export const useNotificationStore = defineStore('notification', () => {
    */
   async function loadMore(params?: GetNotificationsParams) {
     if (!hasMore.value || loading.value) return;
-    currentPage.value++;
-    await fetchNotifications(params);
+    await fetchNotifications(params, currentPage.value + 1);
   }
 
   /**
-   * 刷新通知列表
+   * 刷新通知列表，作废进行中的请求
    */
   async function refresh(params?: GetNotificationsParams) {
-    currentPage.value = 1;
+    currentPage.value = 0;
     hasMore.value = true;
-    await fetchNotifications(params);
+    await fetchNotifications(params, 1);
   }
 
   /**
@@ -112,7 +112,6 @@ export const useNotificationStore = defineStore('notification', () => {
       return detail;
     } catch (error) {
       console.error('获取通知详情失败:', error);
-      uni.showToast({ title: '获取通知详情失败', icon: 'none' });
     }
   }
 
@@ -158,7 +157,6 @@ export const useNotificationStore = defineStore('notification', () => {
       uni.showToast({ title: '已全部标记为已读', icon: 'success' });
     } catch (error) {
       console.error('标记全部已读失败:', error);
-      uni.showToast({ title: '操作失败', icon: 'none' });
     }
   }
 
@@ -183,7 +181,6 @@ export const useNotificationStore = defineStore('notification', () => {
       uni.showToast({ title: '删除成功', icon: 'success' });
     } catch (error) {
       console.error('删除通知失败:', error);
-      uni.showToast({ title: '删除失败', icon: 'none' });
     }
   }
 
@@ -232,7 +229,6 @@ export const useNotificationStore = defineStore('notification', () => {
       }
     } catch (error) {
       console.error('更新通知设置失败:', error);
-      uni.showToast({ title: '更新失败', icon: 'none' });
     }
   }
 
@@ -240,12 +236,13 @@ export const useNotificationStore = defineStore('notification', () => {
    * 重置状态
    */
   function reset() {
+    listRequestId++;
     notifications.value = [];
     unreadCount.value = 0;
     settings.value = [];
     loading.value = false;
     hasMore.value = true;
-    currentPage.value = 1;
+    currentPage.value = 0;
   }
 
   return {

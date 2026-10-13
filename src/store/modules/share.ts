@@ -104,7 +104,7 @@ export const useShareStore = defineStore('share', () => {
       shareList.value = [];
     }
 
-    if (!pagination.value.hasMore && !refresh) {
+    if (!refresh && (loading.value || !pagination.value.hasMore)) {
       return shareList.value;
     }
 

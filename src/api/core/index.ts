@@ -3,7 +3,15 @@
  */
 
 // HTTP 客户端（业务代码使用）
-export { http, setAuthHandlers, type ApiResponse, type AuthHandlers, type RequestMeta } from './alova';
+export {
+  http,
+  setAuthHandlers,
+  ApiError,
+  isTransientError,
+  type ApiResponse,
+  type AuthHandlers,
+  type RequestMeta,
+} from './alova';
 
 // Orval 适配器
 export { customMutator, type CustomRequestConfig, type ExtractResult, type RequestOptions } from './mutator';

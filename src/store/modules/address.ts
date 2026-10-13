@@ -51,7 +51,7 @@ export const useAddressStore = defineStore('address', () => {
       hasMore.value = true;
     }
 
-    if (!hasMore.value && !refresh) {
+    if (!refresh && (loading.value || !hasMore.value)) {
       return addressList.value;
     }
 

@@ -131,7 +131,6 @@ const submitAction = useAsyncAction({
     });
   },
   successText: '提交成功',
-  errorText: '提交失败，请重试',
   onSuccess: () => {
     uni.navigateBack();
   },

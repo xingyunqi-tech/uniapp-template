@@ -60,7 +60,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
       hasMore.value = true;
     }
 
-    if (!hasMore.value && !refresh) {
+    if (!refresh && (loading.value || !hasMore.value)) {
       return favoriteList.value;
     }
 

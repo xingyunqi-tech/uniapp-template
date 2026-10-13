@@ -22,6 +22,7 @@ import {
   resetPasswordByPhone as apiResetPasswordByPhone,
   logout as apiLogout,
   refreshToken as apiRefreshToken,
+  isTransientError,
   type User,
   AuthSendCodeDtoType,
   AuthWechatLoginDtoType,
@@ -243,7 +244,7 @@ export const useUserStore = defineStore(
     }
 
     /**
-     * 刷新 Token，失败返回 null（登录态由请求拦截器统一清理）
+     * 刷新 Token：凭证失效返回 null（登录态由请求拦截器统一清理），网络错误或服务端 5xx 时抛出
      */
     async function refreshToken(): Promise<string | null> {
       if (!refreshTokenValue.value) {
@@ -251,14 +252,18 @@ export const useUserStore = defineStore(
       }
 
       const usedRefreshToken = refreshTokenValue.value;
-      const response = await apiRefreshToken(usedRefreshToken).catch(() => null);
+      let response: Awaited<ReturnType<typeof apiRefreshToken>>;
+      try {
+        response = await apiRefreshToken(usedRefreshToken);
+      } catch (error) {
+        if (refreshTokenValue.value !== usedRefreshToken) return token.value || null;
+        if (isTransientError(error)) throw error;
+        return null;
+      }
 
       // 刷新期间已登出或重新登录：丢弃本次结果，沿用当前登录态
       if (refreshTokenValue.value !== usedRefreshToken) {
         return token.value || null;
-      }
-      if (!response) {
-        return null;
       }
 
       setToken(response.token);

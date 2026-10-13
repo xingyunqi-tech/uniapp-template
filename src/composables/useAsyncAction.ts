@@ -8,15 +8,15 @@ export interface AsyncActionOptions<T = unknown> {
   successText?: string;
   /** 失败提示文本 */
   errorText?: string;
-  /** 成功后的回调 */
-  onSuccess?: (result: T) => void;
+  /** 成功后的回调，返回 Promise 时等待其完成后才解除锁定 */
+  onSuccess?: (result: T) => void | Promise<void>;
   /** 失败后的回调 */
   onError?: (error: unknown) => void;
   /** 成功后延迟执行时间（毫秒），设为 0 则不延迟 */
   delay?: number;
   /** 是否显示成功提示，默认 true */
   showSuccessToast?: boolean;
-  /** 是否显示失败提示，默认 true */
+  /** 是否显示失败提示，默认 false（请求错误已由请求层提示） */
   showErrorToast?: boolean;
 }
 
@@ -62,7 +62,7 @@ function resolveOptions<T>(options: AsyncActionOptions<T>) {
     onError: options.onError,
     delay: options.delay ?? DELAY_TIMES.LONG,
     showSuccessToast: options.showSuccessToast ?? true,
-    showErrorToast: options.showErrorToast ?? true,
+    showErrorToast: options.showErrorToast ?? false,
   };
 }
 
@@ -74,8 +74,10 @@ async function _executeAsync<T>(
   options: ReturnType<typeof resolveOptions<T>>,
   context: ExecutionContext,
   onFinally?: () => void,
+  onSettled?: () => void,
 ): Promise<T | undefined> {
   const { action, successText, errorText, onSuccess, onError, delay, showSuccessToast, showErrorToast } = options;
+  let settleInTimer = false;
 
   try {
     const result = await action();
@@ -92,13 +94,18 @@ async function _executeAsync<T>(
 
     if (onSuccess) {
       if (delay > 0) {
-        context.delayTimer = setTimeout(() => {
-          if (!context.isCancelled) {
-            onSuccess(result);
+        settleInTimer = true;
+        context.delayTimer = setTimeout(async () => {
+          try {
+            if (!context.isCancelled) {
+              await onSuccess(result);
+            }
+          } finally {
+            onSettled?.();
           }
         }, delay);
       } else {
-        onSuccess(result);
+        await onSuccess(result);
       }
     }
 
@@ -120,6 +127,7 @@ async function _executeAsync<T>(
     return undefined;
   } finally {
     onFinally?.();
+    if (!settleInTimer) onSettled?.();
   }
 }
 
@@ -142,17 +150,27 @@ export function useAsyncAction<T = unknown>(options: AsyncActionOptions<T>): Use
   const resolvedOptions = resolveOptions(options);
   const loading = ref(false);
   const context = createExecutionContext();
+  /** 成功回调执行完之前保持锁定，防止延迟期间重复提交 */
+  let locked = false;
 
   async function execute(): Promise<T | undefined> {
-    if (loading.value) return undefined;
+    if (locked) return undefined;
 
+    locked = true;
     loading.value = true;
 
-    return _executeAsync(resolvedOptions, context, () => {
-      if (!context.isCancelled) {
-        loading.value = false;
-      }
-    });
+    return _executeAsync(
+      resolvedOptions,
+      context,
+      () => {
+        if (!context.isCancelled) {
+          loading.value = false;
+        }
+      },
+      () => {
+        locked = false;
+      },
+    );
   }
 
   // 组件卸载时清理

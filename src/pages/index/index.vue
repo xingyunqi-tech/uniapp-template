@@ -187,8 +187,13 @@ onShow(() => {
 
 // 下拉刷新
 onPullDownRefresh(async () => {
-  await refresh();
-  uni.stopPullDownRefresh();
+  try {
+    await refresh();
+  } catch (error) {
+    console.error('刷新失败:', error);
+  } finally {
+    uni.stopPullDownRefresh();
+  }
 });
 
 // 上拉加载更多

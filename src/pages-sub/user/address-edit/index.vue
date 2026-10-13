@@ -53,7 +53,7 @@
     </view>
 
     <!-- 保存按钮 -->
-    <UFixedButton text="保存" loading-text="保存中..." :loading="saving" @click="handleSave" />
+    <UFixedButton text="保存" loading-text="保存中..." :loading="saveAction.loading.value" @click="handleSave" />
   </view>
 </template>
 
@@ -66,6 +66,7 @@ definePage({
 
 import { ref, reactive, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import { useAsyncAction } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { useRegionStore } from '@/store/modules/region';
@@ -88,9 +89,6 @@ const formData = reactive({
 
 // 是否编辑模式
 const isEdit = ref(false);
-
-// 保存状态
-const saving = ref(false);
 
 // 地区文本（将编码转换为名称显示）
 const regionText = computed(() => {
@@ -200,14 +198,9 @@ function validateForm(): boolean {
   return true;
 }
 
-// 保存地址
-async function handleSave() {
-  if (!validateForm()) return;
-
-  saving.value = true;
-
-  try {
-    // 使用区划代码保存，后端会自动填充名称
+// 保存地址，使用区划代码保存，后端会自动填充名称
+const saveAction = useAsyncAction({
+  action: async () => {
     const addressData = {
       name: formData.name,
       phone: formData.phone,
@@ -223,20 +216,16 @@ async function handleSave() {
     } else {
       await addressStore.addAddress(addressData);
     }
+  },
+  successText: '保存成功',
+  onSuccess: () => {
+    uni.navigateBack();
+  },
+});
 
-    uni.showToast({
-      title: '保存成功',
-      icon: 'success',
-    });
-
-    setTimeout(() => {
-      uni.navigateBack();
-    }, 1500);
-  } catch (error) {
-    console.error('保存地址失败:', error);
-  } finally {
-    saving.value = false;
-  }
+function handleSave() {
+  if (!validateForm()) return;
+  saveAction.execute();
 }
 
 // 删除地址

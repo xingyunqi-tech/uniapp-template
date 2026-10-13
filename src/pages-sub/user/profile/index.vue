@@ -130,7 +130,6 @@ const saveAction = useAsyncAction({
     uploadedPhotoId.value = null;
   },
   successText: '保存成功',
-  errorText: '保存失败',
 });
 
 /**

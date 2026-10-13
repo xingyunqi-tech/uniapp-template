@@ -78,12 +78,12 @@ definePage({
   },
 });
 
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSendSms } from '@/composables';
+import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES, PHONE_LENGTH, DELAY_TIMES } from '@/constants';
+import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue, encryptPassword } from '@/utils';
 
 const globalStore = useGlobalStore();
@@ -99,9 +99,6 @@ const formData = reactive({
   password: '',
   code: '',
 });
-
-// 加载状态
-const loading = ref(false);
 
 // 短信验证码
 const sms = useSendSms({
@@ -156,48 +153,28 @@ async function handleSendCode() {
   }
 }
 
-// 处理登录
-async function handleLogin() {
-  if (!validateForm()) return;
-
-  loading.value = true;
-
-  try {
+// 登录
+const loginAction = useAsyncAction({
+  action: async () => {
     if (loginType.value === 'password') {
-      // 密码登录
       await userStore.login({
         phone: formData.phone,
         password: encryptPassword(formData.password),
       });
     } else {
-      // 验证码登录
       await userStore.smsLogin({
         phone: formData.phone,
         code: formData.code,
       });
     }
+  },
+  successText: '登录成功',
+  onSuccess: navigateAfterLogin,
+});
 
-    uni.showToast({
-      title: '登录成功',
-      icon: 'success',
-    });
-
-    // 跳转
-    setTimeout(() => {
-      navigateAfterLogin();
-    }, DELAY_TIMES.LONG);
-  } catch (error) {
-    console.error('登录失败:', error);
-  } finally {
-    loading.value = false;
-  }
-}
-
-// 处理微信登录（小程序）
-async function handleWechatLogin() {
-  loading.value = true;
-
-  try {
+// 微信登录（小程序）
+const wechatLoginAction = useAsyncAction({
+  action: async () => {
     // 先获取微信登录 code，失败时请求层不会提示，在此单独提示
     const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
       uni.login({
@@ -210,25 +187,26 @@ async function handleWechatLogin() {
       });
     });
 
-    // 调用微信登录接口
     await userStore.wechatLogin({
       code: loginRes.code,
     });
+  },
+  successText: '登录成功',
+  onSuccess: navigateAfterLogin,
+});
 
-    uni.showToast({
-      title: '登录成功',
-      icon: 'success',
-    });
+const loading = computed(() => !!(loginAction.loading.value || wechatLoginAction.loading.value));
 
-    // 跳转
-    setTimeout(() => {
-      navigateAfterLogin();
-    }, DELAY_TIMES.LONG);
-  } catch (error) {
-    console.error('微信登录失败:', error);
-  } finally {
-    loading.value = false;
-  }
+// 处理登录
+function handleLogin() {
+  if (!validateForm()) return;
+  loginAction.execute();
+}
+
+// 处理微信登录（小程序）
+function handleWechatLogin() {
+  if (loading.value) return;
+  wechatLoginAction.execute();
 }
 
 // 跳转注册页

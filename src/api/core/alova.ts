@@ -6,8 +6,8 @@ import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/error-reporter';
-import { PAGES, TAB_BAR_PAGES } from '@/constants/pages';
-import { getCurrentFullPath, getPathFromUrl } from '@/utils/router';
+import { PAGES, TAB_BAR_PAGES, WHITE_LIST } from '@/constants/pages';
+import { getCurrentFullPath, getPathFromUrl, isInWhiteList } from '@/utils/router';
 
 // ==================== 类型定义 ====================
 
@@ -31,6 +31,24 @@ export interface RequestMeta {
   skipAuthHandling?: boolean;
 }
 
+/** 请求层抛出的错误，携带 HTTP 状态码与业务码 */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+    public readonly code?: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+/** 是否为临时错误：网络层失败或服务端 5xx */
+export function isTransientError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return true;
+  return error.status !== undefined && error.status >= 500;
+}
+
 /** 拦截器内部使用的 meta 字段 */
 interface InternalRequestMeta extends RequestMeta {
   /** 已用刷新后的 Token 重发过一次 */
@@ -41,7 +59,7 @@ interface InternalRequestMeta extends RequestMeta {
 
 /** 登录态处理回调，由 main.ts 在 pinia 安装后注册 */
 export interface AuthHandlers {
-  /** 用 Refresh Token 换新的 Token，失败返回 null */
+  /** 用 Refresh Token 换新的 Token，凭证失效返回 null，网络错误或服务端 5xx 时抛出 */
   refreshToken: () => Promise<string | null>;
   /** 清理本地登录态（不调用登出接口） */
   clearAuth: () => void;
@@ -60,23 +78,24 @@ let refreshingToken: Promise<string | null> | null = null;
 function refreshTokenOnce(): Promise<string | null> {
   if (!authHandlers) return Promise.resolve(null);
   if (!refreshingToken) {
-    refreshingToken = authHandlers
-      .refreshToken()
-      .catch(() => null)
-      .finally(() => {
-        refreshingToken = null;
-      });
+    refreshingToken = authHandlers.refreshToken().finally(() => {
+      refreshingToken = null;
+    });
   }
   return refreshingToken;
 }
 
 let isRedirectingToLogin = false;
 
+/** 请求发出时所在的页面，用于判断未登录请求是否由受保护页发起 */
+const methodSourcePath = new WeakMap<object, string>();
+
 /**
  * 清理登录态并跳转登录页（非 TabBar 页登录后跳回），重复触发只执行一次
  * 已在登录页时不跳转，按 showError 提示接口返回的错误信息
+ * @param expired 带 Token 请求被拒为 true，未登录请求为 false
  */
-function handleUnauthorized(message: string, showError: boolean): void {
+function handleUnauthorized(message: string, showError: boolean, expired: boolean): void {
   if (isRedirectingToLogin) return;
 
   const currentPath = getCurrentFullPath();
@@ -88,7 +107,7 @@ function handleUnauthorized(message: string, showError: boolean): void {
   }
 
   isRedirectingToLogin = true;
-  showRequestToast('登录已过期，请重新登录');
+  showRequestToast(expired ? '登录已过期，请重新登录' : '请先登录');
 
   const isTabBarPage = (TAB_BAR_PAGES as readonly string[]).includes(currentRoute);
   const loginUrl =
@@ -168,6 +187,8 @@ const alovaInstance = createAlova({
 
   // ==================== 请求拦截器 ====================
   beforeRequest(method) {
+    methodSourcePath.set(method, getCurrentFullPath());
+
     // 1. 添加 Token
     const token = storage.get<string>(STORAGE_KEYS.TOKEN);
     if (token && !method.config.headers.Authorization) {
@@ -209,15 +230,21 @@ const alovaInstance = createAlova({
       if (statusCode === 401) {
         if (meta?.skipAuthHandling) {
           reportApiError(method.url, method.type, 'Unauthorized', 401);
-          throw new Error('Unauthorized');
+          throw new ApiError('Unauthorized', 401);
         }
 
         const sentToken = method.config.headers.Authorization;
         if (!meta?.authRetried) {
           // 请求发出后 Token 已被其他请求刷新时，直接用当前 Token 重发
           const currentToken = storage.get<string>(STORAGE_KEYS.TOKEN);
-          const newToken =
-            currentToken && sentToken !== `Bearer ${currentToken}` ? currentToken : await refreshTokenOnce();
+          let newToken: string | null;
+          try {
+            newToken = currentToken && sentToken !== `Bearer ${currentToken}` ? currentToken : await refreshTokenOnce();
+          } catch (error) {
+            // 刷新遇到网络错误或服务端异常：保留登录态，仅本次请求失败
+            if (meta?.showError !== false) showRequestToast((error as Error).message || '网络请求失败');
+            throw error;
+          }
           if (newToken) {
             method.meta = { ...meta, authRetried: true };
             method.config.headers.Authorization = `Bearer ${newToken}`;
@@ -228,11 +255,17 @@ const alovaInstance = createAlova({
         }
 
         reportApiError(method.url, method.type, 'Unauthorized', 401);
-        // 带 Token 发出、当前已无 Token：期间已主动登出，不再提示过期和跳转
-        if (!sentToken || storage.get<string>(STORAGE_KEYS.TOKEN)) {
-          handleUnauthorized((data as ApiResponse)?.message || '认证失败，请重试', meta?.showError !== false);
+        const message = (data as ApiResponse)?.message || '认证失败，请重试';
+        const showError = meta?.showError !== false;
+        if (sentToken) {
+          // 带 Token 发出、当前已无 Token 说明期间已主动登出，不提示过期也不跳转
+          if (storage.get<string>(STORAGE_KEYS.TOKEN)) handleUnauthorized(message, showError, true);
+        } else {
+          // 受保护页发起的未登录请求由路由守卫跳转登录页
+          const sourcePath = methodSourcePath.get(method);
+          if (!sourcePath || isInWhiteList(sourcePath, WHITE_LIST)) handleUnauthorized(message, showError, false);
         }
-        throw new Error('Unauthorized');
+        throw new ApiError('Unauthorized', 401);
       }
 
       // HTTP 错误
@@ -242,7 +275,7 @@ const alovaInstance = createAlova({
           showRequestToast(msg);
         }
         reportApiError(method.url, method.type, msg, statusCode);
-        throw new Error(msg);
+        throw new ApiError(msg, statusCode);
       }
 
       const result = data as ApiResponse;
@@ -253,7 +286,7 @@ const alovaInstance = createAlova({
           showRequestToast(result.message || '请求失败');
         }
         reportApiError(method.url, method.type, result.message || '业务错误', result.code);
-        throw new Error(result.message || '业务错误');
+        throw new ApiError(result.message || '业务错误', statusCode, result.code);
       }
 
       return result;

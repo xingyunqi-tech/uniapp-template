@@ -94,64 +94,81 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
 
   const checkHasMore = customHasMore || defaultHasMore;
 
+  /** 最近一次请求的序号，refresh/reset 时递增使进行中的请求作废 */
+  let requestId = 0;
+
   // 加载数据
   async function loadData() {
-    if (loading.value || noMore.value) return;
+    if (loading.value || refreshing.value || noMore.value) return;
 
+    const id = ++requestId;
+    const currentPage = page.value;
     loading.value = true;
 
+    let data: T[];
     try {
-      const data = await fetchData({ page: page.value, pageSize });
-
-      if (page.value === 1) {
-        list.value = data;
-      } else {
-        list.value.push(...data);
-      }
-
-      // 更新总加载数量
-      totalLoaded.value += data.length;
-
-      // 大列表优化：裁剪超出的数据
-      trimList();
-
-      // 检查是否还有更多
-      if (checkHasMore(data, page.value, pageSize)) {
-        page.value++;
-      } else {
-        noMore.value = true;
-      }
+      data = await fetchData({ page: currentPage, pageSize });
+    } catch (error) {
+      if (id !== requestId) return;
+      throw error;
     } finally {
-      loading.value = false;
+      if (id === requestId) loading.value = false;
+    }
+    if (id !== requestId) return;
+
+    if (currentPage === 1) {
+      list.value = data;
+    } else {
+      list.value.push(...data);
+    }
+
+    // 更新总加载数量
+    totalLoaded.value += data.length;
+
+    // 大列表优化：裁剪超出的数据
+    trimList();
+
+    // 检查是否还有更多
+    if (checkHasMore(data, currentPage, pageSize)) {
+      page.value = currentPage + 1;
+    } else {
+      noMore.value = true;
     }
   }
 
   // 刷新数据
   async function refresh() {
-    if (refreshing.value || loading.value) return;
+    if (refreshing.value) return;
 
+    const id = ++requestId;
+    loading.value = false;
     refreshing.value = true;
-    page.value = 1;
-    noMore.value = false;
-    totalLoaded.value = 0;
 
+    let data: T[];
     try {
-      const data = await fetchData({ page: 1, pageSize });
-      list.value = data;
-      totalLoaded.value = data.length;
-
-      if (checkHasMore(data, 1, pageSize)) {
-        page.value = 2;
-      } else {
-        noMore.value = true;
-      }
+      data = await fetchData({ page: 1, pageSize });
+    } catch (error) {
+      if (id !== requestId) return;
+      throw error;
     } finally {
-      refreshing.value = false;
+      if (id === requestId) refreshing.value = false;
+    }
+    if (id !== requestId) return;
+
+    list.value = data;
+    totalLoaded.value = data.length;
+
+    if (checkHasMore(data, 1, pageSize)) {
+      page.value = 2;
+      noMore.value = false;
+    } else {
+      noMore.value = true;
     }
   }
 
   // 重置列表
   function reset() {
+    requestId++;
     list.value = [];
     page.value = 1;
     noMore.value = false;
