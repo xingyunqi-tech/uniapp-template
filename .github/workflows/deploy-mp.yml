@@ -98,6 +98,9 @@ jobs:
 
       - name: Get version info
         id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          INPUT_DESC: ${{ github.event.inputs.description }}
         run: |
           # 判断触发类型获取版本
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
@@ -106,15 +109,17 @@ jobs:
             DESC="Release $VERSION - $(date '+%Y-%m-%d %H:%M')"
           else
             # 手动触发
-            VERSION="${{ github.event.inputs.version }}"
+            VERSION="$INPUT_VERSION"
             if [[ -z "$VERSION" ]]; then
               VERSION=$(node -p "require('./package.json').version")
             fi
-            DESC="${{ github.event.inputs.description }}"
+            DESC="$INPUT_DESC"
             if [[ -z "$DESC" ]]; then
               DESC="v$VERSION - $(date '+%Y-%m-%d %H:%M')"
             fi
           fi
+          VERSION="${VERSION//$'\n'/ }"
+          DESC="${DESC//$'\n'/ }"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "description=$DESC" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
@@ -300,10 +305,13 @@ jobs:
 
       - name: Upload result notification
         if: success()
+        env:
+          MP_VERSION: ${{ needs.build.outputs.version }}
+          MP_DESC: ${{ needs.build.outputs.description }}
         run: |
           echo "✅ 微信小程序上传成功!"
-          echo "📦 版本: ${{ needs.build.outputs.version }}"
-          echo "📝 描述: ${{ needs.build.outputs.description }}"
+          echo "📦 版本: $MP_VERSION"
+          echo "📝 描述: $MP_DESC"
           echo ""
           echo "下一步操作:"
           echo "1. 登录微信小程序后台: https://mp.weixin.qq.com"
@@ -390,10 +398,13 @@ jobs:
 
       - name: Upload result notification
         if: success() && steps.secrets.outputs.configured == 'true'
+        env:
+          MP_VERSION: ${{ needs.build.outputs.version }}
+          MP_DESC: ${{ needs.build.outputs.description }}
         run: |
           echo "✅ 支付宝小程序上传成功!"
-          echo "📦 版本: ${{ needs.build.outputs.version }}"
-          echo "📝 描述: ${{ needs.build.outputs.description }}"
+          echo "📦 版本: $MP_VERSION"
+          echo "📝 描述: $MP_DESC"
           echo ""
           echo "下一步操作:"
           echo "1. 登录支付宝开放平台: https://open.alipay.com"
@@ -409,13 +420,16 @@ jobs:
 
     steps:
       - name: Summary
+        env:
+          MP_VERSION: ${{ needs.build.outputs.version }}
+          MP_DESC: ${{ needs.build.outputs.description }}
         run: |
           echo "# 小程序部署结果" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
           echo "|------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 版本 | ${{ needs.build.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 描述 | ${{ needs.build.outputs.description }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 版本 | $MP_VERSION |" >> $GITHUB_STEP_SUMMARY
+          echo "| 描述 | $MP_DESC |" >> $GITHUB_STEP_SUMMARY
           echo "| 构建 | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 微信 | ${{ needs.deploy-weixin.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 支付宝 | ${{ needs.deploy-alipay.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
