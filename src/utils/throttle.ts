@@ -54,6 +54,17 @@ export function throttle<T extends (...args: any[]) => any>(
     lastArgs = null;
   }
 
+  /** 设置尾部执行 */
+  function scheduleTrailing(wait: number) {
+    timer = setTimeout(() => {
+      if (lastArgs) {
+        fn(...lastArgs);
+      }
+      lastExecTime = Date.now();
+      timer = null;
+    }, wait);
+  }
+
   const throttledFn = function (...args: Parameters<T>) {
     const now = Date.now();
     const remaining = interval - (now - lastExecTime);
@@ -65,24 +76,19 @@ export function throttle<T extends (...args: any[]) => any>(
       timer = null;
     }
 
-    // 首次执行或间隔已过
+    // 首次调用且 leading = false 时不执行，开始计时，由尾部执行
+    if (!leading && lastExecTime === 0) {
+      lastExecTime = now;
+      if (trailing) scheduleTrailing(interval);
+      return;
+    }
+
+    // 间隔已过
     if (remaining <= 0 || remaining > interval) {
-      // 首次调用且 leading = false 时，只更新时间戳不执行
-      if (!leading && lastExecTime === 0) {
-        lastExecTime = now;
-      } else {
-        fn(...args);
-        lastExecTime = now;
-      }
+      fn(...args);
+      lastExecTime = now;
     } else if (trailing) {
-      // 设置尾部执行
-      timer = setTimeout(() => {
-        if (lastArgs) {
-          fn(...lastArgs);
-        }
-        lastExecTime = Date.now();
-        timer = null;
-      }, remaining);
+      scheduleTrailing(remaining);
     }
   } as ThrottledFunction<T>;
 

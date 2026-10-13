@@ -76,9 +76,9 @@ definePage({
 
 import { reactive, ref } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useRouter, useSafeBack, useSendSms } from '@/composables';
+import { useAsyncAction, useRouter, useSafeBack, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
 import { encryptPassword } from '@/utils';
 import { AuthSendCodeDtoType } from '@/api';
 
@@ -99,8 +99,29 @@ const formData = reactive({
   code: '',
 });
 
-// 加载状态
-const loading = ref(false);
+// 注册，成功提示后跳转首页，跳转前保持锁定
+const registerAction = useAsyncAction({
+  action: async () => {
+    if (registerType.value === 'password') {
+      await userStore.register({
+        phone: formData.phone,
+        password: encryptPassword(formData.password),
+        code: formData.code,
+      });
+    } else {
+      // 验证码注册（直接登录）
+      await userStore.smsLogin({
+        phone: formData.phone,
+        code: formData.code,
+      });
+    }
+  },
+  successText: '注册成功',
+  onSuccess: () => {
+    router.switchTab(PAGES.HOME);
+  },
+});
+const loading = registerAction.loading;
 
 // 是否同意协议
 const agreed = ref(false);
@@ -155,41 +176,9 @@ async function handleSendCode() {
 }
 
 // 处理注册
-async function handleRegister() {
+function handleRegister() {
   if (!validateForm()) return;
-
-  loading.value = true;
-
-  try {
-    if (registerType.value === 'password') {
-      // 密码注册
-      await userStore.register({
-        phone: formData.phone,
-        password: encryptPassword(formData.password),
-        code: formData.code,
-      });
-    } else {
-      // 验证码注册（直接登录）
-      await userStore.smsLogin({
-        phone: formData.phone,
-        code: formData.code,
-      });
-    }
-
-    uni.showToast({
-      title: '注册成功',
-      icon: 'success',
-    });
-
-    // 跳转到首页
-    setTimeout(() => {
-      router.switchTab(PAGES.HOME);
-    }, DELAY_TIMES.LONG);
-  } catch (error) {
-    console.error('注册失败:', error);
-  } finally {
-    loading.value = false;
-  }
+  registerAction.execute();
 }
 
 // 跳转登录页

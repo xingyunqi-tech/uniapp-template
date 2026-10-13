@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, type Mock } from 'vitest';
-import { getShareTarget } from '@/utils/router';
+import { getCurrentFullPath, getShareTarget } from '@/utils/router';
 import { PAGES } from '@/constants/pages';
 
 const getCurrentPagesMock = getCurrentPages as unknown as Mock;
@@ -30,5 +30,27 @@ describe('getShareTarget', () => {
 
   it('页面栈为空时分享为首页', () => {
     expect(getShareTarget()).toEqual({ path: PAGES.HOME, query: '' });
+  });
+});
+
+describe('getCurrentFullPath', () => {
+  afterEach(() => {
+    getCurrentPagesMock.mockReset().mockReturnValue([]);
+  });
+
+  it('小程序按原始参数拼接，不重复编码', () => {
+    getCurrentPagesMock.mockReturnValue([
+      {
+        route: 'pages-sub/order/list/index',
+        options: { keyword: '%E4%B8%AD' },
+        $page: { fullPath: '/pages-sub/order/list/index?keyword=%25E4%25B8%25AD' },
+      },
+    ]);
+
+    expect(getCurrentFullPath()).toBe('/pages-sub/order/list/index?keyword=%E4%B8%AD');
+  });
+
+  it('页面栈为空时返回空串', () => {
+    expect(getCurrentFullPath()).toBe('');
   });
 });

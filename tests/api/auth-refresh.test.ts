@@ -290,7 +290,14 @@ describe('401 跳转登录页', () => {
   });
 
   function onPage(fullPath: string) {
-    getCurrentPagesMock.mockReturnValue([{ $page: { fullPath } }]);
+    const [path, query = ''] = fullPath.split('?');
+    const options = Object.fromEntries(
+      query
+        .split('&')
+        .filter(Boolean)
+        .map(pair => pair.split('=')),
+    );
+    getCurrentPagesMock.mockReturnValue([{ route: path.slice(1), options, $page: { fullPath } }]);
   }
 
   afterEach(() => {

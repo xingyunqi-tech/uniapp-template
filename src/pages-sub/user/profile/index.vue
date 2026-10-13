@@ -135,7 +135,7 @@ const saveAction = useAsyncAction({
       nickname?: string;
       firstName?: string;
       lastName?: string;
-      photo?: { id: string };
+      photo?: { id: string } | null;
       gender?: number;
       birthday?: string;
     } = {
@@ -143,9 +143,11 @@ const saveAction = useAsyncAction({
       gender: formData.gender,
     };
 
-    // 如果有新上传的头像，添加 photo 参数
+    // 新上传头像时提交文件 ID，删除了原头像时提交 null
     if (uploadedPhotoId.value) {
       updateParams.photo = { id: uploadedPhotoId.value };
+    } else if (!formData.avatar && userStore.userInfo?.avatar) {
+      updateParams.photo = null;
     }
 
     // 如果有生日，添加 birthday 参数

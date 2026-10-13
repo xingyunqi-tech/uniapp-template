@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
-import { ROLE, ROLE_LEVEL } from '@/constants/permission';
+import { ADMIN_ROLE_ID, ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { encryptPassword } from '@/utils/crypto';
 import { useAddressStore } from './address';
@@ -25,6 +25,7 @@ import {
   refreshToken as apiRefreshToken,
   isTransientError,
   type User,
+  type AuthUpdateDto,
   AuthSendCodeDtoType,
   AuthWechatLoginDtoType,
 } from '@/api';
@@ -45,7 +46,7 @@ function mapUserToUserInfo(user: User): UserInfo {
     nickname: user.nickname,
     gender: user.gender as 0 | 1 | 2,
     birthday: user.birthday,
-    role: user.role?.name === 'admin' ? ROLE.ADMIN : ROLE.USER,
+    role: user.role?.id === ADMIN_ROLE_ID ? ROLE.ADMIN : ROLE.USER,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -213,11 +214,12 @@ export const useUserStore = defineStore(
       nickname?: string;
       firstName?: string;
       lastName?: string;
-      photo?: { id: string };
+      photo?: { id: string } | null;
       gender?: number;
       birthday?: string;
     }): Promise<UserInfo | null> {
-      const user = await updateCurrentUser(params);
+      // photo 传 null 时后端清除头像，OpenAPI 文档未标注 nullable
+      const user = await updateCurrentUser(params as AuthUpdateDto);
       const info = mapUserToUserInfo(user);
       setUserInfo(info);
       return info;

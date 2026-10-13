@@ -156,19 +156,18 @@ export const useAddressStore = defineStore('address', () => {
 
     // 从列表中移除
     const index = addressList.value.findIndex(item => item.id === id);
+    const wasDefault = defaultAddress.value?.id === id || (index !== -1 && addressList.value[index].isDefault);
     if (index !== -1) {
-      const removed = addressList.value[index];
       addressList.value.splice(index, 1);
+    }
 
-      // 如果删除的是默认地址，清除默认地址引用
-      if (removed.isDefault) {
-        // 如果还有其他地址，设置第一个为默认
-        if (addressList.value.length > 0) {
-          await setDefault(addressList.value[0].id);
-        } else {
-          defaultAddress.value = null;
-        }
-      }
+    // 删除默认地址后后端会另选一条作为默认，重新获取
+    if (wasDefault) {
+      defaultAddress.value = null;
+      const address = await fetchDefaultAddress();
+      addressList.value.forEach(item => {
+        item.isDefault = item.id === address?.id;
+      });
     }
   }
 

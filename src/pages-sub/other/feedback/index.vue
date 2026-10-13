@@ -35,17 +35,17 @@
     <view class="form-section">
       <view class="section-title">上传图片（可选，最多{{ FEEDBACK_IMAGE_MAX_COUNT }}张）</view>
       <view class="image-upload">
-        <view v-for="(img, index) in formData.tempImages" :key="index" class="image-item">
-          <image :src="img" mode="aspectFill" @click="previewImage(img)" />
+        <view v-for="(img, index) in formData.images" :key="img.path" class="image-item">
+          <image :src="img.path" mode="aspectFill" @click="previewImage(img.path)" />
           <view class="remove-btn" @click="removeImage(index)">
             <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
           </view>
           <!-- 上传中状态 -->
-          <view v-if="index >= formData.images.length" class="uploading-mask">
+          <view v-if="!img.url" class="uploading-mask">
             <text class="uploading-text">上传中...</text>
           </view>
         </view>
-        <view v-if="formData.tempImages.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
+        <view v-if="formData.images.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
           <uni-icons type="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
           <text class="upload-text">添加图片</text>
         </view>
@@ -84,7 +84,7 @@ definePage({
   },
 });
 
-import { reactive, computed, ref } from 'vue';
+import { reactive, computed } from 'vue';
 import { useAsyncAction, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFeedbackStore } from '@/store/modules/feedback';
@@ -102,22 +102,27 @@ const globalStore = useGlobalStore();
 const feedbackStore = useFeedbackStore();
 const goBack = useSafeBack(PAGES.MINE);
 
-// 图片上传状态
-const uploading = ref(false);
+interface FeedbackImage {
+  /** 本地临时路径（用于预览） */
+  path: string;
+  /** 服务器返回的图片地址，上传完成前为空 */
+  url: string;
+}
 
 const formData = reactive<{
   type: CreateFeedbackDtoType;
   content: string;
-  images: string[]; // 服务器返回的图片 URL
-  tempImages: string[]; // 本地临时图片路径（用于预览）
+  images: FeedbackImage[];
   contact: string;
 }>({
   type: FEEDBACK_TYPES[0].value as CreateFeedbackDtoType,
   content: '',
   images: [],
-  tempImages: [],
   contact: '',
 });
+
+// 是否有图片正在上传
+const uploading = computed(() => formData.images.some(img => !img.url));
 
 // 是否可提交（内容长度足够且没有正在上传的图片）
 const canSubmit = computed(() => {
@@ -130,7 +135,7 @@ const submitAction = useAsyncAction({
     await feedbackStore.submitFeedback({
       type: formData.type,
       content: formData.content,
-      images: formData.images.length > 0 ? formData.images : undefined,
+      images: formData.images.length > 0 ? formData.images.map(img => img.url) : undefined,
       contact: formData.contact || undefined,
     });
   },
@@ -146,52 +151,50 @@ function handleInput(e: { detail: { value: string } }) {
 }
 
 // 选择并上传图片
-async function chooseImage() {
+function chooseImage() {
   uni.chooseImage({
-    count: FEEDBACK_IMAGE_MAX_COUNT - formData.tempImages.length,
+    count: FEEDBACK_IMAGE_MAX_COUNT - formData.images.length,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: async res => {
-      const tempPaths = res.tempFilePaths;
-
-      // 先添加到临时预览
-      formData.tempImages.push(...tempPaths);
-
-      // 上传图片
-      uploading.value = true;
-      try {
-        for (const path of tempPaths) {
-          const fileInfo = await uploadFileByPath(path);
-          formData.images.push(fileInfo.path);
-        }
-      } catch (error) {
-        console.error('图片上传失败:', error);
-        uni.showToast({
-          title: '图片上传失败',
-          icon: 'none',
-        });
-        // 移除上传失败的临时图片
-        formData.tempImages = formData.tempImages.filter(p => !tempPaths.includes(p));
-      } finally {
-        uploading.value = false;
-      }
+    success: res => {
+      const start = formData.images.length;
+      formData.images.push(...(res.tempFilePaths as string[]).map(path => ({ path, url: '' })));
+      formData.images.slice(start).forEach(uploadImage);
     },
   });
 }
 
+// 上传单张图片，失败时移除
+async function uploadImage(image: FeedbackImage) {
+  try {
+    const fileInfo = await uploadFileByPath(image.path);
+    image.url = fileInfo.path;
+  } catch (error) {
+    console.error('图片上传失败:', error);
+    uni.showToast({
+      title: '图片上传失败',
+      icon: 'none',
+    });
+    removeImage(formData.images.indexOf(image));
+  }
+}
+
 // 预览已选图片
 function previewImage(current: string) {
-  uni.previewImage({ urls: formData.tempImages, current });
+  uni.previewImage({ urls: formData.images.map(img => img.path), current });
 }
 
 // 移除图片
 function removeImage(index: number) {
-  formData.tempImages.splice(index, 1);
-  formData.images.splice(index, 1);
+  if (index !== -1) formData.images.splice(index, 1);
 }
 
 // 提交反馈
 function handleSubmit() {
+  if (uploading.value) {
+    uni.showToast({ title: '图片上传中，请稍候', icon: 'none' });
+    return;
+  }
   if (!canSubmit.value) {
     uni.showToast({
       title: `请至少输入${FEEDBACK_CONTENT_MIN_LENGTH}个字`,

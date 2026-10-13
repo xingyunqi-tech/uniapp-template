@@ -46,7 +46,8 @@ export function debounce<T extends (...args: any[]) => any>(
   const { delay = 300, immediate = false } = options;
 
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let lastArgs: Parameters<T> | null = null;
+  /** 等待执行的参数，没有待执行调用时为 null */
+  let pendingArgs: Parameters<T> | null = null;
   let isFirstCall = true;
 
   function cancel() {
@@ -54,19 +55,17 @@ export function debounce<T extends (...args: any[]) => any>(
       clearTimeout(timer);
       timer = null;
     }
-    lastArgs = null;
+    pendingArgs = null;
   }
 
   function flush() {
-    if (lastArgs) {
-      cancel();
-      fn(...lastArgs);
-    }
+    if (!pendingArgs) return;
+    const args = pendingArgs;
+    cancel();
+    fn(...args);
   }
 
   const debouncedFn = function (...args: Parameters<T>) {
-    lastArgs = args;
-
     // 首次调用且开启立即执行
     if (immediate && isFirstCall) {
       isFirstCall = false;
@@ -76,10 +75,9 @@ export function debounce<T extends (...args: any[]) => any>(
 
     isFirstCall = false;
     cancel();
+    pendingArgs = args;
 
-    timer = setTimeout(() => {
-      fn(...args);
-    }, delay);
+    timer = setTimeout(flush, delay);
   } as DebouncedFunction<T>;
 
   debouncedFn.cancel = cancel;

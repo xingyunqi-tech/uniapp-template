@@ -31,7 +31,7 @@ export interface OrderStats {
  * 分页响应结构
  */
 interface PaginatedOrderResponse {
-  data: Order[];
+  list: Order[];
   total: number;
   page: number;
   limit: number;
@@ -73,7 +73,7 @@ export const useOrderStore = defineStore('order', () => {
    */
   async function fetchOrderList(params: GetOrdersParams = {}, refresh = false) {
     if (!refresh && (loading.value || !hasMore.value)) {
-      return { data: orderList.value, total: total.value };
+      return { list: orderList.value, total: total.value };
     }
 
     const id = ++listRequestId;
@@ -92,7 +92,7 @@ export const useOrderStore = defineStore('order', () => {
 
       if (id !== listRequestId) return response;
 
-      const newOrders = response.data || [];
+      const newOrders = response.list || [];
       orderList.value = page === 1 ? newOrders : [...orderList.value, ...newOrders];
       total.value = response.total || 0;
       hasMore.value = page < (response.totalPages || 1);
@@ -100,7 +100,7 @@ export const useOrderStore = defineStore('order', () => {
 
       return response;
     } catch (error) {
-      if (id !== listRequestId) return { data: orderList.value, total: total.value };
+      if (id !== listRequestId) return { list: orderList.value, total: total.value };
       throw error;
     } finally {
       if (id === listRequestId) loading.value = false;

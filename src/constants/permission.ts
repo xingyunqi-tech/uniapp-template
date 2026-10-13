@@ -15,6 +15,9 @@ export enum ROLE {
   ADMIN = 'admin',
 }
 
+/** 后端管理员角色 id（对应后端 RoleEnum.admin） */
+export const ADMIN_ROLE_ID = 1;
+
 /**
  * 角色层级（数值越大权限越高）
  * 用于判断权限包含关系

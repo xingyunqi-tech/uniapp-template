@@ -81,11 +81,14 @@ export async function queryOrder(method: PaymentMethod, outTradeNo: string): Pro
 
 /**
  * 申请退款
+ * @param refundAmount 退款金额（元）
+ * @param totalAmount 原订单金额（元），微信退款必需
  */
 export async function refund(
   method: PaymentMethod,
   outTradeNo: string,
   refundAmount: number,
+  totalAmount: number,
   reason?: string,
 ): Promise<boolean> {
   if (method === PaymentMethod.WECHAT) {
@@ -93,7 +96,7 @@ export async function refund(
       outTradeNo,
       outRefundNo: `${outTradeNo}_refund_${Date.now()}`,
       refundAmount: AlipayPay.yuanToFen(refundAmount), // 元转分
-      totalAmount: AlipayPay.yuanToFen(refundAmount), // 元转分
+      totalAmount: AlipayPay.yuanToFen(totalAmount), // 元转分
       reason,
     });
   } else if (method === PaymentMethod.ALIPAY) {

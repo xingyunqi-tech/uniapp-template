@@ -31,9 +31,7 @@
         @send="handleSendCode"
       />
 
-      <button class="submit-btn" :loading="verifying" :disabled="verifying" @click="handleVerify">
-        {{ verifying ? '验证中...' : '下一步' }}
-      </button>
+      <button class="submit-btn" @click="handleNext">下一步</button>
     </view>
 
     <!-- 第二步：设置新密码 -->
@@ -72,6 +70,7 @@
 
     <!-- 返回登录 -->
     <view class="link-row">
+      <text v-if="step === 2" class="link-text" @click="step = 1">上一步</text>
       <text class="link-text" @click="goBack">返回登录</text>
     </view>
   </AuthLayout>
@@ -87,10 +86,10 @@ definePage({
 
 import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
-import { useSafeBack, useSendSms, usePasswordStrength } from '@/composables';
+import { useAsyncAction, useSafeBack, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, DELAY_TIMES } from '@/constants';
-import { AuthSendCodeDtoType } from '@/api';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
+import { ApiError, AuthSendCodeDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
 
@@ -108,9 +107,18 @@ const formData = reactive({
   confirmPassword: '',
 });
 
-// 状态
-const verifying = ref(false);
-const submitting = ref(false);
+// 重置密码，验证码或手机号有误（422）时回到第一步
+const resetAction = useAsyncAction({
+  action: () => userStore.resetPasswordByPhone(formData.phone, formData.code, formData.newPassword),
+  successText: '密码重置成功',
+  onSuccess: () => {
+    backToLogin();
+  },
+  onError: error => {
+    if (error instanceof ApiError && error.status === 422) step.value = 1;
+  },
+});
+const submitting = resetAction.loading;
 
 // 短信验证码
 const sms = useSendSms({
@@ -128,28 +136,15 @@ async function handleSendCode() {
   }
 }
 
-// 验证手机号和验证码
-async function handleVerify() {
+// 校验手机号和验证码格式，验证码在重置密码时由后端校验
+function handleNext() {
   if (!sms.validatePhone(formData.phone)) return;
   if (!sms.validateCode(formData.code)) return;
-
-  verifying.value = true;
-
-  try {
-    // TODO: 调用验证码校验接口
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // 验证成功，进入下一步
-    step.value = 2;
-  } catch {
-    uni.showToast({ title: '验证码错误', icon: 'none' });
-  } finally {
-    verifying.value = false;
-  }
+  step.value = 2;
 }
 
 // 重置密码
-async function handleReset() {
+function handleReset() {
   if (!formData.newPassword) {
     uni.showToast({ title: '请输入新密码', icon: 'none' });
     return;
@@ -175,26 +170,7 @@ async function handleReset() {
     return;
   }
 
-  submitting.value = true;
-
-  try {
-    // 调用重置密码接口
-    await userStore.resetPasswordByPhone(formData.phone, formData.code, formData.newPassword);
-
-    uni.showToast({
-      title: '密码重置成功',
-      icon: 'success',
-    });
-
-    // 跳转到登录页
-    setTimeout(() => {
-      backToLogin();
-    }, DELAY_TIMES.LONG);
-  } catch (error) {
-    console.error('重置密码失败:', error);
-  } finally {
-    submitting.value = false;
-  }
+  resetAction.execute();
 }
 
 // 返回登录
@@ -309,6 +285,7 @@ function goBack() {
 .link-row {
   display: flex;
   justify-content: center;
+  gap: 48rpx;
   margin-top: 40rpx;
 
   .link-text {

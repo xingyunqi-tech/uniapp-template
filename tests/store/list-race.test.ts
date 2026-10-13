@@ -24,7 +24,7 @@ const { useOrderStore } = await import('@/store/modules/order');
 const { useNotificationStore } = await import('@/store/modules/notification');
 const { useAddressStore } = await import('@/store/modules/address');
 
-const ordersPage = (ids: string[], totalPages = 3) => ({ data: ids.map(id => ({ id })), total: 30, totalPages });
+const ordersPage = (ids: string[], totalPages = 3) => ({ list: ids.map(id => ({ id })), total: 30, totalPages });
 const listPage = (ids: string[], totalPages = 3) => ({ list: ids.map(id => ({ id })), totalPages });
 
 beforeEach(() => {

@@ -7,7 +7,14 @@ const getCurrentPagesMock = getCurrentPages as unknown as Mock;
 const loginWithRedirect = (path: string) => `/pages/login/index?redirect=${encodeURIComponent(path)}`;
 
 function onPage(fullPath: string) {
-  getCurrentPagesMock.mockReturnValue([{ $page: { fullPath } }]);
+  const [path, query = ''] = fullPath.split('?');
+  const options = Object.fromEntries(
+    query
+      .split('&')
+      .filter(Boolean)
+      .map(pair => pair.split('=')),
+  );
+  getCurrentPagesMock.mockReturnValue([{ route: path.slice(1), options, $page: { fullPath } }]);
 }
 
 describe('guardCurrentPage', () => {

@@ -168,11 +168,22 @@ export function getCurrentRoute(): string {
 
 /**
  * 获取当前页面完整路径（含查询参数），读取失败返回空串
+ * 小程序的 $page.fullPath 会对原始编码的参数再编码一次，改用 route 与 options 原值拼接
  */
 export function getCurrentFullPath(): string {
+  // #ifdef MP
+  const route = getCurrentRoute();
+  if (!route) return '';
+  const query = joinRawQuery(getCurrentQuery());
+  return query ? `${route}?${query}` : route;
+  // #endif
+
+  // #ifndef MP
+
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1] as { $page?: { fullPath?: string } } | undefined;
   return currentPage?.$page?.fullPath ?? '';
+  // #endif
 }
 
 /**
@@ -202,19 +213,24 @@ export function getCurrentQuery(): QueryParams {
   return (currentPage?.options as QueryParams) || {};
 }
 
+/** 拼接查询参数，小程序 options 为原始编码值，不再编码 */
+function joinRawQuery(query: QueryParams): string {
+  return Object.entries(query)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+}
+
 /** 不作为分享落地页的页面，分享时改为首页 */
 const UNSHAREABLE_PAGES: string[] = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.ERROR];
 
 /**
- * 当前页面的分享路径与参数，小程序 options 为原始编码值，直接拼接
+ * 当前页面的分享路径与参数
  */
 export function getShareTarget(): { path: string; query: string } {
   const route = getCurrentRoute();
   if (!route || UNSHAREABLE_PAGES.includes(route)) return { path: PAGES.HOME, query: '' };
-  const query = Object.entries(getCurrentQuery())
-    .filter(([, value]) => value !== undefined)
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
+  const query = joinRawQuery(getCurrentQuery());
   return { path: query ? `${route}?${query}` : route, query };
 }
 

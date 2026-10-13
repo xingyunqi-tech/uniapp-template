@@ -33,7 +33,8 @@ import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useRouter, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { decodeQueryValue } from '@/utils/router';
-import { isUrl } from '@/utils/validator';
+import { isUrlInHosts } from '@/utils/validator';
+import { WEBVIEW_ALLOWED_HOSTS } from '@/constants';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -58,10 +59,10 @@ let progressTimer: ReturnType<typeof setInterval> | null = null;
  */
 onLoad(options => {
   const targetUrl = options?.url ? decodeQueryValue(options.url) : '';
-  if (!isUrl(targetUrl)) {
+  if (!isUrlInHosts(targetUrl, WEBVIEW_ALLOWED_HOSTS)) {
     loading.value = false;
     error.value = true;
-    errorMessage.value = '无效的页面地址';
+    errorMessage.value = '不支持打开该页面地址';
     return;
   }
   originalUrl = targetUrl;

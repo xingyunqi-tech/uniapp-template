@@ -55,8 +55,8 @@
             <view v-if="!item.isRead" class="unread-dot"></view>
 
             <!-- 通知图标 -->
-            <view class="notification-icon" :class="`type-${item.type}`">
-              <uni-icons :type="getIconType(item.type) as any" size="20" color="var(--color-text-inverse)" />
+            <view class="notification-icon" :class="`category-${item.category}`">
+              <uni-icons :type="getIconType(item.category) as any" size="20" color="var(--color-text-inverse)" />
             </view>
 
             <!-- 通知内容 -->
@@ -205,7 +205,7 @@ function handleDelete(item: Notification) {
  * 全部已读
  */
 function handleMarkAllRead() {
-  if (notifications.value.every(n => n.isRead)) {
+  if (notificationStore.unreadCount === 0 && notifications.value.every(n => n.isRead)) {
     uni.showToast({ title: '已全部已读', icon: 'none' });
     return;
   }
@@ -229,9 +229,9 @@ function navigateToSettings() {
 }
 
 /**
- * 获取图标类型
+ * 获取分类图标
  */
-function getIconType(type: string): string {
+function getIconType(category: string): string {
   const iconMap: Record<string, string> = {
     [NotificationCategory.SYSTEM]: 'notification',
     [NotificationCategory.ORDER]: 'cart',
@@ -239,7 +239,7 @@ function getIconType(type: string): string {
     [NotificationCategory.PROMOTION]: 'medal',
     [NotificationCategory.ACTIVITY]: 'gift',
   };
-  return iconMap[type] || 'notification';
+  return iconMap[category] || 'notification';
 }
 
 /**
@@ -364,23 +364,23 @@ function formatTime(time: string): string {
     margin-right: 24rpx;
     border-radius: 50%;
 
-    &.type-SYSTEM {
+    &.category-SYSTEM {
       background: var(--color-primary);
     }
 
-    &.type-ORDER {
+    &.category-ORDER {
       background: var(--color-warning);
     }
 
-    &.type-ACTIVITY {
+    &.category-ACTIVITY {
       background: var(--color-success);
     }
 
-    &.type-PAYMENT {
+    &.category-PAYMENT {
       background: var(--color-primary);
     }
 
-    &.type-PROMOTION {
+    &.category-PROMOTION {
       background: var(--color-error);
     }
   }

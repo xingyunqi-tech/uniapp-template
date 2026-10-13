@@ -63,6 +63,11 @@ export const ICP_LICENSE = '沪ICP备2025155741号-1';
 export const ICP_LINK = 'https://beian.miit.gov.cn/';
 
 /**
+ * webview 页允许打开的域名（含其子域名）
+ */
+export const WEBVIEW_ALLOWED_HOSTS: readonly string[] = ['sunweijie.top'];
+
+/**
  * 原生组件属性颜色（swiper 指示点等原生属性不支持 CSS 变量）
  */
 export const NATIVE_COLOR = {

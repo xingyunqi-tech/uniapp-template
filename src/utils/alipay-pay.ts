@@ -1,6 +1,6 @@
 /**
  * 支付宝支付工具函数
- * 支持 H5、支付宝小程序、App 等多端
+ * 支持 H5（手机网站支付、电脑网站支付），支付宝小程序与 App 支付暂不支持
  */
 import {
   alipayControllerCreateMobilePaymentV1,
@@ -22,95 +22,26 @@ export interface PaymentResult {
 
 /**
  * 创建支付宝小程序支付
+ * 需要后端提供 alipay.trade.create 下单接口返回 trade_no，当前后端未提供，始终返回失败
  */
 export async function createMiniProgramPayment(params: CreatePaymentDto): Promise<PaymentResult> {
-  try {
-    // #ifdef MP-ALIPAY
-    const paymentData = await alipayControllerCreateMobilePaymentV1(params);
-
-    // 支付宝小程序使用 my.tradePay
-    return new Promise(resolve => {
-      my.tradePay({
-        tradeNO: (paymentData as any).tradeNO || params.outTradeNo,
-        success: () => {
-          resolve({
-            success: true,
-            message: '支付成功',
-            outTradeNo: params.outTradeNo,
-          });
-        },
-        fail: (err: any) => {
-          console.error('支付宝支付失败:', err);
-          resolve({
-            success: false,
-            message: err.errorMessage || '支付失败',
-            outTradeNo: params.outTradeNo,
-          });
-        },
-      });
-    });
-    // #endif
-
-    // #ifndef MP-ALIPAY
-    return {
-      success: false,
-      message: '当前平台不支持支付宝小程序支付',
-    };
-    // #endif
-  } catch (error) {
-    console.error('创建支付订单失败:', error);
-    return {
-      success: false,
-      message: '创建支付订单失败',
-    };
-  }
+  return {
+    success: false,
+    message: '暂不支持支付宝小程序支付',
+    outTradeNo: params.outTradeNo,
+  };
 }
 
 /**
  * 创建 App 支付
+ * 需要后端提供 alipay.trade.app.pay 接口返回 orderInfo，当前后端未提供，始终返回失败
  */
 export async function createAppPayment(params: CreatePaymentDto): Promise<PaymentResult> {
-  try {
-    // #ifdef APP-PLUS
-    const paymentData = await alipayControllerCreateMobilePaymentV1(params);
-
-    // App 使用 uni.requestPayment
-    return new Promise(resolve => {
-      uni.requestPayment({
-        provider: 'alipay',
-        orderInfo: (paymentData as any).orderInfo || paymentData,
-        success: () => {
-          resolve({
-            success: true,
-            message: '支付成功',
-            outTradeNo: params.outTradeNo,
-          });
-        },
-        fail: (err: any) => {
-          console.error('支付宝支付失败:', err);
-          resolve({
-            success: false,
-            message: err.errMsg || '支付失败',
-            outTradeNo: params.outTradeNo,
-          });
-        },
-      });
-    });
-    // #endif
-
-    // #ifndef APP-PLUS
-    return {
-      success: false,
-      message: '当前平台不支持支付宝 App 支付',
-    };
-    // #endif
-  } catch (error) {
-    console.error('创建支付订单失败:', error);
-    return {
-      success: false,
-      message: '创建支付订单失败',
-    };
-  }
+  return {
+    success: false,
+    message: '暂不支持支付宝 App 支付',
+    outTradeNo: params.outTradeNo,
+  };
 }
 
 /**

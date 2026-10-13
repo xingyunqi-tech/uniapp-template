@@ -149,6 +149,16 @@ export const ID_CARD_PATTERN = /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[1
 /** URL 正则 */
 export const URL_PATTERN = /^https?:\/\/.+/;
 
+/**
+ * URL 的域名是否在列表中（含子域名），仅匹配 http/https
+ * @example isUrlInHosts('https://m.example.com/a', ['example.com']) // true
+ */
+export function isUrlInHosts(url: string, hosts: readonly string[]): boolean {
+  const hostname = /^https?:\/\/(?:[^/\\?#@]*@)?([a-z0-9.-]+)(?=[:/?#]|$)/i.exec(url)?.[1]?.toLowerCase();
+  if (!hostname) return false;
+  return hosts.some(host => hostname === host || hostname.endsWith(`.${host}`));
+}
+
 /** 验证手机号 */
 export function isPhone(value: string): boolean {
   return PHONE_PATTERN.test(value);
