@@ -7,6 +7,21 @@
       "^AuthLayout$": "@/components/AuthLayout/index.vue"
     }
   },
+  "preloadRule": {
+    "pages/mine/index": {
+      "network": "all",
+      "packages": [
+        "pages-sub/user",
+        "pages-sub/order"
+      ]
+    },
+    "pages-sub/user/settings/index": {
+      "network": "all",
+      "packages": [
+        "pages-sub/other"
+      ]
+    }
+  },
   "globalStyle": {
     "navigationBarTextStyle": "@navTxtStyle",
     "navigationBarTitleText": "UniApp",

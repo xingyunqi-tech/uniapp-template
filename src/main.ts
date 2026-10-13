@@ -1,12 +1,13 @@
-import { createSSRApp } from 'vue';
+import { createSSRApp, watch } from 'vue';
 import type { App } from 'vue';
 import AppComponent from './App.vue';
 import { setAuthHandlers } from './api';
-import pinia, { useGlobalStore, useUserStore } from './store';
+import pinia, { useGlobalStore, useNotificationStore, useUserStore } from './store';
 import { i18n } from './utils/locale';
 import { guardCurrentPage, setupRouterInterceptor } from './utils/router-interceptor';
-import { getShareTarget } from './utils/router';
-import { APP_NAME } from './constants';
+import { getCurrentRoute, getShareTarget, isTabBarPage } from './utils/router';
+import { syncTabBarBadge } from './utils/tabbar-badge';
+import { APP_NAME, TAB_BAR_BADGE } from './constants';
 
 /** 是否为当前栈顶页面的实例（排除组件） */
 function isCurrentPageVm(vm: unknown): boolean {
@@ -34,6 +35,9 @@ export function createApp() {
   // 设置路由拦截器
   setupRouterInterceptor();
 
+  // 未读数变化时同步 TabBar 角标
+  watch(() => useNotificationStore(pinia).unreadCount, syncTabBarBadge);
+
   app.mixin({
     // 页面加载时校验访问权限
     onLoad(this: unknown) {
@@ -44,6 +48,13 @@ export function createApp() {
     onShow(this: unknown) {
       if (!isCurrentPageVm(this)) return;
       useGlobalStore(pinia).initTheme();
+
+      // 进入 TabBar 页时刷新未读数并同步角标
+      if (TAB_BAR_BADGE.enabled && isTabBarPage(getCurrentRoute())) {
+        const notificationStore = useNotificationStore(pinia);
+        syncTabBarBadge(notificationStore.unreadCount);
+        if (useUserStore(pinia).isLoggedIn) notificationStore.fetchUnreadCount();
+      }
     },
     // 默认开启转发与分享到朋友圈，页面自行注册时以页面为准
     onShareAppMessage() {

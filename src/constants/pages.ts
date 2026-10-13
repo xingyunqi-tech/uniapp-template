@@ -94,6 +94,22 @@ export const TAB_BAR_CONFIG = [
 ] as const;
 
 /**
+ * TabBar 未读消息角标配置
+ */
+export const TAB_BAR_BADGE: {
+  /** 是否开启 */
+  enabled: boolean;
+  /** 显示角标的 TabBar 索引 */
+  index: number;
+  /** count 显示未读数，dot 只显示红点 */
+  type: 'count' | 'dot';
+} = {
+  enabled: true,
+  index: 1,
+  type: 'count',
+};
+
+/**
  * 白名单页面（无需登录）
  */
 export const WHITE_LIST = [

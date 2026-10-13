@@ -43,6 +43,7 @@
       :webp="webp"
       @load="handleLoad"
       @error="handleError"
+      @click="handlePreview"
     />
   </view>
 </template>
@@ -100,6 +101,10 @@ export interface Props {
   placeholder?: string;
   /** 错误时显示的图片地址 */
   errorImage?: string;
+  /** 点击是否预览大图 */
+  preview?: boolean;
+  /** 预览时可左右切换的图片列表，默认只预览当前图片 */
+  previewUrls?: string[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -115,6 +120,8 @@ const props = withDefaults(defineProps<Props>(), {
   showError: true,
   placeholder: '',
   errorImage: '',
+  preview: false,
+  previewUrls: () => [],
 });
 
 const emit = defineEmits<{
@@ -166,6 +173,15 @@ function handleError(event: any) {
   loading.value = false;
   error.value = true;
   emit('error', event);
+}
+
+// 预览大图
+function handlePreview() {
+  if (!props.preview || !props.src || loading.value || error.value) return;
+  uni.previewImage({
+    urls: props.previewUrls.length > 0 ? props.previewUrls : [props.src],
+    current: props.src,
+  });
 }
 
 // 重试加载

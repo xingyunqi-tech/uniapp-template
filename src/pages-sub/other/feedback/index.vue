@@ -36,7 +36,7 @@
       <view class="section-title">上传图片（可选，最多{{ FEEDBACK_IMAGE_MAX_COUNT }}张）</view>
       <view class="image-upload">
         <view v-for="(img, index) in formData.tempImages" :key="index" class="image-item">
-          <image :src="img" mode="aspectFill" />
+          <image :src="img" mode="aspectFill" @click="previewImage(img)" />
           <view class="remove-btn" @click="removeImage(index)">
             <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
           </view>
@@ -177,6 +177,11 @@ async function chooseImage() {
       }
     },
   });
+}
+
+// 预览已选图片
+function previewImage(current: string) {
+  uni.previewImage({ urls: formData.tempImages, current });
 }
 
 // 移除图片

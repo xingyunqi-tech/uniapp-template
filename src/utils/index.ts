@@ -4,6 +4,7 @@
 
 export * from './router';
 export * from './router-interceptor';
+export * from './tabbar-badge';
 export * from './storage';
 export * from './datetime';
 export * from './formatters';

@@ -44,6 +44,19 @@ export default defineUniPages({
       pages: [],
     },
   ],
+  /**
+   * 分包预下载：进入指定页面后在后台下载分包，network 可选 all / wifi
+   */
+  preloadRule: {
+    'pages/mine/index': {
+      network: 'all',
+      packages: ['pages-sub/user', 'pages-sub/order'],
+    },
+    'pages-sub/user/settings/index': {
+      network: 'all',
+      packages: ['pages-sub/other'],
+    },
+  },
   globalStyle: {
     navigationBarTextStyle: '@navTxtStyle',
     navigationBarTitleText: 'UniApp',

@@ -117,8 +117,15 @@ export function safeBack(fallback: string = PAGES.HOME, delta = 1): Promise<void
   if (getPageStackLength() > delta) {
     return navigateBack(delta);
   }
-  const isTabBar = (TAB_BAR_PAGES as readonly string[]).includes(getPathFromUrl(fallback));
-  return isTabBar ? switchTab(fallback) : redirectTo(fallback);
+  return isTabBarPage(fallback) ? switchTab(fallback) : redirectTo(fallback);
+}
+
+/**
+ * 是否为 TabBar 页面
+ * @param url 页面路径（可带查询参数）
+ */
+export function isTabBarPage(url: string): boolean {
+  return (TAB_BAR_PAGES as readonly string[]).includes(getPathFromUrl(url));
 }
 
 /**

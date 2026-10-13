@@ -38,6 +38,7 @@
             placeholder="请输入昵称"
             :maxlength="NICKNAME_MAX_LENGTH"
             @blur="handleNicknameBlur"
+            @nicknamereview="handleNicknameReview"
           />
           <!-- #endif -->
           <!-- #ifndef MP-WEIXIN -->
@@ -246,6 +247,13 @@ function handleChooseAvatar(e: UniHelper.ButtonOnChooseavatarEvent) {
 // 微信昵称：选择微信昵称时不一定触发 input，失焦时同步
 function handleNicknameBlur(e: { detail: { value: string } }) {
   formData.username = e.detail.value;
+}
+
+// 微信昵称安全审核未通过时输入框会被清空，同步清空并提示
+function handleNicknameReview(e: UniHelper.InputOnNicknamereviewEvent) {
+  if (e.detail.pass) return;
+  formData.username = '';
+  uni.showToast({ title: '昵称未通过安全审核，请重新输入', icon: 'none' });
 }
 
 // 删除头像
