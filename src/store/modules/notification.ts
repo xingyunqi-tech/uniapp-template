@@ -199,8 +199,11 @@ export const useNotificationStore = defineStore('notification', () => {
     }
   }
 
+  /** 各分类最近一次更新设置请求的序号 */
+  const settingsRequestIds = new Map<string, number>();
+
   /**
-   * 更新通知设置
+   * 更新通知设置：先更新本地，失败时回滚；同一分类只采用最近一次请求的结果
    */
   async function updateSettings(
     category: UpdateNotificationSettingsDtoCategory,
@@ -209,6 +212,16 @@ export const useNotificationStore = defineStore('notification', () => {
     enableSms: boolean,
     enablePush: boolean,
   ) {
+    const id = (settingsRequestIds.get(category) ?? 0) + 1;
+    settingsRequestIds.set(category, id);
+    const findIndex = () => settings.value.findIndex(s => s.category === category);
+
+    const index = findIndex();
+    const previous = index !== -1 ? settings.value[index] : null;
+    if (previous) {
+      settings.value[index] = { ...previous, enableInApp, enableEmail, enableSms, enablePush };
+    }
+
     try {
       const result = await updateNotificationSettings({
         category,
@@ -217,18 +230,21 @@ export const useNotificationStore = defineStore('notification', () => {
         enableSms,
         enablePush,
       });
+      if (settingsRequestIds.get(category) !== id) return;
 
-      if (result) {
-        // 更新本地设置
-        const index = settings.value.findIndex(s => s.category === category);
-        if (index !== -1) {
-          settings.value[index] = result;
-        }
-
-        uni.showToast({ title: '设置已更新', icon: 'success' });
+      const current = findIndex();
+      if (result && current !== -1) {
+        settings.value[current] = result;
       }
+      uni.showToast({ title: '设置已更新', icon: 'success' });
     } catch (error) {
       console.error('更新通知设置失败:', error);
+      if (settingsRequestIds.get(category) !== id) return;
+
+      const current = findIndex();
+      if (previous && current !== -1) {
+        settings.value[current] = previous;
+      }
     }
   }
 

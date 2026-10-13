@@ -17,13 +17,15 @@ vi.mock('@/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/api')>()),
   getOrders: server.handler,
   getNotifications: server.handler,
+  getAddresses: server.handler,
 }));
 
 const { useOrderStore } = await import('@/store/modules/order');
 const { useNotificationStore } = await import('@/store/modules/notification');
+const { useAddressStore } = await import('@/store/modules/address');
 
 const ordersPage = (ids: string[], totalPages = 3) => ({ data: ids.map(id => ({ id })), total: 30, totalPages });
-const notificationsPage = (ids: string[], totalPages = 3) => ({ list: ids.map(id => ({ id })), totalPages });
+const listPage = (ids: string[], totalPages = 3) => ({ list: ids.map(id => ({ id })), totalPages });
 
 beforeEach(() => {
   setActivePinia(createPinia());
@@ -84,7 +86,7 @@ describe('通知列表', () => {
     const store = useNotificationStore();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const first = store.refresh();
-    server.pending[0].resolve(notificationsPage(['1']));
+    server.pending[0].resolve(listPage(['1']));
     await first;
 
     const more = store.loadMore();
@@ -94,7 +96,7 @@ describe('通知列表', () => {
     expect(store.currentPage).toBe(1);
     const retry = store.loadMore();
     expect(server.pending[2].params.page).toBe(2);
-    server.pending[2].resolve(notificationsPage(['2']));
+    server.pending[2].resolve(listPage(['2']));
     await retry;
     expect(store.notifications.map(n => n.id)).toEqual(['1', '2']);
   });
@@ -102,14 +104,14 @@ describe('通知列表', () => {
   it('加载更多进行中刷新时丢弃加载更多的结果', async () => {
     const store = useNotificationStore();
     const first = store.refresh();
-    server.pending[0].resolve(notificationsPage(['1']));
+    server.pending[0].resolve(listPage(['1']));
     await first;
 
     const more = store.loadMore();
     const refreshing = store.refresh();
-    server.pending[2].resolve(notificationsPage(['new-1']));
+    server.pending[2].resolve(listPage(['new-1']));
     await refreshing;
-    server.pending[1].resolve(notificationsPage(['2']));
+    server.pending[1].resolve(listPage(['2']));
     await more;
 
     expect(store.notifications.map(n => n.id)).toEqual(['new-1']);
@@ -125,8 +127,28 @@ describe('通知列表', () => {
 
     const more = store.loadMore();
     expect(server.pending[1].params.page).toBe(1);
-    server.pending[1].resolve(notificationsPage(['1']));
+    server.pending[1].resolve(listPage(['1']));
     await more;
     expect(store.notifications.map(n => n.id)).toEqual(['1']);
+  });
+});
+
+describe('地址列表', () => {
+  it('加载更多进行中刷新时丢弃加载更多的结果', async () => {
+    const store = useAddressStore();
+    const first = store.fetchAddressList(true);
+    server.pending[0].resolve(listPage(['1']));
+    await first;
+
+    const more = store.fetchAddressList();
+    const refreshing = store.fetchAddressList(true);
+    server.pending[2].resolve(listPage(['new-1']));
+    await refreshing;
+    server.pending[1].resolve(listPage(['2']));
+    await more;
+
+    expect(store.addressList.map(a => a.id)).toEqual(['new-1']);
+    expect(store.currentPage).toBe(2);
+    expect(store.loading).toBe(false);
   });
 });

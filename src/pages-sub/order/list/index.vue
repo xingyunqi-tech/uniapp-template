@@ -122,12 +122,11 @@ const loadMoreStatus = computed<LoadMoreStatus>(() => {
 onShow(() => {
   // 每次显示时刷新
   handleRefresh();
-  // 加载统计数据更新 badge
-  loadStats();
 });
 
-// 加载统计数据
+// 按「全部」tab 已加载的订单更新待付款 badge
 async function loadStats() {
+  if (currentTab.value !== 'all') return;
   try {
     const stats = await orderStore.fetchStats();
     // 更新 badge
@@ -154,6 +153,7 @@ async function loadOrders(refresh = false) {
 
     // 判断是否还有更多数据
     noMore.value = !orderStore.hasMore;
+    if (refresh) loadStats();
   } catch (error) {
     console.error('加载订单列表失败:', error);
   } finally {

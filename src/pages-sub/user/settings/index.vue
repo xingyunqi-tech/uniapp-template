@@ -87,7 +87,7 @@ const isLoggedIn = computed(() => userStore.isLoggedIn);
 
 // 设置状态
 const cacheSize = ref('0 MB');
-const version = ref('1.0.0');
+const version = ref(uni.getAppBaseInfo().appVersion || '1.0.0');
 
 // ==================== 隐藏开发者选项 ====================
 const devModeClickCount = ref(0);

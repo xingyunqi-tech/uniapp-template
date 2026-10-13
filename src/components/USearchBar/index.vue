@@ -198,16 +198,23 @@ const showPanel = computed(() => {
 // ==================== Methods ====================
 
 /**
+ * 取消待触发的防抖搜索
+ */
+function cancelDebounce() {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+}
+
+/**
  * 处理输入
  */
 function handleInput(e: UniHelper.InputOnInputEvent) {
   const value = e.detail.value || '';
   emit('update:modelValue', value);
 
-  // 防抖处理
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
+  cancelDebounce();
 
   if (props.debounceTime > 0) {
     debounceTimer = setTimeout(() => {
@@ -241,6 +248,7 @@ function handleBlur() {
  * 处理确认搜索 (键盘回车)
  */
 function handleConfirm() {
+  cancelDebounce();
   const value = props.modelValue?.trim() || '';
   if (value) {
     // 添加到搜索历史
@@ -255,6 +263,7 @@ function handleConfirm() {
  * 处理清空
  */
 function handleClear() {
+  cancelDebounce();
   emit('update:modelValue', '');
   emit('clear');
 }
@@ -263,6 +272,7 @@ function handleClear() {
  * 处理取消
  */
 function handleCancel() {
+  cancelDebounce();
   emit('update:modelValue', '');
   isFocused.value = false;
   emit('cancel');
@@ -272,6 +282,7 @@ function handleCancel() {
  * 选择历史记录
  */
 function handleSelectHistory(keyword: string) {
+  cancelDebounce();
   emit('update:modelValue', keyword);
   emit('selectHistory', keyword);
   // 触发搜索
@@ -284,6 +295,7 @@ function handleSelectHistory(keyword: string) {
  * 选择热门搜索
  */
 function handleSelectHot(keyword: string) {
+  cancelDebounce();
   emit('update:modelValue', keyword);
   emit('selectHot', keyword);
   // 触发搜索
@@ -311,11 +323,7 @@ function handleClearHistory() {
 // ==================== Lifecycle ====================
 
 // 清理定时器
-onUnmounted(() => {
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
-  }
-});
+onUnmounted(cancelDebounce);
 
 // ==================== Expose ====================
 

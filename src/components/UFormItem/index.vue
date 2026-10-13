@@ -29,12 +29,10 @@
         </text>
         <text v-else class="u-form-item__value">{{ value }}</text>
       </slot>
+      <view v-if="showArrow" class="u-form-item__arrow">
+        <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
+      </view>
     </view>
-
-    <!-- 右侧箭头 -->
-    <template v-if="showArrow" #right>
-      <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
-    </template>
   </uni-forms-item>
 </template>
 
@@ -121,6 +119,12 @@ function handleClick() {
   &__value {
     color: var(--color-text);
     font-size: var(--font-size-base);
+  }
+
+  &__arrow {
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: var(--spacing-xs);
   }
 
   &--arrow {

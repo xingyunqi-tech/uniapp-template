@@ -43,6 +43,9 @@ export const useFavoriteStore = defineStore('favorite', () => {
     return `${targetType}:${targetId}`;
   }
 
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
    * 获取收藏列表
    * @param targetType 目标类型（可选，用于筛选）
@@ -64,22 +67,21 @@ export const useFavoriteStore = defineStore('favorite', () => {
       return favoriteList.value;
     }
 
+    const id = ++listRequestId;
+    const page = currentPage.value;
     loading.value = true;
     try {
       const params: GetFavoritesParams = {
-        page: currentPage.value,
+        page,
         limit: 20,
         targetType,
       };
 
       const response = await getFavorites(params);
+      if (id !== listRequestId) return favoriteList.value;
       const newList = response.list || [];
 
-      if (refresh) {
-        favoriteList.value = newList;
-      } else {
-        favoriteList.value = [...favoriteList.value, ...newList];
-      }
+      favoriteList.value = page === 1 ? newList : [...favoriteList.value, ...newList];
 
       // 更新缓存
       newList.forEach((item: Favorite) => {
@@ -87,14 +89,12 @@ export const useFavoriteStore = defineStore('favorite', () => {
         favoriteStatusCache.value.set(key, true);
       });
 
-      hasMore.value = currentPage.value < response.totalPages;
-      if (hasMore.value) {
-        currentPage.value++;
-      }
+      hasMore.value = page < response.totalPages;
+      currentPage.value = hasMore.value ? page + 1 : page;
 
       return favoriteList.value;
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -214,6 +214,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
    * 重置状态
    */
   function reset() {
+    listRequestId++;
     favoriteList.value = [];
     favoriteStatusCache.value.clear();
     loading.value = false;

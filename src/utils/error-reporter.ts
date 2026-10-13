@@ -160,7 +160,7 @@ function getErrorDeviceInfo(): ErrorDeviceInfo {
     cachedDeviceInfo = {
       platform: deviceInfo.platform || 'unknown',
       system: deviceInfo.system || 'unknown',
-      appVersion: appBaseInfo.version || '1.0.0',
+      appVersion: appBaseInfo.appVersion || '1.0.0',
       brand: deviceInfo.brand,
       model: deviceInfo.model,
     };

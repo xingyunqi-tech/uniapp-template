@@ -153,60 +153,62 @@ async function handleSendCode() {
   }
 }
 
-// 登录
-const loginAction = useAsyncAction({
-  action: async () => {
-    if (loginType.value === 'password') {
-      await userStore.login({
-        phone: formData.phone,
-        password: encryptPassword(formData.password),
-      });
-    } else {
-      await userStore.smsLogin({
-        phone: formData.phone,
-        code: formData.code,
-      });
-    }
-  },
-  successText: '登录成功',
-  onSuccess: navigateAfterLogin,
-});
+// 表单登录（密码 / 验证码）
+async function loginWithForm() {
+  if (loginType.value === 'password') {
+    await userStore.login({
+      phone: formData.phone,
+      password: encryptPassword(formData.password),
+    });
+  } else {
+    await userStore.smsLogin({
+      phone: formData.phone,
+      code: formData.code,
+    });
+  }
+}
 
 // 微信登录（小程序）
-const wechatLoginAction = useAsyncAction({
-  action: async () => {
-    // 先获取微信登录 code，失败时请求层不会提示，在此单独提示
-    const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
-      uni.login({
-        provider: 'weixin',
-        success: resolve,
-        fail: err => {
-          uni.showToast({ title: '微信授权失败，请重试', icon: 'none' });
-          reject(err);
-        },
-      });
+async function loginWithWechat() {
+  // 先获取微信登录 code，失败时请求层不会提示，在此单独提示
+  const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
+    uni.login({
+      provider: 'weixin',
+      success: resolve,
+      fail: err => {
+        uni.showToast({ title: '微信授权失败，请重试', icon: 'none' });
+        reject(err);
+      },
     });
+  });
 
-    await userStore.wechatLogin({
-      code: loginRes.code,
-    });
-  },
+  await userStore.wechatLogin({
+    code: loginRes.code,
+  });
+}
+
+/** 本次登录方式，各登录方式共用一把锁 */
+let loginMethod: () => Promise<void> = loginWithForm;
+
+const loginAction = useAsyncAction({
+  action: () => loginMethod(),
   successText: '登录成功',
   onSuccess: navigateAfterLogin,
 });
 
-const loading = computed(() => !!(loginAction.loading.value || wechatLoginAction.loading.value));
+const loading = computed(() => !!loginAction.loading.value);
 
 // 处理登录
 function handleLogin() {
   if (!validateForm()) return;
+  loginMethod = loginWithForm;
   loginAction.execute();
 }
 
 // 处理微信登录（小程序）
 function handleWechatLogin() {
-  if (loading.value) return;
-  wechatLoginAction.execute();
+  loginMethod = loginWithWechat;
+  loginAction.execute();
 }
 
 // 跳转注册页

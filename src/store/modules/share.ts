@@ -92,6 +92,9 @@ export const useShareStore = defineStore('share', () => {
     }
   }
 
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
    * 获取分享列表
    * @param params 查询参数
@@ -108,29 +111,27 @@ export const useShareStore = defineStore('share', () => {
       return shareList.value;
     }
 
+    const id = ++listRequestId;
+    const page = pagination.value.page;
     loading.value = true;
     try {
       const response = await getShares({
         ...params,
-        page: pagination.value.page,
+        page,
         limit: pagination.value.limit,
       });
+      if (id !== listRequestId) return shareList.value;
 
       const newItems = response.list || [];
-
-      if (refresh) {
-        shareList.value = newItems;
-      } else {
-        shareList.value.push(...newItems);
-      }
+      shareList.value = page === 1 ? newItems : [...shareList.value, ...newItems];
 
       pagination.value.total = response.total || 0;
       pagination.value.hasMore = shareList.value.length < pagination.value.total;
-      pagination.value.page += 1;
+      pagination.value.page = page + 1;
 
       return shareList.value;
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -201,6 +202,7 @@ export const useShareStore = defineStore('share', () => {
    * 清空状态
    */
   function clearState(): void {
+    listRequestId++;
     currentShare.value = null;
     shareList.value = [];
     shareStats.value = null;

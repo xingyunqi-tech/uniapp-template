@@ -61,7 +61,7 @@ onLoad(() => {
 // 获取版本号
 function getVersion() {
   const appBaseInfo = uni.getAppBaseInfo();
-  version.value = appBaseInfo.version || '1.0.0';
+  version.value = appBaseInfo.appVersion || '1.0.0';
 }
 
 // 菜单点击

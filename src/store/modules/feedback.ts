@@ -37,6 +37,9 @@ export const useFeedbackStore = defineStore('feedback', () => {
   const hasUnreadReply = computed(() => feedbackList.value.some(item => item.reply && item.status === 'resolved'));
 
   // ==================== Actions ====================
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
    * 获取反馈列表
    * @param type 反馈类型（可选，用于筛选）
@@ -58,31 +61,27 @@ export const useFeedbackStore = defineStore('feedback', () => {
       return feedbackList.value;
     }
 
+    const id = ++listRequestId;
+    const page = currentPage.value;
     loading.value = true;
     try {
       const params: GetFeedbacksParams = {
-        page: currentPage.value,
+        page,
         limit: 20,
         type,
       };
 
       const response = await getFeedbacks(params);
+      if (id !== listRequestId) return feedbackList.value;
       const newList = response.list || [];
 
-      if (refresh) {
-        feedbackList.value = newList;
-      } else {
-        feedbackList.value = [...feedbackList.value, ...newList];
-      }
-
-      hasMore.value = currentPage.value < response.totalPages;
-      if (hasMore.value) {
-        currentPage.value++;
-      }
+      feedbackList.value = page === 1 ? newList : [...feedbackList.value, ...newList];
+      hasMore.value = page < response.totalPages;
+      currentPage.value = hasMore.value ? page + 1 : page;
 
       return feedbackList.value;
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -122,6 +121,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
    * 重置状态
    */
   function reset() {
+    listRequestId++;
     feedbackList.value = [];
     loading.value = false;
     submitting.value = false;

@@ -41,6 +41,9 @@ export const useAddressStore = defineStore('address', () => {
   const hasDefaultAddress = computed(() => !!defaultAddress.value);
 
   // ==================== Actions ====================
+  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
+  let listRequestId = 0;
+
   /**
    * 获取地址列表
    * @param refresh 是否刷新（从第一页开始）
@@ -55,30 +58,26 @@ export const useAddressStore = defineStore('address', () => {
       return addressList.value;
     }
 
+    const id = ++listRequestId;
+    const page = currentPage.value;
     loading.value = true;
     try {
       const params: GetAddressesParams = {
-        page: currentPage.value,
+        page,
         limit: 20,
       };
 
       const response = await getAddresses(params);
+      if (id !== listRequestId) return addressList.value;
       const newList = response.list || [];
 
-      if (refresh) {
-        addressList.value = newList;
-      } else {
-        addressList.value = [...addressList.value, ...newList];
-      }
-
-      hasMore.value = currentPage.value < response.totalPages;
-      if (hasMore.value) {
-        currentPage.value++;
-      }
+      addressList.value = page === 1 ? newList : [...addressList.value, ...newList];
+      hasMore.value = page < response.totalPages;
+      currentPage.value = hasMore.value ? page + 1 : page;
 
       return addressList.value;
     } finally {
-      loading.value = false;
+      if (id === listRequestId) loading.value = false;
     }
   }
 
@@ -209,6 +208,7 @@ export const useAddressStore = defineStore('address', () => {
    * 重置状态
    */
   function reset() {
+    listRequestId++;
     addressList.value = [];
     defaultAddress.value = null;
     selectedAddress.value = null;

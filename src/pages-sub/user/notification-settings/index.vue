@@ -76,7 +76,7 @@ definePage({
 import { ref, computed, onMounted } from 'vue';
 import { useNotificationStore } from '@/store/modules/notification';
 import { useGlobalStore } from '@/store/modules/global';
-import type { NotificationSetting } from '@/api';
+import type { NotificationSetting, NotificationSettingCategory } from '@/api';
 import themeConfig from '@/theme.json';
 
 const notificationStore = useNotificationStore();
@@ -104,24 +104,28 @@ async function loadSettings() {
   }
 }
 
-function getCategoryName(category: string): string {
-  const nameMap: Record<string, string> = {
-    SYSTEM: '系统通知',
-    ORDER: '订单通知',
-    ACTIVITY: '活动通知',
-    ANNOUNCEMENT: '公告通知',
-  };
-  return nameMap[category] || category;
+const CATEGORY_NAMES: Record<NotificationSettingCategory, string> = {
+  SYSTEM: '系统通知',
+  ORDER: '订单通知',
+  PAYMENT: '支付通知',
+  ACTIVITY: '活动通知',
+  PROMOTION: '推广通知',
+};
+
+const CATEGORY_DESCS: Record<NotificationSettingCategory, string> = {
+  SYSTEM: '系统维护、更新等重要通知',
+  ORDER: '订单状态变更、物流信息等',
+  PAYMENT: '支付成功、退款等资金变动',
+  ACTIVITY: '优惠活动、促销信息等',
+  PROMOTION: '优惠券发放、商品推荐等',
+};
+
+function getCategoryName(category: NotificationSettingCategory): string {
+  return CATEGORY_NAMES[category] || category;
 }
 
-function getCategoryDesc(category: string): string {
-  const descMap: Record<string, string> = {
-    SYSTEM: '系统维护、更新等重要通知',
-    ORDER: '订单状态变更、物流信息等',
-    ACTIVITY: '优惠活动、促销信息等',
-    ANNOUNCEMENT: '平台公告、政策变更等',
-  };
-  return descMap[category] || '';
+function getCategoryDesc(category: NotificationSettingCategory): string {
+  return CATEGORY_DESCS[category] || '';
 }
 
 async function handleToggle(

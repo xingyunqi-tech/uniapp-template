@@ -40,7 +40,7 @@
         <ULoading v-if="loading && notifications.length === 0" visible />
 
         <!-- 空状态 -->
-        <UEmpty v-else-if="notifications.length === 0" description="暂无通知" />
+        <UEmpty v-else-if="notifications.length === 0" text="暂无通知" />
 
         <!-- 通知列表 -->
         <view v-else class="list-content">

@@ -19,7 +19,7 @@
     :class="themeClass"
     @click="handleClick"
     @close="handleClose"
-    @get-more="handleGetMore"
+    @getmore="handleGetMore"
   >
     <template v-if="$slots.default" #default>
       <slot />
