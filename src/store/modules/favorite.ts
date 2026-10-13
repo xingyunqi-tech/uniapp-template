@@ -26,8 +26,8 @@ export const useFavoriteStore = defineStore('favorite', () => {
   const loading = ref(false);
   /** 是否还有更多数据 */
   const hasMore = ref(true);
-  /** 当前页码 */
-  const currentPage = ref(1);
+  /** 已加载到的页码，0 表示尚未加载 */
+  const currentPage = ref(0);
   /** 当前筛选的目标类型 */
   const currentTargetType = ref<CreateFavoriteDtoTargetType | undefined>(undefined);
 
@@ -59,7 +59,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     }
 
     if (refresh) {
-      currentPage.value = 1;
+      currentPage.value = 0;
       hasMore.value = true;
     }
 
@@ -68,7 +68,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     }
 
     const id = ++listRequestId;
-    const page = currentPage.value;
+    const page = currentPage.value + 1;
     loading.value = true;
     try {
       const params: GetFavoritesParams = {
@@ -90,9 +90,12 @@ export const useFavoriteStore = defineStore('favorite', () => {
       });
 
       hasMore.value = page < response.totalPages;
-      currentPage.value = hasMore.value ? page + 1 : page;
+      currentPage.value = page;
 
       return favoriteList.value;
+    } catch (error) {
+      if (id !== listRequestId) return favoriteList.value;
+      throw error;
     } finally {
       if (id === listRequestId) loading.value = false;
     }
@@ -219,7 +222,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     favoriteStatusCache.value.clear();
     loading.value = false;
     hasMore.value = true;
-    currentPage.value = 1;
+    currentPage.value = 0;
     currentTargetType.value = undefined;
   }
 

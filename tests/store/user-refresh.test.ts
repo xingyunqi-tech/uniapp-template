@@ -108,4 +108,17 @@ describe('useUserStore.refreshToken', () => {
     await expect(pending).rejects.toThrow('Internal Server Error');
     expect(store.isLoggedIn).toBe(true);
   });
+
+  it('刷新接口被限流（429）时抛出错误，保留登录态', async () => {
+    setActivePinia(createPinia());
+    const store = useUserStore();
+    store.setToken('old');
+    store.setRefreshToken('refresh-old');
+
+    const pending = store.refreshToken();
+    refreshDeferred.reject(new ApiError('Too Many Requests', 429));
+
+    await expect(pending).rejects.toThrow('Too Many Requests');
+    expect(store.isLoggedIn).toBe(true);
+  });
 });

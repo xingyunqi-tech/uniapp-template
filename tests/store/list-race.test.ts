@@ -45,8 +45,21 @@ describe('订单列表', () => {
     await all;
 
     expect(store.orderList.map(o => o.id)).toEqual(['unpaid-1']);
-    expect(store.currentPage).toBe(2);
+    expect(store.currentPage).toBe(1);
     expect(store.loading).toBe(false);
+  });
+
+  it('被取代的请求失败时静默结束', async () => {
+    const store = useOrderStore();
+
+    const all = store.fetchOrderList({}, true);
+    const unpaid = store.fetchOrderList({ status: 'UNPAID' as never }, true);
+    server.pending[0].reject(new Error('network'));
+    server.pending[1].resolve(ordersPage(['unpaid-1']));
+
+    await expect(all).resolves.toBeDefined();
+    await unpaid;
+    expect(store.orderList.map(o => o.id)).toEqual(['unpaid-1']);
   });
 
   it('加载更多进行中时不重复请求', async () => {
@@ -148,7 +161,7 @@ describe('地址列表', () => {
     await more;
 
     expect(store.addressList.map(a => a.id)).toEqual(['new-1']);
-    expect(store.currentPage).toBe(2);
+    expect(store.currentPage).toBe(1);
     expect(store.loading).toBe(false);
   });
 });

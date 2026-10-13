@@ -30,8 +30,8 @@ export const useAddressStore = defineStore('address', () => {
   const loading = ref(false);
   /** 是否还有更多数据 */
   const hasMore = ref(true);
-  /** 当前页码 */
-  const currentPage = ref(1);
+  /** 已加载到的页码，0 表示尚未加载 */
+  const currentPage = ref(0);
 
   // ==================== Getters ====================
   /** 地址数量 */
@@ -50,7 +50,7 @@ export const useAddressStore = defineStore('address', () => {
    */
   async function fetchAddressList(refresh = false): Promise<Address[]> {
     if (refresh) {
-      currentPage.value = 1;
+      currentPage.value = 0;
       hasMore.value = true;
     }
 
@@ -59,7 +59,7 @@ export const useAddressStore = defineStore('address', () => {
     }
 
     const id = ++listRequestId;
-    const page = currentPage.value;
+    const page = currentPage.value + 1;
     loading.value = true;
     try {
       const params: GetAddressesParams = {
@@ -73,9 +73,12 @@ export const useAddressStore = defineStore('address', () => {
 
       addressList.value = page === 1 ? newList : [...addressList.value, ...newList];
       hasMore.value = page < response.totalPages;
-      currentPage.value = hasMore.value ? page + 1 : page;
+      currentPage.value = page;
 
       return addressList.value;
+    } catch (error) {
+      if (id !== listRequestId) return addressList.value;
+      throw error;
     } finally {
       if (id === listRequestId) loading.value = false;
     }
@@ -214,7 +217,7 @@ export const useAddressStore = defineStore('address', () => {
     selectedAddress.value = null;
     loading.value = false;
     hasMore.value = true;
-    currentPage.value = 1;
+    currentPage.value = 0;
   }
 
   return {

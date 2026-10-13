@@ -43,10 +43,11 @@ export class ApiError extends Error {
   }
 }
 
-/** 是否为临时错误：网络层失败或服务端 5xx */
+/** 是否为临时错误：网络层失败、请求超时（408）、限流（429）或服务端 5xx */
 export function isTransientError(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
-  return error.status !== undefined && error.status >= 500;
+  const { status } = error;
+  return status !== undefined && (status === 408 || status === 429 || status >= 500);
 }
 
 /** 拦截器内部使用的 meta 字段 */

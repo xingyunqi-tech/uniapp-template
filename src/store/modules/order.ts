@@ -50,7 +50,8 @@ export const useOrderStore = defineStore('order', () => {
   });
   const loading = ref(false);
   const total = ref(0);
-  const currentPage = ref(1);
+  /** 已加载到的页码，0 表示尚未加载 */
+  const currentPage = ref(0);
   const hasMore = ref(true);
 
   // ==================== Getters ====================
@@ -77,10 +78,10 @@ export const useOrderStore = defineStore('order', () => {
 
     const id = ++listRequestId;
     if (refresh) {
-      currentPage.value = 1;
+      currentPage.value = 0;
       hasMore.value = true;
     }
-    const page = currentPage.value;
+    const page = currentPage.value + 1;
     loading.value = true;
     try {
       const response = (await getOrders({
@@ -95,9 +96,12 @@ export const useOrderStore = defineStore('order', () => {
       orderList.value = page === 1 ? newOrders : [...orderList.value, ...newOrders];
       total.value = response.total || 0;
       hasMore.value = page < (response.totalPages || 1);
-      currentPage.value = hasMore.value ? page + 1 : page;
+      currentPage.value = page;
 
       return response;
+    } catch (error) {
+      if (id !== listRequestId) return { data: orderList.value, total: total.value };
+      throw error;
     } finally {
       if (id === listRequestId) loading.value = false;
     }
@@ -203,7 +207,7 @@ export const useOrderStore = defineStore('order', () => {
     loading.value = false;
     orderList.value = [];
     total.value = 0;
-    currentPage.value = 1;
+    currentPage.value = 0;
     hasMore.value = true;
   }
 

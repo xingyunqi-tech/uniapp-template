@@ -29,9 +29,9 @@ export const useShareStore = defineStore('share', () => {
   const shareStats = ref<ShareStatsDto | null>(null);
   /** 加载状态 */
   const loading = ref(false);
-  /** 分享列表分页信息 */
+  /** 分享列表分页信息，page 为已加载到的页码，0 表示尚未加载 */
   const pagination = ref({
-    page: 1,
+    page: 0,
     limit: 20,
     total: 0,
     hasMore: true,
@@ -102,7 +102,7 @@ export const useShareStore = defineStore('share', () => {
    */
   async function fetchShareList(params?: GetSharesParams, refresh = false): Promise<Share[]> {
     if (refresh) {
-      pagination.value.page = 1;
+      pagination.value.page = 0;
       pagination.value.hasMore = true;
       shareList.value = [];
     }
@@ -112,7 +112,7 @@ export const useShareStore = defineStore('share', () => {
     }
 
     const id = ++listRequestId;
-    const page = pagination.value.page;
+    const page = pagination.value.page + 1;
     loading.value = true;
     try {
       const response = await getShares({
@@ -127,9 +127,12 @@ export const useShareStore = defineStore('share', () => {
 
       pagination.value.total = response.total || 0;
       pagination.value.hasMore = shareList.value.length < pagination.value.total;
-      pagination.value.page = page + 1;
+      pagination.value.page = page;
 
       return shareList.value;
+    } catch (error) {
+      if (id !== listRequestId) return shareList.value;
+      throw error;
     } finally {
       if (id === listRequestId) loading.value = false;
     }
@@ -207,7 +210,7 @@ export const useShareStore = defineStore('share', () => {
     shareList.value = [];
     shareStats.value = null;
     pagination.value = {
-      page: 1,
+      page: 0,
       limit: 20,
       total: 0,
       hasMore: true,
