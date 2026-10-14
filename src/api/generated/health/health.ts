@@ -7,27 +7,29 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { HealthCheck200, LivenessProbe200, ReadinessProbe200 } from '.././model';
+import type { HealthCheck200, LivenessProbe200, ReadinessProbe200 } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 健康检查
  */
-export const healthCheck = () => {
-  return customMutator<HealthCheck200>({ url: `/api/v1/health`, method: 'GET' });
+export const healthCheck = (options?: SecondParameter<typeof customMutator<HealthCheck200>>) => {
+  return customMutator<HealthCheck200>({ url: `/api/v1/health`, method: 'GET' }, options);
 };
 /**
  * @summary 存活探针（Kubernetes）
  */
-export const livenessProbe = () => {
-  return customMutator<LivenessProbe200>({ url: `/api/v1/health/live`, method: 'GET' });
+export const livenessProbe = (options?: SecondParameter<typeof customMutator<LivenessProbe200>>) => {
+  return customMutator<LivenessProbe200>({ url: `/api/v1/health/live`, method: 'GET' }, options);
 };
 /**
  * @summary 就绪探针（Kubernetes）
  */
-export const readinessProbe = () => {
-  return customMutator<ReadinessProbe200>({ url: `/api/v1/health/ready`, method: 'GET' });
+export const readinessProbe = (options?: SecondParameter<typeof customMutator<ReadinessProbe200>>) => {
+  return customMutator<ReadinessProbe200>({ url: `/api/v1/health/ready`, method: 'GET' }, options);
 };
 export type HealthCheckResult = NonNullable<Awaited<ReturnType<typeof healthCheck>>>;
 export type LivenessProbeResult = NonNullable<Awaited<ReturnType<typeof livenessProbe>>>;

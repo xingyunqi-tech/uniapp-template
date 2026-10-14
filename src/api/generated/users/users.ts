@@ -7,49 +7,54 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateUserDto, GetUsersParams, InfinityPaginationUserResponseDto, UpdateUserDto, User } from '.././model';
+import type { CreateUserDto, GetUsersParams, InfinityPaginationUserResponseDto, UpdateUserDto, User } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建用户（管理员）
  */
-export const createUser = (createUserDto: CreateUserDto) => {
-  return customMutator<User>({
-    url: `/api/v1/users`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createUserDto,
-  });
+export const createUser = (createUserDto: CreateUserDto, options?: SecondParameter<typeof customMutator<User>>) => {
+  return customMutator<User>(
+    { url: `/api/v1/users`, method: 'POST', headers: { 'Content-Type': 'application/json' }, data: createUserDto },
+    options,
+  );
 };
 /**
  * @summary 获取用户列表（管理员）
  */
-export const getUsers = (params?: GetUsersParams) => {
-  return customMutator<InfinityPaginationUserResponseDto>({ url: `/api/v1/users`, method: 'GET', params });
+export const getUsers = (
+  params?: GetUsersParams,
+  options?: SecondParameter<typeof customMutator<InfinityPaginationUserResponseDto>>,
+) => {
+  return customMutator<InfinityPaginationUserResponseDto>({ url: `/api/v1/users`, method: 'GET', params }, options);
 };
 /**
  * @summary 获取用户详情（管理员）
  */
-export const getUser = (id: string) => {
-  return customMutator<User>({ url: `/api/v1/users/${id}`, method: 'GET' });
+export const getUser = (id: number, options?: SecondParameter<typeof customMutator<User>>) => {
+  return customMutator<User>({ url: `/api/v1/users/${id}`, method: 'GET' }, options);
 };
 /**
  * @summary 更新用户（管理员）
  */
-export const updateUser = (id: string, updateUserDto: UpdateUserDto) => {
-  return customMutator<User>({
-    url: `/api/v1/users/${id}`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: updateUserDto,
-  });
+export const updateUser = (
+  id: number,
+  updateUserDto: UpdateUserDto,
+  options?: SecondParameter<typeof customMutator<User>>,
+) => {
+  return customMutator<User>(
+    { url: `/api/v1/users/${id}`, method: 'PUT', headers: { 'Content-Type': 'application/json' }, data: updateUserDto },
+    options,
+  );
 };
 /**
  * @summary 删除用户（管理员）
  */
-export const deleteUser = (id: string) => {
-  return customMutator<void>({ url: `/api/v1/users/${id}`, method: 'DELETE' });
+export const deleteUser = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/users/${id}`, method: 'DELETE' }, options);
 };
 export type CreateUserResult = NonNullable<Awaited<ReturnType<typeof createUser>>>;
 export type GetUsersResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>;

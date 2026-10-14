@@ -13,7 +13,9 @@
  */
 export type LivenessProbe200Info = {
   [key: string]: {
-    status: string;
+    status: 'up' | 'degraded' | 'down';
+    /** Time the health indicator took to respond, in ms */
+    responseTime?: number;
     [key: string]: unknown;
   };
 } | null;

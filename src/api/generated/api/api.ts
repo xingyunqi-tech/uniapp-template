@@ -7,14 +7,16 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { SimpleHealthCheck200 } from '.././model';
+import type { SimpleHealthCheck200 } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 简单健康检查
  */
-export const simpleHealthCheck = () => {
-  return customMutator<SimpleHealthCheck200>({ url: `/api/health`, method: 'GET' });
+export const simpleHealthCheck = (options?: SecondParameter<typeof customMutator<SimpleHealthCheck200>>) => {
+  return customMutator<SimpleHealthCheck200>({ url: `/api/health`, method: 'GET' }, options);
 };
 export type SimpleHealthCheckResult = NonNullable<Awaited<ReturnType<typeof simpleHealthCheck>>>;

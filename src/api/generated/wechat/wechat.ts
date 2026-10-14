@@ -7,54 +7,77 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateWechatAppPaymentDto, CreateWechatJsapiPaymentDto, WechatRefundDto } from '.././model';
+import type { CreateWechatAppPaymentDto, CreateWechatJsapiPaymentDto, WechatRefundDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建 JSAPI 支付订单（小程序/公众号）
  */
-export const wechatPayControllerCreateJsapiPaymentV1 = (createWechatJsapiPaymentDto: CreateWechatJsapiPaymentDto) => {
-  return customMutator<void>({
-    url: `/api/v1/wechat/payment/jsapi`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createWechatJsapiPaymentDto,
-  });
+export const wechatPayControllerCreateJsapiPaymentV1 = (
+  createWechatJsapiPaymentDto: CreateWechatJsapiPaymentDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/wechat/payment/jsapi`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createWechatJsapiPaymentDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 创建 APP 支付订单
  */
-export const wechatPayControllerCreateAppPaymentV1 = (createWechatAppPaymentDto: CreateWechatAppPaymentDto) => {
-  return customMutator<void>({
-    url: `/api/v1/wechat/payment/app`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createWechatAppPaymentDto,
-  });
+export const wechatPayControllerCreateAppPaymentV1 = (
+  createWechatAppPaymentDto: CreateWechatAppPaymentDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/wechat/payment/app`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createWechatAppPaymentDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 查询订单状态
  */
-export const wechatPayControllerQueryOrderV1 = (outTradeNo: string) => {
-  return customMutator<void>({ url: `/api/v1/wechat/order/${outTradeNo}`, method: 'GET' });
+export const wechatPayControllerQueryOrderV1 = (
+  outTradeNo: string,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>({ url: `/api/v1/wechat/order/${outTradeNo}`, method: 'GET' }, options);
 };
 /**
- * @summary 申请退款
+ * @summary 申请退款（管理员）
  */
-export const wechatPayControllerRefundV1 = (wechatRefundDto: WechatRefundDto) => {
-  return customMutator<void>({
-    url: `/api/v1/wechat/refund`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: wechatRefundDto,
-  });
+export const wechatPayControllerRefundV1 = (
+  wechatRefundDto: WechatRefundDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/wechat/refund`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: wechatRefundDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 微信支付回调通知
  */
-export const wechatPayControllerNotifyV1 = () => {
-  return customMutator<void>({ url: `/api/v1/wechat/notify`, method: 'POST' });
+export const wechatPayControllerNotifyV1 = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/wechat/notify`, method: 'POST' }, options);
 };
 export type WechatPayControllerCreateJsapiPaymentV1Result = NonNullable<
   Awaited<ReturnType<typeof wechatPayControllerCreateJsapiPaymentV1>>

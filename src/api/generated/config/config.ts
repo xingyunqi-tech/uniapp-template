@@ -7,26 +7,35 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { Config, UpsertConfigDto } from '.././model';
+import type { Config, UpsertConfigDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 获取配置
  */
-export const getConfig = (key: string) => {
-  return customMutator<Config>({ url: `/api/v1/config/${key}`, method: 'GET' });
+export const getConfig = (key: string, options?: SecondParameter<typeof customMutator<Config>>) => {
+  return customMutator<Config>({ url: `/api/v1/config/${key}`, method: 'GET' }, options);
 };
 /**
- * @summary 写入配置
+ * @summary 写入配置（管理员）
  */
-export const upsertConfig = (key: string, upsertConfigDto: UpsertConfigDto) => {
-  return customMutator<Config>({
-    url: `/api/v1/config/${key}`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: upsertConfigDto,
-  });
+export const upsertConfig = (
+  key: string,
+  upsertConfigDto: UpsertConfigDto,
+  options?: SecondParameter<typeof customMutator<Config>>,
+) => {
+  return customMutator<Config>(
+    {
+      url: `/api/v1/config/${key}`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      data: upsertConfigDto,
+    },
+    options,
+  );
 };
 export type GetConfigResult = NonNullable<Awaited<ReturnType<typeof getConfig>>>;
 export type UpsertConfigResult = NonNullable<Awaited<ReturnType<typeof upsertConfig>>>;

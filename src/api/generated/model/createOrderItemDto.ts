@@ -11,10 +11,6 @@ import type { CreateOrderItemDtoMetadata } from './createOrderItemDtoMetadata';
 
 export interface CreateOrderItemDto {
   productId: string;
-  productName: string;
-  productImage?: string;
-  /** Unit price in cents */
-  unitPrice: number;
   quantity: number;
   metadata?: CreateOrderItemDtoMetadata;
 }

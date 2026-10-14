@@ -10,9 +10,10 @@
 import type { HealthCheck503Details } from './healthCheck503Details';
 import type { HealthCheck503Error } from './healthCheck503Error';
 import type { HealthCheck503Info } from './healthCheck503Info';
+import type { HealthCheck503Status } from './healthCheck503Status';
 
 export type HealthCheck503 = {
-  status?: string;
+  status?: HealthCheck503Status;
   /** @nullable */
   info?: HealthCheck503Info;
   /** @nullable */

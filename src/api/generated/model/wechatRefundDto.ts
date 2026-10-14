@@ -15,8 +15,6 @@ export interface WechatRefundDto {
   outRefundNo: string;
   /** 退款金额（分） */
   refundAmount: number;
-  /** 订单总金额（分） */
-  totalAmount: number;
   /** 退款原因 */
   reason?: string;
 }

@@ -13,61 +13,79 @@ import type {
   GetAddressesParams,
   PaginationAddressResponseDto,
   UpdateAddressDto,
-} from '.././model';
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建地址
  */
-export const createAddress = (createAddressDto: CreateAddressDto) => {
-  return customMutator<Address>({
-    url: `/api/v1/addresses`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createAddressDto,
-  });
+export const createAddress = (
+  createAddressDto: CreateAddressDto,
+  options?: SecondParameter<typeof customMutator<Address>>,
+) => {
+  return customMutator<Address>(
+    {
+      url: `/api/v1/addresses`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createAddressDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取地址列表
  */
-export const getAddresses = (params?: GetAddressesParams) => {
-  return customMutator<PaginationAddressResponseDto>({ url: `/api/v1/addresses`, method: 'GET', params });
+export const getAddresses = (
+  params?: GetAddressesParams,
+  options?: SecondParameter<typeof customMutator<PaginationAddressResponseDto>>,
+) => {
+  return customMutator<PaginationAddressResponseDto>({ url: `/api/v1/addresses`, method: 'GET', params }, options);
 };
 /**
  * @summary 获取默认地址
  */
-export const getDefaultAddress = () => {
-  return customMutator<Address>({ url: `/api/v1/addresses/default`, method: 'GET' });
+export const getDefaultAddress = (options?: SecondParameter<typeof customMutator<Address>>) => {
+  return customMutator<Address>({ url: `/api/v1/addresses/default`, method: 'GET' }, options);
 };
 /**
  * @summary 获取地址详情
  */
-export const getAddress = (id: string) => {
-  return customMutator<Address>({ url: `/api/v1/addresses/${id}`, method: 'GET' });
+export const getAddress = (id: number, options?: SecondParameter<typeof customMutator<Address>>) => {
+  return customMutator<Address>({ url: `/api/v1/addresses/${id}`, method: 'GET' }, options);
 };
 /**
  * @summary 更新地址
  */
-export const updateAddress = (id: string, updateAddressDto: UpdateAddressDto) => {
-  return customMutator<Address>({
-    url: `/api/v1/addresses/${id}`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: updateAddressDto,
-  });
+export const updateAddress = (
+  id: number,
+  updateAddressDto: UpdateAddressDto,
+  options?: SecondParameter<typeof customMutator<Address>>,
+) => {
+  return customMutator<Address>(
+    {
+      url: `/api/v1/addresses/${id}`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateAddressDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 删除地址
  */
-export const deleteAddress = (id: string) => {
-  return customMutator<void>({ url: `/api/v1/addresses/${id}`, method: 'DELETE' });
+export const deleteAddress = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/addresses/${id}`, method: 'DELETE' }, options);
 };
 /**
  * @summary 设为默认地址
  */
-export const setDefaultAddress = (id: string) => {
-  return customMutator<Address>({ url: `/api/v1/addresses/${id}/default`, method: 'PUT' });
+export const setDefaultAddress = (id: number, options?: SecondParameter<typeof customMutator<Address>>) => {
+  return customMutator<Address>({ url: `/api/v1/addresses/${id}/default`, method: 'PUT' }, options);
 };
 export type CreateAddressResult = NonNullable<Awaited<ReturnType<typeof createAddress>>>;
 export type GetAddressesResult = NonNullable<Awaited<ReturnType<typeof getAddresses>>>;

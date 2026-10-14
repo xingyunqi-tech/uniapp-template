@@ -7,13 +7,16 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
+import type { CreateUserDtoProvider } from './createUserDtoProvider';
 import type { FileDto } from './fileDto';
 import type { RoleDto } from './roleDto';
 import type { StatusDto } from './statusDto';
 
 export interface CreateUserDto {
   email?: string;
+  /** 前端 MD5 后的密码（32 位十六进制） */
   password?: string;
+  provider?: CreateUserDtoProvider;
   firstName?: string;
   lastName?: string;
   phone?: string;

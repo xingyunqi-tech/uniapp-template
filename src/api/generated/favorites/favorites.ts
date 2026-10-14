@@ -15,54 +15,77 @@ import type {
   GetFavoritesParams,
   PaginationFavoriteResponseDto,
   ToggleFavorite200,
-} from '.././model';
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 添加收藏
  */
-export const createFavorite = (createFavoriteDto: CreateFavoriteDto) => {
-  return customMutator<Favorite>({
-    url: `/api/v1/favorites`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createFavoriteDto,
-  });
+export const createFavorite = (
+  createFavoriteDto: CreateFavoriteDto,
+  options?: SecondParameter<typeof customMutator<Favorite>>,
+) => {
+  return customMutator<Favorite>(
+    {
+      url: `/api/v1/favorites`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createFavoriteDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取收藏列表
  */
-export const getFavorites = (params?: GetFavoritesParams) => {
-  return customMutator<PaginationFavoriteResponseDto>({ url: `/api/v1/favorites`, method: 'GET', params });
+export const getFavorites = (
+  params?: GetFavoritesParams,
+  options?: SecondParameter<typeof customMutator<PaginationFavoriteResponseDto>>,
+) => {
+  return customMutator<PaginationFavoriteResponseDto>({ url: `/api/v1/favorites`, method: 'GET', params }, options);
 };
 /**
  * @summary 检查是否已收藏
  */
-export const checkFavorite = (checkFavoriteDto: CheckFavoriteDto) => {
-  return customMutator<CheckFavoriteResponseDto>({
-    url: `/api/v1/favorites/check`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: checkFavoriteDto,
-  });
+export const checkFavorite = (
+  checkFavoriteDto: CheckFavoriteDto,
+  options?: SecondParameter<typeof customMutator<CheckFavoriteResponseDto>>,
+) => {
+  return customMutator<CheckFavoriteResponseDto>(
+    {
+      url: `/api/v1/favorites/check`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: checkFavoriteDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 切换收藏状态
  */
-export const toggleFavorite = (createFavoriteDto: CreateFavoriteDto) => {
-  return customMutator<ToggleFavorite200>({
-    url: `/api/v1/favorites/toggle`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createFavoriteDto,
-  });
+export const toggleFavorite = (
+  createFavoriteDto: CreateFavoriteDto,
+  options?: SecondParameter<typeof customMutator<ToggleFavorite200>>,
+) => {
+  return customMutator<ToggleFavorite200>(
+    {
+      url: `/api/v1/favorites/toggle`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createFavoriteDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 取消收藏
  */
-export const deleteFavorite = (id: string) => {
-  return customMutator<void>({ url: `/api/v1/favorites/${id}`, method: 'DELETE' });
+export const deleteFavorite = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/favorites/${id}`, method: 'DELETE' }, options);
 };
 export type CreateFavoriteResult = NonNullable<Awaited<ReturnType<typeof createFavorite>>>;
 export type GetFavoritesResult = NonNullable<Awaited<ReturnType<typeof getFavorites>>>;

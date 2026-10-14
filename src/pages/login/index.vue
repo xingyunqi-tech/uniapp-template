@@ -50,6 +50,18 @@
     <!-- 其他登录方式 (仅小程序显示) -->
     <!-- #ifdef MP-WEIXIN -->
     <view class="other-login">
+      <!-- 未同意协议时不能直接弹出手机号授权，先提示勾选 -->
+      <button
+        v-if="agreed"
+        class="phone-login-btn"
+        :disabled="loading"
+        open-type="getPhoneNumber"
+        @getphonenumber="handleGetPhoneNumber"
+      >
+        手机号快捷登录
+      </button>
+      <button v-else class="phone-login-btn" :disabled="loading" @click="checkAgreed">手机号快捷登录</button>
+
       <view class="divider">
         <text class="divider-text">其他登录方式</text>
       </view>
@@ -71,6 +83,8 @@
     <view class="link-row secondary">
       <text class="link-text" @click="goToForgotPassword">忘记密码？</text>
     </view>
+
+    <UPrivacyPopup />
   </AuthLayout>
 </template>
 
@@ -82,7 +96,7 @@ definePage({
   },
 });
 
-import { computed, reactive, ref } from 'vue';
+import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
@@ -172,9 +186,8 @@ async function loginWithForm() {
   }
 }
 
-// 微信登录（小程序）
-async function loginWithWechat() {
-  // 先获取微信登录 code，失败时请求层不会提示，在此单独提示
+// 获取微信登录 code，失败时请求层不会提示，在此单独提示
+async function getWechatLoginCode(): Promise<string> {
   const loginRes = await new Promise<UniApp.LoginRes>((resolve, reject) => {
     uni.login({
       provider: 'weixin',
@@ -185,22 +198,45 @@ async function loginWithWechat() {
       },
     });
   });
+  return loginRes.code;
+}
 
+// 微信登录（小程序）
+async function loginWithWechat() {
   await userStore.wechatLogin({
-    code: loginRes.code,
+    code: await getWechatLoginCode(),
+  });
+}
+
+// 手机号快捷登录（小程序）
+async function loginWithWechatPhone(phoneCode: string) {
+  await userStore.wechatPhoneLogin({
+    loginCode: await getWechatLoginCode(),
+    phoneCode,
   });
 }
 
 /** 本次登录方式，各登录方式共用一把锁 */
 let loginMethod: () => Promise<void> = loginWithForm;
 
+/** 登录请求开始到跳转离开前为 true，登录失败时恢复 */
+const loading = ref(false);
+
 const loginAction = useAsyncAction({
   action: () => loginMethod(),
   successText: '登录成功',
   onSuccess: navigateAfterLogin,
+  onError: () => {
+    loading.value = false;
+  },
 });
 
-const loading = computed(() => !!loginAction.loading.value);
+function startLogin(method: () => Promise<void>) {
+  if (loading.value) return;
+  loginMethod = method;
+  loading.value = true;
+  loginAction.execute();
+}
 
 /** 是否已同意用户协议与隐私政策 */
 const agreed = ref(false);
@@ -215,15 +251,26 @@ function checkAgreed(): boolean {
 // 处理登录
 function handleLogin() {
   if (!validateForm() || !checkAgreed()) return;
-  loginMethod = loginWithForm;
-  loginAction.execute();
+  startLogin(loginWithForm);
 }
 
 // 处理微信登录（小程序）
 function handleWechatLogin() {
   if (!checkAgreed()) return;
-  loginMethod = loginWithWechat;
-  loginAction.execute();
+  startLogin(loginWithWechat);
+}
+
+// 手机号快捷登录授权回调（小程序）
+function handleGetPhoneNumber(e: UniHelper.ButtonOnGetphonenumberEvent) {
+  const { code, errMsg = '' } = e.detail;
+  if (!code) {
+    // 用户拒绝手机号授权或拒绝隐私授权时不提示；其它失败（如小程序未开通该能力）提示改用其它方式
+    if (!/user deny|privacy/i.test(errMsg)) {
+      uni.showToast({ title: '手机号快捷登录暂不可用，请使用其他方式登录', icon: 'none' });
+    }
+    return;
+  }
+  startLogin(() => loginWithWechatPhone(code));
 }
 
 // 跳转注册页
@@ -295,6 +342,31 @@ function goToForgotPassword() {
 // 其他登录方式
 .other-login {
   margin-top: 64rpx;
+
+  .phone-login-btn {
+    width: 100%;
+    height: 96rpx;
+    margin-bottom: 48rpx;
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--color-brand-wechat);
+    color: var(--color-text-inverse);
+    font-size: 32rpx;
+    font-weight: 500;
+    line-height: 96rpx;
+
+    &::after {
+      border: none;
+    }
+
+    &:active {
+      opacity: 0.8;
+    }
+
+    &[disabled] {
+      opacity: 0.6;
+    }
+  }
 
   .divider {
     position: relative;

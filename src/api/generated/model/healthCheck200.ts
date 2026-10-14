@@ -10,9 +10,10 @@
 import type { HealthCheck200Details } from './healthCheck200Details';
 import type { HealthCheck200Error } from './healthCheck200Error';
 import type { HealthCheck200Info } from './healthCheck200Info';
+import type { HealthCheck200Status } from './healthCheck200Status';
 
 export type HealthCheck200 = {
-  status?: string;
+  status?: HealthCheck200Status;
   /** @nullable */
   info?: HealthCheck200Info;
   /** @nullable */

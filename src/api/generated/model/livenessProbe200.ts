@@ -10,9 +10,10 @@
 import type { LivenessProbe200Details } from './livenessProbe200Details';
 import type { LivenessProbe200Error } from './livenessProbe200Error';
 import type { LivenessProbe200Info } from './livenessProbe200Info';
+import type { LivenessProbe200Status } from './livenessProbe200Status';
 
 export type LivenessProbe200 = {
-  status?: string;
+  status?: LivenessProbe200Status;
   /** @nullable */
   info?: LivenessProbe200Info;
   /** @nullable */

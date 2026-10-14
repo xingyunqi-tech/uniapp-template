@@ -11,6 +11,8 @@
 export interface RefundDto {
   /** 商户订单号 */
   outTradeNo: string;
+  /** 退款请求号，同一笔退款重试时须保持不变 */
+  outRequestNo: string;
   /** 退款金额（元） */
   refundAmount: string;
   /** 退款原因 */

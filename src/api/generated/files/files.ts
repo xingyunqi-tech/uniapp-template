@@ -7,24 +7,27 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { FileResponseDto, UploadFileBody } from '.././model';
+import type { FileResponseDto, UploadFileBody } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 上传文件
  */
-export const uploadFile = (uploadFileBody: UploadFileBody) => {
+export const uploadFile = (
+  uploadFileBody: UploadFileBody,
+  options?: SecondParameter<typeof customMutator<FileResponseDto>>,
+) => {
   const formData = new FormData();
   if (uploadFileBody.file !== undefined) {
     formData.append(`file`, uploadFileBody.file);
   }
 
-  return customMutator<FileResponseDto>({
-    url: `/api/v1/files/upload`,
-    method: 'POST',
-    headers: { 'Content-Type': 'multipart/form-data' },
-    data: formData,
-  });
+  return customMutator<FileResponseDto>(
+    { url: `/api/v1/files/upload`, method: 'POST', headers: { 'Content-Type': 'multipart/form-data' }, data: formData },
+    options,
+  );
 };
 export type UploadFileResult = NonNullable<Awaited<ReturnType<typeof uploadFile>>>;

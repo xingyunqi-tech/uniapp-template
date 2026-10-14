@@ -10,9 +10,10 @@
 import type { ReadinessProbe503Details } from './readinessProbe503Details';
 import type { ReadinessProbe503Error } from './readinessProbe503Error';
 import type { ReadinessProbe503Info } from './readinessProbe503Info';
+import type { ReadinessProbe503Status } from './readinessProbe503Status';
 
 export type ReadinessProbe503 = {
-  status?: string;
+  status?: ReadinessProbe503Status;
   /** @nullable */
   info?: ReadinessProbe503Info;
   /** @nullable */

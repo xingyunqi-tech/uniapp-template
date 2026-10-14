@@ -27,6 +27,8 @@ export interface Order {
   paidAt?: string;
   refundedAt?: string;
   closedAt?: string;
+  /** 支付截止时间，过期后不可支付 */
+  expiresAt?: string;
   metadata?: OrderMetadata;
   createdAt: string;
   updatedAt: string;

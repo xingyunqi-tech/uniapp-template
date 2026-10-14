@@ -149,7 +149,6 @@ export async function refundOrder(params: WechatRefundDto): Promise<boolean> {
 export async function pay(params: {
   outTradeNo: string;
   description: string;
-  amount: number;
   openid?: string;
 }): Promise<PaymentResult> {
   // #ifdef MP-WEIXIN
@@ -159,11 +158,11 @@ export async function pay(params: {
       message: '缺少 openid 参数',
     };
   }
-  return createJsapiPayment(params as CreateWechatJsapiPaymentDto);
+  return createJsapiPayment({ outTradeNo: params.outTradeNo, description: params.description, openid: params.openid });
   // #endif
 
   // #ifdef APP-PLUS
-  return createAppPayment(params as CreateWechatAppPaymentDto);
+  return createAppPayment({ outTradeNo: params.outTradeNo, description: params.description });
   // #endif
 
   // #ifdef H5

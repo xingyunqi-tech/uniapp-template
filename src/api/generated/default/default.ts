@@ -9,10 +9,12 @@
  */
 import { customMutator } from '../../core/mutator';
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 /**
  * @summary 获取应用信息
  */
-export const getAppInfo = () => {
-  return customMutator<void>({ url: `/`, method: 'GET' });
+export const getAppInfo = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/`, method: 'GET' }, options);
 };
 export type GetAppInfoResult = NonNullable<Awaited<ReturnType<typeof getAppInfo>>>;

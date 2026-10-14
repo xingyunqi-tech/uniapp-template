@@ -9,10 +9,8 @@
  */
 
 export interface CreateWechatAppPaymentDto {
-  /** 商户订单号 */
+  /** 商户订单号（即订单的 orderNo），支付金额取订单金额 */
   outTradeNo: string;
   /** 商品描述 */
   description: string;
-  /** 订单金额（分） */
-  amount: number;
 }

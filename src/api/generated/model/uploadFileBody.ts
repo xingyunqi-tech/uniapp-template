@@ -9,5 +9,5 @@
  */
 
 export type UploadFileBody = {
-  file?: Blob;
+  file?: Blob | File;
 };

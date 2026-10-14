@@ -7,60 +7,81 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreatePaymentDto, RefundDto } from '.././model';
+import type { CreatePaymentDto, RefundDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建手机网站支付订单
  */
-export const alipayControllerCreateMobilePaymentV1 = (createPaymentDto: CreatePaymentDto) => {
-  return customMutator<void>({
-    url: `/api/v1/alipay/payment/mobile`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createPaymentDto,
-  });
+export const alipayControllerCreateMobilePaymentV1 = (
+  createPaymentDto: CreatePaymentDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/alipay/payment/mobile`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createPaymentDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 创建电脑网站支付订单
  */
-export const alipayControllerCreateWebPaymentV1 = (createPaymentDto: CreatePaymentDto) => {
-  return customMutator<void>({
-    url: `/api/v1/alipay/payment/web`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createPaymentDto,
-  });
+export const alipayControllerCreateWebPaymentV1 = (
+  createPaymentDto: CreatePaymentDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/alipay/payment/web`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createPaymentDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 查询订单状态
  */
-export const alipayControllerQueryOrderV1 = (outTradeNo: string) => {
-  return customMutator<void>({ url: `/api/v1/alipay/order/${outTradeNo}`, method: 'GET' });
+export const alipayControllerQueryOrderV1 = (
+  outTradeNo: string,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>({ url: `/api/v1/alipay/order/${outTradeNo}`, method: 'GET' }, options);
 };
 /**
- * @summary 申请退款
+ * @summary 申请退款（管理员）
  */
-export const alipayControllerRefundV1 = (refundDto: RefundDto) => {
-  return customMutator<void>({
-    url: `/api/v1/alipay/refund`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: refundDto,
-  });
+export const alipayControllerRefundV1 = (
+  refundDto: RefundDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    { url: `/api/v1/alipay/refund`, method: 'POST', headers: { 'Content-Type': 'application/json' }, data: refundDto },
+    options,
+  );
 };
 /**
  * @summary 关闭订单
  */
-export const alipayControllerCloseOrderV1 = (outTradeNo: string) => {
-  return customMutator<void>({ url: `/api/v1/alipay/order/close/${outTradeNo}`, method: 'POST' });
+export const alipayControllerCloseOrderV1 = (
+  outTradeNo: string,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>({ url: `/api/v1/alipay/order/close/${outTradeNo}`, method: 'POST' }, options);
 };
 /**
  * @summary 支付宝异步通知回调
  */
-export const alipayControllerNotifyV1 = () => {
-  return customMutator<void>({ url: `/api/v1/alipay/notify`, method: 'POST' });
+export const alipayControllerNotifyV1 = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/alipay/notify`, method: 'POST' }, options);
 };
 export type AlipayControllerCreateMobilePaymentV1Result = NonNullable<
   Awaited<ReturnType<typeof alipayControllerCreateMobilePaymentV1>>

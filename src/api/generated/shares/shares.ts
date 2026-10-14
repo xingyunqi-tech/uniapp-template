@@ -18,83 +18,105 @@ import type {
   TrackShareDto,
   WeChatConfigDto,
   WeChatJsSdkConfigResponseDto,
-} from '.././model';
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建分享
  */
-export const createShare = (createShareDto: CreateShareDto) => {
-  return customMutator<Share>({
-    url: `/api/v1/shares`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createShareDto,
-  });
+export const createShare = (createShareDto: CreateShareDto, options?: SecondParameter<typeof customMutator<Share>>) => {
+  return customMutator<Share>(
+    { url: `/api/v1/shares`, method: 'POST', headers: { 'Content-Type': 'application/json' }, data: createShareDto },
+    options,
+  );
 };
 /**
  * @summary 获取分享列表
  */
-export const getShares = (params?: GetSharesParams) => {
-  return customMutator<PaginationShareResponseDto>({ url: `/api/v1/shares`, method: 'GET', params });
+export const getShares = (
+  params?: GetSharesParams,
+  options?: SecondParameter<typeof customMutator<PaginationShareResponseDto>>,
+) => {
+  return customMutator<PaginationShareResponseDto>({ url: `/api/v1/shares`, method: 'GET', params }, options);
 };
 /**
  * @summary 通过分享码获取内容
  */
-export const getShareByCode = (code: string) => {
-  return customMutator<Share>({ url: `/api/v1/shares/code/${code}`, method: 'GET' });
+export const getShareByCode = (code: string, options?: SecondParameter<typeof customMutator<Share>>) => {
+  return customMutator<Share>({ url: `/api/v1/shares/code/${code}`, method: 'GET' }, options);
 };
 /**
  * @summary 获取分享详情
  */
-export const getShareById = (id: number) => {
-  return customMutator<Share>({ url: `/api/v1/shares/${id}`, method: 'GET' });
+export const getShareById = (id: number, options?: SecondParameter<typeof customMutator<Share>>) => {
+  return customMutator<Share>({ url: `/api/v1/shares/${id}`, method: 'GET' }, options);
 };
 /**
  * @summary 删除分享
  */
-export const deleteShare = (id: number) => {
-  return customMutator<void>({ url: `/api/v1/shares/${id}`, method: 'DELETE' });
+export const deleteShare = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/shares/${id}`, method: 'DELETE' }, options);
 };
 /**
  * @summary 获取分享统计
  */
-export const getShareStats = (id: number) => {
-  return customMutator<ShareStatsDto>({ url: `/api/v1/shares/${id}/stats`, method: 'GET' });
+export const getShareStats = (id: number, options?: SecondParameter<typeof customMutator<ShareStatsDto>>) => {
+  return customMutator<ShareStatsDto>({ url: `/api/v1/shares/${id}/stats`, method: 'GET' }, options);
 };
 /**
  * @summary 追踪分享行为
  */
-export const trackShare = (id: number, trackShareDto: TrackShareDto) => {
-  return customMutator<void>({
-    url: `/api/v1/shares/${id}/track`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: trackShareDto,
-  });
+export const trackShare = (
+  code: string,
+  trackShareDto: TrackShareDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/shares/code/${code}/track`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: trackShareDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取微信JS-SDK配置
  */
-export const getWeChatConfig = (weChatConfigDto: WeChatConfigDto) => {
-  return customMutator<WeChatJsSdkConfigResponseDto>({
-    url: `/api/v1/shares/wechat/config`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: weChatConfigDto,
-  });
+export const getWeChatConfig = (
+  weChatConfigDto: WeChatConfigDto,
+  options?: SecondParameter<typeof customMutator<WeChatJsSdkConfigResponseDto>>,
+) => {
+  return customMutator<WeChatJsSdkConfigResponseDto>(
+    {
+      url: `/api/v1/shares/wechat/config`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: weChatConfigDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取支付宝分享配置
  */
-export const getAlipayConfig = (alipayConfigDto: AlipayConfigDto) => {
-  return customMutator<AlipayShareConfigResponseDto>({
-    url: `/api/v1/shares/alipay/config`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: alipayConfigDto,
-  });
+export const getAlipayConfig = (
+  alipayConfigDto: AlipayConfigDto,
+  options?: SecondParameter<typeof customMutator<AlipayShareConfigResponseDto>>,
+) => {
+  return customMutator<AlipayShareConfigResponseDto>(
+    {
+      url: `/api/v1/shares/alipay/config`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: alipayConfigDto,
+    },
+    options,
+  );
 };
 export type CreateShareResult = NonNullable<Awaited<ReturnType<typeof createShare>>>;
 export type GetSharesResult = NonNullable<Awaited<ReturnType<typeof getShares>>>;

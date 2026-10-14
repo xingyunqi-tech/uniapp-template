@@ -7,38 +7,41 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateOrderDto, GetOrdersParams, Order, PaginationResponseDto } from '.././model';
+import type { CreateOrderDto, GetOrdersParams, Order, PaginationResponseDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 创建订单
  */
-export const createOrder = (createOrderDto: CreateOrderDto) => {
-  return customMutator<Order>({
-    url: `/api/v1/orders`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createOrderDto,
-  });
+export const createOrder = (createOrderDto: CreateOrderDto, options?: SecondParameter<typeof customMutator<Order>>) => {
+  return customMutator<Order>(
+    { url: `/api/v1/orders`, method: 'POST', headers: { 'Content-Type': 'application/json' }, data: createOrderDto },
+    options,
+  );
 };
 /**
  * @summary 获取订单列表
  */
-export const getOrders = (params?: GetOrdersParams) => {
-  return customMutator<PaginationResponseDto>({ url: `/api/v1/orders`, method: 'GET', params });
+export const getOrders = (
+  params?: GetOrdersParams,
+  options?: SecondParameter<typeof customMutator<PaginationResponseDto>>,
+) => {
+  return customMutator<PaginationResponseDto>({ url: `/api/v1/orders`, method: 'GET', params }, options);
 };
 /**
  * @summary 获取订单详情
  */
-export const getOrder = (id: string) => {
-  return customMutator<Order>({ url: `/api/v1/orders/${id}`, method: 'GET' });
+export const getOrder = (id: number, options?: SecondParameter<typeof customMutator<Order>>) => {
+  return customMutator<Order>({ url: `/api/v1/orders/${id}`, method: 'GET' }, options);
 };
 /**
  * @summary 取消未支付订单
  */
-export const cancelOrder = (id: string) => {
-  return customMutator<void>({ url: `/api/v1/orders/${id}`, method: 'DELETE' });
+export const cancelOrder = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/orders/${id}`, method: 'DELETE' }, options);
 };
 export type CreateOrderResult = NonNullable<Awaited<ReturnType<typeof createOrder>>>;
 export type GetOrdersResult = NonNullable<Awaited<ReturnType<typeof getOrders>>>;

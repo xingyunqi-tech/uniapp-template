@@ -65,6 +65,7 @@ export {
   resetPasswordByPhone,
   changePassword,
   loginWithWechat,
+  loginWithWechatPhone,
 } from './generated/auth/auth';
 
 export { getConfig, upsertConfig } from './generated/config/config';

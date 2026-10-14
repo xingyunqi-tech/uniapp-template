@@ -23,8 +23,6 @@ export interface UnifiedPaymentParams {
   outTradeNo: string;
   /** 商品描述/标题 */
   description: string;
-  /** 订单金额（元） */
-  amount: number;
   /** 微信 openid（微信支付必需） */
   openid?: string;
 }
@@ -42,22 +40,19 @@ export interface UnifiedPaymentResult {
  * 统一支付入口
  */
 export async function unifiedPay(params: UnifiedPaymentParams): Promise<UnifiedPaymentResult> {
-  const { method, outTradeNo, description, amount, openid } = params;
+  const { method, outTradeNo, description, openid } = params;
 
+  // 支付金额由后端按订单金额确定
   if (method === PaymentMethod.WECHAT) {
-    // 微信支付（金额单位：分）
     return WechatPay.pay({
       outTradeNo,
       description,
-      amount: AlipayPay.yuanToFen(amount), // 元转分
       openid,
     });
   } else if (method === PaymentMethod.ALIPAY) {
-    // 支付宝支付（金额单位：元）
     return AlipayPay.pay({
       outTradeNo,
       subject: description,
-      totalAmount: amount.toFixed(2), // 保留两位小数
     });
   }
 
@@ -81,27 +76,27 @@ export async function queryOrder(method: PaymentMethod, outTradeNo: string): Pro
 
 /**
  * 申请退款
+ * @param refundNo 退款单号，同一笔退款重试时须保持不变
  * @param refundAmount 退款金额（元）
- * @param totalAmount 原订单金额（元），微信退款必需
  */
 export async function refund(
   method: PaymentMethod,
   outTradeNo: string,
+  refundNo: string,
   refundAmount: number,
-  totalAmount: number,
   reason?: string,
 ): Promise<boolean> {
   if (method === PaymentMethod.WECHAT) {
     return WechatPay.refundOrder({
       outTradeNo,
-      outRefundNo: `${outTradeNo}_refund_${Date.now()}`,
+      outRefundNo: refundNo,
       refundAmount: AlipayPay.yuanToFen(refundAmount), // 元转分
-      totalAmount: AlipayPay.yuanToFen(totalAmount), // 元转分
       reason,
     });
   } else if (method === PaymentMethod.ALIPAY) {
     return AlipayPay.refundOrder({
       outTradeNo,
+      outRequestNo: refundNo,
       refundAmount: refundAmount.toFixed(2), // 保留两位小数
       refundReason: reason,
     });

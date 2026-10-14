@@ -7,45 +7,50 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { QueryRegionsParams, Region, RegionTreeDto } from '.././model';
+import type { QueryRegionsParams, Region, RegionTreeDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 获取所有省份
  */
-export const getProvinces = () => {
-  return customMutator<Region[]>({ url: `/api/v1/regions/provinces`, method: 'GET' });
+export const getProvinces = (options?: SecondParameter<typeof customMutator<Region[]>>) => {
+  return customMutator<Region[]>({ url: `/api/v1/regions/provinces`, method: 'GET' }, options);
 };
 /**
  * @summary 获取指定省份下的城市
  */
-export const getCities = (provinceCode: string) => {
-  return customMutator<Region[]>({ url: `/api/v1/regions/cities/${provinceCode}`, method: 'GET' });
+export const getCities = (provinceCode: string, options?: SecondParameter<typeof customMutator<Region[]>>) => {
+  return customMutator<Region[]>({ url: `/api/v1/regions/cities/${provinceCode}`, method: 'GET' }, options);
 };
 /**
  * @summary 获取指定城市下的区县
  */
-export const getDistricts = (cityCode: string) => {
-  return customMutator<Region[]>({ url: `/api/v1/regions/districts/${cityCode}`, method: 'GET' });
+export const getDistricts = (cityCode: string, options?: SecondParameter<typeof customMutator<Region[]>>) => {
+  return customMutator<Region[]>({ url: `/api/v1/regions/districts/${cityCode}`, method: 'GET' }, options);
 };
 /**
  * @summary 根据 code 获取地区详情
  */
-export const getRegionByCode = (code: string) => {
-  return customMutator<Region>({ url: `/api/v1/regions/code/${code}`, method: 'GET' });
+export const getRegionByCode = (code: string, options?: SecondParameter<typeof customMutator<Region>>) => {
+  return customMutator<Region>({ url: `/api/v1/regions/code/${code}`, method: 'GET' }, options);
 };
 /**
  * @summary 获取完整的省市区树形结构
  */
-export const getRegionTree = () => {
-  return customMutator<RegionTreeDto[]>({ url: `/api/v1/regions/tree`, method: 'GET' });
+export const getRegionTree = (options?: SecondParameter<typeof customMutator<RegionTreeDto[]>>) => {
+  return customMutator<RegionTreeDto[]>({ url: `/api/v1/regions/tree`, method: 'GET' }, options);
 };
 /**
  * @summary 查询地区（支持按级别、父级代码、关键词搜索）
  */
-export const queryRegions = (params?: QueryRegionsParams) => {
-  return customMutator<Region[]>({ url: `/api/v1/regions`, method: 'GET', params });
+export const queryRegions = (
+  params?: QueryRegionsParams,
+  options?: SecondParameter<typeof customMutator<Region[]>>,
+) => {
+  return customMutator<Region[]>({ url: `/api/v1/regions`, method: 'GET', params }, options);
 };
 export type GetProvincesResult = NonNullable<Awaited<ReturnType<typeof getProvinces>>>;
 export type GetCitiesResult = NonNullable<Awaited<ReturnType<typeof getCities>>>;

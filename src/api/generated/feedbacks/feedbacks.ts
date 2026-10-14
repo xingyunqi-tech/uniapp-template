@@ -7,32 +7,43 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateFeedbackDto, Feedback, GetFeedbacksParams, PaginationFeedbackResponseDto } from '.././model';
+import type { CreateFeedbackDto, Feedback, GetFeedbacksParams, PaginationFeedbackResponseDto } from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 提交反馈
  */
-export const createFeedback = (createFeedbackDto: CreateFeedbackDto) => {
-  return customMutator<Feedback>({
-    url: `/api/v1/feedbacks`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: createFeedbackDto,
-  });
+export const createFeedback = (
+  createFeedbackDto: CreateFeedbackDto,
+  options?: SecondParameter<typeof customMutator<Feedback>>,
+) => {
+  return customMutator<Feedback>(
+    {
+      url: `/api/v1/feedbacks`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createFeedbackDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取反馈列表
  */
-export const getFeedbacks = (params?: GetFeedbacksParams) => {
-  return customMutator<PaginationFeedbackResponseDto>({ url: `/api/v1/feedbacks`, method: 'GET', params });
+export const getFeedbacks = (
+  params?: GetFeedbacksParams,
+  options?: SecondParameter<typeof customMutator<PaginationFeedbackResponseDto>>,
+) => {
+  return customMutator<PaginationFeedbackResponseDto>({ url: `/api/v1/feedbacks`, method: 'GET', params }, options);
 };
 /**
  * @summary 获取反馈详情
  */
-export const getFeedback = (id: string) => {
-  return customMutator<Feedback>({ url: `/api/v1/feedbacks/${id}`, method: 'GET' });
+export const getFeedback = (id: number, options?: SecondParameter<typeof customMutator<Feedback>>) => {
+  return customMutator<Feedback>({ url: `/api/v1/feedbacks/${id}`, method: 'GET' }, options);
 };
 export type CreateFeedbackResult = NonNullable<Awaited<ReturnType<typeof createFeedback>>>;
 export type GetFeedbacksResult = NonNullable<Awaited<ReturnType<typeof getFeedbacks>>>;

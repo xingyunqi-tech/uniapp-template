@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams } from '@/interface';
+import type {
+  UserInfo,
+  LoginParams,
+  RegisterParams,
+  SmsLoginParams,
+  WechatLoginParams,
+  WechatPhoneLoginParams,
+} from '@/interface';
 import { ADMIN_ROLE_ID, ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { encryptPassword } from '@/utils/crypto';
@@ -14,6 +21,7 @@ import {
   loginWithPhone,
   loginWithSms,
   loginWithWechat,
+  loginWithWechatPhone,
   registerWithPhone,
   sendSmsCode as apiSendSmsCode,
   getCurrentUser,
@@ -31,7 +39,7 @@ import {
 } from '@/api';
 
 // 重新导出类型，保持向后兼容
-export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams };
+export type { UserInfo, LoginParams, RegisterParams, SmsLoginParams, WechatLoginParams, WechatPhoneLoginParams };
 
 /**
  * 将后端 User 类型转换为前端 UserInfo 类型
@@ -188,6 +196,19 @@ export const useUserStore = defineStore(
       const response = await loginWithWechat({
         code: params.code,
         type: AuthWechatLoginDtoType.mini_app, // 小程序登录
+      });
+      handleLoginResponse(response);
+      return response.token;
+    }
+
+    /**
+     * 微信手机号快捷登录（小程序）
+     * @param params 微信登录 code 与手机号授权 code
+     */
+    async function wechatPhoneLogin(params: WechatPhoneLoginParams): Promise<string> {
+      const response = await loginWithWechatPhone({
+        loginCode: params.loginCode,
+        phoneCode: params.phoneCode,
       });
       handleLoginResponse(response);
       return response.token;
@@ -387,6 +408,7 @@ export const useUserStore = defineStore(
       smsLogin,
       sendSmsCode,
       wechatLogin,
+      wechatPhoneLogin,
       getUserInfo,
       updateUserInfo,
       changePassword,

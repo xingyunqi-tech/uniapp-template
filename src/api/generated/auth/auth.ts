@@ -21,190 +21,289 @@ import type {
   AuthSendCodeDto,
   AuthUpdateDto,
   AuthWechatLoginDto,
+  AuthWechatPhoneLoginDto,
   LoginResponseDto,
   RefreshResponseDto,
   User,
-} from '.././model';
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 邮箱登录
  */
-export const loginWithEmail = (authEmailLoginDto: AuthEmailLoginDto) => {
-  return customMutator<LoginResponseDto>({
-    url: `/api/v1/auth/email/login`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authEmailLoginDto,
-  });
+export const loginWithEmail = (
+  authEmailLoginDto: AuthEmailLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/email/login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authEmailLoginDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 邮箱注册
  */
-export const registerWithEmail = (authRegisterLoginDto: AuthRegisterLoginDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/email/register`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authRegisterLoginDto,
-  });
+export const registerWithEmail = (
+  authRegisterLoginDto: AuthRegisterLoginDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/email/register`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authRegisterLoginDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 确认邮箱
  */
-export const confirmEmail = (authConfirmEmailDto: AuthConfirmEmailDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/email/confirm`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authConfirmEmailDto,
-  });
+export const confirmEmail = (
+  authConfirmEmailDto: AuthConfirmEmailDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/email/confirm`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authConfirmEmailDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 确认新邮箱
  */
-export const confirmNewEmail = (authConfirmEmailDto: AuthConfirmEmailDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/email/confirm/new`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authConfirmEmailDto,
-  });
+export const confirmNewEmail = (
+  authConfirmEmailDto: AuthConfirmEmailDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/email/confirm/new`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authConfirmEmailDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 忘记密码
  */
-export const forgotPassword = (authForgotPasswordDto: AuthForgotPasswordDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/forgot/password`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authForgotPasswordDto,
-  });
+export const forgotPassword = (
+  authForgotPasswordDto: AuthForgotPasswordDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/forgot/password`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authForgotPasswordDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 重置密码
  */
-export const resetPassword = (authResetPasswordDto: AuthResetPasswordDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/reset/password`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authResetPasswordDto,
-  });
+export const resetPassword = (
+  authResetPasswordDto: AuthResetPasswordDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/reset/password`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authResetPasswordDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取当前用户信息
  */
-export const getCurrentUser = () => {
-  return customMutator<User>({ url: `/api/v1/auth/me`, method: 'GET' });
+export const getCurrentUser = (options?: SecondParameter<typeof customMutator<User>>) => {
+  return customMutator<User>({ url: `/api/v1/auth/me`, method: 'GET' }, options);
 };
 /**
  * @summary 更新当前用户信息
  */
-export const updateCurrentUser = (authUpdateDto: AuthUpdateDto) => {
-  return customMutator<User>({
-    url: `/api/v1/auth/me`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: authUpdateDto,
-  });
+export const updateCurrentUser = (
+  authUpdateDto: AuthUpdateDto,
+  options?: SecondParameter<typeof customMutator<User>>,
+) => {
+  return customMutator<User>(
+    { url: `/api/v1/auth/me`, method: 'PUT', headers: { 'Content-Type': 'application/json' }, data: authUpdateDto },
+    options,
+  );
 };
 /**
  * @summary 删除当前用户账号
  */
-export const deleteCurrentUser = () => {
-  return customMutator<void>({ url: `/api/v1/auth/me`, method: 'DELETE' });
+export const deleteCurrentUser = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/auth/me`, method: 'DELETE' }, options);
 };
 /**
  * @summary 刷新令牌
  */
-export const refreshToken = () => {
-  return customMutator<RefreshResponseDto>({ url: `/api/v1/auth/refresh`, method: 'POST' });
+export const refreshToken = (options?: SecondParameter<typeof customMutator<RefreshResponseDto>>) => {
+  return customMutator<RefreshResponseDto>({ url: `/api/v1/auth/refresh`, method: 'POST' }, options);
 };
 /**
  * @summary 退出登录
  */
-export const logout = () => {
-  return customMutator<void>({ url: `/api/v1/auth/logout`, method: 'POST' });
+export const logout = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/auth/logout`, method: 'POST' }, options);
 };
 /**
  * @summary 发送短信验证码
  */
-export const sendSmsCode = (authSendCodeDto: AuthSendCodeDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/phone/send-code`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authSendCodeDto,
-  });
+export const sendSmsCode = (
+  authSendCodeDto: AuthSendCodeDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/phone/send-code`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authSendCodeDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 手机号密码登录
  */
-export const loginWithPhone = (authPhoneLoginDto: AuthPhoneLoginDto) => {
-  return customMutator<LoginResponseDto>({
-    url: `/api/v1/auth/phone/login`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authPhoneLoginDto,
-  });
+export const loginWithPhone = (
+  authPhoneLoginDto: AuthPhoneLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/phone/login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authPhoneLoginDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 短信验证码登录
  */
-export const loginWithSms = (authPhoneSmsLoginDto: AuthPhoneSmsLoginDto) => {
-  return customMutator<LoginResponseDto>({
-    url: `/api/v1/auth/phone/sms-login`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authPhoneSmsLoginDto,
-  });
+export const loginWithSms = (
+  authPhoneSmsLoginDto: AuthPhoneSmsLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/phone/sms-login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authPhoneSmsLoginDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 手机号注册
  */
-export const registerWithPhone = (authPhoneRegisterDto: AuthPhoneRegisterDto) => {
-  return customMutator<LoginResponseDto>({
-    url: `/api/v1/auth/phone/register`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authPhoneRegisterDto,
-  });
+export const registerWithPhone = (
+  authPhoneRegisterDto: AuthPhoneRegisterDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/phone/register`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authPhoneRegisterDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 通过手机验证码重置密码
  */
-export const resetPasswordByPhone = (authPhoneResetPasswordDto: AuthPhoneResetPasswordDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/phone/reset-password`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authPhoneResetPasswordDto,
-  });
+export const resetPasswordByPhone = (
+  authPhoneResetPasswordDto: AuthPhoneResetPasswordDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/phone/reset-password`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authPhoneResetPasswordDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 修改密码
  */
-export const changePassword = (authChangePasswordDto: AuthChangePasswordDto) => {
-  return customMutator<void>({
-    url: `/api/v1/auth/password`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: authChangePasswordDto,
-  });
+export const changePassword = (
+  authChangePasswordDto: AuthChangePasswordDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/password`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      data: authChangePasswordDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 微信登录
  */
-export const loginWithWechat = (authWechatLoginDto: AuthWechatLoginDto) => {
-  return customMutator<LoginResponseDto>({
-    url: `/api/v1/auth/wechat/login`,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: authWechatLoginDto,
-  });
+export const loginWithWechat = (
+  authWechatLoginDto: AuthWechatLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/wechat/login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authWechatLoginDto,
+    },
+    options,
+  );
+};
+/**
+ * @summary 微信手机号快捷登录（小程序）
+ */
+export const loginWithWechatPhone = (
+  authWechatPhoneLoginDto: AuthWechatPhoneLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/wechat/phone-login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authWechatPhoneLoginDto,
+    },
+    options,
+  );
 };
 export type LoginWithEmailResult = NonNullable<Awaited<ReturnType<typeof loginWithEmail>>>;
 export type RegisterWithEmailResult = NonNullable<Awaited<ReturnType<typeof registerWithEmail>>>;
@@ -224,3 +323,4 @@ export type RegisterWithPhoneResult = NonNullable<Awaited<ReturnType<typeof regi
 export type ResetPasswordByPhoneResult = NonNullable<Awaited<ReturnType<typeof resetPasswordByPhone>>>;
 export type ChangePasswordResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>;
 export type LoginWithWechatResult = NonNullable<Awaited<ReturnType<typeof loginWithWechat>>>;
+export type LoginWithWechatPhoneResult = NonNullable<Awaited<ReturnType<typeof loginWithWechatPhone>>>;

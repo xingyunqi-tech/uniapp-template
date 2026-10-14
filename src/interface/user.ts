@@ -80,6 +80,16 @@ export interface WechatLoginParams {
 }
 
 /**
+ * 微信手机号快捷登录参数接口
+ */
+export interface WechatPhoneLoginParams {
+  /** uni.login 返回的 code */
+  loginCode: string;
+  /** getPhoneNumber 返回的手机号授权 code */
+  phoneCode: string;
+}
+
+/**
  * 修改密码参数接口
  */
 export interface ChangePasswordParams {

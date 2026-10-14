@@ -7,10 +7,13 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
+import type { HealthCheck200DetailsStatus } from './healthCheck200DetailsStatus';
 
 export type HealthCheck200Details = {
   [key: string]: {
-    status: string;
+    status: HealthCheck200DetailsStatus;
+    /** Time the health indicator took to respond, in ms */
+    responseTime?: number;
     [key: string]: unknown;
   };
 };

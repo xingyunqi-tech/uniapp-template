@@ -96,7 +96,7 @@ export function useShareTracking(options: UseShareTrackingOptions = {}): UseShar
     }
 
     try {
-      await shareStore.trackShareAction(shareRecord.value.id, action, {
+      await shareStore.trackShareAction(shareRecord.value.shareCode, action, {
         ...metadata,
         platform: getSharePlatform(),
         timestamp: Date.now(),

@@ -113,7 +113,7 @@ export const useOrderStore = defineStore('order', () => {
   async function fetchOrderDetail(orderId: string) {
     loading.value = true;
     try {
-      const order = await getOrder(orderId);
+      const order = await getOrder(Number(orderId));
       currentOrder.value = order;
       return order;
     } finally {
@@ -150,7 +150,7 @@ export const useOrderStore = defineStore('order', () => {
    * 取消订单
    */
   async function cancel(orderId: string) {
-    await cancelOrder(orderId);
+    await cancelOrder(Number(orderId));
 
     // 更新列表中的订单状态
     const order = orderList.value.find(o => getOrderIdString(o.id) === orderId);

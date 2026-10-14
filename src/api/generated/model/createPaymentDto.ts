@@ -9,12 +9,10 @@
  */
 
 export interface CreatePaymentDto {
-  /** 商户订单号（唯一） */
+  /** 商户订单号（即订单的 orderNo），支付金额取订单金额 */
   outTradeNo: string;
   /** 订单标题 */
   subject: string;
-  /** 订单金额（元） */
-  totalAmount: string;
   /** 订单描述 */
   body?: string;
 }

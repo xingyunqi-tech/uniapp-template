@@ -10,9 +10,10 @@
 import type { ReadinessProbe200Details } from './readinessProbe200Details';
 import type { ReadinessProbe200Error } from './readinessProbe200Error';
 import type { ReadinessProbe200Info } from './readinessProbe200Info';
+import type { ReadinessProbe200Status } from './readinessProbe200Status';
 
 export type ReadinessProbe200 = {
-  status?: string;
+  status?: ReadinessProbe200Status;
   /** @nullable */
   info?: ReadinessProbe200Info;
   /** @nullable */

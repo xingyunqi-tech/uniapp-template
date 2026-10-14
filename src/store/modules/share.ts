@@ -140,17 +140,17 @@ export const useShareStore = defineStore('share', () => {
 
   /**
    * 追踪分享行为
-   * @param shareId 分享 ID
+   * @param shareCode 分享码
    * @param action 行为类型 (VIEW/CLICK/CONVERSION)
    * @param metadata 额外元数据
    */
   async function trackShareAction(
-    shareId: number,
+    shareCode: string,
     action: TrackShareDtoAction,
     metadata?: Record<string, unknown>,
   ): Promise<void> {
     try {
-      await trackShare(shareId, {
+      await trackShare(shareCode, {
         action,
         metadata,
       });

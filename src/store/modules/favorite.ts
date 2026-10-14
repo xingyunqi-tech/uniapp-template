@@ -148,7 +148,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     // 先找到要删除的收藏，用于更新缓存
     const favorite = favoriteList.value.find(item => item.id === id);
 
-    await deleteFavorite(String(id));
+    await deleteFavorite(id);
 
     // 从列表中移除
     const index = favoriteList.value.findIndex(item => item.id === id);

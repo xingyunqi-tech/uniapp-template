@@ -13,6 +13,7 @@ export * from './update';
 export * from './network';
 export * from './error-reporter';
 export * from './performance-reporter';
+export * from './subscribe';
 export * from './platform';
 export * from './locale';
 export * from './debounce';

@@ -13,62 +13,76 @@ import type {
   NotificationSetting,
   PaginationNotificationResponseDto,
   UpdateNotificationSettingsDto,
-} from '.././model';
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
  * @summary 获取通知列表
  */
-export const getNotifications = (params?: GetNotificationsParams) => {
-  return customMutator<PaginationNotificationResponseDto>({ url: `/api/v1/notifications`, method: 'GET', params });
+export const getNotifications = (
+  params?: GetNotificationsParams,
+  options?: SecondParameter<typeof customMutator<PaginationNotificationResponseDto>>,
+) => {
+  return customMutator<PaginationNotificationResponseDto>(
+    { url: `/api/v1/notifications`, method: 'GET', params },
+    options,
+  );
 };
 /**
  * @summary 获取未读通知数量
  */
-export const getUnreadCount = () => {
-  return customMutator<number>({ url: `/api/v1/notifications/unread-count`, method: 'GET' });
+export const getUnreadCount = (options?: SecondParameter<typeof customMutator<number>>) => {
+  return customMutator<number>({ url: `/api/v1/notifications/unread-count`, method: 'GET' }, options);
 };
 /**
  * @summary 获取通知设置
  */
-export const getNotificationSettings = () => {
-  return customMutator<NotificationSetting[]>({ url: `/api/v1/notifications/settings`, method: 'GET' });
+export const getNotificationSettings = (options?: SecondParameter<typeof customMutator<NotificationSetting[]>>) => {
+  return customMutator<NotificationSetting[]>({ url: `/api/v1/notifications/settings`, method: 'GET' }, options);
 };
 /**
  * @summary 更新通知设置
  */
-export const updateNotificationSettings = (updateNotificationSettingsDto: UpdateNotificationSettingsDto) => {
-  return customMutator<NotificationSetting>({
-    url: `/api/v1/notifications/settings`,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    data: updateNotificationSettingsDto,
-  });
+export const updateNotificationSettings = (
+  updateNotificationSettingsDto: UpdateNotificationSettingsDto,
+  options?: SecondParameter<typeof customMutator<NotificationSetting>>,
+) => {
+  return customMutator<NotificationSetting>(
+    {
+      url: `/api/v1/notifications/settings`,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      data: updateNotificationSettingsDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 获取通知详情
  */
-export const getNotification = (id: number) => {
-  return customMutator<Notification>({ url: `/api/v1/notifications/${id}`, method: 'GET' });
+export const getNotification = (id: number, options?: SecondParameter<typeof customMutator<Notification>>) => {
+  return customMutator<Notification>({ url: `/api/v1/notifications/${id}`, method: 'GET' }, options);
 };
 /**
  * @summary 删除通知
  */
-export const deleteNotification = (id: number) => {
-  return customMutator<void>({ url: `/api/v1/notifications/${id}`, method: 'DELETE' });
+export const deleteNotification = (id: number, options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/notifications/${id}`, method: 'DELETE' }, options);
 };
 /**
  * @summary 标记所有通知为已读
  */
-export const markAllNotificationsAsRead = () => {
-  return customMutator<void>({ url: `/api/v1/notifications/read-all`, method: 'POST' });
+export const markAllNotificationsAsRead = (options?: SecondParameter<typeof customMutator<void>>) => {
+  return customMutator<void>({ url: `/api/v1/notifications/read-all`, method: 'POST' }, options);
 };
 /**
  * @summary 标记通知为已读
  */
-export const markNotificationAsRead = (id: number) => {
-  return customMutator<Notification>({ url: `/api/v1/notifications/${id}/read`, method: 'POST' });
+export const markNotificationAsRead = (id: number, options?: SecondParameter<typeof customMutator<Notification>>) => {
+  return customMutator<Notification>({ url: `/api/v1/notifications/${id}/read`, method: 'POST' }, options);
 };
 export type GetNotificationsResult = NonNullable<Awaited<ReturnType<typeof getNotifications>>>;
 export type GetUnreadCountResult = NonNullable<Awaited<ReturnType<typeof getUnreadCount>>>;

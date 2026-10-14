@@ -21,7 +21,7 @@ export interface CustomRequestConfig extends RequestMeta {
  *
  * 不含 params / data：它们由生成函数的前几个参数给出。
  *
- * @example getOrders(params, { showError: false }) // 需先执行 pnpm api:gen 生成带该参数的函数
+ * @example getOrders(params, { showError: false })
  */
 export type RequestOptions = Omit<CustomRequestConfig, 'url' | 'method' | 'params' | 'data'>;
 

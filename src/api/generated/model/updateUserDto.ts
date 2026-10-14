@@ -10,10 +10,13 @@
 import type { FileDto } from './fileDto';
 import type { RoleDto } from './roleDto';
 import type { StatusDto } from './statusDto';
+import type { UpdateUserDtoProvider } from './updateUserDtoProvider';
 
 export interface UpdateUserDto {
   email?: string;
+  /** 前端 MD5 后的密码（32 位十六进制） */
   password?: string;
+  provider?: UpdateUserDtoProvider;
   firstName?: string;
   lastName?: string;
   phone?: string;

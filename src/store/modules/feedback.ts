@@ -92,7 +92,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
    * 获取反馈详情
    */
   async function fetchFeedback(id: string): Promise<Feedback> {
-    const feedback = await getFeedback(id);
+    const feedback = await getFeedback(Number(id));
 
     // 更新列表中的反馈数据
     const index = feedbackList.value.findIndex(item => String(item.id) === id);
