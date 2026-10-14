@@ -22,6 +22,7 @@ import {
   onNetworkChange,
   initErrorReporter,
   resetReportFailureCount,
+  initPerformanceReporter,
 } from '@/utils';
 import { PAGES, type ThemeType } from '@/constants';
 
@@ -70,6 +71,15 @@ onLaunch(options => {
     // customReport: async (errors) => {
     //   // 对接 Sentry 或其他监控平台
     //   errors.forEach(err => Sentry.captureException(err));
+    // },
+  });
+
+  // 性能指标采集，传入 report 后生效
+  initPerformanceReporter({
+    enabled: import.meta.env.PROD,
+    sampleRate: 1,
+    // report: metric => {
+    //   wx.reportPerformance(METRIC_IDS[metric.name], metric.duration, metric.path);
     // },
   });
 

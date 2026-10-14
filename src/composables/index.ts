@@ -4,6 +4,7 @@
 export * from './useRouter';
 export * from './useSafeBack';
 export * from './useList';
+export * from './usePageReady';
 export * from './useCountdown';
 export * from './usePasswordStrength';
 export * from './useSendSms';

@@ -1,4 +1,4 @@
-import { ref, computed, type Ref, type ComputedRef } from 'vue';
+import { ref, shallowRef, computed, type Ref, type ShallowRef, type ComputedRef } from 'vue';
 
 export interface UseListOptions<T> {
   /** 获取数据的函数，返回数据列表 */
@@ -9,18 +9,11 @@ export interface UseListOptions<T> {
   immediate?: boolean;
   /** 判断是否还有更多数据，默认根据返回数量判断 */
   hasMore?: (data: T[], page: number, pageSize: number) => boolean;
-  /**
-   * 最大保留数量 (大列表优化)
-   * 设置后，列表超过该数量时会自动移除最早的数据
-   * 用于无限滚动场景，防止 DOM 节点过多导致性能问题
-   * 默认不限制
-   */
-  maxItems?: number;
 }
 
 export interface UseListReturn<T> {
-  /** 数据列表 */
-  list: Ref<T[]>;
+  /** 数据列表 (shallowRef：原地修改不会触发更新，用 updateItem / removeItem 修改) */
+  list: ShallowRef<T[]>;
   /** 是否正在加载 */
   loading: Ref<boolean>;
   /** 是否正在刷新 */
@@ -31,14 +24,16 @@ export interface UseListReturn<T> {
   page: Ref<number>;
   /** 是否为空 */
   isEmpty: ComputedRef<boolean>;
-  /** 总数据量 (包括已回收的) */
-  totalLoaded: Ref<number>;
   /** 加载数据 */
   loadData: () => Promise<void>;
   /** 刷新数据 */
   refresh: () => Promise<void>;
   /** 重置列表 */
   reset: () => void;
+  /** 更新匹配的列表项 */
+  updateItem: (predicate: (item: T) => boolean, updater: (item: T) => T) => void;
+  /** 移除匹配的列表项 */
+  removeItem: (predicate: (item: T) => boolean) => void;
 }
 
 /**
@@ -55,37 +50,23 @@ export interface UseListReturn<T> {
  *   },
  * });
  *
- * // 大列表优化 (限制 DOM 节点数量)
- * const { list, loadData } = useList({
- *   fetchData: ...,
- *   maxItems: 100, // 最多保留 100 条
- * });
+ * // 修改列表项
+ * updateItem(item => item.id === id, item => ({ ...item, liked: true }));
+ * removeItem(item => item.id === id);
  * ```
  */
 export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
-  const { fetchData, pageSize = 10, immediate = false, hasMore: customHasMore, maxItems } = options;
+  const { fetchData, pageSize = 10, immediate = false, hasMore: customHasMore } = options;
 
   // 状态
-  const list = ref<T[]>([]) as Ref<T[]>;
+  const list = shallowRef<T[]>([]);
   const loading = ref(false);
   const refreshing = ref(false);
   const noMore = ref(false);
   const page = ref(1);
-  const totalLoaded = ref(0);
 
   // 是否为空
   const isEmpty = computed(() => !loading.value && !refreshing.value && list.value.length === 0);
-
-  /**
-   * 裁剪列表 (大列表优化)
-   * 当列表超过 maxItems 时，移除最早的数据
-   */
-  function trimList() {
-    if (maxItems && list.value.length > maxItems) {
-      const removeCount = list.value.length - maxItems;
-      list.value.splice(0, removeCount);
-    }
-  }
 
   // 默认判断是否还有更多
   const defaultHasMore = (data: T[], _page: number, _pageSize: number) => {
@@ -116,17 +97,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     }
     if (id !== requestId) return;
 
-    if (currentPage === 1) {
-      list.value = data;
-    } else {
-      list.value.push(...data);
-    }
-
-    // 更新总加载数量
-    totalLoaded.value += data.length;
-
-    // 大列表优化：裁剪超出的数据
-    trimList();
+    list.value = currentPage === 1 ? data : [...list.value, ...data];
 
     // 检查是否还有更多
     if (checkHasMore(data, currentPage, pageSize)) {
@@ -156,7 +127,6 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     if (id !== requestId) return;
 
     list.value = data;
-    totalLoaded.value = data.length;
 
     if (checkHasMore(data, 1, pageSize)) {
       page.value = 2;
@@ -174,7 +144,14 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     noMore.value = false;
     loading.value = false;
     refreshing.value = false;
-    totalLoaded.value = 0;
+  }
+
+  function updateItem(predicate: (item: T) => boolean, updater: (item: T) => T) {
+    list.value = list.value.map(item => (predicate(item) ? updater(item) : item));
+  }
+
+  function removeItem(predicate: (item: T) => boolean) {
+    list.value = list.value.filter(item => !predicate(item));
   }
 
   // 立即加载
@@ -189,9 +166,10 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     noMore,
     page,
     isEmpty,
-    totalLoaded,
     loadData,
     refresh,
     reset,
+    updateItem,
+    removeItem,
   };
 }

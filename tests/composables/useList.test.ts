@@ -108,4 +108,50 @@ describe('useList', () => {
 
     await expect(pending).resolves.toBeUndefined();
   });
+
+  it('加载更多时替换数组引用，不修改原数组', async () => {
+    const { list, loadData, calls } = setup();
+
+    const first = loadData();
+    calls[0].result.resolve([1, 2]);
+    await first;
+    const firstPage = list.value;
+
+    const second = loadData();
+    calls[1].result.resolve([3, 4]);
+    await second;
+
+    expect(list.value).not.toBe(firstPage);
+    expect(firstPage).toEqual([1, 2]);
+    expect(list.value).toEqual([1, 2, 3, 4]);
+  });
+
+  it('updateItem 替换匹配项并生成新数组', async () => {
+    const { list, loadData, updateItem, calls } = setup();
+
+    const first = loadData();
+    calls[0].result.resolve([1, 2]);
+    await first;
+    const before = list.value;
+
+    updateItem(
+      item => item === 2,
+      item => item * 10,
+    );
+
+    expect(list.value).toEqual([1, 20]);
+    expect(list.value).not.toBe(before);
+  });
+
+  it('removeItem 移除匹配项', async () => {
+    const { list, loadData, removeItem, calls } = setup();
+
+    const first = loadData();
+    calls[0].result.resolve([1, 2]);
+    await first;
+
+    removeItem(item => item === 1);
+
+    expect(list.value).toEqual([2]);
+  });
 });

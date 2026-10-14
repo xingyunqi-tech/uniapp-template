@@ -12,6 +12,7 @@ export * from './validator';
 export * from './update';
 export * from './network';
 export * from './error-reporter';
+export * from './performance-reporter';
 export * from './platform';
 export * from './locale';
 export * from './debounce';
