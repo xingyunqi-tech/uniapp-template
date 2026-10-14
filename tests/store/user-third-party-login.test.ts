@@ -2,6 +2,17 @@ import { describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 
+const loginWithAlipay = vi.hoisted(() =>
+  vi.fn(() =>
+    Promise.resolve({
+      token: 'alipay-token',
+      refreshToken: 'alipay-refresh',
+      tokenExpires: 1,
+      user: { id: 2, role: { id: 2 }, status: { id: 1 } },
+    }),
+  ),
+);
+
 const loginWithWechatPhone = vi.hoisted(() =>
   vi.fn(() =>
     Promise.resolve({
@@ -16,6 +27,7 @@ const loginWithWechatPhone = vi.hoisted(() =>
 vi.mock('@/api', async importOriginal => ({
   ...(await importOriginal<typeof import('@/api')>()),
   loginWithWechatPhone,
+  loginWithAlipay,
 }));
 
 const { useUserStore } = await import('@/store/modules/user');
@@ -31,5 +43,18 @@ describe('useUserStore.wechatPhoneLogin', () => {
     expect(store.isLoggedIn).toBe(true);
     expect(storage.get(STORAGE_KEYS.TOKEN)).toBe('phone-token');
     expect(store.userInfo?.phone).toBe('13800000000');
+  });
+});
+
+describe('useUserStore.alipayLogin', () => {
+  it('提交授权码并保存登录态', async () => {
+    setActivePinia(createPinia());
+    const store = useUserStore();
+
+    await expect(store.alipayLogin('AUTH1')).resolves.toBe('alipay-token');
+
+    expect(loginWithAlipay).toHaveBeenCalledWith({ authCode: 'AUTH1' });
+    expect(store.isLoggedIn).toBe(true);
+    expect(storage.get(STORAGE_KEYS.TOKEN)).toBe('alipay-token');
   });
 });

@@ -7,7 +7,13 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreatePaymentDto, RefundDto } from '../model';
+import type {
+  AlipayFormPaymentResponseDto,
+  AlipayMiniPaymentResponseDto,
+  CreateMiniPaymentDto,
+  CreatePaymentDto,
+  RefundDto,
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
 
@@ -18,9 +24,9 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  */
 export const alipayControllerCreateMobilePaymentV1 = (
   createPaymentDto: CreatePaymentDto,
-  options?: SecondParameter<typeof customMutator<void>>,
+  options?: SecondParameter<typeof customMutator<AlipayFormPaymentResponseDto>>,
 ) => {
-  return customMutator<void>(
+  return customMutator<AlipayFormPaymentResponseDto>(
     {
       url: `/api/v1/alipay/payment/mobile`,
       method: 'POST',
@@ -31,13 +37,30 @@ export const alipayControllerCreateMobilePaymentV1 = (
   );
 };
 /**
+ * @summary 创建支付宝小程序支付订单
+ */
+export const alipayControllerCreateMiniPaymentV1 = (
+  createMiniPaymentDto: CreateMiniPaymentDto,
+  options?: SecondParameter<typeof customMutator<AlipayMiniPaymentResponseDto>>,
+) => {
+  return customMutator<AlipayMiniPaymentResponseDto>(
+    {
+      url: `/api/v1/alipay/payment/mini`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createMiniPaymentDto,
+    },
+    options,
+  );
+};
+/**
  * @summary 创建电脑网站支付订单
  */
 export const alipayControllerCreateWebPaymentV1 = (
   createPaymentDto: CreatePaymentDto,
-  options?: SecondParameter<typeof customMutator<void>>,
+  options?: SecondParameter<typeof customMutator<AlipayFormPaymentResponseDto>>,
 ) => {
-  return customMutator<void>(
+  return customMutator<AlipayFormPaymentResponseDto>(
     {
       url: `/api/v1/alipay/payment/web`,
       method: 'POST',
@@ -85,6 +108,9 @@ export const alipayControllerNotifyV1 = (options?: SecondParameter<typeof custom
 };
 export type AlipayControllerCreateMobilePaymentV1Result = NonNullable<
   Awaited<ReturnType<typeof alipayControllerCreateMobilePaymentV1>>
+>;
+export type AlipayControllerCreateMiniPaymentV1Result = NonNullable<
+  Awaited<ReturnType<typeof alipayControllerCreateMiniPaymentV1>>
 >;
 export type AlipayControllerCreateWebPaymentV1Result = NonNullable<
   Awaited<ReturnType<typeof alipayControllerCreateWebPaymentV1>>

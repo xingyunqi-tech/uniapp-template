@@ -53,14 +53,14 @@
       <!-- 未同意协议时不能直接弹出手机号授权，先提示勾选 -->
       <button
         v-if="agreed"
-        class="phone-login-btn"
+        class="quick-login-btn wechat"
         :disabled="loading"
         open-type="getPhoneNumber"
         @getphonenumber="handleGetPhoneNumber"
       >
         手机号快捷登录
       </button>
-      <button v-else class="phone-login-btn" :disabled="loading" @click="checkAgreed">手机号快捷登录</button>
+      <button v-else class="quick-login-btn wechat" :disabled="loading" @click="checkAgreed">手机号快捷登录</button>
 
       <view class="divider">
         <text class="divider-text">其他登录方式</text>
@@ -71,6 +71,12 @@
           <uni-icons type="weixin" color="var(--color-brand-wechat)" size="48rpx" />
         </button>
       </view>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef MP-ALIPAY -->
+    <view class="other-login">
+      <button class="quick-login-btn alipay" :disabled="loading" @click="handleAlipayLogin">支付宝一键登录</button>
     </view>
     <!-- #endif -->
 
@@ -103,6 +109,7 @@ import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue, encryptPassword } from '@/utils';
+import { getAlipayAuthCode } from '@/utils/alipay-pay';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -208,6 +215,18 @@ async function loginWithWechat() {
   });
 }
 
+// 支付宝登录（小程序）
+async function loginWithAlipay() {
+  let authCode: string;
+  try {
+    authCode = await getAlipayAuthCode();
+  } catch (error) {
+    uni.showToast({ title: '支付宝授权失败，请重试', icon: 'none' });
+    throw error;
+  }
+  await userStore.alipayLogin(authCode);
+}
+
 // 手机号快捷登录（小程序）
 async function loginWithWechatPhone(phoneCode: string) {
   await userStore.wechatPhoneLogin({
@@ -258,6 +277,12 @@ function handleLogin() {
 function handleWechatLogin() {
   if (!checkAgreed()) return;
   startLogin(loginWithWechat);
+}
+
+// 处理支付宝登录（小程序）
+function handleAlipayLogin() {
+  if (!checkAgreed()) return;
+  startLogin(loginWithAlipay);
 }
 
 // 手机号快捷登录授权回调（小程序）
@@ -343,13 +368,12 @@ function goToForgotPassword() {
 .other-login {
   margin-top: 64rpx;
 
-  .phone-login-btn {
+  .quick-login-btn {
     width: 100%;
     height: 96rpx;
     margin-bottom: 48rpx;
     border: none;
     border-radius: var(--radius-lg);
-    background: var(--color-brand-wechat);
     color: var(--color-text-inverse);
     font-size: 32rpx;
     font-weight: 500;
@@ -365,6 +389,14 @@ function goToForgotPassword() {
 
     &[disabled] {
       opacity: 0.6;
+    }
+
+    &.wechat {
+      background: var(--color-brand-wechat);
+    }
+
+    &.alipay {
+      background: var(--color-brand-alipay);
     }
   }
 

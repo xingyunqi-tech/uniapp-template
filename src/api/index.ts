@@ -38,6 +38,7 @@ export {
 
 export {
   alipayControllerCreateMobilePaymentV1,
+  alipayControllerCreateMiniPaymentV1,
   alipayControllerCreateWebPaymentV1,
   alipayControllerQueryOrderV1,
   alipayControllerRefundV1,
@@ -66,6 +67,7 @@ export {
   changePassword,
   loginWithWechat,
   loginWithWechatPhone,
+  loginWithAlipay,
 } from './generated/auth/auth';
 
 export { getConfig, upsertConfig } from './generated/config/config';

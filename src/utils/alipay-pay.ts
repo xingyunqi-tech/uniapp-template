@@ -1,8 +1,9 @@
 /**
  * 支付宝支付工具函数
- * 支持 H5（手机网站支付、电脑网站支付），支付宝小程序与 App 支付暂不支持
+ * 支持 H5（手机网站支付、电脑网站支付）与支付宝小程序支付，App 支付暂不支持
  */
 import {
+  alipayControllerCreateMiniPaymentV1,
   alipayControllerCreateMobilePaymentV1,
   alipayControllerCreateWebPaymentV1,
   alipayControllerQueryOrderV1,
@@ -21,15 +22,59 @@ export interface PaymentResult {
 }
 
 /**
- * 创建支付宝小程序支付
- * 需要后端提供 alipay.trade.create 下单接口返回 trade_no，当前后端未提供，始终返回失败
+ * 获取支付宝授权码（auth_base 静默授权，不弹窗）
+ */
+export function getAlipayAuthCode(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    uni.login({
+      success: res => (res.code ? resolve(res.code) : reject(new Error('未获取到支付宝授权码'))),
+      fail: reject,
+    });
+  });
+}
+
+/** my.tradePay 的 resultCode 转为支付结果，8000 / 6004 表示结果未知，以服务端支付状态为准 */
+function toTradePayResult(resultCode: unknown, outTradeNo: string): PaymentResult {
+  switch (String(resultCode ?? '')) {
+    case '9000':
+      return { success: true, message: '支付成功', outTradeNo };
+    case '6001':
+      return { success: false, message: '已取消支付', outTradeNo };
+    case '8000':
+    case '6004':
+      return { success: false, message: '支付结果确认中，请稍后在订单中查看', outTradeNo };
+    default:
+      return { success: false, message: '支付失败', outTradeNo };
+  }
+}
+
+/**
+ * 创建支付宝小程序支付：后端以授权码确定付款用户并下单，返回交易号后拉起收银台
  */
 export async function createMiniProgramPayment(params: CreatePaymentDto): Promise<PaymentResult> {
+  // #ifdef MP-ALIPAY
+  try {
+    const authCode = await getAlipayAuthCode();
+    const { tradeNo } = await alipayControllerCreateMiniPaymentV1({ ...params, authCode });
+    const res = await uni.requestPayment({ provider: 'alipay', orderInfo: tradeNo });
+    return toTradePayResult((res as unknown as { resultCode?: unknown }).resultCode, params.outTradeNo);
+  } catch (error) {
+    console.error('支付宝小程序支付失败:', error);
+    return {
+      success: false,
+      message: '支付失败',
+      outTradeNo: params.outTradeNo,
+    };
+  }
+  // #endif
+
+  // #ifndef MP-ALIPAY
   return {
     success: false,
-    message: '暂不支持支付宝小程序支付',
+    message: '当前平台不支持支付宝小程序支付',
     outTradeNo: params.outTradeNo,
   };
+  // #endif
 }
 
 /**
@@ -49,13 +94,6 @@ export async function createAppPayment(params: CreatePaymentDto): Promise<Paymen
  * 仅支持 H5 平台，使用 DOM 操作提交支付表单
  */
 export async function createMobilePayment(params: CreatePaymentDto): Promise<PaymentResult> {
-  // #ifndef H5
-  return {
-    success: false,
-    message: '当前平台不支持支付宝 H5 支付',
-  };
-  // #endif
-
   // #ifdef H5
   try {
     // 运行时双重检查，确保 DOM API 可用
@@ -66,11 +104,11 @@ export async function createMobilePayment(params: CreatePaymentDto): Promise<Pay
       };
     }
 
-    const paymentData = await alipayControllerCreateMobilePaymentV1(params);
+    const { form: formHtml } = await alipayControllerCreateMobilePaymentV1(params);
 
     // 创建临时表单并提交
     const div = document.createElement('div');
-    div.innerHTML = paymentData as any;
+    div.innerHTML = formHtml;
     document.body.appendChild(div);
     const form = div.querySelector<HTMLFormElement>('form');
 
@@ -101,6 +139,13 @@ export async function createMobilePayment(params: CreatePaymentDto): Promise<Pay
       message: '创建支付订单失败',
     };
   }
+  // #endif
+
+  // #ifndef H5
+  return {
+    success: false,
+    message: '当前平台不支持支付宝 H5 支付',
+  };
   // #endif
 }
 
@@ -109,13 +154,6 @@ export async function createMobilePayment(params: CreatePaymentDto): Promise<Pay
  * 仅支持 H5 平台，使用 DOM 操作提交支付表单
  */
 export async function createWebPayment(params: CreatePaymentDto): Promise<PaymentResult> {
-  // #ifndef H5
-  return {
-    success: false,
-    message: '当前平台不支持支付宝网站支付',
-  };
-  // #endif
-
   // #ifdef H5
   try {
     // 运行时双重检查，确保 DOM API 可用
@@ -126,11 +164,11 @@ export async function createWebPayment(params: CreatePaymentDto): Promise<Paymen
       };
     }
 
-    const paymentData = await alipayControllerCreateWebPaymentV1(params);
+    const { form: formHtml } = await alipayControllerCreateWebPaymentV1(params);
 
     // 创建临时表单并提交
     const div = document.createElement('div');
-    div.innerHTML = paymentData as any;
+    div.innerHTML = formHtml;
     document.body.appendChild(div);
     const form = div.querySelector<HTMLFormElement>('form');
 
@@ -161,6 +199,13 @@ export async function createWebPayment(params: CreatePaymentDto): Promise<Paymen
       message: '创建支付订单失败',
     };
   }
+  // #endif
+
+  // #ifndef H5
+  return {
+    success: false,
+    message: '当前平台不支持支付宝网站支付',
+  };
   // #endif
 }
 

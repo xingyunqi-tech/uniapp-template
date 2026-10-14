@@ -32,4 +32,6 @@ export interface User {
   wechatOpenId: string;
   /** WeChat UnionID */
   wechatUnionId: string;
+  /** Alipay OpenID */
+  alipayOpenId: string;
 }

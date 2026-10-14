@@ -22,6 +22,7 @@ import {
   loginWithSms,
   loginWithWechat,
   loginWithWechatPhone,
+  loginWithAlipay,
   registerWithPhone,
   sendSmsCode as apiSendSmsCode,
   getCurrentUser,
@@ -210,6 +211,16 @@ export const useUserStore = defineStore(
         loginCode: params.loginCode,
         phoneCode: params.phoneCode,
       });
+      handleLoginResponse(response);
+      return response.token;
+    }
+
+    /**
+     * 支付宝登录（小程序）
+     * @param authCode my.getAuthCode 返回的授权码
+     */
+    async function alipayLogin(authCode: string): Promise<string> {
+      const response = await loginWithAlipay({ authCode });
       handleLoginResponse(response);
       return response.token;
     }
@@ -409,6 +420,7 @@ export const useUserStore = defineStore(
       sendSmsCode,
       wechatLogin,
       wechatPhoneLogin,
+      alipayLogin,
       getUserInfo,
       updateUserInfo,
       changePassword,

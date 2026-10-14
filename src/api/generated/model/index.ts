@@ -10,7 +10,10 @@
 
 export * from './address';
 export * from './alipayConfigDto';
+export * from './alipayFormPaymentResponseDto';
+export * from './alipayMiniPaymentResponseDto';
 export * from './alipayShareConfigResponseDto';
+export * from './authAlipayLoginDto';
 export * from './authChangePasswordDto';
 export * from './authConfirmEmailDto';
 export * from './authEmailLoginDto';
@@ -37,6 +40,7 @@ export * from './createFavoriteDto';
 export * from './createFavoriteDtoTargetType';
 export * from './createFeedbackDto';
 export * from './createFeedbackDtoType';
+export * from './createMiniPaymentDto';
 export * from './createOrderDto';
 export * from './createOrderDtoMetadata';
 export * from './createOrderItemDto';

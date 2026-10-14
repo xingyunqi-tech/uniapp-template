@@ -14,4 +14,5 @@ export const CreateUserDtoProvider = {
   email: 'email',
   phone: 'phone',
   wechat: 'wechat',
+  alipay: 'alipay',
 } as const;

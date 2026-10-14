@@ -29,4 +29,5 @@ export interface CreateUserDto {
   status?: StatusDto;
   wechatOpenId?: string;
   wechatUnionId?: string;
+  alipayOpenId?: string;
 }

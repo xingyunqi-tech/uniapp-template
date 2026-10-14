@@ -14,4 +14,5 @@ export const UpdateUserDtoProvider = {
   email: 'email',
   phone: 'phone',
   wechat: 'wechat',
+  alipay: 'alipay',
 } as const;

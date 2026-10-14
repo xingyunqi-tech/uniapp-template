@@ -8,6 +8,7 @@
  *  *\/
  */
 import type {
+  AuthAlipayLoginDto,
   AuthChangePasswordDto,
   AuthConfirmEmailDto,
   AuthEmailLoginDto,
@@ -305,6 +306,23 @@ export const loginWithWechatPhone = (
     options,
   );
 };
+/**
+ * @summary 支付宝登录（小程序）
+ */
+export const loginWithAlipay = (
+  authAlipayLoginDto: AuthAlipayLoginDto,
+  options?: SecondParameter<typeof customMutator<LoginResponseDto>>,
+) => {
+  return customMutator<LoginResponseDto>(
+    {
+      url: `/api/v1/auth/alipay/login`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: authAlipayLoginDto,
+    },
+    options,
+  );
+};
 export type LoginWithEmailResult = NonNullable<Awaited<ReturnType<typeof loginWithEmail>>>;
 export type RegisterWithEmailResult = NonNullable<Awaited<ReturnType<typeof registerWithEmail>>>;
 export type ConfirmEmailResult = NonNullable<Awaited<ReturnType<typeof confirmEmail>>>;
@@ -324,3 +342,4 @@ export type ResetPasswordByPhoneResult = NonNullable<Awaited<ReturnType<typeof r
 export type ChangePasswordResult = NonNullable<Awaited<ReturnType<typeof changePassword>>>;
 export type LoginWithWechatResult = NonNullable<Awaited<ReturnType<typeof loginWithWechat>>>;
 export type LoginWithWechatPhoneResult = NonNullable<Awaited<ReturnType<typeof loginWithWechatPhone>>>;
+export type LoginWithAlipayResult = NonNullable<Awaited<ReturnType<typeof loginWithAlipay>>>;
