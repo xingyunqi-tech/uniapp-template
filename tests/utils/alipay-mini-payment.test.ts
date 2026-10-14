@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PaymentStatus } from '@/constants';
 
 const createMiniPayment = vi.hoisted(() => vi.fn());
 
@@ -29,6 +30,7 @@ describe('createMiniProgramPayment', () => {
       success: true,
       message: '支付成功',
       outTradeNo: 'ORD1',
+      status: PaymentStatus.SUCCESS,
     });
     expect(createMiniPayment).toHaveBeenCalledWith({ ...params, authCode: 'AUTH1' });
     expect(uni.requestPayment).toHaveBeenCalledWith({ provider: 'alipay', orderInfo: 'T1' });

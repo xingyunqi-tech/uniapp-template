@@ -7,20 +7,26 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { CreateWechatAppPaymentDto, CreateWechatJsapiPaymentDto, WechatRefundDto } from '../model';
+import type {
+  CreateWechatAppPaymentDto,
+  CreateWechatJsapiPaymentDto,
+  WechatAppPaymentResponseDto,
+  WechatJsapiPaymentResponseDto,
+  WechatRefundDto,
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * @summary 创建 JSAPI 支付订单（小程序/公众号）
+ * @summary 创建 JSAPI 支付订单（小程序）
  */
 export const wechatPayControllerCreateJsapiPaymentV1 = (
   createWechatJsapiPaymentDto: CreateWechatJsapiPaymentDto,
-  options?: SecondParameter<typeof customMutator<void>>,
+  options?: SecondParameter<typeof customMutator<WechatJsapiPaymentResponseDto>>,
 ) => {
-  return customMutator<void>(
+  return customMutator<WechatJsapiPaymentResponseDto>(
     {
       url: `/api/v1/wechat/payment/jsapi`,
       method: 'POST',
@@ -35,9 +41,9 @@ export const wechatPayControllerCreateJsapiPaymentV1 = (
  */
 export const wechatPayControllerCreateAppPaymentV1 = (
   createWechatAppPaymentDto: CreateWechatAppPaymentDto,
-  options?: SecondParameter<typeof customMutator<void>>,
+  options?: SecondParameter<typeof customMutator<WechatAppPaymentResponseDto>>,
 ) => {
-  return customMutator<void>(
+  return customMutator<WechatAppPaymentResponseDto>(
     {
       url: `/api/v1/wechat/payment/app`,
       method: 'POST',

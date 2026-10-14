@@ -9,8 +9,8 @@
  */
 
 export interface CreateWechatJsapiPaymentDto {
-  /** 用户 OpenID */
-  openid: string;
+  /** 小程序 wx.login 返回的 code，用于确定付款用户的 openid */
+  code: string;
   /** 商户订单号（即订单的 orderNo），支付金额取订单金额 */
   outTradeNo: string;
   /** 商品描述 */

@@ -198,6 +198,8 @@ export * from './uploadFileBody';
 export * from './upsertConfigDto';
 export * from './upsertConfigDtoValue';
 export * from './user';
+export * from './wechatAppPaymentResponseDto';
 export * from './weChatConfigDto';
+export * from './wechatJsapiPaymentResponseDto';
 export * from './weChatJsSdkConfigResponseDto';
 export * from './wechatRefundDto';

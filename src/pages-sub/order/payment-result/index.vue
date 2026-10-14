@@ -1,36 +1,30 @@
 <template>
   <view class="payment-result-page" :class="globalStore.themeClass">
     <!-- 结果图标 -->
-    <view class="result-icon">
-      <uni-icons
-        :type="isSuccess ? 'checkmarkempty' : 'closeempty'"
-        :size="80"
-        :color="isSuccess ? 'var(--color-success)' : 'var(--color-error)'"
-      />
+    <view class="result-icon" :class="{ spinning: state === 'checking' }">
+      <uni-icons :type="view.icon" :size="80" :color="view.color" />
     </view>
 
     <!-- 结果标题 -->
-    <view class="result-title">
-      {{ isSuccess ? '支付成功' : '支付失败' }}
-    </view>
+    <view class="result-title">{{ view.title }}</view>
 
     <!-- 结果描述 -->
-    <view class="result-desc">
-      {{ message }}
-    </view>
+    <view class="result-desc">{{ view.desc }}</view>
 
     <!-- 订单信息 -->
-    <view v-if="outTradeNo" class="order-info">
+    <view v-if="orderNo" class="order-info">
       <view class="info-item">
         <text class="info-label">订单号</text>
-        <text class="info-value">{{ outTradeNo }}</text>
+        <text class="info-value">{{ orderNo }}</text>
       </view>
     </view>
 
     <!-- 操作按钮 -->
     <view class="actions">
-      <button v-if="!isSuccess" class="btn-primary" @tap="handleRetry">重新支付</button>
-      <button class="btn-default" @tap="handleViewOrder">查看订单</button>
+      <button v-if="orderId && (state === 'unpaid' || state === 'error')" class="btn-primary" @tap="handleRefresh">
+        刷新支付结果
+      </button>
+      <button v-if="orderId" class="btn-default" @tap="handleViewOrder">查看订单</button>
       <button class="btn-default" @tap="handleBackHome">返回首页</button>
     </view>
   </view>
@@ -43,53 +37,72 @@ definePage({
   },
 });
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
-import { useSafeBack } from '@/composables';
-import { decodeQueryValue } from '@/utils/router';
+import { useOrderPaymentStatus, type OrderPaymentState } from '@/composables';
 
 const globalStore = useGlobalStore();
-const goBack = useSafeBack(PAGES.ORDER);
+const { state, orderNo, check } = useOrderPaymentStatus();
 
-// ==================== 状态 ====================
-const isSuccess = ref(false);
-const message = ref('');
-const outTradeNo = ref('');
+const orderId = ref(0);
 
-// ==================== 生命周期 ====================
+const STATE_VIEW: Record<OrderPaymentState, { icon: UniIconsType; color: string; title: string; desc: string }> = {
+  checking: {
+    icon: 'spinner-cycle',
+    color: 'var(--color-primary)',
+    title: '正在确认支付结果',
+    desc: '请稍候…',
+  },
+  paid: {
+    icon: 'checkmarkempty',
+    color: 'var(--color-success)',
+    title: '支付成功',
+    desc: '订单已支付',
+  },
+  unpaid: {
+    icon: 'info',
+    color: 'var(--color-warning)',
+    title: '支付结果确认中',
+    desc: '暂未收到支付结果，如已付款请稍后刷新',
+  },
+  closed: {
+    icon: 'closeempty',
+    color: 'var(--color-error)',
+    title: '订单已关闭',
+    desc: '订单已超时或已取消，如需购买请重新下单',
+  },
+  error: {
+    icon: 'closeempty',
+    color: 'var(--color-error)',
+    title: '查询失败',
+    desc: '暂时无法获取订单状态，请稍后刷新',
+  },
+};
+
+const view = computed(() => STATE_VIEW[state.value]);
+
+// H5 支付宝网页支付完成后由 return_url 带回 orderId
 onLoad(options => {
-  isSuccess.value = options?.success === 'true';
-  message.value = options?.message ? decodeQueryValue(options.message) : '';
-  outTradeNo.value = options?.outTradeNo || '';
+  orderId.value = Number(options?.orderId) || 0;
+  if (orderId.value) {
+    check(orderId.value);
+  } else {
+    state.value = 'error';
+  }
 });
 
-// ==================== 方法 ====================
-
-/**
- * 重新支付
- */
-function handleRetry() {
-  goBack();
+function handleRefresh() {
+  if (orderId.value) check(orderId.value);
 }
 
-/**
- * 查看订单
- */
 function handleViewOrder() {
-  uni.redirectTo({
-    url: PAGES.ORDER,
-  });
+  uni.redirectTo({ url: `${PAGES.ORDER_DETAIL}?id=${orderId.value}` });
 }
 
-/**
- * 返回首页
- */
 function handleBackHome() {
-  uni.switchTab({
-    url: PAGES.HOME,
-  });
+  uni.switchTab({ url: PAGES.HOME });
 }
 </script>
 
@@ -106,6 +119,16 @@ function handleBackHome() {
 
 .result-icon {
   margin-bottom: 48rpx;
+
+  &.spinning {
+    animation: result-icon-spin 1s linear infinite;
+  }
+}
+
+@keyframes result-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .result-title {

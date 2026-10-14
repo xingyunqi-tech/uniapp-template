@@ -1,6 +1,6 @@
 /**
- * 统一支付工具函数
- * 整合微信支付和支付宝支付，提供统一的支付接口
+ * 支付查询与退款工具函数
+ * 按支付方式调用微信支付或支付宝接口
  */
 import * as WechatPay from './wechat-pay';
 import * as AlipayPay from './alipay-pay';
@@ -11,55 +11,6 @@ import * as AlipayPay from './alipay-pay';
 export enum PaymentMethod {
   WECHAT = 'wechat',
   ALIPAY = 'alipay',
-}
-
-/**
- * 统一支付参数
- */
-export interface UnifiedPaymentParams {
-  /** 支付方式 */
-  method: PaymentMethod;
-  /** 商户订单号 */
-  outTradeNo: string;
-  /** 商品描述/标题 */
-  description: string;
-  /** 微信 openid（微信支付必需） */
-  openid?: string;
-}
-
-/**
- * 统一支付结果
- */
-export interface UnifiedPaymentResult {
-  success: boolean;
-  message: string;
-  outTradeNo?: string;
-}
-
-/**
- * 统一支付入口
- */
-export async function unifiedPay(params: UnifiedPaymentParams): Promise<UnifiedPaymentResult> {
-  const { method, outTradeNo, description, openid } = params;
-
-  // 支付金额由后端按订单金额确定
-  if (method === PaymentMethod.WECHAT) {
-    return WechatPay.pay({
-      outTradeNo,
-      description,
-      openid,
-    });
-  } else if (method === PaymentMethod.ALIPAY) {
-    return AlipayPay.pay({
-      outTradeNo,
-      subject: description,
-    });
-  }
-
-  return {
-    success: false,
-    message: '不支持的支付方式',
-  };
 }
 
 /**

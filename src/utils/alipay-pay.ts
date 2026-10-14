@@ -11,6 +11,7 @@ import {
   alipayControllerCloseOrderV1,
 } from '@/api';
 import type { CreatePaymentDto, RefundDto } from '@/api';
+import { PaymentStatus } from '@/constants';
 
 /**
  * 支付结果
@@ -19,6 +20,8 @@ export interface PaymentResult {
   success: boolean;
   message: string;
   outTradeNo?: string;
+  /** 支付状态，未提供时按 success 判断成功或失败 */
+  status?: PaymentStatus;
 }
 
 /**
@@ -37,14 +40,19 @@ export function getAlipayAuthCode(): Promise<string> {
 function toTradePayResult(resultCode: unknown, outTradeNo: string): PaymentResult {
   switch (String(resultCode ?? '')) {
     case '9000':
-      return { success: true, message: '支付成功', outTradeNo };
+      return { success: true, message: '支付成功', outTradeNo, status: PaymentStatus.SUCCESS };
     case '6001':
-      return { success: false, message: '已取消支付', outTradeNo };
+      return { success: false, message: '已取消支付', outTradeNo, status: PaymentStatus.CANCELLED };
     case '8000':
     case '6004':
-      return { success: false, message: '支付结果确认中，请稍后在订单中查看', outTradeNo };
+      return {
+        success: false,
+        message: '支付结果确认中，请稍后在订单中查看',
+        outTradeNo,
+        status: PaymentStatus.PROCESSING,
+      };
     default:
-      return { success: false, message: '支付失败', outTradeNo };
+      return { success: false, message: '支付失败', outTradeNo, status: PaymentStatus.FAILED };
   }
 }
 

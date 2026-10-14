@@ -62,7 +62,8 @@
             <button
               v-if="order.status === OrderStatus.UNPAID"
               class="action-btn primary"
-              @click.stop="handlePay(orderStore.getOrderIdString(order.id))"
+              :disabled="paying"
+              @click.stop="handlePay(order)"
             >
               立即支付
             </button>
@@ -87,13 +88,15 @@ import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm } from '@/utils';
+import { usePayment } from '@/composables';
 import type { LoadMoreStatus, TabItem } from '@/components';
 import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass } from '@/constants';
 import { PAGES } from '@/constants';
-import type { OrderPaymentChannel } from '@/api';
+import type { Order, OrderPaymentChannel } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
+const { paying, pay, handlePayResult } = usePayment();
 
 // 标签配置
 const tabs = ref<TabItem[]>(
@@ -203,11 +206,9 @@ async function handleCancel(id: string) {
 }
 
 // 立即支付
-function handlePay(id: string) {
-  uni.showToast({
-    title: `支付订单 ${id}`,
-    icon: 'none',
-  });
+async function handlePay(order: Order) {
+  const target = { id: orderStore.getOrderIdString(order.id), orderNo: order.orderNo };
+  handlePayResult(await pay(target), target.id);
 }
 
 // 去逛逛

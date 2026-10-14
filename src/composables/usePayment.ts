@@ -1,166 +1,129 @@
 /**
- * 支付相关 Composable
+ * 订单支付 Composable
  */
 
 import { ref } from 'vue';
-import { PaymentMethod, PaymentStatus } from '@/constants';
+import { PAGES, PaymentStatus } from '@/constants';
+import * as WechatPay from '@/utils/wechat-pay';
+import * as AlipayPay from '@/utils/alipay-pay';
+import { requestSubscribe } from '@/utils/subscribe';
 
-// TODO: 等待后端 OpenAPI 文档生成后，使用 Orval 自动生成以下 API
-// import { createPayment, queryPayment, type CreatePaymentParams } from '@/api';
+/** 待支付订单 */
+export interface PayOrder {
+  id: string;
+  orderNo: string;
+}
 
-export interface CreatePaymentParams {
-  orderId: string;
-  paymentMethod: PaymentMethod;
-  amount: number;
-  description?: string;
+/** 支付结果 */
+export interface PayResult {
+  status: PaymentStatus;
+  message: string;
+  /** 页面已跳转到支付平台（H5 网页支付） */
+  redirected?: boolean;
+  /** 已有支付在进行，本次调用被忽略 */
+  ignored?: boolean;
+}
+
+/** 支付标题，同一订单每次支付保持一致 */
+export function getPaymentSubject(orderNo: string): string {
+  return `订单 ${orderNo}`;
+}
+
+function toPayResult(result: WechatPay.PaymentResult | AlipayPay.PaymentResult): PayResult {
+  return {
+    status: result.status ?? (result.success ? PaymentStatus.SUCCESS : PaymentStatus.FAILED),
+    message: result.message,
+  };
 }
 
 /**
- * 支付 Composable
+ * 微信小程序支付，订阅消息授权须在点击事件中先于其它异步操作发起
+ */
+export async function payOnWechat(order: PayOrder): Promise<PayResult> {
+  await requestSubscribe(['orderPaid']);
+  return toPayResult(await WechatPay.pay({ outTradeNo: order.orderNo, description: getPaymentSubject(order.orderNo) }));
+}
+
+/**
+ * 支付宝小程序支付
+ */
+export async function payOnAlipayMini(order: PayOrder): Promise<PayResult> {
+  return toPayResult(
+    await AlipayPay.createMiniProgramPayment({ outTradeNo: order.orderNo, subject: getPaymentSubject(order.orderNo) }),
+  );
+}
+
+/**
+ * H5 支付宝网页支付，成功时页面跳转到支付宝
+ */
+export async function payOnH5(order: PayOrder): Promise<PayResult> {
+  const result = await AlipayPay.pay({ outTradeNo: order.orderNo, subject: getPaymentSubject(order.orderNo) });
+  return result.success
+    ? { status: PaymentStatus.PROCESSING, message: result.message, redirected: true }
+    : { status: PaymentStatus.FAILED, message: result.message };
+}
+
+/**
+ * 订单支付：按平台选择支付方式，必须在点击事件中同步调用
+ *
+ * @example
+ * ```typescript
+ * const { paying, pay, handlePayResult } = usePayment();
+ *
+ * async function handlePay() {
+ *   handlePayResult(await pay(order), order.id);
+ * }
+ * ```
  */
 export function usePayment() {
   const paying = ref(false);
 
-  /**
-   * 发起支付
-   */
-  async function pay(params: CreatePaymentParams) {
+  async function pay(order: PayOrder): Promise<PayResult> {
+    if (paying.value) {
+      return { status: PaymentStatus.PROCESSING, message: '', ignored: true };
+    }
     paying.value = true;
     try {
-      // TODO: 等待 Orval 生成 API 后替换
-      // 1. 创建支付订单
-      // const paymentResult = await createPayment(params);
+      // #ifdef MP-WEIXIN
+      return await payOnWechat(order);
+      // #endif
 
-      // 2. 根据支付方式调起支付
-      if (params.paymentMethod === PaymentMethod.WECHAT) {
-        // 临时模拟微信支付参数
-        const mockPaymentParams = {
-          timeStamp: Date.now().toString(),
-          nonceStr: 'mock-nonce',
-          package: 'prepay_id=mock',
-          signType: 'RSA',
-          paySign: 'mock-sign',
-        };
-        return await payWithWechat(mockPaymentParams);
-      } else if (params.paymentMethod === PaymentMethod.ALIPAY) {
-        // 临时模拟支付宝支付参数
-        const mockPaymentParams = {
-          orderInfo: 'mock-order-info',
-        };
-        return await payWithAlipay(mockPaymentParams);
-      } else if (params.paymentMethod === PaymentMethod.BALANCE) {
-        // 余额支付直接返回成功
-        return { status: PaymentStatus.SUCCESS };
-      }
+      // #ifdef MP-ALIPAY
+      return await payOnAlipayMini(order);
+      // #endif
 
-      throw new Error('不支持的支付方式');
+      // #ifdef H5
+      return await payOnH5(order);
+      // #endif
+
+      // #ifndef MP-WEIXIN || MP-ALIPAY || H5
+      return { status: PaymentStatus.FAILED, message: '当前平台暂不支持支付' };
+      // #endif
+    } catch (error) {
+      console.error('支付失败:', error);
+      return { status: PaymentStatus.FAILED, message: '支付失败' };
     } finally {
       paying.value = false;
     }
   }
 
   /**
-   * 微信支付
+   * 处理支付结果：成功或结果未知时进入支付结果页（以服务端订单状态为准），取消或失败时提示
    */
-  async function payWithWechat(paymentParams: any) {
-    return new Promise((resolve, reject) => {
-      // #ifdef MP-WEIXIN
-      uni.requestPayment({
-        provider: 'wxpay',
-        timeStamp: paymentParams.timeStamp,
-        nonceStr: paymentParams.nonceStr,
-        package: paymentParams.package,
-        signType: paymentParams.signType,
-        paySign: paymentParams.paySign,
-        success: () => {
-          resolve({ status: PaymentStatus.SUCCESS });
-        },
-        fail: (err: any) => {
-          if (err.errMsg === 'requestPayment:fail cancel') {
-            reject(new Error('用户取消支付'));
-          } else {
-            reject(new Error('支付失败'));
-          }
-        },
-      });
-      // #endif
+  function handlePayResult(result: PayResult, orderId: PayOrder['id']) {
+    if (result.ignored || result.redirected) return;
 
-      // #ifdef H5
-      // H5 微信支付需要跳转到微信支付页面
-      if (paymentParams.mwebUrl) {
-        // 跳转前先 resolve，支付结果通过回调页面处理
-        resolve({ status: PaymentStatus.PROCESSING });
-        setTimeout(() => {
-          window.location.href = paymentParams.mwebUrl;
-        }, 100);
-      } else {
-        reject(new Error('缺少支付参数'));
-      }
-      // #endif
+    if (result.status === PaymentStatus.SUCCESS || result.status === PaymentStatus.PROCESSING) {
+      uni.redirectTo({ url: `${PAGES.PAYMENT_RESULT}?orderId=${orderId}` });
+      return;
+    }
 
-      // #ifndef MP-WEIXIN || H5
-      reject(new Error('当前平台不支持微信支付'));
-      // #endif
-    });
-  }
-
-  /**
-   * 支付宝支付
-   */
-  async function payWithAlipay(paymentParams: any) {
-    return new Promise((resolve, reject) => {
-      // #ifdef MP-ALIPAY
-      uni.requestPayment({
-        provider: 'alipay',
-        orderInfo: paymentParams.orderInfo,
-        success: () => {
-          resolve({ status: PaymentStatus.SUCCESS });
-        },
-        fail: (err: any) => {
-          if (err.errMsg === 'requestPayment:fail cancel') {
-            reject(new Error('用户取消支付'));
-          } else {
-            reject(new Error('支付失败'));
-          }
-        },
-      });
-      // #endif
-
-      // #ifdef H5
-      // H5 支付宝支付需要跳转到支付宝页面
-      if (paymentParams.payUrl) {
-        // 跳转前先 resolve，支付结果通过回调页面处理
-        resolve({ status: PaymentStatus.PROCESSING });
-        setTimeout(() => {
-          window.location.href = paymentParams.payUrl;
-        }, 100);
-      } else {
-        reject(new Error('缺少支付参数'));
-      }
-      // #endif
-
-      // #ifndef MP-ALIPAY || H5
-      reject(new Error('当前平台不支持支付宝支付'));
-      // #endif
-    });
-  }
-
-  /**
-   * 查询支付结果
-   */
-  async function checkPaymentStatus(paymentId: string) {
-    // TODO: 等待 Orval 生成 API 后替换
-    // const result = await queryPayment(paymentId);
-    // return result.status === PaymentStatus.SUCCESS;
-
-    // 临时返回成功
-    console.log('查询支付状态:', paymentId);
-    return true;
+    uni.showToast({ title: result.message, icon: 'none' });
   }
 
   return {
     paying,
     pay,
-    checkPaymentStatus,
+    handlePayResult,
   };
 }

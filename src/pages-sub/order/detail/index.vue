@@ -75,7 +75,7 @@
     <!-- 底部操作栏 -->
     <view v-if="order && (canCancel || canPay)" class="footer-actions">
       <button v-if="canCancel" class="action-btn cancel" @click="handleCancel">取消订单</button>
-      <button v-if="canPay" class="action-btn primary" @click="handlePay">立即支付</button>
+      <button v-if="canPay" class="action-btn primary" :disabled="paying" @click="handlePay">立即支付</button>
     </view>
 
     <UPrivacyPopup />
@@ -89,8 +89,9 @@ definePage({
   },
 });
 
-import { ref, computed, onMounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { ref, computed } from 'vue';
+import { onLoad, onShow } from '@dcloudio/uni-app';
+import { usePayment } from '@/composables';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { OrderStatus, getOrderStatusText, getOrderStatusClass } from '@/constants';
 import { confirm } from '@/utils';
@@ -105,6 +106,8 @@ const loading = ref(false);
 
 const order = computed(() => orderStore.currentOrder);
 
+const { paying, pay, handlePayResult } = usePayment();
+
 // 是否可以取消
 const canCancel = computed(() => order.value?.status === OrderStatus.UNPAID);
 
@@ -118,16 +121,22 @@ onLoad(options => {
   }
 });
 
-onMounted(() => {
+// 每次显示时刷新，支付或取消后返回能看到最新状态
+onShow(() => {
   loadOrderDetail();
 });
 
 // 加载订单详情
 async function loadOrderDetail() {
   if (!orderId.value) return;
-  loading.value = true;
+  // currentOrder 为各详情页共用，不是本页订单时先清空，避免显示其它订单
+  const isCurrent = !!order.value && orderStore.getOrderIdString(order.value.id) === orderId.value;
+  if (!isCurrent) orderStore.clearCurrentOrder();
+  loading.value = !isCurrent;
   try {
-    await orderStore.fetchOrderDetail(orderId.value);
+    await orderStore.fetchOrderDetail(orderId.value, { showError: !isCurrent });
+  } catch (error) {
+    console.error('加载订单详情失败:', error);
   } finally {
     loading.value = false;
   }
@@ -181,12 +190,10 @@ async function handleCancel() {
 }
 
 // 立即支付
-function handlePay() {
-  uni.showToast({
-    title: '跳转支付页面',
-    icon: 'none',
-  });
-  // TODO: 跳转到支付页面
+async function handlePay() {
+  if (!order.value) return;
+  const target = { id: orderStore.getOrderIdString(order.value.id), orderNo: order.value.orderNo };
+  handlePayResult(await pay(target), target.id);
 }
 </script>
 

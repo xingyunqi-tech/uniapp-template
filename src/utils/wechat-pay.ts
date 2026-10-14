@@ -9,6 +9,7 @@ import {
   wechatPayControllerRefundV1,
 } from '@/api';
 import type { CreateWechatJsapiPaymentDto, CreateWechatAppPaymentDto, WechatRefundDto } from '@/api';
+import { PaymentStatus } from '@/constants';
 
 /**
  * 支付结果
@@ -17,35 +18,54 @@ export interface PaymentResult {
   success: boolean;
   message: string;
   outTradeNo?: string;
+  /** 支付状态，未提供时按 success 判断成功或失败 */
+  status?: PaymentStatus;
+}
+
+/** 获取小程序登录 code，供后端换取付款用户的 openid */
+function getLoginCode(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    uni.login({
+      provider: 'weixin',
+      success: res => (res.code ? resolve(res.code) : reject(new Error('未获取到微信登录 code'))),
+      fail: reject,
+    });
+  });
 }
 
 /**
- * 创建 JSAPI 支付（小程序/公众号）
+ * 创建 JSAPI 支付（小程序）：后端以登录 code 确定付款用户并下单，返回支付参数后拉起收银台
  */
-export async function createJsapiPayment(params: CreateWechatJsapiPaymentDto): Promise<PaymentResult> {
+export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDto, 'code'>): Promise<PaymentResult> {
   try {
     // #ifdef MP-WEIXIN
-    // 1. 调用后端接口创建支付订单
-    const paymentData = await wechatPayControllerCreateJsapiPaymentV1(params);
+    const code = await getLoginCode();
+    const paymentData = await wechatPayControllerCreateJsapiPaymentV1({ ...params, code });
 
-    // 2. 调用微信支付
-    return new Promise(resolve => {
+    return await new Promise(resolve => {
       uni.requestPayment({
         provider: 'wxpay',
-        ...(paymentData as any),
+        timeStamp: paymentData.timeStamp,
+        nonceStr: paymentData.nonceStr,
+        package: paymentData.package,
+        signType: paymentData.signType,
+        paySign: paymentData.paySign,
         success: () => {
           resolve({
             success: true,
             message: '支付成功',
             outTradeNo: params.outTradeNo,
+            status: PaymentStatus.SUCCESS,
           });
         },
-        fail: (err: any) => {
-          console.error('微信支付失败:', err);
+        fail: (err: { errMsg?: string }) => {
+          const cancelled = err.errMsg?.includes('cancel') ?? false;
+          if (!cancelled) console.error('微信支付失败:', err);
           resolve({
             success: false,
-            message: err.errMsg || '支付失败',
+            message: cancelled ? '已取消支付' : '支付失败',
             outTradeNo: params.outTradeNo,
+            status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.FAILED,
           });
         },
       });
@@ -80,7 +100,7 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
     return new Promise(resolve => {
       uni.requestPayment({
         provider: 'wxpay',
-        ...(paymentData as any),
+        orderInfo: { ...paymentData },
         success: () => {
           resolve({
             success: true,
@@ -146,19 +166,9 @@ export async function refundOrder(params: WechatRefundDto): Promise<boolean> {
 /**
  * 统一支付入口（自动判断平台）
  */
-export async function pay(params: {
-  outTradeNo: string;
-  description: string;
-  openid?: string;
-}): Promise<PaymentResult> {
+export async function pay(params: { outTradeNo: string; description: string }): Promise<PaymentResult> {
   // #ifdef MP-WEIXIN
-  if (!params.openid) {
-    return {
-      success: false,
-      message: '缺少 openid 参数',
-    };
-  }
-  return createJsapiPayment({ outTradeNo: params.outTradeNo, description: params.description, openid: params.openid });
+  return createJsapiPayment({ outTradeNo: params.outTradeNo, description: params.description });
   // #endif
 
   // #ifdef APP-PLUS
