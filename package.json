@@ -58,6 +58,9 @@
     ],
     "!(*.js|*.jsx|*.ts|*.tsx|*.vue|*.css|*.scss)": [
       "prettier --write --ignore-unknown"
+    ],
+    "{src,tests,scripts}/**/*.{js,mjs,jsx,ts,tsx,vue}": [
+      "cspell --no-must-find-files --no-progress"
     ]
   },
   "dependencies": {
