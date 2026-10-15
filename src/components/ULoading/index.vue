@@ -44,7 +44,7 @@ export interface ULoadingProps {
   spinnerType?: SpinnerType;
   /** 加载文字 */
   text?: string;
-  /** 是否全屏 */
+  /** 是否全屏，为 false 时覆盖最近的定位父元素 */
   fullscreen?: boolean;
   /** 图标颜色 */
   color?: string;
@@ -100,7 +100,7 @@ const spinnerStyle = computed<CSSProperties>(() => {
     height: `${props.size}rpx`,
   };
   if (props.color) {
-    style.borderColor = props.color;
+    style['--u-loading-color'] = props.color;
   }
   return style;
 });
@@ -126,11 +126,15 @@ function handleMaskClick() {
 <style lang="scss" scoped>
 .u-loading {
   display: flex;
-  position: fixed;
+  position: absolute;
   z-index: 9999;
   inset: 0;
   align-items: center;
   justify-content: center;
+
+  &--fullscreen {
+    position: fixed;
+  }
 
   &__mask {
     position: absolute;
@@ -160,7 +164,7 @@ function handleMaskClick() {
         animation: u-loading-rotate 0.8s linear infinite;
         border: 4rpx solid var(--color-overlay-medium);
         border-radius: 50%;
-        border-top-color: var(--color-text-inverse);
+        border-top-color: var(--u-loading-color, var(--color-text-inverse));
       }
     }
 
@@ -176,7 +180,7 @@ function handleMaskClick() {
         transform-origin: center bottom;
         animation: u-loading-fade 1s linear infinite;
         border-radius: 2rpx;
-        background-color: var(--color-overlay-heavy);
+        background-color: var(--u-loading-color, var(--color-overlay-heavy));
 
         @for $i from 1 through 12 {
           &:nth-child(#{$i}) {

@@ -85,15 +85,19 @@ export function formatRelativeTime(date: Date | number | string): string {
 }
 
 /**
- * 字符串转日期对象
+ * 字符串转日期对象，日期部分统一为 YYYY/MM/DD 以兼容 iOS，ISO 格式（含 T）按原样解析
  * @param dateStr 日期字符串
  * @returns 日期对象或 null
  */
 export function str2Date(dateStr: string): Date | null {
   if (!dateStr) return null;
 
-  // 处理各种常见格式
-  const normalized = dateStr.replace(/年|月/g, '-').replace(/日/g, '').replace(/\//g, '-').trim();
+  const trimmed = dateStr.trim();
+  const normalized = trimmed.includes('T')
+    ? trimmed
+    : trimmed
+        .replace(/^(\d{4})年(\d{1,2})月(\d{1,2})日?/, '$1/$2/$3')
+        .replace(/^(\d{4})-(\d{1,2})-(\d{1,2})/, '$1/$2/$3');
 
   const date = new Date(normalized);
   return isNaN(date.getTime()) ? null : date;

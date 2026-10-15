@@ -6,7 +6,7 @@ import { ref, computed, onMounted } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
 import { useShareStore } from '@/store';
 import { getSharePlatform } from '@/utils/platform';
-import { PAGES } from '@/constants';
+import { getShareTarget } from '@/utils/router';
 import type { ShareTargetType, Share } from '@/api';
 
 /** 分享参数接口 */
@@ -55,25 +55,28 @@ export interface UseShareOptions {
 }
 
 /**
+ * 合并查询参数：保留已有参数，同名参数以 extra 为准
+ * @param baseQuery 已有查询字符串（原始编码值）
+ * @param extra 追加的查询参数
+ */
+function mergeQuery(baseQuery: string, extra: Record<string, string | number> = {}): string {
+  const extraKeys = Object.keys(extra);
+  const kept = baseQuery.split('&').filter(pair => pair && !extraKeys.includes(pair.split('=')[0]));
+  const added = Object.entries(extra).map(
+    ([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+  );
+  return [...kept, ...added].join('&');
+}
+
+/**
  * 构建分享路径
- * @param path 基础路径
+ * @param path 基础路径，默认当前页面路径与参数
  * @param query 查询参数
  */
 function buildSharePath(path?: string, query?: Record<string, string | number>): string {
-  // 获取当前页面路径作为默认值
-  const pages = getCurrentPages();
-  const currentPage = pages[pages.length - 1];
-  const basePath = path || (currentPage ? `/${currentPage.route}` : PAGES.HOME);
-
-  if (!query || Object.keys(query).length === 0) {
-    return basePath;
-  }
-
-  const queryString = Object.entries(query)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-    .join('&');
-
-  return `${basePath}?${queryString}`;
+  const [pathname, baseQuery = ''] = (path || getShareTarget().path).split('?');
+  const merged = mergeQuery(baseQuery, query);
+  return merged ? `${pathname}?${merged}` : pathname;
 }
 
 /**
@@ -235,11 +238,11 @@ export function useShare(options: UseShareOptions = {}) {
         query.sc = shareCode.value;
       }
 
+      const baseQuery = params.path ? (params.path.split('?')[1] ?? '') : getShareTarget().query;
+
       return {
         title: params.title || '',
-        query: Object.entries(query)
-          .map(([key, value]) => `${key}=${value}`)
-          .join('&'),
+        query: mergeQuery(baseQuery, query),
         imageUrl: params.imageUrl,
       };
     });

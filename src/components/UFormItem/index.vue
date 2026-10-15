@@ -24,7 +24,7 @@
     <view class="u-form-item__content" @click="handleClick">
       <slot>
         <!-- 默认显示占位符或值 -->
-        <text v-if="!value && placeholder" class="u-form-item__placeholder">
+        <text v-if="isEmptyValue && placeholder" class="u-form-item__placeholder">
           {{ placeholder }}
         </text>
         <text v-else class="u-form-item__value">{{ value }}</text>
@@ -42,6 +42,8 @@ definePage({
     isComponent: true,
   },
 });
+
+import { computed } from 'vue';
 
 defineOptions({
   name: 'UFormItem',
@@ -97,6 +99,8 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   click: [];
 }>();
+
+const isEmptyValue = computed(() => props.value === '' || props.value === undefined || props.value === null);
 
 function handleClick() {
   if (props.showArrow) {

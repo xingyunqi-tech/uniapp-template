@@ -24,7 +24,7 @@
         :title="title"
         :content="content"
         :placeholder="placeholder"
-        :value="dialogValue"
+        :model-value="dialogValue"
         :before-close="true"
         :cancel-text="cancelText"
         :confirm-text="confirmText"
@@ -200,8 +200,9 @@ function handleDialogClose() {
   // close 事件由 handleChange 统一触发，避免重复
 }
 
-function handleDialogConfirm(e?: UniHelper.UniPopupDialogOnConfirmEvent) {
-  emit('confirm', e?.value as string | undefined);
+/** 输入模式下 uni-popup-dialog 直接传出输入值，基础模式不传参 */
+function handleDialogConfirm(value?: unknown) {
+  emit('confirm', value === undefined || value === null ? undefined : String(value));
   close();
 }
 

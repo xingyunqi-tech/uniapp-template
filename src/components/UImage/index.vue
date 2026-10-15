@@ -17,7 +17,7 @@
     </view>
 
     <!-- 加载失败状态 -->
-    <view v-else-if="error" class="u-image__error" @click="handleRetry">
+    <view v-else-if="error && showError" class="u-image__error" @click="handleRetry">
       <slot name="error">
         <!-- 有错误图时显示错误图 -->
         <image v-if="errorImage" class="u-image__error-img" :src="errorImage" :mode="mode" />

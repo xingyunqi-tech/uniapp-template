@@ -9,11 +9,11 @@
  * @returns 格式化后的文件大小字符串
  */
 export function formatFileSize(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 B';
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
 
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.min(Math.max(Math.floor(Math.log(bytes) / Math.log(k)), 0), sizes.length - 1);
 
   return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 }
@@ -24,7 +24,9 @@ export function formatFileSize(bytes: number, decimals = 2): string {
  * @returns 格式化后的字符串
  */
 export function formatNumber(num: number): string {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const [integer, decimal] = num.toString().split('.');
+  const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return decimal === undefined ? formatted : `${formatted}.${decimal}`;
 }
 
 /**
