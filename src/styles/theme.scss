@@ -188,12 +188,28 @@ page.dark-theme {
   @include theme-dark;
 }
 
-// H5 开关未选中态在深色模式下的底色，选中态由 color 属性以行内样式设置
+// 开关未选中态在深色模式下的底色（::before 为未选中时的底色层），选中态由 color 属性以行内样式设置
 
 /* #ifdef H5 */
 .dark-theme .uni-switch-input:not(.uni-switch-input-checked) {
   border-color: var(--color-border);
   background-color: var(--color-bg-active);
+
+  &::before {
+    background-color: var(--color-bg-active);
+  }
+}
+
+/* #endif */
+
+/* #ifdef MP-WEIXIN */
+.dark-theme .wx-switch-input:not(.wx-switch-input-checked) {
+  border-color: var(--color-border) !important;
+  background-color: var(--color-bg-active) !important;
+
+  &::before {
+    background-color: var(--color-bg-active) !important;
+  }
 }
 
 /* #endif */
