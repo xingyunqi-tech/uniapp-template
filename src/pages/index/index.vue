@@ -25,8 +25,15 @@
     </view>
 
     <!-- 时政卡片列表 -->
-    <view class="news-list">
-      <view v-for="item in newsList" :key="item.id" class="news-item" @click="handleNewsClick(item)">
+    <UList
+      class="news-list"
+      :empty="newsList.length === 0"
+      :loading="loading"
+      :finished="noMore"
+      :error="loadError"
+      @retry="loadNews"
+    >
+      <UCard v-for="item in newsList" :key="item.id" class="news-item" clickable @click="handleNewsClick(item)">
         <view class="news-content">
           <text class="news-title">{{ item.title }}</text>
           <text class="news-summary">{{ item.summary }}</text>
@@ -37,11 +44,8 @@
           </view>
         </view>
         <image v-if="item.image" class="news-image" :src="item.image" mode="aspectFill" />
-      </view>
-    </view>
-
-    <!-- 加载更多 -->
-    <ULoadMore :status="loadMoreStatus" />
+      </UCard>
+    </UList>
   </view>
 </template>
 
@@ -53,11 +57,10 @@ definePage({
   },
 });
 
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 
@@ -127,6 +130,7 @@ const {
   list: newsList,
   loading,
   noMore,
+  error: loadError,
   loadData,
   refresh,
 } = useList<NewsItem>({
@@ -152,12 +156,14 @@ const {
   hasMore: (data, page) => data.length > 0 && page < 3,
 });
 
-// 加载更多状态
-const loadMoreStatus = computed<LoadMoreStatus>(() => {
-  if (loading.value) return 'loading';
-  if (noMore.value) return 'nomore';
-  return 'loadmore';
-});
+// 加载新闻列表，失败由列表显示重试
+async function loadNews() {
+  try {
+    await loadData();
+  } catch (error) {
+    console.error('加载新闻失败:', error);
+  }
+}
 
 // Banner 点击
 function handleBannerClick(item: Record<string, any>, index: number) {
@@ -177,7 +183,7 @@ function handleNewsClick(item: NewsItem) {
 
 // 页面加载
 onLoad(() => {
-  loadData();
+  loadNews();
 });
 
 // 页面显示
@@ -199,7 +205,7 @@ onPullDownRefresh(async () => {
 // 上拉加载更多
 onReachBottom(() => {
   if (!noMore.value) {
-    loadData();
+    loadNews();
   }
 });
 </script>
@@ -267,16 +273,7 @@ onReachBottom(() => {
   .news-item {
     display: flex;
     margin-bottom: 20rpx;
-    padding: 24rpx;
-    transition: all var(--duration-fast);
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-sm);
     gap: 20rpx;
-
-    &:active {
-      background: var(--color-bg-hover);
-    }
 
     .news-content {
       flex: 1;

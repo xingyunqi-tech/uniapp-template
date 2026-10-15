@@ -15,7 +15,7 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 25 个组件（24 个 `U` 前缀组件 + `AuthLayout`）
+- **自定义组件库**: 27 个组件（26 个 `U` 前缀组件 + `AuthLayout`）
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
@@ -94,6 +94,8 @@ uniapp-template/
 │   │   ├── UPasswordStrength/ # 密码强度
 │   │   ├── URichText/         # 富文本
 │   │   ├── UButton/           # 按钮
+│   │   ├── UCard/             # 卡片容器
+│   │   ├── UList/             # 分页列表状态
 │   │   ├── UFixedButton/      # 固定按钮
 │   │   ├── ULoadMore/         # 加载更多
 │   │   ├── USearchBar/        # 搜索栏

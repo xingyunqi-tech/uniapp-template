@@ -2,7 +2,7 @@
   <view class="password-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
-      <view class="form-group">
+      <UCard :padding="false">
         <view class="form-item">
           <text class="form-label">原密码</text>
           <input
@@ -44,11 +44,11 @@
             <uni-icons :type="showConfirmPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
           </view>
         </view>
-      </view>
+      </UCard>
     </view>
 
     <!-- 密码强度提示 -->
-    <view v-if="formData.newPassword" class="strength-section">
+    <UCard v-if="formData.newPassword" class="strength-section">
       <UPasswordStrength
         :strength="pwdStrength.strength.value"
         :strength-text="pwdStrength.strengthText.value"
@@ -59,7 +59,7 @@
         :horizontal="false"
         :show-rules-title="true"
       />
-    </view>
+    </UCard>
 
     <!-- 保存按钮 -->
     <UFixedButton
@@ -172,41 +172,34 @@ function handleSave() {
 .form-section {
   padding: 24rpx;
 
-  .form-group {
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-sm);
+  .form-item {
+    display: flex;
+    gap: 16rpx;
+    align-items: center;
+    padding: 32rpx;
 
-    .form-item {
-      display: flex;
-      gap: 16rpx;
-      align-items: center;
-      padding: 32rpx;
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--color-border-light);
+    }
 
-      &:not(:last-child) {
-        border-bottom: 1px solid var(--color-border-light);
-      }
+    .form-label {
+      flex-shrink: 0;
+      width: 160rpx;
+      color: var(--color-text);
+      font-size: 30rpx;
+    }
 
-      .form-label {
-        flex-shrink: 0;
-        width: 160rpx;
-        color: var(--color-text);
-        font-size: 30rpx;
-      }
+    .form-input {
+      flex: 1;
+      color: var(--color-text);
+      font-size: 30rpx;
+    }
 
-      .form-input {
-        flex: 1;
-        color: var(--color-text);
-        font-size: 30rpx;
-      }
-
-      .toggle-eye {
-        flex-shrink: 0;
-        padding: 8rpx;
-        color: var(--color-text-secondary);
-        font-size: 36rpx;
-      }
+    .toggle-eye {
+      flex-shrink: 0;
+      padding: 8rpx;
+      color: var(--color-text-secondary);
+      font-size: 36rpx;
     }
   }
 }
@@ -214,9 +207,5 @@ function handleSave() {
 // 密码强度区域
 .strength-section {
   margin: 0 24rpx;
-  padding: 24rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
 }
 </style>

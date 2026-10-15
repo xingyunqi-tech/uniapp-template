@@ -87,6 +87,38 @@ describe('useList', () => {
     expect(refreshing.value).toBe(false);
   });
 
+  it('加载失败时标记 error，再次加载时清除', async () => {
+    const { error, loadData, calls } = setup();
+
+    const failed = loadData();
+    calls[0].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+    expect(error.value).toBe(true);
+
+    const retry = loadData();
+    expect(error.value).toBe(false);
+    calls[1].result.resolve([1, 2]);
+    await retry;
+    expect(error.value).toBe(false);
+  });
+
+  it('刷新失败后已无更多数据时，再次加载清除 error', async () => {
+    const { error, noMore, loadData, refresh, calls } = setup();
+
+    const first = loadData();
+    calls[0].result.resolve([1]);
+    await first;
+    expect(noMore.value).toBe(true);
+
+    const failed = refresh();
+    calls[1].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+    expect(error.value).toBe(true);
+
+    await loadData();
+    expect(error.value).toBe(false);
+  });
+
   it('重置后丢弃进行中请求的结果', async () => {
     const { list, loading, loadData, reset, calls } = setup();
 

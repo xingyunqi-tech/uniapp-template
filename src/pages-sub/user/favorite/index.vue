@@ -1,11 +1,16 @@
 <template>
   <view class="favorite-page" :class="globalStore.themeClass">
-    <!-- 空状态 -->
-    <UEmpty v-if="!loading && list.length === 0" icon="star" text="暂无收藏内容" />
-
-    <!-- 收藏列表 -->
-    <view v-else class="favorite-list">
-      <view v-for="item in list" :key="item.id" class="favorite-item" @click="handleItemClick(item)">
+    <UList
+      class="favorite-list"
+      :empty="list.length === 0"
+      :loading="loading"
+      :finished="!favoriteStore.hasMore"
+      :error="loadError"
+      empty-icon="star"
+      empty-text="暂无收藏内容"
+      @retry="fetchList(list.length === 0)"
+    >
+      <UCard v-for="item in list" :key="item.id" class="favorite-item" clickable @click="handleItemClick(item)">
         <image class="item-cover" :src="item.image || '/static/images/default-cover.png'" mode="aspectFill" />
         <view class="item-info">
           <text class="item-title">{{ item.title || '未命名' }}</text>
@@ -17,14 +22,8 @@
         <view class="item-action" @click.stop="handleRemove(item)">
           <uni-icons type="closeempty" color="var(--color-text-secondary)" size="28rpx" />
         </view>
-      </view>
-      <ULoadMore v-if="list.length > 0" :status="loadMoreStatus" />
-    </view>
-
-    <!-- 加载状态 -->
-    <view v-if="loading && list.length === 0" class="loading-state">
-      <text class="loading-text">加载中...</text>
-    </view>
+      </UCard>
+    </UList>
   </view>
 </template>
 
@@ -35,13 +34,12 @@ definePage({
   },
 });
 
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFavoriteStore } from '@/store/modules/favorite';
 import { formatRelativeTime } from '@/utils/datetime';
 import type { Favorite } from '@/api';
-import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 const favoriteStore = useFavoriteStore();
@@ -55,11 +53,7 @@ function formatTime(dateStr: string): string {
 const loading = computed(() => favoriteStore.loading);
 const list = computed(() => favoriteStore.favoriteList);
 
-const loadMoreStatus = computed<LoadMoreStatus>(() => {
-  if (loading.value) return 'loading';
-  if (!favoriteStore.hasMore) return 'nomore';
-  return 'loadmore';
-});
+const loadError = ref(false);
 
 onLoad(() => {
   fetchList(true);
@@ -71,9 +65,11 @@ onReachBottom(() => {
 
 // 获取收藏列表
 async function fetchList(refresh = false) {
+  loadError.value = false;
   try {
     await favoriteStore.fetchFavoriteList(undefined, refresh);
   } catch (error) {
+    loadError.value = true;
     console.error('获取收藏列表失败:', error);
   }
 }
@@ -127,10 +123,6 @@ function handleRemove(item: Favorite) {
   display: flex;
   gap: 24rpx;
   align-items: center;
-  padding: 24rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
 
   .item-cover {
     flex-shrink: 0;
@@ -186,18 +178,6 @@ function handleRemove(item: Favorite) {
     height: 56rpx;
     border-radius: 50%;
     background: var(--color-bg-grey);
-  }
-}
-
-// 加载状态
-.loading-state {
-  display: flex;
-  justify-content: center;
-  padding: 48rpx;
-
-  .loading-text {
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
   }
 }
 </style>

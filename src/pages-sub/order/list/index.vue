@@ -12,66 +12,61 @@
       @refresherrefresh="handleRefresh"
       @scrolltolower="handleLoadMore"
     >
-      <!-- 空状态 -->
-      <UEmpty v-if="!loading && orderList.length === 0" type="cart" text="暂无订单">
-        <UButton type="primary" size="small" text="去逛逛" @click="handleGoShopping" />
-      </UEmpty>
-
-      <!-- 订单卡片 -->
-      <view
-        v-for="order in orderList"
-        :key="orderStore.getOrderIdString(order.id)"
-        class="order-card"
-        @click="handleOrderDetail(orderStore.getOrderIdString(order.id))"
+      <UList
+        :empty="orderList.length === 0"
+        :loading="loading"
+        :finished="noMore"
+        :error="loadError"
+        @retry="loadOrders(orderList.length === 0)"
       >
-        <view class="order-header">
-          <text class="order-no">订单号：{{ order.orderNo }}</text>
-          <text class="order-status" :class="getOrderStatusClass(order.status)">{{
-            getOrderStatusText(order.status)
-          }}</text>
-        </view>
+        <template #empty>
+          <UEmpty type="cart" text="暂无订单">
+            <UButton type="primary" size="small" text="去逛逛" @click="handleGoShopping" />
+          </UEmpty>
+        </template>
 
-        <view class="order-info">
-          <view class="info-row">
-            <text class="info-label">订单金额</text>
-            <text class="info-value price">¥{{ formatMoney(order.totalAmount) }}</text>
+        <!-- 订单卡片 -->
+        <UCard
+          v-for="order in orderList"
+          :key="orderStore.getOrderIdString(order.id)"
+          class="order-card"
+          clickable
+          @click="handleOrderDetail(orderStore.getOrderIdString(order.id))"
+        >
+          <view class="order-header">
+            <text class="order-no">订单号：{{ order.orderNo }}</text>
+            <text class="order-status" :class="getOrderStatusClass(order.status)">{{
+              getOrderStatusText(order.status)
+            }}</text>
           </view>
-          <view v-if="order.paidAmount" class="info-row">
-            <text class="info-label">已付金额</text>
-            <text class="info-value">¥{{ formatMoney(order.paidAmount) }}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">下单时间</text>
-            <text class="info-value">{{ formatDateTime(order.createdAt, 'YYYY-MM-DD HH:mm') }}</text>
-          </view>
-          <view v-if="order.paymentChannel" class="info-row">
-            <text class="info-label">支付渠道</text>
-            <text class="info-value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
-          </view>
-        </view>
 
-        <view class="order-footer">
-          <view class="order-actions" @click.stop>
-            <UButton
-              v-if="order.status === OrderStatus.UNPAID"
-              size="small"
-              text="取消订单"
-              @click="handleCancel(orderStore.getOrderIdString(order.id))"
-            />
-            <UButton
-              v-if="order.status === OrderStatus.UNPAID"
-              type="primary"
-              size="small"
-              text="立即支付"
-              :disabled="paying"
-              @click="handlePay(order)"
-            />
+          <view class="order-info">
+            <view class="info-row">
+              <text class="info-label">订单金额</text>
+              <text class="info-value price">¥{{ formatMoney(order.totalAmount) }}</text>
+            </view>
+            <view v-if="order.paidAmount" class="info-row">
+              <text class="info-label">已付金额</text>
+              <text class="info-value">¥{{ formatMoney(order.paidAmount) }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">下单时间</text>
+              <text class="info-value">{{ formatDateTime(order.createdAt, 'YYYY-MM-DD HH:mm') }}</text>
+            </view>
+            <view v-if="order.paymentChannel" class="info-row">
+              <text class="info-label">支付渠道</text>
+              <text class="info-value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
+            </view>
           </view>
-        </view>
-      </view>
 
-      <!-- 加载更多 -->
-      <ULoadMore v-if="orderList.length > 0" :status="loadMoreStatus" />
+          <view v-if="order.status === OrderStatus.UNPAID" class="order-footer">
+            <view class="order-actions" @click.stop>
+              <UButton size="small" text="取消订单" @click="handleCancel(orderStore.getOrderIdString(order.id))" />
+              <UButton type="primary" size="small" text="立即支付" :disabled="paying" @click="handlePay(order)" />
+            </view>
+          </view>
+        </UCard>
+      </UList>
     </scroll-view>
   </view>
 </template>
@@ -89,7 +84,7 @@ import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm, formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
 import { usePayment } from '@/composables';
-import type { LoadMoreStatus, TabItem } from '@/components';
+import type { TabItem } from '@/components';
 import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
 import { PAGES } from '@/constants';
 import type { Order } from '@/api';
@@ -110,17 +105,11 @@ const tabs = ref<TabItem[]>(
 const currentTab = ref('all');
 const refreshing = ref(false);
 const noMore = ref(false);
+const loadError = ref(false);
 
 // 使用 Store 中的数据
 const orderList = computed(() => orderStore.orderList);
 const loading = computed(() => orderStore.loading);
-
-// 加载更多状态
-const loadMoreStatus = computed<LoadMoreStatus>(() => {
-  if (loading.value) return 'loading';
-  if (noMore.value) return 'nomore';
-  return 'loadmore';
-});
 
 onShow(() => {
   // 每次显示时刷新
@@ -150,6 +139,7 @@ function handleTabChange(_tab: TabItem) {
 
 // 加载订单
 async function loadOrders(refresh = false) {
+  loadError.value = false;
   try {
     const status = currentTab.value === 'all' ? undefined : (currentTab.value as any);
     await orderStore.fetchOrderList({ status, limit: 10 }, refresh);
@@ -158,6 +148,7 @@ async function loadOrders(refresh = false) {
     noMore.value = !orderStore.hasMore;
     if (refresh) loadStats();
   } catch (error) {
+    loadError.value = true;
     console.error('加载订单列表失败:', error);
   } finally {
     refreshing.value = false;
@@ -238,10 +229,6 @@ function handleGoShopping() {
 // 订单卡片
 .order-card {
   margin-bottom: 24rpx;
-  padding: 24rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
 
   .order-header {
     display: flex;

@@ -20,6 +20,8 @@ export interface UseListReturn<T> {
   refreshing: Ref<boolean>;
   /** 是否没有更多数据 */
   noMore: Ref<boolean>;
+  /** 最近一次加载或刷新是否失败 */
+  error: Ref<boolean>;
   /** 当前页码 */
   page: Ref<number>;
   /** 是否为空 */
@@ -63,6 +65,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
   const loading = ref(false);
   const refreshing = ref(false);
   const noMore = ref(false);
+  const error = ref(false);
   const page = ref(1);
 
   // 是否为空
@@ -80,6 +83,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
 
   // 加载数据
   async function loadData() {
+    error.value = false;
     if (loading.value || refreshing.value || noMore.value) return;
 
     const id = ++requestId;
@@ -89,9 +93,10 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     let data: T[];
     try {
       data = await fetchData({ page: currentPage, pageSize });
-    } catch (error) {
+    } catch (err) {
       if (id !== requestId) return;
-      throw error;
+      error.value = true;
+      throw err;
     } finally {
       if (id === requestId) loading.value = false;
     }
@@ -114,13 +119,15 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     const id = ++requestId;
     loading.value = false;
     refreshing.value = true;
+    error.value = false;
 
     let data: T[];
     try {
       data = await fetchData({ page: 1, pageSize });
-    } catch (error) {
+    } catch (err) {
       if (id !== requestId) return;
-      throw error;
+      error.value = true;
+      throw err;
     } finally {
       if (id === requestId) refreshing.value = false;
     }
@@ -142,6 +149,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     list.value = [];
     page.value = 1;
     noMore.value = false;
+    error.value = false;
     loading.value = false;
     refreshing.value = false;
   }
@@ -164,6 +172,7 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
     loading,
     refreshing,
     noMore,
+    error,
     page,
     isEmpty,
     loadData,

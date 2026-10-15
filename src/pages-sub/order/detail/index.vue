@@ -4,15 +4,15 @@
 
     <scroll-view v-else-if="order" scroll-y class="detail-content">
       <!-- 订单状态 -->
-      <view class="status-card" :class="getOrderStatusClass(order.status)">
+      <UCard class="detail-card status-card" :class="getOrderStatusClass(order.status)">
         <view class="status-info">
           <text class="status-text">{{ getOrderStatusText(order.status) }}</text>
           <text class="status-time">{{ formatDateTime(order.createdAt) }}</text>
         </view>
-      </view>
+      </UCard>
 
       <!-- 订单信息 -->
-      <view class="info-card">
+      <UCard class="detail-card">
         <view class="info-row">
           <text class="label">订单号</text>
           <view class="value-row">
@@ -47,11 +47,10 @@
           <text class="label">关闭时间</text>
           <text class="value">{{ formatDateTime(order.closedAt) }}</text>
         </view>
-      </view>
+      </UCard>
 
       <!-- 金额明细 -->
-      <view class="amount-card">
-        <view class="card-title">金额明细</view>
+      <UCard class="detail-card" title="金额明细">
         <view class="amount-row">
           <text class="label">订单总额</text>
           <text class="value">¥{{ formatMoney(order.totalAmount) }}</text>
@@ -64,16 +63,15 @@
           <text class="label">已退款</text>
           <text class="value">-¥{{ formatMoney(order.refundedAmount) }}</text>
         </view>
-      </view>
+      </UCard>
 
       <!-- 元数据 -->
-      <view v-if="order.metadata && Object.keys(order.metadata).length > 0" class="metadata-card">
-        <view class="card-title">附加信息</view>
+      <UCard v-if="order.metadata && Object.keys(order.metadata).length > 0" class="detail-card" title="附加信息">
         <view v-for="(value, key) in order.metadata" :key="key" class="info-row">
           <text class="label">{{ key }}</text>
           <text class="value">{{ value }}</text>
         </view>
-      </view>
+      </UCard>
     </scroll-view>
 
     <!-- 底部操作栏 -->
@@ -198,18 +196,17 @@ async function handlePay() {
 }
 
 .detail-content {
+  box-sizing: border-box;
   flex: 1;
   padding: 24rpx;
 }
 
+.detail-card {
+  margin-bottom: 24rpx;
+}
+
 // 状态卡片
 .status-card {
-  margin-bottom: 24rpx;
-  padding: 32rpx 24rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
-
   &.warning {
     border-left: 6rpx solid var(--color-warning);
   }
@@ -246,24 +243,6 @@ async function handlePay() {
       font-size: 24rpx;
     }
   }
-}
-
-// 信息卡片
-.info-card,
-.amount-card,
-.metadata-card {
-  margin-bottom: 24rpx;
-  padding: 24rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-  box-shadow: var(--shadow-sm);
-}
-
-.card-title {
-  margin-bottom: 20rpx;
-  color: var(--color-text);
-  font-size: 28rpx;
-  font-weight: 600;
 }
 
 .info-row {

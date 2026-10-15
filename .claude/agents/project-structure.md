@@ -167,6 +167,10 @@ src/components/
 │   └── index.vue
 ├── UButton/                # 按钮
 │   └── index.vue
+├── UCard/                  # 卡片容器
+│   └── index.vue
+├── UList/                  # 分页列表状态
+│   └── index.vue
 ├── UFixedButton/           # 固定按钮
 │   └── index.vue
 ├── URichText/              # 富文本

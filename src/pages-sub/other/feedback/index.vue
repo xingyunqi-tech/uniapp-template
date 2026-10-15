@@ -1,8 +1,7 @@
 <template>
   <view class="feedback-page" :class="globalStore.themeClass">
     <!-- 反馈类型 -->
-    <view class="form-section">
-      <view class="section-title">反馈类型</view>
+    <UCard class="form-section" title="反馈类型">
       <view class="type-list">
         <view
           v-for="item in FEEDBACK_TYPES"
@@ -14,11 +13,10 @@
           {{ item.label }}
         </view>
       </view>
-    </view>
+    </UCard>
 
     <!-- 反馈内容 -->
-    <view class="form-section">
-      <view class="section-title">问题描述</view>
+    <UCard class="form-section" title="问题描述">
       <view class="textarea-wrapper">
         <textarea
           v-model="formData.content"
@@ -29,11 +27,10 @@
         />
         <view class="word-count">{{ formData.content.length }}/{{ FEEDBACK_CONTENT_MAX_LENGTH }}</view>
       </view>
-    </view>
+    </UCard>
 
     <!-- 图片上传 -->
-    <view class="form-section">
-      <view class="section-title">上传图片（可选，最多{{ FEEDBACK_IMAGE_MAX_COUNT }}张）</view>
+    <UCard class="form-section" :title="`上传图片（可选，最多${FEEDBACK_IMAGE_MAX_COUNT}张）`">
       <view class="image-upload">
         <view v-for="(img, index) in formData.images" :key="img.path" class="image-item">
           <image :src="img.path" mode="aspectFill" @click="previewImage(img.path)" />
@@ -50,11 +47,10 @@
           <text class="upload-text">添加图片</text>
         </view>
       </view>
-    </view>
+    </UCard>
 
     <!-- 联系方式 -->
-    <view class="form-section">
-      <view class="section-title">联系方式（可选）</view>
+    <UCard class="form-section" title="联系方式（可选）">
       <input
         v-model="formData.contact"
         class="contact-input"
@@ -62,7 +58,7 @@
         :maxlength="11"
         placeholder="请输入手机号，方便我们联系您"
       />
-    </view>
+    </UCard>
 
     <!-- 提交按钮 -->
     <UFixedButton
@@ -217,17 +213,7 @@ function handleSubmit() {
 }
 
 .form-section {
-  margin-bottom: 32rpx;
-  padding: 32rpx;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg);
-
-  .section-title {
-    margin-bottom: 24rpx;
-    color: var(--color-text);
-    font-size: 30rpx;
-    font-weight: 500;
-  }
+  margin-bottom: 24rpx;
 }
 
 // 反馈类型

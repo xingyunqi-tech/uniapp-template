@@ -20,6 +20,14 @@ export { default as UBanner } from './UBanner/index.vue';
 // 空状态组件 (uni-ui 无此组件)
 export { default as UEmpty } from './UEmpty/index.vue';
 
+// 卡片容器 (背景、圆角、阴影、内边距、可选标题栏)
+export { default as UCard } from './UCard/index.vue';
+export type { UCardProps } from './UCard/index.vue';
+
+// 分页列表状态容器 (首次加载、空状态、失败重试、加载更多)
+export { default as UList } from './UList/index.vue';
+export type { UListProps } from './UList/index.vue';
+
 // 按钮 (类型、尺寸、加载与禁用状态、小程序 open-type)
 export { default as UButton } from './UButton/index.vue';
 export type { UButtonProps, ButtonType, ButtonSize } from './UButton/index.vue';

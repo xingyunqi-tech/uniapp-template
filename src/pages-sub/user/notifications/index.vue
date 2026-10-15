@@ -36,14 +36,16 @@
         @refresherrefresh="onRefresh"
         @scrolltolower="onLoadMore"
       >
-        <!-- 加载中 -->
-        <ULoading v-if="loading && notifications.length === 0" visible />
-
-        <!-- 空状态 -->
-        <UEmpty v-else-if="notifications.length === 0" text="暂无通知" />
-
-        <!-- 通知列表 -->
-        <view v-else class="list-content">
+        <UList
+          class="list-content"
+          :empty="notifications.length === 0"
+          :loading="loading"
+          :finished="!hasMore"
+          :error="notificationStore.loadError"
+          empty-type="message"
+          empty-text="暂无通知"
+          @retry="notifications.length === 0 ? loadNotifications() : onLoadMore()"
+        >
           <view
             v-for="item in notifications"
             :key="item.id"
@@ -73,15 +75,7 @@
               <uni-icons type="trash" size="18" color="var(--color-text-secondary)" />
             </view>
           </view>
-
-          <!-- 加载更多 -->
-          <view v-if="hasMore" class="load-more">
-            <text class="load-more-text">{{ loading ? '加载中...' : '上拉加载更多' }}</text>
-          </view>
-          <view v-else-if="notifications.length > 0" class="load-more">
-            <text class="load-more-text">没有更多了</text>
-          </view>
-        </view>
+        </UList>
       </scroll-view>
     </view>
   </view>
@@ -450,16 +444,6 @@ function formatTime(time: string): string {
     flex-shrink: 0;
     margin-left: 24rpx;
     padding: 8rpx;
-  }
-}
-
-.load-more {
-  padding: 32rpx;
-  text-align: center;
-
-  .load-more-text {
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
   }
 }
 </style>

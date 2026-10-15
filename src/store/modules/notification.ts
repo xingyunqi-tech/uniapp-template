@@ -28,6 +28,8 @@ export const useNotificationStore = defineStore('notification', () => {
   const unreadCount = ref(0);
   const settings = ref<NotificationSetting[]>([]);
   const loading = ref(false);
+  /** 最近一次列表请求是否失败 */
+  const loadError = ref(false);
   const hasMore = ref(true);
   /** 已加载到的页码，0 表示尚未加载 */
   const currentPage = ref(0);
@@ -49,6 +51,7 @@ export const useNotificationStore = defineStore('notification', () => {
   async function fetchNotifications(params?: GetNotificationsParams, page = 1) {
     const id = ++listRequestId;
     loading.value = true;
+    loadError.value = false;
     try {
       const response = await getNotifications({
         ...params,
@@ -63,6 +66,7 @@ export const useNotificationStore = defineStore('notification', () => {
       currentPage.value = page;
       hasMore.value = page < data.totalPages;
     } catch (error) {
+      if (id === listRequestId) loadError.value = true;
       console.error('获取通知列表失败:', error);
     } finally {
       if (id === listRequestId) loading.value = false;
@@ -267,6 +271,7 @@ export const useNotificationStore = defineStore('notification', () => {
     unreadCount.value = 0;
     settings.value = [];
     loading.value = false;
+    loadError.value = false;
     hasMore.value = true;
     currentPage.value = 0;
   }
@@ -277,6 +282,7 @@ export const useNotificationStore = defineStore('notification', () => {
     unreadCount,
     settings,
     loading,
+    loadError,
     hasMore,
     currentPage,
     pageSize,

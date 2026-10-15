@@ -1,8 +1,17 @@
 <template>
   <view class="address-page" :class="globalStore.themeClass">
     <!-- 地址列表 -->
-    <view v-if="addressList.length > 0" class="address-list">
-      <view v-for="item in addressList" :key="item.id" class="address-item" @click="handleEdit(item)">
+    <UList
+      class="address-list"
+      :empty="addressList.length === 0"
+      :loading="addressStore.loading"
+      :finished="!addressStore.hasMore"
+      :error="loadError"
+      empty-icon="location"
+      empty-text="暂无收货地址"
+      @retry="loadAddressList(addressList.length === 0)"
+    >
+      <UCard v-for="item in addressList" :key="item.id" class="address-item" clickable @click="handleEdit(item)">
         <view class="address-info">
           <view class="address-header">
             <text class="name">{{ item.name }}</text>
@@ -21,12 +30,8 @@
             <text class="action-text">删除</text>
           </view>
         </view>
-      </view>
-      <ULoadMore :status="loadMoreStatus" />
-    </view>
-
-    <!-- 空状态 -->
-    <UEmpty v-else icon="location" text="暂无收货地址" />
+      </UCard>
+    </UList>
 
     <!-- 添加地址按钮 -->
     <view class="add-btn-wrapper">
@@ -45,14 +50,13 @@ definePage({
   },
 });
 
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { onReachBottom, onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { PAGES } from '@/constants';
 import type { Address } from '@/api';
-import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
@@ -61,11 +65,7 @@ const router = useRouter();
 // 地址列表
 const addressList = computed(() => addressStore.addressList);
 
-const loadMoreStatus = computed<LoadMoreStatus>(() => {
-  if (addressStore.loading) return 'loading';
-  if (!addressStore.hasMore) return 'nomore';
-  return 'loadmore';
-});
+const loadError = ref(false);
 
 onShow(() => {
   loadAddressList(true);
@@ -77,9 +77,11 @@ onReachBottom(() => {
 
 // 加载地址列表
 async function loadAddressList(refresh = false) {
+  loadError.value = false;
   try {
     await addressStore.fetchAddressList(refresh);
   } catch (error) {
+    loadError.value = true;
     console.error('加载地址列表失败:', error);
   }
 }
@@ -146,10 +148,6 @@ function handleDelete(item: Address) {
 
   .address-item {
     margin-bottom: 24rpx;
-    padding: 32rpx;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    box-shadow: var(--shadow-sm);
 
     .address-info {
       .address-header {
