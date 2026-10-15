@@ -9,7 +9,7 @@
  */
 
 /**
- * 验证码类型: login(登录), register(注册), reset_password(重置密码), change_phone(换绑手机)
+ * 验证码类型: login(登录), register(注册), reset_password(重置密码), change_phone(换绑手机), verify_identity(敏感操作身份验证)
  */
 export type AuthSendCodeDtoType = (typeof AuthSendCodeDtoType)[keyof typeof AuthSendCodeDtoType];
 
@@ -18,4 +18,5 @@ export const AuthSendCodeDtoType = {
   register: 'register',
   reset_password: 'reset_password',
   change_phone: 'change_phone',
+  verify_identity: 'verify_identity',
 } as const;

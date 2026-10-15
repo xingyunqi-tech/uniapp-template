@@ -13,13 +13,18 @@ import type { CreateShareDtoTargetType } from './createShareDtoTargetType';
 
 export interface CreateShareDto {
   targetType: CreateShareDtoTargetType;
-  /** ID of the target content */
+  /**
+   * ID of the target content
+   * @maxLength 100
+   */
   targetId: string;
   platform: CreateShareDtoPlatform;
   /** @maxLength 200 */
   title: string;
   description?: string;
+  /** @maxLength 500 */
   image?: string;
+  /** @maxLength 1000 */
   url: string;
   /** Additional metadata in JSON format */
   metadata?: CreateShareDtoMetadata;

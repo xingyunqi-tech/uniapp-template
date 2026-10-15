@@ -11,6 +11,7 @@ import type { TrackShareDtoAction } from './trackShareDtoAction';
 import type { TrackShareDtoMetadata } from './trackShareDtoMetadata';
 
 export interface TrackShareDto {
+  /** 转化由服务端业务调用 SharesService.trackShare 记录，不接受客户端上报 */
   action: TrackShareDtoAction;
   /** Additional metadata in JSON format */
   metadata?: TrackShareDtoMetadata;

@@ -9,7 +9,13 @@
  */
 
 export type GetUsersParams = {
+  /**
+   * @minimum 1
+   */
   page?: number;
+  /**
+   * @minimum 1
+   */
   limit?: number;
   filters?: string;
   sort?: string;

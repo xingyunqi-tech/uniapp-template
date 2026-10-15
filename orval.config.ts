@@ -7,10 +7,9 @@ import { defineConfig } from 'orval';
  */
 export default defineConfig({
   api: {
-    // 输入：OpenAPI 文档（使用后端在线 API）
+    // 输入：本地后端的 OpenAPI 文档，生成前需启动后端并开启 SWAGGER_ENABLED
     input: {
-      // target: 'http://localhost:3000/docs-json',
-      target: 'https://api.sunweijie.top/docs-json',
+      target: 'http://localhost:3000/docs-json',
       // 使用 transformer 根据 API 路径自动生成英文 tag
       override: {
         transformer: './scripts/api/transform-openapi.ts',

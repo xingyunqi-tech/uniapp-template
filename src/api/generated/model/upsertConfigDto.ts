@@ -11,4 +11,6 @@ import type { UpsertConfigDtoValue } from './upsertConfigDtoValue';
 
 export interface UpsertConfigDto {
   value: UpsertConfigDtoValue;
+  /** 是否公开，新建时默认 false，更新时不传则保持不变 */
+  isPublic?: boolean;
 }

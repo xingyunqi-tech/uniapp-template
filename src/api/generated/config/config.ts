@@ -14,7 +14,7 @@ import { customMutator } from '../../core/mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * @summary 获取配置
+ * @summary 获取公开配置
  */
 export const getConfig = (key: string, options?: SecondParameter<typeof customMutator<Config>>) => {
   return customMutator<Config>({ url: `/api/v1/config/${key}`, method: 'GET' }, options);
@@ -37,5 +37,12 @@ export const upsertConfig = (
     options,
   );
 };
+/**
+ * @summary 获取配置（管理员）
+ */
+export const getConfigAsAdmin = (key: string, options?: SecondParameter<typeof customMutator<Config>>) => {
+  return customMutator<Config>({ url: `/api/v1/config/admin/${key}`, method: 'GET' }, options);
+};
 export type GetConfigResult = NonNullable<Awaited<ReturnType<typeof getConfig>>>;
 export type UpsertConfigResult = NonNullable<Awaited<ReturnType<typeof upsertConfig>>>;
+export type GetConfigAsAdminResult = NonNullable<Awaited<ReturnType<typeof getConfigAsAdmin>>>;

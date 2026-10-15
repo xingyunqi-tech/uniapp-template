@@ -58,7 +58,7 @@ src/api/
 ```
 1. 后端更新 API
    ↓
-2. 运行 pnpm api:gen（Orval 直接拉取 orval.config.ts 中配置的在线 OpenAPI 文档）
+2. 在本地启动后端并开启 SWAGGER_ENABLED，运行 pnpm api:gen（Orval 拉取 orval.config.ts 中配置的 http://localhost:3000/docs-json）
    ↓
 3. 必要时在 custom/ 添加业务逻辑
    ↓

@@ -32,8 +32,6 @@ export interface UseShareTrackingReturn {
   trackAction: (action: TrackShareDtoAction, metadata?: Record<string, unknown>) => Promise<void>;
   /** 追踪点击行为 */
   trackClick: (metadata?: Record<string, unknown>) => Promise<void>;
-  /** 追踪转化行为 */
-  trackConversion: (metadata?: Record<string, unknown>) => Promise<void>;
 }
 
 /**
@@ -45,13 +43,11 @@ export interface UseShareTrackingReturn {
  * @example
  * ```ts
  * // 商品详情页使用
- * const { isFromShare, shareRecord, trackConversion } = useShareTracking()
+ * const { isFromShare, shareRecord, trackClick } = useShareTracking()
  *
- * // 用户下单时追踪转化
- * async function handleOrder() {
- *   await createOrder()
- *   // 如果是从分享进入，追踪转化
- *   await trackConversion({ orderId: order.id })
+ * // 用户点击购买时追踪点击，转化由服务端在下单时记录
+ * async function handleBuy() {
+ *   await trackClick({ action: 'buy' })
  * }
  * ```
  *
@@ -114,13 +110,6 @@ export function useShareTracking(options: UseShareTrackingOptions = {}): UseShar
   }
 
   /**
-   * 追踪转化行为
-   */
-  async function trackConversion(metadata?: Record<string, unknown>): Promise<void> {
-    await trackAction('CONVERSION', metadata);
-  }
-
-  /**
    * 处理分享来源
    */
   async function handleShareSource(code: string): Promise<void> {
@@ -169,7 +158,6 @@ export function useShareTracking(options: UseShareTrackingOptions = {}): UseShar
     loading,
     trackAction,
     trackClick,
-    trackConversion,
   };
 }
 

@@ -24,6 +24,8 @@ export interface Order {
   totalAmount: number;
   /** Paid amount in cents */
   paidAmount?: number;
+  /** Refunded amount in cents */
+  refundedAmount: number;
   paidAt?: string;
   refundedAt?: string;
   closedAt?: string;

@@ -154,9 +154,9 @@ function formatAmount(amount: number): string {
 
 // 获取支付渠道文本
 function getPaymentChannelText(channel: OrderPaymentChannel): string {
-  const channelMap: Record<string, string> = {
-    wechat: '微信支付',
-    alipay: '支付宝',
+  const channelMap: Record<OrderPaymentChannel, string> = {
+    WECHAT: '微信支付',
+    ALIPAY: '支付宝',
   };
   return channelMap[channel] || channel;
 }

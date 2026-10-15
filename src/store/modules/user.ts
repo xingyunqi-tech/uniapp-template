@@ -35,6 +35,7 @@ import {
   isTransientError,
   type User,
   type AuthUpdateDto,
+  type AuthDeleteAccountDto,
   AuthSendCodeDtoType,
   AuthWechatLoginDtoType,
 } from '@/api';
@@ -354,10 +355,10 @@ export const useUserStore = defineStore(
     }
 
     /**
-     * 注销账号：接口成功后清除本地登录态
+     * 注销账号：有密码的用户传当前密码（MD5），没有密码的用户传 verify_identity 短信验证码；接口成功后清除本地登录态
      */
-    async function deleteAccount(): Promise<void> {
-      await deleteCurrentUser();
+    async function deleteAccount(credentials: AuthDeleteAccountDto): Promise<void> {
+      await deleteCurrentUser(credentials);
       resetUserState();
     }
 

@@ -16,6 +16,7 @@ export * from './alipayShareConfigResponseDto';
 export * from './authAlipayLoginDto';
 export * from './authChangePasswordDto';
 export * from './authConfirmEmailDto';
+export * from './authDeleteAccountDto';
 export * from './authEmailLoginDto';
 export * from './authForgotPasswordDto';
 export * from './authPhoneLoginDto';

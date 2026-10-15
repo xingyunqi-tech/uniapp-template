@@ -8,6 +8,8 @@ import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { reportApiError } from '@/utils/error-reporter';
 import { PAGES, TAB_BAR_PAGES, WHITE_LIST } from '@/constants/pages';
 import { getCurrentFullPath, getPathFromUrl, isInWhiteList } from '@/utils/router';
+import { i18n } from '@/utils/locale';
+import { LOCALE_TYPE } from '@/constants/system';
 
 // ==================== 类型定义 ====================
 
@@ -54,6 +56,32 @@ export function isTransientError(error: unknown): boolean {
 interface InternalRequestMeta extends RequestMeta {
   /** 已用刷新后的 Token 重发过一次 */
   authRetried?: boolean;
+}
+
+// ==================== 语言与错误信息 ====================
+
+/** 后端按此请求头选择返回语言，与后端 APP_HEADER_LANGUAGE 一致 */
+const LANGUAGE_HEADER = 'x-custom-lang';
+
+/** 当前界面语言对应的后端语言 */
+function getRequestLanguage(): string {
+  return i18n.global.locale.value === LOCALE_TYPE.EN_US ? 'en' : 'zh';
+}
+
+/**
+ * 取后端字段错误（data）中的第一条提示，跳过未翻译的错误码（如 emailExists）
+ */
+function getFirstFieldError(errors: unknown): string | undefined {
+  if (!errors || typeof errors !== 'object') return undefined;
+  for (const value of Object.values(errors)) {
+    if (typeof value === 'string') {
+      if (value && !/^[a-z][a-zA-Z0-9]*$/.test(value)) return value;
+      continue;
+    }
+    const nested = getFirstFieldError(value);
+    if (nested) return nested;
+  }
+  return undefined;
 }
 
 // ==================== 401 处理 ====================
@@ -196,18 +224,21 @@ const alovaInstance = createAlova({
       method.config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // 2. 查询参数编码
+    // 2. 语言
+    method.config.headers[LANGUAGE_HEADER] = getRequestLanguage();
+
+    // 3. 查询参数编码
     const { params } = method.config;
     if (params && typeof params === 'object') {
       (method.config as { params: unknown }).params = serializeParams(params);
     }
 
-    // 3. 只合并进行中的 GET/HEAD 请求
+    // 4. 只合并进行中的 GET/HEAD 请求
     if (method.type !== 'GET' && method.type !== 'HEAD') {
       method.config.shareRequest = false;
     }
 
-    // 4. 显示 Loading
+    // 5. 显示 Loading
     const meta = method.meta as RequestMeta | undefined;
     if (meta?.showLoading) {
       showRequestLoading(method, meta.loadingText || '加载中...');
@@ -271,7 +302,8 @@ const alovaInstance = createAlova({
 
       // HTTP 错误
       if (statusCode >= 400) {
-        const msg = (data as ApiResponse)?.message || `请求失败(${statusCode})`;
+        const body = data as ApiResponse | undefined;
+        const msg = getFirstFieldError(body?.data) || body?.message || `请求失败(${statusCode})`;
         if (meta?.showError !== false) {
           showRequestToast(msg);
         }

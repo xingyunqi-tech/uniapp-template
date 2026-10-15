@@ -179,7 +179,7 @@ src/api/
 **工作流程**:
 
 ```bash
-后端更新 API → pnpm api:gen（orval.config.ts 直接拉取在线 OpenAPI 文档）→ 自动生成代码
+后端更新 API → 本地启动后端（开启 SWAGGER_ENABLED）→ pnpm api:gen（拉取 http://localhost:3000/docs-json）→ 自动生成代码
 ```
 
 **详细文档**: [.claude/agents/api-development.md](.claude/agents/api-development.md)

@@ -8,10 +8,12 @@
  *  *\/
  */
 
+/**
+ * 转化由服务端业务调用 SharesService.trackShare 记录，不接受客户端上报
+ */
 export type TrackShareDtoAction = (typeof TrackShareDtoAction)[keyof typeof TrackShareDtoAction];
 
 export const TrackShareDtoAction = {
   VIEW: 'VIEW',
   CLICK: 'CLICK',
-  CONVERSION: 'CONVERSION',
 } as const;

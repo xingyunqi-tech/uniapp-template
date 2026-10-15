@@ -141,7 +141,7 @@ export const useShareStore = defineStore('share', () => {
   /**
    * 追踪分享行为
    * @param shareCode 分享码
-   * @param action 行为类型 (VIEW/CLICK/CONVERSION)
+   * @param action 行为类型 (VIEW/CLICK)
    * @param metadata 额外元数据
    */
   async function trackShareAction(

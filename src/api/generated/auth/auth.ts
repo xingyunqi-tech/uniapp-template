@@ -11,6 +11,7 @@ import type {
   AuthAlipayLoginDto,
   AuthChangePasswordDto,
   AuthConfirmEmailDto,
+  AuthDeleteAccountDto,
   AuthEmailLoginDto,
   AuthForgotPasswordDto,
   AuthPhoneLoginDto,
@@ -155,8 +156,19 @@ export const updateCurrentUser = (
 /**
  * @summary 删除当前用户账号
  */
-export const deleteCurrentUser = (options?: SecondParameter<typeof customMutator<void>>) => {
-  return customMutator<void>({ url: `/api/v1/auth/me`, method: 'DELETE' }, options);
+export const deleteCurrentUser = (
+  authDeleteAccountDto: AuthDeleteAccountDto,
+  options?: SecondParameter<typeof customMutator<void>>,
+) => {
+  return customMutator<void>(
+    {
+      url: `/api/v1/auth/me`,
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      data: authDeleteAccountDto,
+    },
+    options,
+  );
 };
 /**
  * @summary 刷新令牌

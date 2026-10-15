@@ -11,6 +11,6 @@ import type { AuthSendCodeDtoType } from './authSendCodeDtoType';
 
 export interface AuthSendCodeDto {
   phone: string;
-  /** 验证码类型: login(登录), register(注册), reset_password(重置密码), change_phone(换绑手机) */
+  /** 验证码类型: login(登录), register(注册), reset_password(重置密码), change_phone(换绑手机), verify_identity(敏感操作身份验证) */
   type?: AuthSendCodeDtoType;
 }

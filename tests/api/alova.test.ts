@@ -3,6 +3,7 @@ import { http, serializeParams } from '@/api/core/alova';
 import { uploadFileByPath } from '@/api/custom/override';
 import { getWeather } from '@/api/custom/external';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { i18n } from '@/utils/locale';
 
 interface RequestOptions {
   url: string;
@@ -182,5 +183,43 @@ describe('外部 API', () => {
 
     expect(calls[0].url).toBe('https://api.weather.example.com/weather/bei%20jing');
     expect(calls[0].header.Authorization).toBeUndefined();
+  });
+});
+
+describe('语言与错误提示', () => {
+  afterEach(() => {
+    i18n.global.locale.value = 'zh-CN';
+    (uni.showToast as Mock).mockClear();
+  });
+
+  it('按界面语言携带 x-custom-lang 请求头', async () => {
+    const calls = mockServer(() => ok());
+
+    await http.Get('/lang-zh').send();
+    i18n.global.locale.value = 'en-US';
+    await http.Get('/lang-en').send();
+
+    expect(calls[0].header['x-custom-lang']).toBe('zh');
+    expect(calls[1].header['x-custom-lang']).toBe('en');
+  });
+
+  it('校验失败时提示第一条字段错误', async () => {
+    mockServer(() => ({
+      statusCode: 422,
+      data: { code: 422, message: '数据验证失败', data: { oldPassword: '原密码不正确' } },
+    }));
+
+    await expect(http.Delete('/auth/me').send()).rejects.toThrow('原密码不正确');
+    expect(uni.showToast).toHaveBeenCalledWith({ title: '原密码不正确', icon: 'none' });
+  });
+
+  it('字段错误为未翻译的错误码时提示 message', async () => {
+    mockServer(() => ({
+      statusCode: 422,
+      data: { code: 422, message: '数据验证失败', data: { email: 'emailExists' } },
+    }));
+
+    await expect(http.Put('/auth/me', {}).send()).rejects.toThrow('数据验证失败');
+    expect(uni.showToast).toHaveBeenCalledWith({ title: '数据验证失败', icon: 'none' });
   });
 });

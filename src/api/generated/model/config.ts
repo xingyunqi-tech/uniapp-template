@@ -12,6 +12,8 @@ import type { ConfigValue } from './configValue';
 export interface Config {
   key: string;
   value: ConfigValue;
+  /** 公开配置可被所有登录用户读取 */
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -62,6 +62,41 @@
       <button class="logout-btn" @click="handleLogout">退出登录</button>
       <text class="delete-account" @click="handleDeleteAccount">注销账号</text>
     </view>
+
+    <!-- 注销账号身份验证 -->
+    <UPopup ref="deletePopupRef" type="bottom" title="注销账号">
+      <view class="delete-form">
+        <text class="delete-form__tip">注销后账号及相关数据将被删除且无法恢复，请先验证身份</text>
+        <template v-if="verifyMode === 'password'">
+          <uni-easyinput
+            v-model="deleteForm.password"
+            type="password"
+            placeholder="请输入当前密码"
+            prefix-icon="locked"
+            :clearable="true"
+          />
+          <text v-if="boundPhone" class="delete-form__switch" @click="verifyMode = 'sms'">没有密码？用短信验证</text>
+        </template>
+        <template v-else>
+          <text class="delete-form__phone">验证码将发送至 {{ formatPhone(boundPhone) }}</text>
+          <USmsInput
+            v-model="deleteForm.code"
+            :countdown="sms.countdown.value"
+            :is-counting="sms.isCounting.value"
+            @send="handleSendVerifyCode"
+          />
+          <text class="delete-form__switch" @click="verifyMode = 'password'">使用密码验证</text>
+        </template>
+        <button
+          class="delete-form__submit"
+          :loading="deleteAccountAction.loading.value"
+          :disabled="deleteAccountAction.loading.value"
+          @click="handleConfirmDelete"
+        >
+          确认注销
+        </button>
+      </view>
+    </UPopup>
   </view>
 </template>
 
@@ -72,13 +107,14 @@ definePage({
   },
 });
 
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useAsyncAction, useRouter } from '@/composables';
+import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
-import { confirm, formatFileSize, storage } from '@/utils';
+import { confirm, encryptPassword, formatFileSize, formatPhone, storage } from '@/utils';
+import { AuthSendCodeDtoType } from '@/api';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -151,21 +187,51 @@ async function handleLogout() {
 }
 
 // 注销账号
+const deletePopupRef = ref<{ open: () => void; close: () => void } | null>(null);
+const verifyMode = ref<'password' | 'sms'>('password');
+const deleteForm = reactive({ password: '', code: '' });
+const boundPhone = computed(() => userStore.userInfo?.phone || '');
+
+const sms = useSendSms({
+  sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.verify_identity),
+});
+
 const deleteAccountAction = useAsyncAction({
-  action: () => userStore.deleteAccount(),
+  action: async () => {
+    await userStore.deleteAccount(
+      verifyMode.value === 'password'
+        ? { oldPassword: encryptPassword(deleteForm.password) }
+        : { smsCode: deleteForm.code },
+    );
+    deletePopupRef.value?.close();
+  },
   successText: '账号已注销',
   onSuccess: () => {
     uni.switchTab({ url: PAGES.HOME });
   },
 });
 
-async function handleDeleteAccount() {
-  const confirmed = await confirm({
-    title: '注销账号',
-    content: '注销后账号及相关数据将被删除且无法恢复，确定要注销吗？',
-    confirmText: '确认注销',
-  });
-  if (confirmed) deleteAccountAction.execute();
+function handleDeleteAccount() {
+  verifyMode.value = 'password';
+  deleteForm.password = '';
+  deleteForm.code = '';
+  deletePopupRef.value?.open();
+}
+
+async function handleSendVerifyCode() {
+  const success = await sms.send(boundPhone.value);
+  if (success) {
+    uni.showToast({ title: '验证码已发送', icon: 'success' });
+  }
+}
+
+function handleConfirmDelete() {
+  if (verifyMode.value === 'password' && !deleteForm.password) {
+    uni.showToast({ title: '请输入当前密码', icon: 'none' });
+    return;
+  }
+  if (verifyMode.value === 'sms' && !sms.validateCode(deleteForm.code)) return;
+  deleteAccountAction.execute();
 }
 
 // ==================== 隐藏开发者选项功能 ====================
@@ -263,6 +329,45 @@ function handleToggleLocale(checked: boolean) {
 
     &:active {
       opacity: 0.8;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+}
+
+.delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+  padding-bottom: 24rpx;
+
+  &__tip,
+  &__phone {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+    line-height: 1.5;
+  }
+
+  &__switch {
+    align-self: flex-end;
+    color: var(--color-primary);
+    font-size: 26rpx;
+  }
+
+  &__submit {
+    width: 100%;
+    height: 96rpx;
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--color-error);
+    color: var(--color-text-inverse);
+    font-size: 32rpx;
+    line-height: 96rpx;
+
+    &[disabled] {
+      opacity: 0.6;
     }
 
     &::after {

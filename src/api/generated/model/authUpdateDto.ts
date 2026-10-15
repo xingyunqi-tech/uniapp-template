@@ -20,6 +20,8 @@ export interface AuthUpdateDto {
   email?: string;
   /** MD5 encrypted new password */
   password?: string;
-  /** MD5 encrypted old password */
+  /** MD5 encrypted old password, required when changing password, or changing email for users with a password */
   oldPassword?: string;
+  /** verify_identity SMS code, required when changing email for users without a password */
+  smsCode?: string;
 }

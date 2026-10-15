@@ -1,15 +1,5 @@
 <template>
   <AuthLayout title="创建账号" card-title="手机号注册" :class="globalStore.themeClass">
-    <!-- 注册方式切换 -->
-    <view class="register-tabs">
-      <view class="tab-item" :class="{ active: registerType === 'password' }" @click="registerType = 'password'">
-        密码注册
-      </view>
-      <view class="tab-item" :class="{ active: registerType === 'sms' }" @click="registerType = 'sms'">
-        验证码注册
-      </view>
-    </view>
-
     <!-- 注册表单 -->
     <view class="auth-form">
       <uni-easyinput
@@ -21,7 +11,6 @@
         :clearable="true"
       />
 
-      <!-- 验证码（两种注册方式都需要） -->
       <USmsInput
         v-model="formData.code"
         :countdown="sms.countdown.value"
@@ -29,24 +18,21 @@
         @send="handleSendCode"
       />
 
-      <!-- 密码注册 -->
-      <template v-if="registerType === 'password'">
-        <uni-easyinput
-          v-model="formData.password"
-          type="password"
-          :placeholder="`请输入密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
-          prefix-icon="locked"
-          :clearable="true"
-        />
+      <uni-easyinput
+        v-model="formData.password"
+        type="password"
+        :placeholder="`请输入密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
+        prefix-icon="locked"
+        :clearable="true"
+      />
 
-        <uni-easyinput
-          v-model="formData.confirmPassword"
-          type="password"
-          placeholder="请再次输入密码"
-          prefix-icon="locked"
-          :clearable="true"
-        />
-      </template>
+      <uni-easyinput
+        v-model="formData.confirmPassword"
+        type="password"
+        placeholder="请再次输入密码"
+        prefix-icon="locked"
+        :clearable="true"
+      />
 
       <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleRegister">
         {{ loading ? '注册中...' : '注册' }}
@@ -88,9 +74,6 @@ const router = useRouter();
 const backToLogin = useSafeBack(PAGES.LOGIN);
 const userStore = useUserStore();
 
-// 注册方式: password | sms
-const registerType = ref<'password' | 'sms'>('password');
-
 // 表单数据
 const formData = reactive({
   phone: '',
@@ -101,21 +84,12 @@ const formData = reactive({
 
 // 注册，成功提示后跳转首页，跳转前保持锁定
 const registerAction = useAsyncAction({
-  action: async () => {
-    if (registerType.value === 'password') {
-      await userStore.register({
-        phone: formData.phone,
-        password: encryptPassword(formData.password),
-        code: formData.code,
-      });
-    } else {
-      // 验证码注册（直接登录）
-      await userStore.smsLogin({
-        phone: formData.phone,
-        code: formData.code,
-      });
-    }
-  },
+  action: () =>
+    userStore.register({
+      phone: formData.phone,
+      password: encryptPassword(formData.password),
+      code: formData.code,
+    }),
   successText: '注册成功',
   onSuccess: () => {
     router.switchTab(PAGES.HOME);
@@ -137,26 +111,24 @@ function validateForm(): boolean {
 
   if (!sms.validateCode(formData.code)) return false;
 
-  if (registerType.value === 'password') {
-    if (!formData.password) {
-      uni.showToast({ title: '请输入密码', icon: 'none' });
-      return false;
-    }
+  if (!formData.password) {
+    uni.showToast({ title: '请输入密码', icon: 'none' });
+    return false;
+  }
 
-    if (formData.password.length < PASSWORD_MIN_LENGTH || formData.password.length > PASSWORD_MAX_LENGTH) {
-      uni.showToast({ title: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`, icon: 'none' });
-      return false;
-    }
+  if (formData.password.length < PASSWORD_MIN_LENGTH || formData.password.length > PASSWORD_MAX_LENGTH) {
+    uni.showToast({ title: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`, icon: 'none' });
+    return false;
+  }
 
-    if (!formData.confirmPassword) {
-      uni.showToast({ title: '请再次输入密码', icon: 'none' });
-      return false;
-    }
+  if (!formData.confirmPassword) {
+    uni.showToast({ title: '请再次输入密码', icon: 'none' });
+    return false;
+  }
 
-    if (formData.password !== formData.confirmPassword) {
-      uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
-      return false;
-    }
+  if (formData.password !== formData.confirmPassword) {
+    uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
+    return false;
   }
 
   if (!agreed.value) {
@@ -188,32 +160,6 @@ function goToLogin() {
 </script>
 
 <style scoped lang="scss">
-// 注册方式切换
-.register-tabs {
-  display: flex;
-  gap: 0;
-  justify-content: center;
-  margin-bottom: 48rpx;
-  border-radius: var(--radius-base);
-  background: var(--color-bg-grey);
-
-  .tab-item {
-    flex: 1;
-    padding: 20rpx 0;
-    transition: all var(--duration-fast);
-    border-radius: var(--radius-base);
-    color: var(--color-text-secondary);
-    font-size: 28rpx;
-    text-align: center;
-
-    &.active {
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-      font-weight: 500;
-    }
-  }
-}
-
 // 表单样式
 .auth-form {
   display: flex;

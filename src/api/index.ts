@@ -70,7 +70,7 @@ export {
   loginWithAlipay,
 } from './generated/auth/auth';
 
-export { getConfig, upsertConfig } from './generated/config/config';
+export { getConfig, upsertConfig, getConfigAsAdmin } from './generated/config/config';
 
 export { getAppInfo } from './generated/default/default';
 
