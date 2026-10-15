@@ -14,7 +14,7 @@ import { customMutator } from '../../core/mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * @summary 健康检查
+ * @summary 完整健康检查（需监控令牌）
  */
 export const healthCheck = (options?: SecondParameter<typeof customMutator<HealthCheck200>>) => {
   return customMutator<HealthCheck200>({ url: `/api/v1/health`, method: 'GET' }, options);
