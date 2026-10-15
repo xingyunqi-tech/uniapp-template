@@ -32,6 +32,7 @@
         v-if="showSwitch"
         :checked="switchChecked"
         :disabled="disabled"
+        :color="globalStore.primaryColor"
         class="u-menu-item__switch"
         @change="handleSwitchChange"
       />
@@ -59,6 +60,7 @@ definePage({
 });
 
 import { computed } from 'vue';
+import { useGlobalStore } from '@/store/modules/global';
 
 defineOptions({
   name: 'UMenuItem',
@@ -94,6 +96,8 @@ interface Props {
   /** 是否为微信客服按钮 */
   isContact?: boolean;
 }
+
+const globalStore = useGlobalStore();
 
 const props = withDefaults(defineProps<Props>(), {
   label: '',

@@ -187,3 +187,13 @@ page.dark-theme {
 .dark-theme {
   @include theme-dark;
 }
+
+// H5 开关未选中态在深色模式下的底色，选中态由 color 属性以行内样式设置
+
+/* #ifdef H5 */
+.dark-theme .uni-switch-input:not(.uni-switch-input-checked) {
+  border-color: var(--color-border);
+  background-color: var(--color-bg-active);
+}
+
+/* #endif */

@@ -6,7 +6,8 @@
         <UFormItem label="原密码">
           <input
             v-model="formData.oldPassword"
-            class="form-input"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
             :password="!showOldPassword"
             placeholder="请输入原密码"
             :maxlength="PASSWORD_MAX_LENGTH"
@@ -19,7 +20,8 @@
         <UFormItem label="新密码">
           <input
             v-model="formData.newPassword"
-            class="form-input"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
             :password="!showNewPassword"
             :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
             :maxlength="PASSWORD_MAX_LENGTH"
@@ -32,7 +34,8 @@
         <UFormItem label="确认密码">
           <input
             v-model="formData.confirmPassword"
-            class="form-input"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
             :password="!showConfirmPassword"
             placeholder="请再次输入新密码"
             :maxlength="PASSWORD_MAX_LENGTH"
@@ -168,14 +171,6 @@ function handleSave() {
 // 表单区域
 .form-section {
   padding: 24rpx;
-
-  .form-input {
-    flex: 1;
-    height: 48rpx;
-    color: var(--color-text);
-    font-size: var(--font-size-base);
-    line-height: 48rpx;
-  }
 
   .toggle-eye {
     flex-shrink: 0;

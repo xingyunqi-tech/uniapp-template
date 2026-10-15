@@ -52,11 +52,16 @@
     <view class="demo-title">UFormItem 表单项</view>
     <UMenuGroup class="demo-section">
       <UFormItem label="输入" required>
-        <input v-model="formText" class="demo-input" placeholder="请输入" />
+        <input v-model="formText" class="u-form-input" placeholder-class="u-form-placeholder" placeholder="请输入" />
       </UFormItem>
       <UFormItem label="选择" show-arrow placeholder="请选择" :value="''" />
       <UFormItem label="多行" align-top>
-        <textarea class="demo-textarea" placeholder="多行内容与标签顶部对齐" :auto-height="true" />
+        <textarea
+          class="u-form-textarea"
+          placeholder-class="u-form-placeholder"
+          placeholder="多行内容与标签顶部对齐"
+          :auto-height="true"
+        />
       </UFormItem>
     </UMenuGroup>
 
@@ -237,19 +242,5 @@ function showLoading() {
 .demo-text {
   color: var(--color-text);
   font-size: var(--font-size-base);
-}
-
-.demo-input {
-  flex: 1;
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-}
-
-.demo-textarea {
-  width: 100%;
-  min-height: 96rpx;
-  color: var(--color-text);
-  font-size: var(--font-size-base);
-  line-height: 1.5;
 }
 </style>

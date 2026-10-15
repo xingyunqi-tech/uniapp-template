@@ -215,6 +215,8 @@ export const useGlobalStore = defineStore(
 
     /** 是否为深色主题 */
     const isDark = computed(() => currentTheme.value === THEME_TYPE.DARK);
+    /** 当前主题的主色值，供 switch 等只接受颜色值、不支持 CSS 变量的原生组件使用 */
+    const primaryColor = computed(() => (isDark.value ? themeConfig.dark : themeConfig.light).primaryColor);
 
     /** 主题类名 */
     const themeClass = computed(() => (currentTheme.value === THEME_TYPE.DARK ? 'dark-theme' : ''));
@@ -224,6 +226,7 @@ export const useGlobalStore = defineStore(
       currentTheme,
       followSystemTheme,
       isDark,
+      primaryColor,
       themeClass,
       initTheme,
       setFollowSystemTheme,

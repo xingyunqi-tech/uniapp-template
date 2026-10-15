@@ -34,6 +34,8 @@
           <!-- #ifdef MP-WEIXIN -->
           <input
             v-model="formData.username"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
             type="nickname"
             placeholder="请输入昵称"
             :maxlength="NICKNAME_MAX_LENGTH"
@@ -42,7 +44,13 @@
           />
           <!-- #endif -->
           <!-- #ifndef MP-WEIXIN -->
-          <input v-model="formData.username" placeholder="请输入昵称" :maxlength="NICKNAME_MAX_LENGTH" />
+          <input
+            v-model="formData.username"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
+            placeholder="请输入昵称"
+            :maxlength="NICKNAME_MAX_LENGTH"
+          />
           <!-- #endif -->
         </UFormItem>
 
@@ -369,14 +377,6 @@ function handleSave() {
 
 // 表单区域
 .form-section {
-  input {
-    flex: 1;
-    height: 48rpx;
-    color: var(--color-text);
-    font-size: var(--font-size-base);
-    line-height: 48rpx;
-  }
-
   .form-value {
     &.disabled {
       color: var(--color-text-secondary);

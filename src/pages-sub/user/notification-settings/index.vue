@@ -24,7 +24,7 @@
             <text class="setting-label">应用内通知</text>
             <switch
               :checked="setting.enableInApp"
-              :color="switchColor"
+              :color="globalStore.primaryColor"
               @change="handleToggle(setting, 'enableInApp', $event)"
             />
           </view>
@@ -33,7 +33,7 @@
             <text class="setting-label">推送通知</text>
             <switch
               :checked="setting.enablePush"
-              :color="switchColor"
+              :color="globalStore.primaryColor"
               @change="handleToggle(setting, 'enablePush', $event)"
             />
           </view>
@@ -42,7 +42,7 @@
             <text class="setting-label">邮件通知</text>
             <switch
               :checked="setting.enableEmail"
-              :color="switchColor"
+              :color="globalStore.primaryColor"
               @change="handleToggle(setting, 'enableEmail', $event)"
             />
           </view>
@@ -51,7 +51,7 @@
             <text class="setting-label">短信通知</text>
             <switch
               :checked="setting.enableSms"
-              :color="switchColor"
+              :color="globalStore.primaryColor"
               @change="handleToggle(setting, 'enableSms', $event)"
             />
           </view>
@@ -77,12 +77,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useNotificationStore } from '@/store/modules/notification';
 import { useGlobalStore } from '@/store/modules/global';
 import type { NotificationSetting, NotificationSettingCategory } from '@/api';
-import themeConfig from '@/theme.json';
 
 const notificationStore = useNotificationStore();
 const globalStore = useGlobalStore();
-// 原生 switch 的颜色取主题配置色值
-const switchColor = computed(() => (globalStore.isDark ? themeConfig.dark : themeConfig.light).primaryColor);
 const loading = ref(false);
 const error = ref(false);
 const settings = computed(() => notificationStore.settings);

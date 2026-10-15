@@ -5,11 +5,24 @@
     <view class="form-section">
       <UMenuGroup>
         <UFormItem label="收货人" required>
-          <input v-model="formData.name" placeholder="请输入收货人姓名" :maxlength="20" />
+          <input
+            v-model="formData.name"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
+            placeholder="请输入收货人姓名"
+            :maxlength="20"
+          />
         </UFormItem>
 
         <UFormItem label="手机号" required>
-          <input v-model="formData.phone" type="number" placeholder="请输入手机号" :maxlength="11" />
+          <input
+            v-model="formData.phone"
+            class="u-form-input"
+            placeholder-class="u-form-placeholder"
+            type="number"
+            placeholder="请输入手机号"
+            :maxlength="11"
+          />
         </UFormItem>
 
         <!-- 统一使用 uni-data-picker，各平台使用相同的 API 数据 -->
@@ -26,7 +39,8 @@
         <UFormItem label="详细地址" required align-top>
           <textarea
             v-model="formData.address"
-            class="form-textarea"
+            class="u-form-textarea"
+            placeholder-class="u-form-placeholder"
             placeholder="请输入详细地址，如街道、门牌号等"
             :maxlength="100"
             :auto-height="true"
@@ -268,33 +282,6 @@ function handleDelete() {
 // 表单区域
 .form-section {
   padding: 24rpx;
-
-  // 输入框样式
-  input {
-    flex: 1;
-    height: 48rpx;
-    padding: 0;
-    color: var(--color-text);
-    font-size: var(--font-size-base);
-    line-height: 48rpx;
-
-    &::placeholder {
-      color: var(--color-text-placeholder);
-    }
-  }
-
-  .form-textarea {
-    width: 100%;
-    min-height: 120rpx;
-    padding: 0;
-    color: var(--color-text);
-    font-size: var(--font-size-base);
-    line-height: 1.5;
-
-    &::placeholder {
-      color: var(--color-text-placeholder);
-    }
-  }
 }
 
 // 默认地址
