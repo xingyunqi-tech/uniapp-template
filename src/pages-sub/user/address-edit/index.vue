@@ -138,15 +138,14 @@ async function loadAddressDetail(id: number) {
       formData.id = address.id;
       formData.name = address.name;
       formData.phone = address.phone;
-      // 优先使用区划代码，兼容旧数据使用名称
-      formData.province = address.provinceCode || address.province;
-      formData.city = address.cityCode || address.city;
-      formData.district = address.districtCode || address.district;
       formData.address = address.address;
       formData.isDefault = address.isDefault;
 
-      // 如果使用了区划代码，预加载对应的名称到缓存
+      // 缺少区划代码时地区留空，需重新选择
       if (address.provinceCode && address.cityCode && address.districtCode) {
+        formData.province = address.provinceCode;
+        formData.city = address.cityCode;
+        formData.district = address.districtCode;
         await regionStore.codesToNames(address.provinceCode, address.cityCode, address.districtCode);
       }
     }

@@ -45,6 +45,9 @@ definePage({
 
 defineOptions({
   name: 'UFormItem',
+  options: {
+    styleIsolation: 'shared',
+  },
 });
 
 interface FormRule {

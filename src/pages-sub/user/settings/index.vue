@@ -137,25 +137,17 @@ function handleMenuClick(type: string) {
 }
 
 // 退出登录
-function handleLogout() {
-  uni.showModal({
-    title: '提示',
-    content: '确定要退出登录吗？',
-    success: res => {
-      if (res.confirm) {
-        userStore.logout();
-        uni.showToast({
-          title: '已退出登录',
-          icon: 'success',
-        });
-        setTimeout(() => {
-          uni.switchTab({
-            url: PAGES.HOME,
-          });
-        }, 1500);
-      }
-    },
-  });
+const logoutAction = useAsyncAction({
+  action: () => userStore.logout(),
+  successText: '已退出登录',
+  onSuccess: () => {
+    uni.switchTab({ url: PAGES.HOME });
+  },
+});
+
+async function handleLogout() {
+  const confirmed = await confirm('确定要退出登录吗？');
+  if (confirmed) logoutAction.execute();
 }
 
 // 注销账号

@@ -100,6 +100,7 @@ import { useNotificationStore } from '@/store/modules/notification';
 import { useGlobalStore } from '@/store/modules/global';
 import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
+import { getPathFromUrl, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
 import { PAGES } from '@/constants';
 
 // ==================== Store ====================
@@ -180,9 +181,29 @@ async function handleItemClick(item: Notification) {
     await notificationStore.markAsRead(String(item.id));
   }
 
-  // 根据通知类型跳转到不同页面
-  if (item.metadata?.url) {
-    uni.navigateTo({ url: item.metadata.url as any });
+  if (typeof item.metadata?.url === 'string' && item.metadata.url) {
+    await openLink(item.metadata.url);
+  }
+}
+
+/**
+ * 打开通知链接：外链走 webview，TabBar 页用 switchTab，其余页面用 navigateTo
+ */
+async function openLink(url: string) {
+  try {
+    if (/^https?:\/\//i.test(url)) {
+      await navigateTo(PAGES.WEBVIEW, { url });
+      return;
+    }
+    const pagePath = url.startsWith('/') ? url : `/${url}`;
+    if (isTabBarPage(pagePath)) {
+      await switchTab(getPathFromUrl(pagePath));
+    } else {
+      await navigateTo(pagePath);
+    }
+  } catch (error) {
+    console.error('通知跳转失败:', error);
+    uni.showToast({ title: '页面无法打开', icon: 'none' });
   }
 }
 

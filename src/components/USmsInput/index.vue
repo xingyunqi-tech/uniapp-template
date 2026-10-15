@@ -37,6 +37,9 @@ import { useCountdown } from '@/composables';
 
 defineOptions({
   name: 'USmsInput',
+  options: {
+    styleIsolation: 'shared',
+  },
 });
 
 const props = withDefaults(

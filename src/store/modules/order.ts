@@ -111,14 +111,9 @@ export const useOrderStore = defineStore('order', () => {
    * 获取订单详情
    */
   async function fetchOrderDetail(orderId: string, options?: { showError?: boolean }) {
-    loading.value = true;
-    try {
-      const order = await getOrder(Number(orderId), options);
-      currentOrder.value = order;
-      return order;
-    } finally {
-      loading.value = false;
-    }
+    const order = await getOrder(Number(orderId), options);
+    currentOrder.value = order;
+    return order;
   }
 
   /**

@@ -3,7 +3,7 @@ import { getOrder } from '@/api';
 import { OrderStatus } from '@/constants';
 
 /** 支付结果页展示状态 */
-export type OrderPaymentState = 'checking' | 'paid' | 'unpaid' | 'closed' | 'error';
+export type OrderPaymentState = 'checking' | 'paid' | 'refunded' | 'unpaid' | 'closed' | 'error';
 
 export interface UseOrderPaymentStatusOptions {
   /** 轮询间隔（毫秒），默认 1500 */
@@ -49,8 +49,12 @@ export function useOrderPaymentStatus(options: UseOrderPaymentStatusOptions = {}
         if (id !== checkId) return;
         orderNo.value = order.orderNo;
 
-        if (order.status === OrderStatus.PAID || order.status === OrderStatus.REFUNDED) {
+        if (order.status === OrderStatus.PAID) {
           state.value = 'paid';
+          return;
+        }
+        if (order.status === OrderStatus.REFUNDED) {
+          state.value = 'refunded';
           return;
         }
         if (order.status === OrderStatus.CLOSED) {

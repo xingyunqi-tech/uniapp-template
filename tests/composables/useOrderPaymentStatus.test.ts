@@ -41,6 +41,15 @@ describe('useOrderPaymentStatus', () => {
     expect(getOrder).toHaveBeenCalledWith(1, { showError: false });
   });
 
+  it('订单已退款时显示已退款', async () => {
+    getOrder.mockResolvedValue(orderWith('REFUNDED'));
+    const { state, check } = useOrderPaymentStatus();
+
+    await check(1);
+
+    expect(state.value).toBe('refunded');
+  });
+
   it('待支付时按间隔重试，回调到达后显示支付成功', async () => {
     getOrder.mockResolvedValueOnce(orderWith('UNPAID')).mockResolvedValueOnce(orderWith('PAID'));
     const { state, check } = useOrderPaymentStatus({ interval: 1000 });

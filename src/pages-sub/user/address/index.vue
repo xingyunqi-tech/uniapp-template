@@ -22,6 +22,7 @@
           </view>
         </view>
       </view>
+      <ULoadMore :status="loadMoreStatus" />
     </view>
 
     <!-- 空状态 -->
@@ -45,12 +46,13 @@ definePage({
 });
 
 import { computed } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onReachBottom, onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { PAGES } from '@/constants';
 import type { Address } from '@/api';
+import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
@@ -59,14 +61,24 @@ const router = useRouter();
 // 地址列表
 const addressList = computed(() => addressStore.addressList);
 
+const loadMoreStatus = computed<LoadMoreStatus>(() => {
+  if (addressStore.loading) return 'loading';
+  if (!addressStore.hasMore) return 'nomore';
+  return 'loadmore';
+});
+
 onShow(() => {
+  loadAddressList(true);
+});
+
+onReachBottom(() => {
   loadAddressList();
 });
 
 // 加载地址列表
-async function loadAddressList() {
+async function loadAddressList(refresh = false) {
   try {
-    await addressStore.fetchAddressList(true);
+    await addressStore.fetchAddressList(refresh);
   } catch (error) {
     console.error('加载地址列表失败:', error);
   }
@@ -106,6 +118,7 @@ function handleDelete(item: Address) {
       if (res.confirm) {
         try {
           await addressStore.removeAddress(item.id);
+          if (addressStore.hasMore) loadAddressList(true);
           uni.showToast({
             title: '删除成功',
             icon: 'success',

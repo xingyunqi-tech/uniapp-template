@@ -45,6 +45,9 @@ import { ref, computed, watch, toRaw } from 'vue';
 
 defineOptions({
   name: 'UImageUpload',
+  options: {
+    styleIsolation: 'shared',
+  },
 });
 
 // ==================== Types ====================

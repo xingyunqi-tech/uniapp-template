@@ -38,6 +38,9 @@ import { ref, computed } from 'vue';
 
 defineOptions({
   name: 'UNoticeBar',
+  options: {
+    styleIsolation: 'shared',
+  },
 });
 
 // ==================== Types ====================

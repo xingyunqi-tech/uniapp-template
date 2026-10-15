@@ -18,10 +18,11 @@
           <uni-icons type="closeempty" color="var(--color-text-secondary)" size="28rpx" />
         </view>
       </view>
+      <ULoadMore v-if="list.length > 0" :status="loadMoreStatus" />
     </view>
 
     <!-- 加载状态 -->
-    <view v-if="loading" class="loading-state">
+    <view v-if="loading && list.length === 0" class="loading-state">
       <text class="loading-text">加载中...</text>
     </view>
   </view>
@@ -35,11 +36,12 @@ definePage({
 });
 
 import { computed } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onReachBottom } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFavoriteStore } from '@/store/modules/favorite';
 import { formatRelativeTime } from '@/utils/datetime';
 import type { Favorite } from '@/api';
+import type { LoadMoreStatus } from '@/components';
 
 const globalStore = useGlobalStore();
 const favoriteStore = useFavoriteStore();
@@ -53,14 +55,24 @@ function formatTime(dateStr: string): string {
 const loading = computed(() => favoriteStore.loading);
 const list = computed(() => favoriteStore.favoriteList);
 
+const loadMoreStatus = computed<LoadMoreStatus>(() => {
+  if (loading.value) return 'loading';
+  if (!favoriteStore.hasMore) return 'nomore';
+  return 'loadmore';
+});
+
 onLoad(() => {
+  fetchList(true);
+});
+
+onReachBottom(() => {
   fetchList();
 });
 
 // 获取收藏列表
-async function fetchList() {
+async function fetchList(refresh = false) {
   try {
-    await favoriteStore.fetchFavoriteList(undefined, true);
+    await favoriteStore.fetchFavoriteList(undefined, refresh);
   } catch (error) {
     console.error('获取收藏列表失败:', error);
   }
@@ -82,6 +94,7 @@ function handleRemove(item: Favorite) {
       if (res.confirm) {
         try {
           await favoriteStore.removeFavorite(item.id);
+          if (favoriteStore.hasMore) fetchList(true);
           uni.showToast({
             title: '已取消收藏',
             icon: 'success',

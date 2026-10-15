@@ -61,6 +61,12 @@ const STATE_VIEW: Record<OrderPaymentState, { icon: UniIconsType; color: string;
     title: '支付成功',
     desc: '订单已支付',
   },
+  refunded: {
+    icon: 'info',
+    color: 'var(--color-warning)',
+    title: '订单已退款',
+    desc: '该订单已退款，款项将原路退回',
+  },
   unpaid: {
     icon: 'info',
     color: 'var(--color-warning)',

@@ -72,6 +72,9 @@ import { ref, computed } from 'vue';
 
 defineOptions({
   name: 'UPopup',
+  options: {
+    styleIsolation: 'shared',
+  },
 });
 
 // ==================== Types ====================
