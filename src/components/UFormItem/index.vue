@@ -4,36 +4,32 @@
     封装 uni-forms-item，提供统一样式和简化 API
     支持表单验证功能（需配合 uni-forms 使用）
   -->
-  <uni-forms-item
-    :name="name"
-    :label="label"
-    :required="required"
-    :label-width="labelWidth"
-    :label-align="labelAlign"
-    :error-message="errorMessage"
-    :rules="rules"
-    class="u-form-item"
-    :class="{ 'u-form-item--arrow': showArrow }"
-  >
-    <!-- 自定义 label -->
-    <template v-if="$slots.label" #label>
-      <slot name="label" />
-    </template>
-
-    <!-- 表单内容 -->
-    <view class="u-form-item__content" @click="handleClick">
-      <slot>
-        <!-- 默认显示占位符或值 -->
-        <text v-if="isEmptyValue && placeholder" class="u-form-item__placeholder">
-          {{ placeholder }}
-        </text>
-        <text v-else class="u-form-item__value">{{ value }}</text>
-      </slot>
-      <view v-if="showArrow" class="u-form-item__arrow">
-        <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
+  <!-- 覆盖 uni-forms-item 的样式挂在外层 view 上（支付宝中组件标签不是真实节点） -->
+  <view class="u-form-item" :class="{ 'u-form-item--arrow': showArrow, 'u-form-item--top': alignTop }">
+    <uni-forms-item
+      :name="name"
+      :label="label"
+      :required="required"
+      :label-width="labelWidth"
+      :label-align="labelAlign"
+      :error-message="errorMessage"
+      :rules="rules"
+    >
+      <!-- 表单内容 -->
+      <view class="u-form-item__content" @click="handleClick">
+        <slot>
+          <!-- 默认显示占位符或值 -->
+          <text v-if="isEmptyValue && placeholder" class="u-form-item__placeholder">
+            {{ placeholder }}
+          </text>
+          <text v-else class="u-form-item__value">{{ value }}</text>
+        </slot>
+        <view v-if="showArrow" class="u-form-item__arrow">
+          <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
+        </view>
       </view>
-    </view>
-  </uni-forms-item>
+    </uni-forms-item>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -82,6 +78,8 @@ interface Props {
   value?: string | number;
   /** 占位符文本 */
   placeholder?: string;
+  /** 标签与内容顶部对齐，用于多行输入 */
+  alignTop?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -94,6 +92,7 @@ const props = withDefaults(defineProps<Props>(), {
   showArrow: false,
   value: '',
   placeholder: '',
+  alignTop: false,
 });
 
 const emit = defineEmits<{
@@ -141,28 +140,40 @@ function handleClick() {
   }
 }
 
-// 覆盖 uni-forms-item 默认样式
-:deep(.uni-forms-item__label) {
-  color: var(--color-text);
-  font-size: var(--font-size-base);
+// 覆盖 uni-forms-item 默认样式：去掉为校验提示预留的下边距，上下留白一致，标签与内容垂直居中
+.u-form-item :deep(.uni-forms-item) {
+  align-items: center;
+  margin-bottom: 0;
+  padding: var(--spacing-base) 0;
 }
 
-:deep(.uni-forms-item__content) {
+.u-form-item--top :deep(.uni-forms-item) {
+  align-items: flex-start;
+}
+
+.u-form-item :deep(.uni-forms-item__label) {
+  height: auto;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}
+
+.u-form-item :deep(.uni-forms-item__content) {
   display: flex;
   align-items: center;
 }
 
-:deep(.is-required) {
+.u-form-item :deep(.is-required) {
   color: var(--color-error);
 }
 
-:deep(.uni-forms-item__error) {
+.u-form-item :deep(.uni-forms-item__error) {
   color: var(--color-error);
   font-size: var(--font-size-sm);
 }
 
 // 输入框样式统一
-:deep(.uni-easyinput) {
+.u-form-item :deep(.uni-easyinput) {
   .uni-easyinput__content {
     border: none !important;
     background: transparent !important;

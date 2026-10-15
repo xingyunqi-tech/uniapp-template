@@ -3,28 +3,28 @@
     UNoticeBar - 基于 uni-notice-bar 的通知公告栏组件
     封装 uni-notice-bar，提供简化 API 和统一样式
   -->
-  <uni-notice-bar
-    v-if="visible"
-    :text="text"
-    :speed="speed"
-    :scrollable="scrollable"
-    :single="single"
-    :show-icon="showIcon"
-    :show-get-more="showMore"
-    :show-close="showClose"
-    :background-color="backgroundColor"
-    :color="textColor"
-    :more-color="moreColor"
-    class="u-notice-bar"
-    :class="themeClass"
-    @click="handleClick"
-    @close="handleClose"
-    @getmore="handleGetMore"
-  >
-    <template v-if="$slots.default" #default>
-      <slot />
-    </template>
-  </uni-notice-bar>
+  <!-- 覆盖 uni-notice-bar 的样式挂在外层 view 上（支付宝中组件标签不是真实节点） -->
+  <view v-if="visible" class="u-notice-bar" :class="themeClass">
+    <uni-notice-bar
+      :text="text"
+      :speed="speed"
+      :scrollable="scrollable"
+      :single="single"
+      :show-icon="showIcon"
+      :show-get-more="showMore"
+      :show-close="showClose"
+      :background-color="backgroundColor"
+      :color="textColor"
+      :more-color="moreColor"
+      @click="handleClick"
+      @close="handleClose"
+      @getmore="handleGetMore"
+    >
+      <template v-if="$slots.default" #default>
+        <slot />
+      </template>
+    </uni-notice-bar>
+  </view>
 </template>
 
 <script setup lang="ts">

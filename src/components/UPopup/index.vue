@@ -16,8 +16,8 @@
     @change="handleChange"
     @mask-click="handleMaskClick"
   >
-    <!-- 对话框模式 -->
-    <template v-if="type === 'dialog'">
+    <!-- 对话框模式，覆盖样式挂在外层 view 上（支付宝中组件标签不是真实节点） -->
+    <view v-if="type === 'dialog'" class="u-popup__dialog">
       <uni-popup-dialog
         :type="dialogType"
         :mode="dialogMode"
@@ -33,7 +33,7 @@
       >
         <slot />
       </uni-popup-dialog>
-    </template>
+    </view>
 
     <!-- 底部弹出模式 -->
     <template v-else-if="type === 'bottom'">
@@ -283,25 +283,25 @@ defineExpose({
 }
 
 // 覆盖 uni-popup-dialog 样式
-:deep(.uni-popup-dialog) {
+.u-popup__dialog :deep(.uni-popup-dialog) {
   border-radius: var(--radius-lg);
 }
 
-:deep(.uni-dialog-title) {
+.u-popup__dialog :deep(.uni-dialog-title) {
   color: var(--color-text);
   font-size: var(--font-size-xl);
 }
 
-:deep(.uni-dialog-content) {
+.u-popup__dialog :deep(.uni-dialog-content) {
   color: var(--color-text-secondary);
   font-size: var(--font-size-base);
 }
 
-:deep(.uni-dialog-button-group) {
+.u-popup__dialog :deep(.uni-dialog-button-group) {
   border-top: var(--border-width-base) solid var(--color-border);
 }
 
-:deep(.uni-dialog-button) {
+.u-popup__dialog :deep(.uni-dialog-button) {
   color: var(--color-text-secondary);
   font-size: var(--font-size-lg);
 

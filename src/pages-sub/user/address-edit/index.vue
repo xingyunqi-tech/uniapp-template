@@ -23,7 +23,7 @@
           <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
         </uni-data-picker>
 
-        <UFormItem label="详细地址" required :border="false">
+        <UFormItem label="详细地址" required align-top>
           <textarea
             v-model="formData.address"
             class="form-textarea"

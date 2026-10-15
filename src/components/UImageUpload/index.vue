@@ -3,35 +3,36 @@
     UImageUpload - 基于 uni-file-picker 的图片上传组件
     封装 uni-file-picker，提供统一样式和简化 API
   -->
-  <uni-file-picker
-    v-model="fileList"
-    :limit="maxCount"
-    :mode="mode"
-    :file-mediatype="mediaType"
-    :file-extname="fileExtname"
-    :title="title"
-    :disabled="disabled"
-    :readonly="readonly"
-    :del-icon="!disabled && !readonly"
-    :auto-upload="autoUpload"
-    :image-styles="imageStyleConfig"
-    :list-styles="listStyleConfig"
-    class="u-image-upload"
-    @select="handleSelect"
-    @success="handleSuccess"
-    @fail="handleFail"
-    @progress="handleProgress"
-    @delete="handleDelete"
-  >
-    <slot>
-      <view class="u-image-upload__add">
-        <view class="u-image-upload__add-icon">
-          <uni-icons type="plusempty" color="inherit" size="inherit" />
+  <view class="u-image-upload">
+    <uni-file-picker
+      v-model="fileList"
+      :limit="maxCount"
+      :mode="mode"
+      :file-mediatype="mediaType"
+      :file-extname="fileExtname"
+      :title="title"
+      :disabled="disabled"
+      :readonly="readonly"
+      :del-icon="!disabled && !readonly"
+      :auto-upload="autoUpload"
+      :image-styles="imageStyleConfig"
+      :list-styles="listStyleConfig"
+      @select="handleSelect"
+      @success="handleSuccess"
+      @fail="handleFail"
+      @progress="handleProgress"
+      @delete="handleDelete"
+    >
+      <slot>
+        <view class="u-image-upload__add">
+          <view class="u-image-upload__add-icon">
+            <uni-icons type="plusempty" color="inherit" size="inherit" />
+          </view>
+          <text v-if="addText" class="u-image-upload__add-text">{{ addText }}</text>
         </view>
-        <text v-if="addText" class="u-image-upload__add-text">{{ addText }}</text>
-      </view>
-    </slot>
-  </uni-file-picker>
+      </slot>
+    </uni-file-picker>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -279,8 +280,9 @@ defineExpose({
   background: var(--color-bg-grey) !important;
 }
 
+// 始终传入自定义的添加按钮内容，隐藏 uni-file-picker 默认的十字图标
 :deep(.icon-add) {
-  background-color: var(--color-text-secondary) !important;
+  display: none !important;
 }
 
 :deep(.icon-del-box) {
