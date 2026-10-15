@@ -38,6 +38,9 @@ vi.stubGlobal(
   vi.fn(() => []),
 );
 
+// uni-app 编译期宏，组件中调用，测试环境置空
+vi.stubGlobal('definePage', () => {});
+
 // Mock全局对象
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

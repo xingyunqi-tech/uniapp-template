@@ -24,7 +24,7 @@
       </view>
     </view>
 
-    <!-- 时政卡片列表 -->
+    <!-- 示例文章列表 -->
     <UList
       class="news-list"
       :empty="newsList.length === 0"
@@ -40,7 +40,7 @@
           <view class="news-meta">
             <text class="news-source">{{ item.source }}</text>
             <text class="news-time">{{ item.time }}</text>
-            <text v-if="item.questionCount" class="news-questions">{{ item.questionCount }}道题</text>
+            <text v-if="item.tag" class="news-tag">{{ item.tag }}</text>
           </view>
         </view>
         <image v-if="item.image" class="news-image" :src="item.image" mode="aspectFill" />
@@ -78,7 +78,7 @@ interface CategoryItem {
   icon: UniIconsType;
 }
 
-// 时政新闻数据类型
+// 示例文章数据类型
 interface NewsItem {
   id: number;
   title: string;
@@ -86,7 +86,7 @@ interface NewsItem {
   source: string;
   time: string;
   image?: string;
-  questionCount?: number;
+  tag?: string;
 }
 
 // Banner 数据 - 使用 mock 网络图片
@@ -96,36 +96,37 @@ const bannerList = ref<BannerItem[]>([
   { id: 3, image: 'https://picsum.photos/750/500?random=3' },
 ]);
 
-// 试题分类数据 - 10个分类
+// 示例分类，接入业务时替换为实际入口
 const categoryList = ref<CategoryItem[]>([
-  { id: 1, name: '时事政治', icon: 'flag' },
-  { id: 2, name: '行政能力', icon: 'staff' },
-  { id: 3, name: '申论写作', icon: 'compose' },
-  { id: 4, name: '公共基础', icon: 'calendar' },
-  { id: 5, name: '法律常识', icon: 'auth' },
-  { id: 6, name: '经济金融', icon: 'wallet' },
-  { id: 7, name: '历史文化', icon: 'paperclip' },
-  { id: 8, name: '科技常识', icon: 'gear' },
-  { id: 9, name: '判断推理', icon: 'help' },
-  { id: 10, name: '资料分析', icon: 'bars' },
+  { id: 1, name: '推荐', icon: 'star' },
+  { id: 2, name: '热门', icon: 'fire' },
+  { id: 3, name: '新品', icon: 'gift' },
+  { id: 4, name: '活动', icon: 'calendar' },
+  { id: 5, name: '会员', icon: 'vip' },
+  { id: 6, name: '钱包', icon: 'wallet' },
+  { id: 7, name: '消息', icon: 'chatbubble' },
+  { id: 8, name: '帮助', icon: 'help' },
+  { id: 9, name: '设置', icon: 'gear' },
+  { id: 10, name: '更多', icon: 'more-filled' },
 ]);
 
-// 模拟数据
+// 示例文章数据，接入业务时替换为接口请求
 const mockTitles = [
-  '深入学习贯彻党的二十大精神，推动高质量发展',
-  '国务院常务会议部署推进重点领域改革工作',
-  '全国两会热点解读：民生实事如何落地',
-  '新时代中国特色社会主义思想学习要点',
-  '乡村振兴战略实施取得显著成效',
-  '科技创新驱动发展战略深入推进',
-  '生态文明建设迈上新台阶',
-  '共同富裕示范区建设稳步推进',
-  '高水平对外开放持续深化',
-  '数字经济发展迎来新机遇',
+  '快速上手：从模板创建第一个页面',
+  '多端适配：H5、微信与支付宝小程序的差异处理',
+  '接口层实践：Orval 生成的 API 如何扩展',
+  '主题系统：用 CSS 变量实现深浅色切换',
+  '分包策略：控制小程序主包体积',
+  '组件约定：easycom 自动注册与命名规范',
+  '状态管理：Pinia Store 的组织方式',
+  '路由守卫：登录拦截与页面权限',
+  '测试实践：为组合式函数编写单元测试',
+  '发布流程：小程序上传与 H5 部署',
 ];
-const mockSources = ['新华社', '人民日报', '央视新闻', '光明日报', '经济日报'];
+const mockSources = ['示例作者 A', '示例作者 B', '示例作者 C'];
+const mockTags = ['推荐', '教程', undefined];
 
-// 使用 useList 管理新闻列表
+// 使用 useList 管理示例文章列表
 const {
   list: newsList,
   loading,
@@ -146,22 +147,22 @@ const {
     return Array.from({ length: pageSize }, (_, index) => ({
       id: baseId + index + 1,
       title: mockTitles[index % mockTitles.length],
-      summary: '这是一段时政新闻摘要，概述了新闻的主要内容和核心观点，帮助用户快速了解时政动态...',
+      summary: '这是一段示例摘要，用于展示列表卡片的标题、摘要、作者与标签布局。',
       source: mockSources[index % mockSources.length],
-      time: `${Math.floor(Math.random() * 24)}小时前`,
+      time: `${Math.floor(Math.random() * 23) + 1}小时前`,
       image: index % 3 === 0 ? `https://picsum.photos/200/150?random=${baseId + index + 1}` : undefined,
-      questionCount: Math.random() > 0.5 ? Math.floor(Math.random() * 20) + 5 : undefined,
+      tag: mockTags[index % mockTags.length],
     }));
   },
   hasMore: (data, page) => data.length > 0 && page < 3,
 });
 
-// 加载新闻列表，失败由列表显示重试
+// 加载文章列表，失败由列表显示重试
 async function loadNews() {
   try {
     await loadData();
   } catch (error) {
-    console.error('加载新闻失败:', error);
+    console.error('加载文章失败:', error);
   }
 }
 
@@ -176,7 +177,7 @@ function handleCategoryClick(item: CategoryItem) {
   uni.showToast({ title: item.name, icon: 'none' });
 }
 
-// 时政新闻点击
+// 文章点击
 function handleNewsClick(item: NewsItem) {
   uni.showToast({ title: item.title, icon: 'none' });
 }
@@ -266,7 +267,7 @@ onReachBottom(() => {
   }
 }
 
-// 时政新闻列表
+// 示例文章列表
 .news-list {
   padding: 20rpx;
 
@@ -320,7 +321,7 @@ onReachBottom(() => {
           font-size: 24rpx;
         }
 
-        .news-questions {
+        .news-tag {
           padding: 4rpx 12rpx;
           border-radius: 4rpx;
           background: var(--color-primary-bg);

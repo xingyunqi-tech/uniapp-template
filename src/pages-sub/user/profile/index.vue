@@ -54,13 +54,13 @@
 
         <UFormItem label="性别" show-arrow>
           <picker mode="selector" :range="genderLabels" :value="genderIndex" @change="handleGenderChange">
-            <text>{{ genderText }}</text>
+            <text :class="{ 'form-placeholder': !hasGender }">{{ genderText }}</text>
           </picker>
         </UFormItem>
 
-        <UFormItem label="生日" :border="false" show-arrow>
+        <UFormItem label="生日" show-arrow>
           <picker mode="date" :value="formData.birthday" :end="today" @change="handleBirthdayChange">
-            <text>{{ formData.birthday || '请选择' }}</text>
+            <text :class="{ 'form-placeholder': !formData.birthday }">{{ formData.birthday || '请选择' }}</text>
           </picker>
         </UFormItem>
       </UMenuGroup>
@@ -122,7 +122,9 @@ const formData = reactive({
   birthday: '',
 });
 
-const genderText = computed(() => GENDER_OPTIONS.find(item => item.value === formData.gender)?.label ?? '请选择');
+const genderOption = computed(() => GENDER_OPTIONS.find(item => item.value === formData.gender));
+const hasGender = computed(() => !!genderOption.value);
+const genderText = computed(() => genderOption.value?.label ?? '请选择');
 
 // 今天日期（用于限制生日选择）
 const today = computed(() => formatDateTime(new Date(), 'YYYY-MM-DD'));
@@ -294,7 +296,7 @@ function handleSave() {
   box-sizing: border-box;
   min-height: 100vh;
   padding: 24rpx;
-  padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(200rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg-grey);
 }
 
@@ -367,10 +369,22 @@ function handleSave() {
 
 // 表单区域
 .form-section {
+  input {
+    flex: 1;
+    height: 48rpx;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    line-height: 48rpx;
+  }
+
   .form-value {
     &.disabled {
       color: var(--color-text-secondary);
     }
+  }
+
+  .form-placeholder {
+    color: var(--color-text-placeholder);
   }
 }
 </style>

@@ -44,7 +44,7 @@ function isH5Platform(): boolean {
 /**
  * 生成插件配置
  */
-function generatePlugins(command: ConfigEnv['command']): PluginOption[] {
+function generatePlugins(command: ConfigEnv['command'], mode: string): PluginOption[] {
   const isProd = command === 'build';
   const isH5 = isH5Platform();
 
@@ -53,6 +53,8 @@ function generatePlugins(command: ConfigEnv['command']): PluginOption[] {
     UniPages({
       dts: 'typings/uni-pages.d.ts',
       subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other'],
+      // 组件演示页只在 development 模式下生成路由
+      exclude: ['node_modules', '.git', '**/__*__/**', ...(mode === 'development' ? [] : ['**/component-demo/**'])],
     }),
     UniManifest(),
     // uni() 插件
@@ -110,7 +112,7 @@ export default ({ mode, command }: Pick<ConfigEnv, 'mode' | 'command'>) => {
     server: devServer(),
 
     /** 插件配置 */
-    plugins: generatePlugins(command),
+    plugins: generatePlugins(command, mode),
 
     /** 路径别名配置 */
     resolve: {

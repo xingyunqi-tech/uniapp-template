@@ -57,6 +57,8 @@ export const PAGES = {
   CONTACT: '/pages-sub/other/contact/index',
   /** Webview 容器 */
   WEBVIEW: '/pages-sub/other/webview/index',
+  /** 组件演示页，仅 development 模式下存在 */
+  COMPONENT_DEMO: '/pages-sub/other/component-demo/index',
 } as const;
 
 /**

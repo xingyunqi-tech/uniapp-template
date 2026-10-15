@@ -67,6 +67,7 @@ const iconType = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
   padding: var(--spacing-xxl) var(--spacing-lg);
 
   &__icon {
@@ -80,7 +81,11 @@ const iconType = computed(() => {
     text-align: center;
   }
 
+  // 操作区占满宽度并居中内容，撑满的按钮可以铺满，小按钮保持居中
   &__action {
+    display: flex;
+    align-self: stretch;
+    justify-content: center;
     margin-top: var(--spacing-lg);
   }
 }

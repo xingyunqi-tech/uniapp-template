@@ -163,7 +163,7 @@ function handleIcpClick() {
   align-items: center;
   justify-content: flex-end;
   padding: 48rpx 0;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(48rpx + var(--safe-area-inset-bottom));
   gap: 16rpx;
 
   .copyright-text {

@@ -72,7 +72,7 @@ function handleOnlineChat() {
 .contact-page {
   box-sizing: border-box;
   min-height: 100vh;
-  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(48rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg-grey);
 }
 

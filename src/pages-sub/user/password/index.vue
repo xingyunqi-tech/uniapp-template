@@ -2,9 +2,8 @@
   <view class="password-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
-      <UCard :padding="false">
-        <view class="form-item">
-          <text class="form-label">原密码</text>
+      <UMenuGroup>
+        <UFormItem label="原密码">
           <input
             v-model="formData.oldPassword"
             class="form-input"
@@ -15,10 +14,9 @@
           <view class="toggle-eye" @click="showOldPassword = !showOldPassword">
             <uni-icons :type="showOldPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
           </view>
-        </view>
+        </UFormItem>
 
-        <view class="form-item">
-          <text class="form-label">新密码</text>
+        <UFormItem label="新密码">
           <input
             v-model="formData.newPassword"
             class="form-input"
@@ -29,10 +27,9 @@
           <view class="toggle-eye" @click="showNewPassword = !showNewPassword">
             <uni-icons :type="showNewPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
           </view>
-        </view>
+        </UFormItem>
 
-        <view class="form-item">
-          <text class="form-label">确认密码</text>
+        <UFormItem label="确认密码">
           <input
             v-model="formData.confirmPassword"
             class="form-input"
@@ -43,8 +40,8 @@
           <view class="toggle-eye" @click="showConfirmPassword = !showConfirmPassword">
             <uni-icons :type="showConfirmPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
           </view>
-        </view>
-      </UCard>
+        </UFormItem>
+      </UMenuGroup>
     </view>
 
     <!-- 密码强度提示 -->
@@ -172,35 +169,19 @@ function handleSave() {
 .form-section {
   padding: 24rpx;
 
-  .form-item {
-    display: flex;
-    gap: 16rpx;
-    align-items: center;
-    padding: 32rpx;
+  .form-input {
+    flex: 1;
+    height: 48rpx;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    line-height: 48rpx;
+  }
 
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--color-border-light);
-    }
-
-    .form-label {
-      flex-shrink: 0;
-      width: 160rpx;
-      color: var(--color-text);
-      font-size: 30rpx;
-    }
-
-    .form-input {
-      flex: 1;
-      color: var(--color-text);
-      font-size: 30rpx;
-    }
-
-    .toggle-eye {
-      flex-shrink: 0;
-      padding: 8rpx;
-      color: var(--color-text-secondary);
-      font-size: 36rpx;
-    }
+  .toggle-eye {
+    flex-shrink: 0;
+    padding: 8rpx;
+    color: var(--color-text-secondary);
+    font-size: 36rpx;
   }
 }
 

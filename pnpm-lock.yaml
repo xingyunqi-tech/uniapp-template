@@ -99,6 +99,9 @@ importers:
       '@vitejs/plugin-legacy':
         specifier: ^7.2.1
         version: 7.2.1(supports-color@10.2.2)(terser@5.46.0)(vite@7.3.6(@types/node@26.6.4)(jiti@2.6.1)(less@4.5.1)(sass@1.105.1)(terser@5.46.0)(tsx@4.23.15)(yaml@2.9.1))
+      '@vitejs/plugin-vue':
+        specifier: 5.2.4
+        version: 5.2.4(vite@7.3.6(@types/node@26.6.4)(jiti@2.6.1)(less@4.5.1)(sass@1.105.1)(terser@5.46.0)(tsx@4.23.15)(yaml@2.9.1))(vue@3.4.21(typescript@6.0.3))
       '@vitest/coverage-v8':
         specifier: ^5.0.3
         version: 5.0.3(vitest@5.0.3)
@@ -168,6 +171,9 @@ importers:
       orval:
         specifier: ^8.40.0
         version: 8.40.0(prettier@3.9.9)(typedoc-plugin-markdown@4.10.0(typedoc@0.28.16(typescript@6.0.3)))(typedoc@0.28.16(typescript@6.0.3))(typescript@6.0.3)(zod@4.6.5)
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
       postcss-html:
         specifier: ^2.0.0
         version: 2.0.0(postcss@8.5.28)
@@ -7342,6 +7348,16 @@ packages:
   pkg-up@3.1.0:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
+
+  playwright-core@1.64.0:
+    resolution: {integrity: sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.64.0:
+    resolution: {integrity: sha512-kVzTnYFYEyQ9RGzBjNCd2+yEqWmVbxl3AHPynv3qQ6JTjv4a+kwRcnqQwIpuP3NnrnIrE/Q6wWAIAvMfIE2/Yg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   plist@3.1.0:
     resolution: {integrity: sha512-uysumyrvkUX0rX/dEVqt8gC3sTBzd4zoWfLeS29nb53imdaXVvLINYXTI2GNqzaMuvacNx4uJQ8+b3zXR0pkgQ==}
@@ -18212,6 +18228,12 @@ snapshots:
   pkg-up@3.1.0:
     dependencies:
       find-up: 3.0.0
+
+  playwright-core@1.64.0: {}
+
+  playwright@1.64.0:
+    dependencies:
+      playwright-core: 1.64.0
 
   plist@3.1.0:
     dependencies:

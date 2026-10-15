@@ -160,7 +160,7 @@ async function handleToggle(
 
   .group-header {
     padding: 32rpx;
-    border-bottom: 1rpx solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 
     .group-title {
       display: block;
@@ -184,7 +184,7 @@ async function handleToggle(
       align-items: center;
       justify-content: space-between;
       padding: 32rpx;
-      border-bottom: 1rpx solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
 
       &:last-child {
         border-bottom: none;

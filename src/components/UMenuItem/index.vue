@@ -149,7 +149,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
       right: 32rpx;
       bottom: 0;
       left: 88rpx;
-      height: 1rpx;
+      height: 1px;
       background: var(--color-border);
     }
   }

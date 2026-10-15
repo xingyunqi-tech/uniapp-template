@@ -13,6 +13,9 @@ node_modules
 
 # dist / 构建分析报告（pnpm analyzer）
 dist
+
+# pnpm screenshot 输出
+screenshots
 reports
 coverage
 unpackage

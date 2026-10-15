@@ -286,7 +286,7 @@ function formatTime(time: string): string {
   flex-shrink: 0;
   align-items: center;
   padding: 20rpx 32rpx;
-  border-bottom: 1rpx solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   background: var(--color-bg);
   gap: 16rpx;
 

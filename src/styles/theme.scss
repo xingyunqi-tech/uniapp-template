@@ -33,6 +33,8 @@
   --color-text-secondary: #969799;
   --color-text-placeholder: #c8c9cc;
   --color-text-disabled: #d9d9d9;
+
+  // 彩色或深色背景上的文字，深浅主题一致
   --color-text-inverse: #fff;
   --color-text-link: var(--color-primary);
 
@@ -102,12 +104,14 @@
   --color-text-secondary: #a3a6ad;
   --color-text-placeholder: #6c6e72;
   --color-text-disabled: #4c4d4f;
-  --color-text-inverse: #141414;
+  --color-text-inverse: #fff;
   --color-text-link: var(--color-primary);
 
   // 背景颜色 (深色模式)
   --color-bg: #141414;
-  --color-bg-grey: #1d1d1d;
+
+  // 页面背景与内嵌底色，比 --color-bg 和卡片都深一级
+  --color-bg-grey: #0a0a0a;
   --color-bg-hover: #262626;
   --color-bg-active: #303030;
   --color-bg-mask: rgb(0 0 0 / 0.8);

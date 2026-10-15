@@ -208,7 +208,7 @@ function handleSubmit() {
   box-sizing: border-box;
   min-height: 100vh;
   padding: 24rpx;
-  padding-bottom: calc(200rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(200rpx + var(--safe-area-inset-bottom));
   background: var(--color-bg-grey);
 }
 
