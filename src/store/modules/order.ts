@@ -16,6 +16,7 @@ import {
   type GetOrdersParams,
   OrderStatus,
 } from '@/api';
+import { createPagedList, type PageResult } from '../helpers/paged-list';
 
 /**
  * 订单统计数据
@@ -27,20 +28,13 @@ export interface OrderStats {
   closedCount: number;
 }
 
-/**
- * 分页响应结构
- */
-interface PaginatedOrderResponse {
-  list: Order[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 export const useOrderStore = defineStore('order', () => {
   // ==================== State ====================
-  const orderList = ref<Order[]>([]);
+  const pager = createPagedList<Order, Omit<GetOrdersParams, 'page' | 'limit'>>({
+    fetchPage: async params => (await getOrders(params)) as unknown as PageResult<Order>,
+    limit: 10,
+  });
+  const orderList = pager.list;
   const currentOrder = ref<Order | null>(null);
   const stats = ref<OrderStats>({
     unpaidCount: 0,
@@ -48,11 +42,11 @@ export const useOrderStore = defineStore('order', () => {
     refundedCount: 0,
     closedCount: 0,
   });
-  const loading = ref(false);
-  const total = ref(0);
+  const loading = pager.loading;
+  const total = pager.total;
   /** 已加载到的页码，0 表示尚未加载 */
-  const currentPage = ref(0);
-  const hasMore = ref(true);
+  const currentPage = pager.page;
+  const hasMore = pager.hasMore;
 
   // ==================== Getters ====================
   const unpaidOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.UNPAID));
@@ -65,46 +59,14 @@ export const useOrderStore = defineStore('order', () => {
 
   // ==================== Actions ====================
 
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
-
   /**
    * 获取订单列表，refresh 为 true 时从第 1 页重新加载并作废进行中的请求
    */
-  async function fetchOrderList(params: GetOrdersParams = {}, refresh = false) {
-    if (!refresh && (loading.value || !hasMore.value)) {
-      return { list: orderList.value, total: total.value };
-    }
-
-    const id = ++listRequestId;
-    if (refresh) {
-      currentPage.value = 0;
-      hasMore.value = true;
-    }
-    const page = currentPage.value + 1;
-    loading.value = true;
-    try {
-      const response = (await getOrders({
-        ...params,
-        page,
-        limit: params.limit ?? 10,
-      })) as unknown as PaginatedOrderResponse;
-
-      if (id !== listRequestId) return response;
-
-      const newOrders = response.list || [];
-      orderList.value = page === 1 ? newOrders : [...orderList.value, ...newOrders];
-      total.value = response.total || 0;
-      hasMore.value = page < (response.totalPages || 1);
-      currentPage.value = page;
-
-      return response;
-    } catch (error) {
-      if (id !== listRequestId) return { list: orderList.value, total: total.value };
-      throw error;
-    } finally {
-      if (id === listRequestId) loading.value = false;
-    }
+  async function fetchOrderList(
+    params: Omit<GetOrdersParams, 'page' | 'limit'> = {},
+    refresh = false,
+  ): Promise<Order[]> {
+    return pager.load(params, refresh);
   }
 
   /**
@@ -198,12 +160,7 @@ export const useOrderStore = defineStore('order', () => {
    * 清空订单列表
    */
   function clearOrderList() {
-    listRequestId++;
-    loading.value = false;
-    orderList.value = [];
-    total.value = 0;
-    currentPage.value = 0;
-    hasMore.value = true;
+    pager.reset();
   }
 
   /**

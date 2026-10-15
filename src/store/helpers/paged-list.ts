@@ -1,0 +1,90 @@
+import { ref, type Ref } from 'vue';
+
+/** 分页接口返回的数据 */
+export interface PageResult<T> {
+  list?: T[];
+  total?: number;
+  totalPages?: number;
+}
+
+export interface PagedListOptions<T, P> {
+  /** 请求一页数据，page 从 1 开始 */
+  fetchPage: (params: P & { page: number; limit: number }) => Promise<PageResult<T>>;
+  /** 每页条数，默认 20 */
+  limit?: number;
+  /** 一页数据写入列表后调用，可用于同步缓存 */
+  onPageLoaded?: (items: T[], page: number) => void;
+}
+
+/**
+ * 分页列表状态：页码、加载、错误与是否还有更多；新请求发出后丢弃旧请求的结果，第 1 页替换列表，其余页追加
+ *
+ * @example
+ * ```ts
+ * const pager = createPagedList({ fetchPage: params => getAddresses(params) });
+ * await pager.load({}, true); // 刷新
+ * await pager.load(); // 加载下一页
+ * ```
+ */
+export function createPagedList<T, P extends object = object>(options: PagedListOptions<T, P>) {
+  const { fetchPage, limit = 20, onPageLoaded } = options;
+
+  const list = ref<T[]>([]) as Ref<T[]>;
+  const loading = ref(false);
+  const error = ref(false);
+  const hasMore = ref(true);
+  /** 已加载到的页码，0 表示尚未加载 */
+  const page = ref(0);
+  const total = ref(0);
+
+  let requestId = 0;
+
+  /**
+   * 加载下一页；refresh 为 true 时从第 1 页重新加载并作废进行中的请求
+   * 加载中或没有更多时直接返回当前列表；请求失败时抛出错误，被作废的请求失败时不抛出
+   */
+  async function load(params?: P, refresh = false): Promise<T[]> {
+    if (refresh) {
+      page.value = 0;
+      hasMore.value = true;
+    } else if (loading.value || !hasMore.value) {
+      return list.value;
+    }
+
+    const id = ++requestId;
+    const next = page.value + 1;
+    loading.value = true;
+    error.value = false;
+    try {
+      const result = await fetchPage({ ...(params ?? ({} as P)), page: next, limit });
+      if (id !== requestId) return list.value;
+
+      const items = result.list ?? [];
+      list.value = next === 1 ? items : [...list.value, ...items];
+      total.value = result.total ?? list.value.length;
+      hasMore.value = result.totalPages !== undefined ? next < result.totalPages : list.value.length < total.value;
+      page.value = next;
+      onPageLoaded?.(items, next);
+      return list.value;
+    } catch (err) {
+      if (id !== requestId) return list.value;
+      error.value = true;
+      throw err;
+    } finally {
+      if (id === requestId) loading.value = false;
+    }
+  }
+
+  /** 清空列表并作废进行中的请求 */
+  function reset() {
+    requestId++;
+    list.value = [];
+    loading.value = false;
+    error.value = false;
+    hasMore.value = true;
+    page.value = 0;
+    total.value = 0;
+  }
+
+  return { list, loading, error, hasMore, page, total, load, reset };
+}

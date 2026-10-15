@@ -2,8 +2,7 @@
  * Orval 自定义 Mutator
  * 让 Orval 生成的代码使用 http 实例
  */
-import { storage, STORAGE_KEYS } from '@/utils/storage';
-import { http, type ApiResponse, type RequestMeta } from './alova';
+import { http, resolveRequestToken, type ApiResponse, type RequestMeta } from './alova';
 
 /**
  * 请求配置
@@ -59,7 +58,7 @@ export const customMutator = async <T>(
     ...options,
   };
   // Token 在创建请求时写入，参与 alova 的请求 key，不同 Token 的相同请求不会合并
-  const token = storage.get<string>(STORAGE_KEYS.TOKEN);
+  const token = await resolveRequestToken(skipAuthHandling);
   const headers: Record<string, string> = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...config.headers,

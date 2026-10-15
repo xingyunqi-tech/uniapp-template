@@ -11,6 +11,7 @@ import {
   type GetFavoritesParams,
   type CreateFavoriteDtoTargetType,
 } from '@/api';
+import { createPagedList } from '../helpers/paged-list';
 
 /**
  * 收藏状态管理 Store
@@ -18,16 +19,22 @@ import {
  */
 export const useFavoriteStore = defineStore('favorite', () => {
   // ==================== State ====================
-  /** 收藏列表 */
-  const favoriteList = ref<Favorite[]>([]);
   /** 收藏状态缓存 Map<targetType:targetId, boolean> */
   const favoriteStatusCache = ref<Map<string, boolean>>(new Map());
+  const pager = createPagedList<Favorite, Pick<GetFavoritesParams, 'targetType'>>({
+    fetchPage: params => getFavorites(params),
+    onPageLoaded: items => {
+      items.forEach(item => favoriteStatusCache.value.set(getCacheKey(item.targetType, item.targetId), true));
+    },
+  });
+  /** 收藏列表 */
+  const favoriteList = pager.list;
   /** 是否正在加载 */
-  const loading = ref(false);
+  const loading = pager.loading;
   /** 是否还有更多数据 */
-  const hasMore = ref(true);
+  const hasMore = pager.hasMore;
   /** 已加载到的页码，0 表示尚未加载 */
-  const currentPage = ref(0);
+  const currentPage = pager.page;
   /** 当前筛选的目标类型 */
   const currentTargetType = ref<CreateFavoriteDtoTargetType | undefined>(undefined);
 
@@ -43,62 +50,17 @@ export const useFavoriteStore = defineStore('favorite', () => {
     return `${targetType}:${targetId}`;
   }
 
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
-
   /**
-   * 获取收藏列表
+   * 获取收藏列表，切换筛选类型时从第一页重新加载
    * @param targetType 目标类型（可选，用于筛选）
    * @param refresh 是否刷新（从第一页开始）
    */
   async function fetchFavoriteList(targetType?: CreateFavoriteDtoTargetType, refresh = false): Promise<Favorite[]> {
-    // 如果切换了类型，重置分页
     if (targetType !== currentTargetType.value) {
       refresh = true;
       currentTargetType.value = targetType;
     }
-
-    if (refresh) {
-      currentPage.value = 0;
-      hasMore.value = true;
-    }
-
-    if (!refresh && (loading.value || !hasMore.value)) {
-      return favoriteList.value;
-    }
-
-    const id = ++listRequestId;
-    const page = currentPage.value + 1;
-    loading.value = true;
-    try {
-      const params: GetFavoritesParams = {
-        page,
-        limit: 20,
-        targetType,
-      };
-
-      const response = await getFavorites(params);
-      if (id !== listRequestId) return favoriteList.value;
-      const newList = response.list || [];
-
-      favoriteList.value = page === 1 ? newList : [...favoriteList.value, ...newList];
-
-      // 更新缓存
-      newList.forEach((item: Favorite) => {
-        const key = getCacheKey(item.targetType, item.targetId);
-        favoriteStatusCache.value.set(key, true);
-      });
-
-      hasMore.value = page < response.totalPages;
-      currentPage.value = page;
-
-      return favoriteList.value;
-    } catch (error) {
-      if (id !== listRequestId) return favoriteList.value;
-      throw error;
-    } finally {
-      if (id === listRequestId) loading.value = false;
-    }
+    return pager.load({ targetType }, refresh);
   }
 
   /**
@@ -217,12 +179,8 @@ export const useFavoriteStore = defineStore('favorite', () => {
    * 重置状态
    */
   function reset() {
-    listRequestId++;
-    favoriteList.value = [];
+    pager.reset();
     favoriteStatusCache.value.clear();
-    loading.value = false;
-    hasMore.value = true;
-    currentPage.value = 0;
     currentTargetType.value = undefined;
   }
 

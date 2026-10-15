@@ -4,7 +4,7 @@
  */
 import { createAlova } from 'alova';
 import AdapterUniapp from '@alova/adapter-uniapp';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { getAccessToken, isAccessTokenExpiring } from '@/utils/auth-token';
 import { reportApiError } from '@/utils/error-reporter';
 import { PAGES, TAB_BAR_PAGES, WHITE_LIST } from '@/constants/pages';
 import { getCurrentFullPath, getPathFromUrl, isInWhiteList } from '@/utils/router';
@@ -114,6 +114,21 @@ function refreshTokenOnce(): Promise<string | null> {
   return refreshingToken;
 }
 
+/** 主动刷新失败时的 Token，同一 Token 不再主动刷新，交由 401 流程处理 */
+let proactiveRefreshFailedToken = '';
+
+/**
+ * 发请求时使用的 Token：即将过期时先刷新（并发请求共用一次刷新），刷新失败仍返回原 Token，由 401 流程处理
+ * @param skipAuthHandling 刷新、登出等认证接口传 true，不触发刷新
+ */
+export async function resolveRequestToken(skipAuthHandling = false): Promise<string> {
+  const token = getAccessToken();
+  if (!token || skipAuthHandling || token === proactiveRefreshFailedToken || !isAccessTokenExpiring()) return token;
+  const fresh = await refreshTokenOnce().catch(() => null);
+  if (!fresh) proactiveRefreshFailedToken = token;
+  return fresh || getAccessToken();
+}
+
 let isRedirectingToLogin = false;
 
 /** 请求发出时所在的页面，用于判断未登录请求是否由受保护页发起 */
@@ -215,13 +230,16 @@ const alovaInstance = createAlova({
   ...AdapterUniapp(),
 
   // ==================== 请求拦截器 ====================
-  beforeRequest(method) {
+  async beforeRequest(method) {
     methodSourcePath.set(method, getCurrentFullPath());
+    const meta = method.meta as RequestMeta | undefined;
 
-    // 1. 添加 Token
-    const token = storage.get<string>(STORAGE_KEYS.TOKEN);
-    if (token && !method.config.headers.Authorization) {
-      method.config.headers.Authorization = `Bearer ${token}`;
+    // 1. 添加 Token（经 Orval 生成的接口已在创建请求时写入）
+    if (!method.config.headers.Authorization) {
+      const token = await resolveRequestToken(meta?.skipAuthHandling);
+      if (token) {
+        method.config.headers.Authorization = `Bearer ${token}`;
+      }
     }
 
     // 2. 语言
@@ -239,7 +257,6 @@ const alovaInstance = createAlova({
     }
 
     // 5. 显示 Loading
-    const meta = method.meta as RequestMeta | undefined;
     if (meta?.showLoading) {
       showRequestLoading(method, meta.loadingText || '加载中...');
     }
@@ -268,7 +285,7 @@ const alovaInstance = createAlova({
         const sentToken = method.config.headers.Authorization;
         if (!meta?.authRetried) {
           // 请求发出后 Token 已被其他请求刷新时，直接用当前 Token 重发
-          const currentToken = storage.get<string>(STORAGE_KEYS.TOKEN);
+          const currentToken = getAccessToken();
           let newToken: string | null;
           try {
             newToken = currentToken && sentToken !== `Bearer ${currentToken}` ? currentToken : await refreshTokenOnce();
@@ -291,7 +308,7 @@ const alovaInstance = createAlova({
         const showError = meta?.showError !== false;
         if (sentToken) {
           // 带 Token 发出、当前已无 Token 说明期间已主动登出，不提示过期也不跳转
-          if (storage.get<string>(STORAGE_KEYS.TOKEN)) handleUnauthorized(message, showError, true);
+          if (getAccessToken()) handleUnauthorized(message, showError, true);
         } else {
           // 受保护页发起的未登录请求由路由守卫跳转登录页
           const sourcePath = methodSourcePath.get(method);

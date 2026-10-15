@@ -4,12 +4,7 @@
  */
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type {
-  Notification,
-  NotificationSetting,
-  GetNotificationsParams,
-  PaginationNotificationResponseDto,
-} from '@/api';
+import type { Notification, NotificationSetting, GetNotificationsParams } from '@/api';
 import {
   getNotifications,
   getUnreadCount,
@@ -21,73 +16,54 @@ import {
   updateNotificationSettings,
   UpdateNotificationSettingsDtoCategory,
 } from '@/api';
+import { createPagedList } from '../helpers/paged-list';
+
+/** 通知列表的查询参数（分页参数由分页列表管理） */
+type NotificationQuery = Omit<GetNotificationsParams, 'page' | 'limit'>;
 
 export const useNotificationStore = defineStore('notification', () => {
   // ==================== 状态 ====================
-  const notifications = ref<Notification[]>([]);
+  const pager = createPagedList<Notification, NotificationQuery>({
+    fetchPage: params => getNotifications(params),
+  });
+  const notifications = pager.list;
   const unreadCount = ref(0);
   const settings = ref<NotificationSetting[]>([]);
-  const loading = ref(false);
+  const loading = pager.loading;
   /** 最近一次列表请求是否失败 */
-  const loadError = ref(false);
-  const hasMore = ref(true);
+  const loadError = pager.error;
+  const hasMore = pager.hasMore;
   /** 已加载到的页码，0 表示尚未加载 */
-  const currentPage = ref(0);
-  const pageSize = ref(20);
+  const currentPage = pager.page;
 
   // ==================== 计算属性 ====================
   const unreadNotifications = computed(() => notifications.value.filter(n => !n.isRead));
 
   // ==================== Actions ====================
 
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
   /** 未读数请求序号，本地修改未读数或发出新请求后，进行中请求的结果被丢弃 */
   let unreadRequestId = 0;
 
   /**
-   * 获取指定页的通知列表，第 1 页替换列表，其余页追加；成功后才更新当前页码
+   * 加载更多通知，失败时由 loadError 反映
    */
-  async function fetchNotifications(params?: GetNotificationsParams, page = 1) {
-    const id = ++listRequestId;
-    loading.value = true;
-    loadError.value = false;
+  async function loadMore(params?: NotificationQuery) {
     try {
-      const response = await getNotifications({
-        ...params,
-        page,
-        limit: pageSize.value,
-      });
-
-      if (id !== listRequestId || !response) return;
-
-      const data = response as PaginationNotificationResponseDto;
-      notifications.value = page === 1 ? data.list : [...notifications.value, ...data.list];
-      currentPage.value = page;
-      hasMore.value = page < data.totalPages;
+      await pager.load(params);
     } catch (error) {
-      if (id === listRequestId) loadError.value = true;
       console.error('获取通知列表失败:', error);
-    } finally {
-      if (id === listRequestId) loading.value = false;
     }
   }
 
   /**
-   * 加载更多通知
+   * 刷新通知列表，作废进行中的请求，失败时由 loadError 反映
    */
-  async function loadMore(params?: GetNotificationsParams) {
-    if (!hasMore.value || loading.value) return;
-    await fetchNotifications(params, currentPage.value + 1);
-  }
-
-  /**
-   * 刷新通知列表，作废进行中的请求
-   */
-  async function refresh(params?: GetNotificationsParams) {
-    currentPage.value = 0;
-    hasMore.value = true;
-    await fetchNotifications(params, 1);
+  async function refresh(params?: NotificationQuery) {
+    try {
+      await pager.load(params, true);
+    } catch (error) {
+      console.error('获取通知列表失败:', error);
+    }
   }
 
   /**
@@ -265,15 +241,10 @@ export const useNotificationStore = defineStore('notification', () => {
    * 重置状态
    */
   function reset() {
-    listRequestId++;
+    pager.reset();
     unreadRequestId++;
-    notifications.value = [];
     unreadCount.value = 0;
     settings.value = [];
-    loading.value = false;
-    loadError.value = false;
-    hasMore.value = true;
-    currentPage.value = 0;
   }
 
   return {
@@ -285,13 +256,11 @@ export const useNotificationStore = defineStore('notification', () => {
     loadError,
     hasMore,
     currentPage,
-    pageSize,
 
     // 计算属性
     unreadNotifications,
 
     // Actions
-    fetchNotifications,
     loadMore,
     refresh,
     fetchUnreadCount,

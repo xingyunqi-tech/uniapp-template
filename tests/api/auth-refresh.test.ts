@@ -382,3 +382,85 @@ describe('401 跳转登录页', () => {
     expect(uni.redirectTo).not.toHaveBeenCalled();
   });
 });
+
+describe('Token 临近过期时主动刷新', () => {
+  beforeEach(() => {
+    storage.set(STORAGE_KEYS.TOKEN, 'expiring');
+  });
+
+  afterEach(() => {
+    requestMock.mockReset();
+    setAuthHandlers(null);
+    storage.remove(STORAGE_KEYS.TOKEN);
+    storage.remove(STORAGE_KEYS.TOKEN_EXPIRES);
+  });
+
+  function freshOnRefresh() {
+    return vi.fn(async () => {
+      storage.set(STORAGE_KEYS.TOKEN, 'fresh');
+      return 'fresh';
+    });
+  }
+
+  it('即将过期时先刷新，并发请求共用一次刷新并携带新 Token', async () => {
+    storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10_000);
+    const refreshToken = freshOnRefresh();
+    registerHandlers({ refreshToken });
+    const calls = mockServer(() => ok('done'));
+
+    await Promise.all([customMutator({ url: '/a', method: 'GET' }), customMutator({ url: '/b', method: 'GET' })]);
+
+    expect(refreshToken).toHaveBeenCalledTimes(1);
+    expect(calls.map(call => call.header.Authorization)).toEqual(['Bearer fresh', 'Bearer fresh']);
+  });
+
+  it('距离过期较远时不刷新', async () => {
+    storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10 * 60_000);
+    const refreshToken = freshOnRefresh();
+    registerHandlers({ refreshToken });
+    const calls = mockServer(() => ok());
+
+    await customMutator({ url: '/a', method: 'GET' });
+
+    expect(refreshToken).not.toHaveBeenCalled();
+    expect(calls[0].header.Authorization).toBe('Bearer expiring');
+  });
+
+  it('skipAuthHandling 的请求不主动刷新', async () => {
+    storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10_000);
+    const refreshToken = freshOnRefresh();
+    registerHandlers({ refreshToken });
+    mockServer(() => ok());
+
+    await customMutator({ url: '/logout', method: 'POST' }, { skipAuthHandling: true });
+
+    expect(refreshToken).not.toHaveBeenCalled();
+  });
+
+  it('主动刷新失败后，同一 Token 的后续请求不再主动刷新', async () => {
+    storage.set(STORAGE_KEYS.TOKEN, 'stale-refresh');
+    storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10_000);
+    const refreshToken = vi.fn(async () => null);
+    registerHandlers({ refreshToken });
+    mockServer(() => ok());
+
+    await customMutator({ url: '/a', method: 'GET' });
+    await customMutator({ url: '/b', method: 'GET' });
+
+    expect(refreshToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('刷新失败时仍用原 Token 发出请求', async () => {
+    storage.set(STORAGE_KEYS.TOKEN, 'refresh-failing');
+    storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10_000);
+    const refreshToken = vi.fn(async () => {
+      throw new Error('request:fail');
+    });
+    registerHandlers({ refreshToken });
+    const calls = mockServer(() => ok());
+
+    await customMutator({ url: '/a', method: 'GET' });
+
+    expect(calls[0].header.Authorization).toBe('Bearer refresh-failing');
+  });
+});

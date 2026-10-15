@@ -16,14 +16,10 @@ import {
 } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
-import {
-  checkUpdate,
-  setupNetworkListener,
-  onNetworkChange,
-  initErrorReporter,
-  resetReportFailureCount,
-  initPerformanceReporter,
-} from '@/utils';
+import { checkUpdate } from '@/utils/update';
+import { setupNetworkListener, onNetworkChange } from '@/utils/network';
+import { initErrorReporter, resetReportFailureCount } from '@/utils/error-reporter';
+import { initPerformanceReporter } from '@/utils/performance-reporter';
 import { PAGES, type ThemeType } from '@/constants';
 
 // 错误处理器 (在 onLaunch 中初始化后使用)

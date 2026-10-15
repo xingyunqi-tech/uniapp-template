@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
   createShare,
   getShares,
@@ -14,6 +14,10 @@ import {
   type TrackShareDtoAction,
   type GetSharesParams,
 } from '@/api';
+import { createPagedList } from '../helpers/paged-list';
+
+/** 分享列表每页条数 */
+const SHARE_PAGE_SIZE = 20;
 
 /**
  * 分享状态管理 Store
@@ -23,19 +27,25 @@ export const useShareStore = defineStore('share', () => {
   // ==================== State ====================
   /** 当前分享记录 */
   const currentShare = ref<Share | null>(null);
+  const pager = createPagedList<Share, Omit<GetSharesParams, 'page' | 'limit'>>({
+    fetchPage: params => getShares(params),
+    limit: SHARE_PAGE_SIZE,
+  });
   /** 分享列表 */
-  const shareList = ref<Share[]>([]);
+  const shareList = pager.list;
   /** 分享统计 */
   const shareStats = ref<ShareStatsDto | null>(null);
-  /** 加载状态 */
+  /** 创建、查询、删除等单条操作的加载状态 */
   const loading = ref(false);
+  /** 分享列表的加载状态 */
+  const listLoading = pager.loading;
   /** 分享列表分页信息，page 为已加载到的页码，0 表示尚未加载 */
-  const pagination = ref({
-    page: 0,
-    limit: 20,
-    total: 0,
-    hasMore: true,
-  });
+  const pagination = computed(() => ({
+    page: pager.page.value,
+    limit: SHARE_PAGE_SIZE,
+    total: pager.total.value,
+    hasMore: pager.hasMore.value,
+  }));
 
   // ==================== Actions ====================
   /**
@@ -92,50 +102,13 @@ export const useShareStore = defineStore('share', () => {
     }
   }
 
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
-
   /**
    * 获取分享列表
    * @param params 查询参数
    * @param refresh 是否刷新（重置分页）
    */
-  async function fetchShareList(params?: GetSharesParams, refresh = false): Promise<Share[]> {
-    if (refresh) {
-      pagination.value.page = 0;
-      pagination.value.hasMore = true;
-      shareList.value = [];
-    }
-
-    if (!refresh && (loading.value || !pagination.value.hasMore)) {
-      return shareList.value;
-    }
-
-    const id = ++listRequestId;
-    const page = pagination.value.page + 1;
-    loading.value = true;
-    try {
-      const response = await getShares({
-        ...params,
-        page,
-        limit: pagination.value.limit,
-      });
-      if (id !== listRequestId) return shareList.value;
-
-      const newItems = response.list || [];
-      shareList.value = page === 1 ? newItems : [...shareList.value, ...newItems];
-
-      pagination.value.total = response.total || 0;
-      pagination.value.hasMore = shareList.value.length < pagination.value.total;
-      pagination.value.page = page;
-
-      return shareList.value;
-    } catch (error) {
-      if (id !== listRequestId) return shareList.value;
-      throw error;
-    } finally {
-      if (id === listRequestId) loading.value = false;
-    }
+  async function fetchShareList(params?: Omit<GetSharesParams, 'page' | 'limit'>, refresh = false): Promise<Share[]> {
+    return pager.load(params, refresh);
   }
 
   /**
@@ -205,16 +178,10 @@ export const useShareStore = defineStore('share', () => {
    * 清空状态
    */
   function clearState(): void {
-    listRequestId++;
+    pager.reset();
     currentShare.value = null;
-    shareList.value = [];
     shareStats.value = null;
-    pagination.value = {
-      page: 0,
-      limit: 20,
-      total: 0,
-      hasMore: true,
-    };
+    loading.value = false;
   }
 
   return {
@@ -223,6 +190,7 @@ export const useShareStore = defineStore('share', () => {
     shareList,
     shareStats,
     loading,
+    listLoading,
     pagination,
     // Actions
     createShareRecord,

@@ -11,8 +11,8 @@ import {
   type Address,
   type CreateAddressDto,
   type UpdateAddressDto,
-  type GetAddressesParams,
 } from '@/api';
+import { createPagedList } from '../helpers/paged-list';
 
 /**
  * 地址状态管理 Store
@@ -20,18 +20,19 @@ import {
  */
 export const useAddressStore = defineStore('address', () => {
   // ==================== State ====================
+  const pager = createPagedList<Address>({ fetchPage: params => getAddresses(params) });
   /** 地址列表 */
-  const addressList = ref<Address[]>([]);
+  const addressList = pager.list;
   /** 默认地址 */
   const defaultAddress = ref<Address | null>(null);
   /** 当前选中的地址 */
   const selectedAddress = ref<Address | null>(null);
   /** 是否正在加载 */
-  const loading = ref(false);
+  const loading = pager.loading;
   /** 是否还有更多数据 */
-  const hasMore = ref(true);
+  const hasMore = pager.hasMore;
   /** 已加载到的页码，0 表示尚未加载 */
-  const currentPage = ref(0);
+  const currentPage = pager.page;
 
   // ==================== Getters ====================
   /** 地址数量 */
@@ -41,47 +42,12 @@ export const useAddressStore = defineStore('address', () => {
   const hasDefaultAddress = computed(() => !!defaultAddress.value);
 
   // ==================== Actions ====================
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
-
   /**
    * 获取地址列表
    * @param refresh 是否刷新（从第一页开始）
    */
   async function fetchAddressList(refresh = false): Promise<Address[]> {
-    if (refresh) {
-      currentPage.value = 0;
-      hasMore.value = true;
-    }
-
-    if (!refresh && (loading.value || !hasMore.value)) {
-      return addressList.value;
-    }
-
-    const id = ++listRequestId;
-    const page = currentPage.value + 1;
-    loading.value = true;
-    try {
-      const params: GetAddressesParams = {
-        page,
-        limit: 20,
-      };
-
-      const response = await getAddresses(params);
-      if (id !== listRequestId) return addressList.value;
-      const newList = response.list || [];
-
-      addressList.value = page === 1 ? newList : [...addressList.value, ...newList];
-      hasMore.value = page < response.totalPages;
-      currentPage.value = page;
-
-      return addressList.value;
-    } catch (error) {
-      if (id !== listRequestId) return addressList.value;
-      throw error;
-    } finally {
-      if (id === listRequestId) loading.value = false;
-    }
+    return pager.load(undefined, refresh);
   }
 
   /**
@@ -210,13 +176,9 @@ export const useAddressStore = defineStore('address', () => {
    * 重置状态
    */
   function reset() {
-    listRequestId++;
-    addressList.value = [];
+    pager.reset();
     defaultAddress.value = null;
     selectedAddress.value = null;
-    loading.value = false;
-    hasMore.value = true;
-    currentPage.value = 0;
   }
 
   return {

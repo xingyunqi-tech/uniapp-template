@@ -1,24 +1,16 @@
 /**
- * 工具函数统一导出文件
+ * 通用工具函数统一导出，仅含无副作用的轻量工具
+ * 应用启动类（路由守卫、更新检查、网络监听、错误与性能上报、TabBar 角标）与业务模块（订阅消息、多语言、地区）从对应文件导入
  */
 
 export * from './router';
-export * from './router-interceptor';
-export * from './tabbar-badge';
 export * from './storage';
 export * from './datetime';
 export * from './formatters';
 export * from './validator';
-export * from './update';
-export * from './network';
-export * from './error-reporter';
-export * from './performance-reporter';
-export * from './subscribe';
 export * from './platform';
-export * from './locale';
 export * from './debounce';
 export * from './throttle';
 export * from './modal';
 export * from './toast';
 export * from './crypto';
-export * from './region';

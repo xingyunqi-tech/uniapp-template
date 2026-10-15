@@ -22,6 +22,10 @@ interface StorageDataWithExpiry<T> {
 export const STORAGE_KEYS = {
   /** 用户 Token */
   TOKEN: 'token',
+  /** Refresh Token */
+  REFRESH_TOKEN: 'refreshToken',
+  /** Token 过期时间戳 (毫秒) */
+  TOKEN_EXPIRES: 'tokenExpires',
   /** 搜索历史 */
   SEARCH_HISTORY: 'search_history',
   /** 浏览历史 */

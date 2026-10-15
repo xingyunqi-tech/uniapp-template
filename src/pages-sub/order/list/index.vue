@@ -83,7 +83,7 @@ import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm, formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
-import { usePayment } from '@/composables';
+import { usePayment } from '@/composables/usePayment';
 import type { TabItem } from '@/components';
 import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
 import { PAGES } from '@/constants';
@@ -142,7 +142,7 @@ async function loadOrders(refresh = false) {
   loadError.value = false;
   try {
     const status = currentTab.value === 'all' ? undefined : (currentTab.value as any);
-    await orderStore.fetchOrderList({ status, limit: 10 }, refresh);
+    await orderStore.fetchOrderList({ status }, refresh);
 
     // 判断是否还有更多数据
     noMore.value = !orderStore.hasMore;

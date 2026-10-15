@@ -9,7 +9,7 @@ import type {
   WechatPhoneLoginParams,
 } from '@/interface';
 import { ADMIN_ROLE_ID, ROLE, ROLE_LEVEL } from '@/constants/permission';
-import { storage, STORAGE_KEYS } from '@/utils/storage';
+import { clearAuthTokens, getAuthTokens, saveAuthTokens } from '@/utils/auth-token';
 import { encryptPassword } from '@/utils/crypto';
 import { useAddressStore } from './address';
 import { useFavoriteStore } from './favorite';
@@ -70,12 +70,14 @@ export const useUserStore = defineStore(
   'user',
   () => {
     // ==================== State ====================
-    /** 用户 Token - 从 storage 初始化 */
-    const token = ref<string>(storage.get<string>(STORAGE_KEYS.TOKEN) || '');
+    // 登录凭证以本地存储为准（见 utils/auth-token），以下为响应式副本
+    const storedTokens = getAuthTokens();
+    /** 用户 Token */
+    const token = ref<string>(storedTokens.token);
     /** Refresh Token */
-    const refreshTokenValue = ref<string>(storage.get<string>('refreshToken') || '');
-    /** Token 过期时间 */
-    const tokenExpires = ref<number>(storage.get<number>('tokenExpires') || 0);
+    const refreshTokenValue = ref<string>(storedTokens.refreshToken);
+    /** Token 过期时间戳 (毫秒) */
+    const tokenExpires = ref<number>(storedTokens.tokenExpires);
     /** 用户信息 - 由 Pinia persist 管理 */
     const userInfo = ref<UserInfo | null>(null);
 
@@ -99,12 +101,7 @@ export const useUserStore = defineStore(
      */
     function setToken(tokenValue: string) {
       token.value = tokenValue;
-      // 同步到 storage
-      if (tokenValue) {
-        storage.set(STORAGE_KEYS.TOKEN, tokenValue);
-      } else {
-        storage.remove(STORAGE_KEYS.TOKEN);
-      }
+      saveAuthTokens({ token: tokenValue });
     }
 
     /**
@@ -112,16 +109,13 @@ export const useUserStore = defineStore(
      */
     function setRefreshToken(value: string, expires?: number) {
       refreshTokenValue.value = value;
-      if (expires) {
-        tokenExpires.value = expires;
-        storage.set('tokenExpires', expires);
+      if (!value) {
+        tokenExpires.value = 0;
+        saveAuthTokens({ refreshToken: '', tokenExpires: 0 });
+        return;
       }
-      if (value) {
-        storage.set('refreshToken', value);
-      } else {
-        storage.remove('refreshToken');
-        storage.remove('tokenExpires');
-      }
+      if (expires) tokenExpires.value = expires;
+      saveAuthTokens(expires ? { refreshToken: value, tokenExpires: expires } : { refreshToken: value });
     }
 
     /**
@@ -284,11 +278,11 @@ export const useUserStore = defineStore(
      */
     async function refreshToken(): Promise<string | null> {
       // H5 多标签页共享存储，其他标签页可能已轮换凭证，以存储中的值为准
-      const storedRefreshToken = storage.get<string>('refreshToken') || '';
-      if (storedRefreshToken !== refreshTokenValue.value) {
-        token.value = storage.get<string>(STORAGE_KEYS.TOKEN) || '';
-        refreshTokenValue.value = storedRefreshToken;
-        tokenExpires.value = storage.get<number>('tokenExpires') || 0;
+      const stored = getAuthTokens();
+      if (stored.refreshToken !== refreshTokenValue.value) {
+        token.value = stored.token;
+        refreshTokenValue.value = stored.refreshToken;
+        tokenExpires.value = stored.tokenExpires;
       }
 
       if (!refreshTokenValue.value) {
@@ -325,10 +319,7 @@ export const useUserStore = defineStore(
       tokenExpires.value = 0;
       userInfo.value = null;
 
-      // 清除 storage
-      storage.remove(STORAGE_KEYS.TOKEN);
-      storage.remove('refreshToken');
-      storage.remove('tokenExpires');
+      clearAuthTokens();
 
       // 重置其他 Store 的用户相关数据
       useAddressStore().reset();

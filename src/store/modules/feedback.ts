@@ -9,6 +9,7 @@ import {
   type GetFeedbacksParams,
   type CreateFeedbackDtoType,
 } from '@/api';
+import { createPagedList } from '../helpers/paged-list';
 
 /**
  * 反馈状态管理 Store
@@ -16,16 +17,19 @@ import {
  */
 export const useFeedbackStore = defineStore('feedback', () => {
   // ==================== State ====================
+  const pager = createPagedList<Feedback, Pick<GetFeedbacksParams, 'type'>>({
+    fetchPage: params => getFeedbacks(params),
+  });
   /** 反馈列表 */
-  const feedbackList = ref<Feedback[]>([]);
+  const feedbackList = pager.list;
   /** 是否正在加载 */
-  const loading = ref(false);
+  const loading = pager.loading;
   /** 是否正在提交 */
   const submitting = ref(false);
   /** 是否还有更多数据 */
-  const hasMore = ref(true);
+  const hasMore = pager.hasMore;
   /** 已加载到的页码，0 表示尚未加载 */
-  const currentPage = ref(0);
+  const currentPage = pager.page;
   /** 当前筛选的类型 */
   const currentType = ref<CreateFeedbackDtoType | undefined>(undefined);
 
@@ -37,55 +41,17 @@ export const useFeedbackStore = defineStore('feedback', () => {
   const hasUnreadReply = computed(() => feedbackList.value.some(item => item.reply && item.status === 'resolved'));
 
   // ==================== Actions ====================
-  /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
-  let listRequestId = 0;
-
   /**
-   * 获取反馈列表
+   * 获取反馈列表，切换筛选类型时从第一页重新加载
    * @param type 反馈类型（可选，用于筛选）
    * @param refresh 是否刷新（从第一页开始）
    */
   async function fetchFeedbackList(type?: CreateFeedbackDtoType, refresh = false): Promise<Feedback[]> {
-    // 如果切换了类型，重置分页
     if (type !== currentType.value) {
       refresh = true;
       currentType.value = type;
     }
-
-    if (refresh) {
-      currentPage.value = 0;
-      hasMore.value = true;
-    }
-
-    if (!refresh && (loading.value || !hasMore.value)) {
-      return feedbackList.value;
-    }
-
-    const id = ++listRequestId;
-    const page = currentPage.value + 1;
-    loading.value = true;
-    try {
-      const params: GetFeedbacksParams = {
-        page,
-        limit: 20,
-        type,
-      };
-
-      const response = await getFeedbacks(params);
-      if (id !== listRequestId) return feedbackList.value;
-      const newList = response.list || [];
-
-      feedbackList.value = page === 1 ? newList : [...feedbackList.value, ...newList];
-      hasMore.value = page < response.totalPages;
-      currentPage.value = page;
-
-      return feedbackList.value;
-    } catch (error) {
-      if (id !== listRequestId) return feedbackList.value;
-      throw error;
-    } finally {
-      if (id === listRequestId) loading.value = false;
-    }
+    return pager.load({ type }, refresh);
   }
 
   /**
@@ -124,12 +90,8 @@ export const useFeedbackStore = defineStore('feedback', () => {
    * 重置状态
    */
   function reset() {
-    listRequestId++;
-    feedbackList.value = [];
-    loading.value = false;
+    pager.reset();
     submitting.value = false;
-    hasMore.value = true;
-    currentPage.value = 0;
     currentType.value = undefined;
   }
 

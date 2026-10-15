@@ -45,7 +45,7 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
-import { useOrderPaymentStatus, type OrderPaymentState } from '@/composables';
+import { useOrderPaymentStatus, type OrderPaymentState } from '@/composables/useOrderPaymentStatus';
 
 const globalStore = useGlobalStore();
 const { state, orderNo, check } = useOrderPaymentStatus();

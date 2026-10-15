@@ -101,7 +101,7 @@ definePage({
 
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { usePayment } from '@/composables';
+import { usePayment } from '@/composables/usePayment';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { OrderStatus, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
 import { confirm, formatMoney } from '@/utils';
