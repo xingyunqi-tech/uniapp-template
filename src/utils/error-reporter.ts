@@ -106,6 +106,15 @@ let reportFailureCount = 0;
 /** 最大上报失败次数 */
 const MAX_REPORT_FAILURES = 3;
 
+/** 连续失败达到上限后暂停上报的时长 */
+const REPORT_PAUSE_DURATION = 60 * 1000;
+
+/** 暂停上报的截止时间 */
+let reportPausedUntil = 0;
+
+/** 是否有上报请求进行中 */
+let isReporting = false;
+
 // ==================== 错误去重机制 ====================
 
 /** 错误去重窗口 (ms) */
@@ -258,22 +267,13 @@ function addToQueue(errorInfo: ErrorInfo): void {
  * 执行上报
  */
 async function doReport(): Promise<void> {
-  if (errorQueue.length === 0) {
-    return;
-  }
-
-  // 检查是否已达到最大失败次数
-  if (reportFailureCount >= MAX_REPORT_FAILURES) {
-    if (globalOptions.consoleLog) {
-      console.warn(`[ErrorReporter] 上报失败次数过多 (${reportFailureCount}次)，本次跳过上报，队列已清空`);
-    }
-    // 清空队列，防止内存泄漏
-    errorQueue.length = 0;
+  if (errorQueue.length === 0 || isReporting || Date.now() < reportPausedUntil) {
     return;
   }
 
   // 取出待上报的错误
   const errors = errorQueue.splice(0, errorQueue.length);
+  isReporting = true;
 
   try {
     // 优先使用自定义上报 (必须是函数才执行)
@@ -303,22 +303,33 @@ async function doReport(): Promise<void> {
   } catch (err) {
     reportFailureCount++;
 
+    // 放回队列等待重试，超出容量时丢弃最早的错误
+    errorQueue.unshift(...errors);
+    if (errorQueue.length > globalOptions.maxCacheSize) {
+      errorQueue.splice(0, errorQueue.length - globalOptions.maxCacheSize);
+    }
+
     if (reportFailureCount < MAX_REPORT_FAILURES) {
-      // 上报失败但未达到最大次数，将错误放回队列
-      errorQueue.unshift(...errors);
       console.error(`[ErrorReporter] 上报失败 (${reportFailureCount}/${MAX_REPORT_FAILURES}):`, err);
     } else {
-      // 达到最大失败次数，丢弃错误
-      console.error(`[ErrorReporter] 上报失败次数达到上限 (${MAX_REPORT_FAILURES})，错误已丢弃:`, err);
+      reportFailureCount = 0;
+      reportPausedUntil = Date.now() + REPORT_PAUSE_DURATION;
+      console.error(
+        `[ErrorReporter] 连续上报失败 ${MAX_REPORT_FAILURES} 次，暂停上报 ${REPORT_PAUSE_DURATION / 1000} 秒:`,
+        err,
+      );
     }
+  } finally {
+    isReporting = false;
   }
 }
 
 /**
- * 重置上报失败计数 (用于网络恢复后)
+ * 重置上报失败计数并解除暂停 (用于网络恢复后)
  */
 export function resetReportFailureCount(): void {
   reportFailureCount = 0;
+  reportPausedUntil = 0;
 }
 
 /**

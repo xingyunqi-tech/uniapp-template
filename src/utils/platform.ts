@@ -38,6 +38,18 @@ export function isWeixin(): boolean {
 }
 
 /**
+ * 是否为微信内置浏览器打开的 H5
+ */
+export function isWechatBrowser(): boolean {
+  // #ifdef H5
+  return /micromessenger/i.test(navigator.userAgent);
+  // #endif
+  // #ifndef H5
+  return false;
+  // #endif
+}
+
+/**
  * 是否为支付宝小程序
  */
 export function isAlipay(): boolean {

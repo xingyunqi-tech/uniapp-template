@@ -60,6 +60,10 @@
           <text class="label">实付金额</text>
           <text class="value">¥{{ formatAmount(order.paidAmount) }}</text>
         </view>
+        <view v-if="order.refundedAmount > 0" class="amount-row">
+          <text class="label">已退款</text>
+          <text class="value">-¥{{ formatAmount(order.refundedAmount) }}</text>
+        </view>
       </view>
 
       <!-- 元数据 -->

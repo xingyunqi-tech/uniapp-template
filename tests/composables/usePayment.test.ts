@@ -7,10 +7,12 @@ const requestSubscribe = vi.hoisted(() => vi.fn());
 const wechatPay = vi.hoisted(() => vi.fn());
 const alipayMiniPay = vi.hoisted(() => vi.fn());
 const alipayPay = vi.hoisted(() => vi.fn());
+const alertModal = vi.hoisted(() => vi.fn());
 
 vi.mock('@/utils/subscribe', () => ({ requestSubscribe }));
 vi.mock('@/utils/wechat-pay', () => ({ pay: wechatPay }));
 vi.mock('@/utils/alipay-pay', () => ({ createMiniProgramPayment: alipayMiniPay, pay: alipayPay }));
+vi.mock('@/utils/modal', () => ({ alert: alertModal }));
 
 const { usePayment, payOnWechat, payOnAlipayMini, payOnH5, getPaymentSubject } =
   await import('@/composables/usePayment');
@@ -89,6 +91,14 @@ describe('payOnH5', () => {
 
     await expect(payOnH5(order)).resolves.toEqual({ status: PaymentStatus.FAILED, message: '创建支付订单失败' });
   });
+
+  it('微信内置浏览器中弹窗提示到浏览器打开，不发起支付', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 MicroMessenger/8.0');
+
+    await expect(payOnH5(order)).resolves.toMatchObject({ status: PaymentStatus.FAILED, notified: true });
+    expect(alipayPay).not.toHaveBeenCalled();
+    expect(alertModal).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('usePayment', () => {
@@ -137,6 +147,15 @@ describe('usePayment', () => {
     const { handlePayResult } = usePayment();
 
     handlePayResult({ status: PaymentStatus.PROCESSING, message: '', redirected: true }, '12');
+
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+    expect(uni.showToast).not.toHaveBeenCalled();
+  });
+
+  it('已弹窗说明时不再提示', () => {
+    const { handlePayResult } = usePayment();
+
+    handlePayResult({ status: PaymentStatus.FAILED, message: '', notified: true }, '12');
 
     expect(uni.redirectTo).not.toHaveBeenCalled();
     expect(uni.showToast).not.toHaveBeenCalled();

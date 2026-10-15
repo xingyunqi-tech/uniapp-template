@@ -40,6 +40,8 @@ export const useNotificationStore = defineStore('notification', () => {
 
   /** 最近一次列表请求的序号，新请求发出后旧请求的结果被丢弃 */
   let listRequestId = 0;
+  /** 未读数请求序号，本地修改未读数或发出新请求后，进行中请求的结果被丢弃 */
+  let unreadRequestId = 0;
 
   /**
    * 获取指定页的通知列表，第 1 页替换列表，其余页追加；成功后才更新当前页码
@@ -88,8 +90,10 @@ export const useNotificationStore = defineStore('notification', () => {
    * 获取未读通知数量
    */
   async function fetchUnreadCount() {
+    const id = ++unreadRequestId;
     try {
       const count = await getUnreadCount();
+      if (id !== unreadRequestId) return;
       unreadCount.value = count || 0;
     } catch (error) {
       console.error('获取未读数量失败:', error);
@@ -129,9 +133,12 @@ export const useNotificationStore = defineStore('notification', () => {
           notification.isRead = true;
           notification.readAt = result.readAt || new Date().toISOString();
           // 本地递减未读数（不再重复调用 API）
+          unreadRequestId++;
           if (unreadCount.value > 0) {
             unreadCount.value--;
           }
+        } else if (!notification) {
+          await fetchUnreadCount();
         }
       }
     } catch (error) {
@@ -152,6 +159,7 @@ export const useNotificationStore = defineStore('notification', () => {
         n.readAt = new Date().toISOString();
       });
 
+      unreadRequestId++;
       unreadCount.value = 0;
 
       uni.showToast({ title: '已全部标记为已读', icon: 'success' });
@@ -173,6 +181,7 @@ export const useNotificationStore = defineStore('notification', () => {
         const notification = notifications.value[index];
         // 如果是未读通知，递减未读数
         if (!notification.isRead && unreadCount.value > 0) {
+          unreadRequestId++;
           unreadCount.value--;
         }
         notifications.value.splice(index, 1);
@@ -253,6 +262,7 @@ export const useNotificationStore = defineStore('notification', () => {
    */
   function reset() {
     listRequestId++;
+    unreadRequestId++;
     notifications.value = [];
     unreadCount.value = 0;
     settings.value = [];

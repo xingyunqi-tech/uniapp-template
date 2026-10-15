@@ -7,6 +7,8 @@ import { PAGES, PaymentStatus } from '@/constants';
 import * as WechatPay from '@/utils/wechat-pay';
 import * as AlipayPay from '@/utils/alipay-pay';
 import { requestSubscribe } from '@/utils/subscribe';
+import { isWechatBrowser } from '@/utils/platform';
+import { alert } from '@/utils/modal';
 
 /** 待支付订单 */
 export interface PayOrder {
@@ -22,6 +24,8 @@ export interface PayResult {
   redirected?: boolean;
   /** 已有支付在进行，本次调用被忽略 */
   ignored?: boolean;
+  /** 已向用户弹窗说明，无需再提示 */
+  notified?: boolean;
 }
 
 /** 支付标题，同一订单每次支付保持一致 */
@@ -54,9 +58,13 @@ export async function payOnAlipayMini(order: PayOrder): Promise<PayResult> {
 }
 
 /**
- * H5 支付宝网页支付，成功时页面跳转到支付宝
+ * H5 支付宝网页支付，成功时页面跳转到支付宝；微信内置浏览器会拦截支付宝页面，提示用户到浏览器中打开
  */
 export async function payOnH5(order: PayOrder): Promise<PayResult> {
+  if (isWechatBrowser()) {
+    alert('微信内无法打开支付宝，请点击右上角「···」选择在浏览器中打开后再支付');
+    return { status: PaymentStatus.FAILED, message: '', notified: true };
+  }
   const result = await AlipayPay.pay({ outTradeNo: order.orderNo, subject: getPaymentSubject(order.orderNo) });
   return result.success
     ? { status: PaymentStatus.PROCESSING, message: result.message, redirected: true }
@@ -111,7 +119,7 @@ export function usePayment() {
    * 处理支付结果：成功或结果未知时进入支付结果页（以服务端订单状态为准），取消或失败时提示
    */
   function handlePayResult(result: PayResult, orderId: PayOrder['id']) {
-    if (result.ignored || result.redirected) return;
+    if (result.ignored || result.redirected || result.notified) return;
 
     if (result.status === PaymentStatus.SUCCESS || result.status === PaymentStatus.PROCESSING) {
       uni.redirectTo({ url: `${PAGES.PAYMENT_RESULT}?orderId=${orderId}` });

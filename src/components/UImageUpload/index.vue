@@ -92,7 +92,7 @@ export interface SelectResult {
 interface Props {
   /** 已上传的文件列表 (v-model) */
   modelValue?: FileItem[];
-  /** 最大上传数量 */
+  /** 最大上传数量，uni-file-picker 最多支持 9 */
   maxCount?: number;
   /** 显示模式: grid 宫格 | list 列表 */
   mode?: UploadMode;
@@ -149,10 +149,14 @@ const fileList = ref<FileItem[]>([]);
 
 // ==================== Computed ====================
 
-/** 图片样式配置 */
+if (import.meta.env.DEV && props.maxCount > 9) {
+  console.warn('[UImageUpload] maxCount 最大为 9，超出部分不生效');
+}
+
+/** 图片样式配置，uni-file-picker 按 px 处理数值，需由 rpx 换算 */
 const imageStyleConfig = computed(() => ({
-  width: props.imageWidth,
-  height: props.imageHeight,
+  width: uni.upx2px(props.imageWidth),
+  height: uni.upx2px(props.imageHeight),
   border: {
     color: 'var(--color-border)',
     width: '1',

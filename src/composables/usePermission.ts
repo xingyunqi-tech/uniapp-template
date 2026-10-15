@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { isMP, isApp } from '@/utils/platform';
+import { isMP } from '@/utils/platform';
 
 /**
  * 权限类型
@@ -117,8 +117,8 @@ export function usePermission(options: UsePermissionOptions): UsePermissionRetur
    * 检查权限状态
    */
   async function check(): Promise<PermissionStatus> {
-    // H5 环境暂不支持权限检查
-    if (!isMP() && !isApp()) {
+    // 仅小程序有授权设置，H5 与 App 由系统在调用对应接口时申请权限
+    if (!isMP()) {
       status.value = 'authorized';
       isAuthorized.value = true;
       return 'authorized';
@@ -156,8 +156,8 @@ export function usePermission(options: UsePermissionOptions): UsePermissionRetur
   async function request(): Promise<boolean> {
     if (isRequesting.value) return false;
 
-    // H5 环境直接返回 true
-    if (!isMP() && !isApp()) {
+    // 仅小程序有授权设置，H5 与 App 由系统在调用对应接口时申请权限
+    if (!isMP()) {
       status.value = 'authorized';
       isAuthorized.value = true;
       return true;

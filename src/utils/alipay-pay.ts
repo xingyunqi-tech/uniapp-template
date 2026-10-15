@@ -36,23 +36,20 @@ export function getAlipayAuthCode(): Promise<string> {
   });
 }
 
-/** my.tradePay 的 resultCode 转为支付结果，8000 / 6004 表示结果未知，以服务端支付状态为准 */
+/** my.tradePay 的 resultCode 转为支付结果：9000 成功、6001 取消，其余结果码以服务端支付状态为准 */
 function toTradePayResult(resultCode: unknown, outTradeNo: string): PaymentResult {
   switch (String(resultCode ?? '')) {
     case '9000':
       return { success: true, message: '支付成功', outTradeNo, status: PaymentStatus.SUCCESS };
     case '6001':
       return { success: false, message: '已取消支付', outTradeNo, status: PaymentStatus.CANCELLED };
-    case '8000':
-    case '6004':
+    default:
       return {
         success: false,
         message: '支付结果确认中，请稍后在订单中查看',
         outTradeNo,
         status: PaymentStatus.PROCESSING,
       };
-    default:
-      return { success: false, message: '支付失败', outTradeNo, status: PaymentStatus.FAILED };
   }
 }
 
@@ -61,18 +58,26 @@ function toTradePayResult(resultCode: unknown, outTradeNo: string): PaymentResul
  */
 export async function createMiniProgramPayment(params: CreatePaymentDto): Promise<PaymentResult> {
   // #ifdef MP-ALIPAY
+  let tradeNo: string;
   try {
     const authCode = await getAlipayAuthCode();
-    const { tradeNo } = await alipayControllerCreateMiniPaymentV1({ ...params, authCode });
-    const res = await uni.requestPayment({ provider: 'alipay', orderInfo: tradeNo });
-    return toTradePayResult((res as unknown as { resultCode?: unknown }).resultCode, params.outTradeNo);
+    ({ tradeNo } = await alipayControllerCreateMiniPaymentV1({ ...params, authCode }));
   } catch (error) {
-    console.error('支付宝小程序支付失败:', error);
+    console.error('支付宝小程序下单失败:', error);
     return {
       success: false,
       message: '支付失败',
       outTradeNo: params.outTradeNo,
+      status: PaymentStatus.FAILED,
     };
+  }
+
+  try {
+    const res = await uni.requestPayment({ provider: 'alipay', orderInfo: tradeNo });
+    return toTradePayResult((res as unknown as { resultCode?: unknown }).resultCode, params.outTradeNo);
+  } catch (error) {
+    console.error('支付宝小程序支付失败:', error);
+    return toTradePayResult(undefined, params.outTradeNo);
   }
   // #endif
 

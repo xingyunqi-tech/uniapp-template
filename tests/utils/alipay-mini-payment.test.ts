@@ -66,23 +66,33 @@ describe('createMiniProgramPayment', () => {
     });
   });
 
-  it('其它结果码返回支付失败', async () => {
-    mockTradePay('4000');
+  it.each(['4000', '6002'])('其它结果码 %s 以订单状态为准', async resultCode => {
+    mockTradePay(resultCode);
 
-    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({ success: false, message: '支付失败' });
+    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({
+      success: false,
+      status: PaymentStatus.PROCESSING,
+    });
   });
 
-  it('拉起收银台失败时返回支付失败', async () => {
+  it('收银台调用失败时以订单状态为准', async () => {
     vi.mocked(uni).requestPayment = vi.fn(() => Promise.reject(new Error('tradePay fail'))) as never;
 
-    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({ success: false, message: '支付失败' });
+    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({
+      success: false,
+      status: PaymentStatus.PROCESSING,
+    });
   });
 
   it('下单失败时返回失败且不拉起收银台', async () => {
     createMiniPayment.mockRejectedValue(new Error('422'));
     mockTradePay('9000');
 
-    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({ success: false, message: '支付失败' });
+    await expect(createMiniProgramPayment(params)).resolves.toMatchObject({
+      success: false,
+      message: '支付失败',
+      status: PaymentStatus.FAILED,
+    });
     expect(uni.requestPayment).not.toHaveBeenCalled();
   });
 

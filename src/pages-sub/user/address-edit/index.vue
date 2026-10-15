@@ -1,5 +1,6 @@
 <template>
   <view class="address-edit-page" :class="globalStore.themeClass">
+    <ULoading v-if="detailLoading" visible />
     <!-- 表单区域 -->
     <view class="form-section">
       <UMenuGroup>
@@ -92,6 +93,9 @@ const formData = reactive({
 // 是否编辑模式
 const isEdit = ref(false);
 
+// 编辑模式下地址详情加载中，加载完成前遮挡表单
+const detailLoading = ref(false);
+
 // 地区文本（将编码转换为名称显示）
 const regionText = computed(() => {
   if (formData.province && formData.city && formData.district) {
@@ -118,20 +122,15 @@ onLoad(async options => {
     uni.setNavigationBarTitle({ title: '新增地址' });
   }
 
-  // 预加载地区树形数据（所有平台统一）
-  try {
-    await regionStore.fetchRegionTree();
-  } catch (error) {
+  const loadRegionTree = regionStore.fetchRegionTree().catch(error => {
     console.error('加载地区数据失败:', error);
-  }
-
-  if (isEdit.value) {
-    loadAddressDetail(formData.id);
-  }
+  });
+  await Promise.all([loadRegionTree, isEdit.value ? loadAddressDetail(formData.id) : undefined]);
 });
 
 // 加载地址详情
 async function loadAddressDetail(id: number) {
+  detailLoading.value = true;
   try {
     const address = await addressStore.fetchAddress(id);
     if (address) {
@@ -151,6 +150,8 @@ async function loadAddressDetail(id: number) {
     }
   } catch (error) {
     console.error('加载地址详情失败:', error);
+  } finally {
+    detailLoading.value = false;
   }
 }
 

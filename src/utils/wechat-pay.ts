@@ -58,14 +58,15 @@ export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDt
             status: PaymentStatus.SUCCESS,
           });
         },
+        // 收银台已拉起，非取消的失败可能已扣款，以订单状态为准
         fail: (err: { errMsg?: string }) => {
           const cancelled = err.errMsg?.includes('cancel') ?? false;
           if (!cancelled) console.error('微信支付失败:', err);
           resolve({
             success: false,
-            message: cancelled ? '已取消支付' : '支付失败',
+            message: cancelled ? '已取消支付' : '支付结果确认中，请稍后在订单中查看',
             outTradeNo: params.outTradeNo,
-            status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.FAILED,
+            status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.PROCESSING,
           });
         },
       });

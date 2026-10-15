@@ -32,7 +32,8 @@ definePage({
 });
 
 import { onMounted, onUnmounted, ref } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onHide, onShow } from '@dcloudio/uni-app';
+import { privacyListenerOwner } from './owner';
 
 defineOptions({
   name: 'UPrivacyPopup',
@@ -46,9 +47,11 @@ const AGREE_BUTTON_ID = 'u-privacy-agree';
 const visible = ref(false);
 const contractName = ref('《隐私保护指引》');
 let resolvePrivacy: PrivacyResolve | null = null;
+const owner = {};
 
 /** 隐私授权监听全局只生效一个，页面每次显示时重新注册到当前页 */
 function register() {
+  privacyListenerOwner.current = owner;
   // #ifdef MP-WEIXIN
   wx.onNeedPrivacyAuthorization(((resolve: PrivacyResolve) => {
     resolvePrivacy = resolve;
@@ -59,6 +62,18 @@ function register() {
       if (res.privacyContractName) contractName.value = res.privacyContractName;
     },
   });
+  // #endif
+}
+
+/**
+ * 页面隐藏或卸载后改为直接拒绝，未放置弹窗的页面调用隐私接口时立即失败，不会一直等待；
+ * 监听已被其他页面的弹窗接管时不覆盖
+ */
+function registerFallback() {
+  if (privacyListenerOwner.current !== owner) return;
+  privacyListenerOwner.current = null;
+  // #ifdef MP-WEIXIN
+  wx.onNeedPrivacyAuthorization(((resolve: PrivacyResolve) => resolve({ event: 'disagree' })) as never);
   // #endif
 }
 
@@ -84,8 +99,10 @@ function openContract() {
 
 onMounted(register);
 onShow(register);
+onHide(registerFallback);
 onUnmounted(() => {
   if (resolvePrivacy) handleDisagree();
+  registerFallback();
 });
 </script>
 

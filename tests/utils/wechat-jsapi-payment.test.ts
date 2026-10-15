@@ -42,10 +42,10 @@ describe('createJsapiPayment', () => {
     });
   });
 
-  it('支付失败时返回失败', async () => {
+  it('收银台返回非取消的失败时以订单状态为准', async () => {
     vi.mocked(uni).requestPayment = vi.fn(({ fail }) => fail({ errMsg: 'requestPayment:fail' })) as never;
 
-    await expect(createJsapiPayment(params)).resolves.toMatchObject({ status: PaymentStatus.FAILED });
+    await expect(createJsapiPayment(params)).resolves.toMatchObject({ status: PaymentStatus.PROCESSING });
   });
 
   it('下单失败时不拉起支付', async () => {
