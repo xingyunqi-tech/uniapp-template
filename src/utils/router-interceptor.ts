@@ -9,7 +9,13 @@
  */
 import { useUserStore } from '@/store/modules/user';
 import { PAGES, WHITE_LIST, PAGE_ROLES } from '@/constants';
-import { isInWhiteList, getPathFromUrl, getCurrentFullPath, getPageStackLength } from '@/utils/router';
+import {
+  isInWhiteList,
+  getPathFromUrl,
+  getCurrentFullPath,
+  getPageStackLength,
+  ROUTE_INTERCEPTED_SUFFIX,
+} from '@/utils/router';
 
 /**
  * 检查页面角色权限
@@ -53,6 +59,22 @@ function getLoginUrl(redirect: string): string {
 const MAX_PAGE_STACK = 10;
 
 type InterceptMethod = 'navigateTo' | 'redirectTo' | 'reLaunch';
+
+interface InterceptArgs {
+  url: string;
+  fail?: (result: UniApp.GeneralCallbackResult) => void;
+  complete?: (result: UniApp.GeneralCallbackResult) => void;
+}
+
+/**
+ * 阻止跳转并以失败结束本次调用，使回调与 Promise 都能收到结果
+ */
+function rejectNavigation(method: InterceptMethod | 'switchTab', args: InterceptArgs): false {
+  const result = { errMsg: `${method}${ROUTE_INTERCEPTED_SUFFIX}` };
+  args.fail?.(result);
+  args.complete?.(result);
+  return false;
+}
 
 /**
  * 打开登录页，沿用原跳转方式；navigateTo 在页面栈已满时改用 redirectTo
@@ -127,8 +149,8 @@ export function setupRouterInterceptor(): void {
 
   interceptMethods.forEach(method => {
     uni.addInterceptor(method, {
-      invoke(args: { url: string }) {
-        return handleRouteIntercept(method, args) ? args : false;
+      invoke(args: InterceptArgs) {
+        return handleRouteIntercept(method, args) ? args : rejectNavigation(method, args);
       },
       fail(err) {
         console.error(`路由跳转失败 [${method}]:`, err);
@@ -138,7 +160,7 @@ export function setupRouterInterceptor(): void {
 
   // switchTab 单独处理：白名单放行，未登录跳登录页（不携带 redirect）
   uni.addInterceptor('switchTab', {
-    invoke(args: { url: string }) {
+    invoke(args: InterceptArgs) {
       const userStore = useUserStore();
 
       if (isInWhiteList(args.url, WHITE_LIST)) {
@@ -152,7 +174,7 @@ export function setupRouterInterceptor(): void {
             url: PAGES.LOGIN,
           });
         }, 0);
-        return false;
+        return rejectNavigation('switchTab', args);
       }
 
       return args;

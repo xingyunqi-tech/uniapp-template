@@ -60,11 +60,13 @@ export function useCountdown(options: UseCountdownOptions = {}): UseCountdownRet
     if (isCounting.value) return;
 
     const targetSeconds = customSeconds ?? seconds;
+    const endTime = Date.now() + targetSeconds * 1000;
     countdown.value = targetSeconds;
     isCounting.value = true;
 
+    // 按结束时间计算剩余秒数，定时器在后台被挂起后恢复时可校正
     timer = setInterval(() => {
-      countdown.value--;
+      countdown.value = Math.max(0, Math.round((endTime - Date.now()) / 1000));
       if (countdown.value <= 0) {
         stop();
         onFinish?.();

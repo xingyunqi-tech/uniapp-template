@@ -58,6 +58,36 @@ describe('useUserStore.refreshToken', () => {
     expect(storage.get(STORAGE_KEYS.TOKEN)).toBe('relogin');
   });
 
+  it('存储中的 Refresh Token 已被其他标签页轮换时使用存储中的值刷新', async () => {
+    setActivePinia(createPinia());
+    const store = useUserStore();
+    store.setToken('old');
+    store.setRefreshToken('refresh-old');
+    storage.set(STORAGE_KEYS.TOKEN, 'rotated');
+    storage.set('refreshToken', 'refresh-rotated');
+
+    const pending = store.refreshToken();
+    refreshDeferred.resolve({ token: 'new', refreshToken: 'refresh-new', tokenExpires: 1 });
+
+    await expect(pending).resolves.toBe('new');
+    expect(refreshDeferred.refreshToken).toHaveBeenLastCalledWith('refresh-rotated');
+    expect(store.refreshTokenValue).toBe('refresh-new');
+  });
+
+  it('其他标签页已登出时不发起刷新，返回 null', async () => {
+    setActivePinia(createPinia());
+    const store = useUserStore();
+    store.setToken('old');
+    store.setRefreshToken('refresh-old');
+    storage.remove(STORAGE_KEYS.TOKEN);
+    storage.remove('refreshToken');
+    refreshDeferred.refreshToken.mockClear();
+
+    await expect(store.refreshToken()).resolves.toBeNull();
+    expect(refreshDeferred.refreshToken).not.toHaveBeenCalled();
+    expect(store.isLoggedIn).toBe(false);
+  });
+
   it('刷新接口返回 401 时返回 null', async () => {
     setActivePinia(createPinia());
     const store = useUserStore();

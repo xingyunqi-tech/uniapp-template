@@ -27,6 +27,17 @@ export interface NavigateOptions {
   events?: Record<string, (...args: any[]) => void>;
 }
 
+/** 路由拦截器阻止跳转时失败信息的后缀 */
+export const ROUTE_INTERCEPTED_SUFFIX = ':fail intercepted';
+
+/**
+ * 是否为路由拦截器阻止跳转产生的失败
+ */
+export function isRouteIntercepted(error: unknown): boolean {
+  const errMsg = (error as { errMsg?: unknown } | null)?.errMsg;
+  return typeof errMsg === 'string' && errMsg.endsWith(ROUTE_INTERCEPTED_SUFFIX);
+}
+
 export interface QueryParams {
   [key: string]: string | number | boolean | undefined;
 }
@@ -43,18 +54,30 @@ function buildQueryString(params?: QueryParams): string {
   return query ? `?${query}` : '';
 }
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 /**
- * 解析 URL 查询参数
+ * 解析 URL 查询参数：值按第一个 = 拆分，忽略 # 之后的片段，编码格式错误时保留原值
  */
 export function parseQuery(url: string): QueryParams {
-  const queryString = url.split('?')[1];
+  const queryIndex = url.indexOf('?');
+  if (queryIndex === -1) return {};
+  const queryString = url.slice(queryIndex + 1).split('#')[0];
   if (!queryString) return {};
 
   return queryString.split('&').reduce(
     (params, pair) => {
-      const [key, value] = pair.split('=');
+      const separatorIndex = pair.indexOf('=');
+      const key = separatorIndex === -1 ? pair : pair.slice(0, separatorIndex);
+      const value = separatorIndex === -1 ? '' : pair.slice(separatorIndex + 1);
       if (key) {
-        params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+        params[safeDecode(key)] = safeDecode(value);
       }
       return params;
     },

@@ -100,7 +100,7 @@ import { useNotificationStore } from '@/store/modules/notification';
 import { useGlobalStore } from '@/store/modules/global';
 import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
-import { getPathFromUrl, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
+import { getPathFromUrl, isRouteIntercepted, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
 import { PAGES } from '@/constants';
 
 // ==================== Store ====================
@@ -202,6 +202,7 @@ async function openLink(url: string) {
       await navigateTo(pagePath);
     }
   } catch (error) {
+    if (isRouteIntercepted(error)) return;
     console.error('通知跳转失败:', error);
     uni.showToast({ title: '页面无法打开', icon: 'none' });
   }

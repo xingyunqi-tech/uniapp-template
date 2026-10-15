@@ -2,6 +2,7 @@
  * 错误上报工具
  * 统一管理应用的错误收集和上报
  */
+import { isRouteIntercepted } from '@/utils/router';
 
 // ==================== 类型定义 ====================
 
@@ -562,6 +563,10 @@ function setupH5GlobalListeners(): void {
 
   // 未处理的 Promise 拒绝
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    if (isRouteIntercepted(event.reason)) {
+      event.preventDefault();
+      return;
+    }
     if (globalOptions.consoleLog) {
       console.error('[H5 UnhandledRejection]', event.reason);
     }
@@ -635,6 +640,7 @@ export function getGlobalErrorHandlers(): GlobalErrorHandlers {
       reportError(error, 'js', 'error', { source: 'onError' });
     },
     onUnhandledRejection: (event: { reason: unknown; promise: Promise<unknown> }) => {
+      if (isRouteIntercepted(event.reason)) return;
       if (globalOptions.consoleLog) {
         console.error('[Unhandled Promise Rejection]', event.reason);
       }

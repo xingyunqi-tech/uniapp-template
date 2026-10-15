@@ -282,6 +282,14 @@ export const useUserStore = defineStore(
      * 刷新 Token：凭证失效返回 null（登录态由请求拦截器统一清理），网络错误或服务端 5xx 时抛出
      */
     async function refreshToken(): Promise<string | null> {
+      // H5 多标签页共享存储，其他标签页可能已轮换凭证，以存储中的值为准
+      const storedRefreshToken = storage.get<string>('refreshToken') || '';
+      if (storedRefreshToken !== refreshTokenValue.value) {
+        token.value = storage.get<string>(STORAGE_KEYS.TOKEN) || '';
+        refreshTokenValue.value = storedRefreshToken;
+        tokenExpires.value = storage.get<number>('tokenExpires') || 0;
+      }
+
       if (!refreshTokenValue.value) {
         return null;
       }

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vite
 import { createPinia, setActivePinia } from 'pinia';
 import { useUserStore } from '@/store/modules/user';
 import { guardCurrentPage, setupRouterInterceptor } from '@/utils/router-interceptor';
+import { isRouteIntercepted } from '@/utils/router';
+import { PAGE_ROLES, ROLE } from '@/constants';
 
 const getCurrentPagesMock = getCurrentPages as unknown as Mock;
 const loginWithRedirect = (path: string) => `/pages/login/index?redirect=${encodeURIComponent(path)}`;
@@ -62,7 +64,8 @@ describe('guardCurrentPage', () => {
 });
 
 describe('路由拦截器', () => {
-  type Invoke = (args: { url: string }) => { url: string } | false;
+  type InvokeArgs = { url: string; fail?: (result: { errMsg: string }) => void; complete?: () => void };
+  type Invoke = (args: InvokeArgs) => InvokeArgs | false;
   const invokers = new Map<string, Invoke>();
 
   beforeEach(() => {
@@ -112,8 +115,47 @@ describe('路由拦截器', () => {
 
   it('已登录跳转受保护页时放行', () => {
     useUserStore().setToken('token');
-    const args = { url: '/pages-sub/order/list/index' };
+    const fail = vi.fn();
+    const args = { url: '/pages-sub/order/list/index', fail };
 
     expect(invokers.get('navigateTo')?.(args)).toBe(args);
+    expect(fail).not.toHaveBeenCalled();
+  });
+
+  it('未登录被拦截时以失败结束本次调用', () => {
+    const fail = vi.fn();
+    const complete = vi.fn();
+
+    const result = invokers.get('navigateTo')?.({ url: '/pages-sub/order/list/index', fail, complete });
+
+    expect(result).toBe(false);
+    expect(fail).toHaveBeenCalledWith({ errMsg: 'navigateTo:fail intercepted' });
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(isRouteIntercepted(fail.mock.calls[0][0])).toBe(true);
+  });
+
+  it('无页面权限被拦截时以失败结束本次调用', () => {
+    const path = '/pages-sub/order/list/index';
+    PAGE_ROLES[path] = [ROLE.ADMIN];
+    try {
+      useUserStore().setToken('token');
+      const fail = vi.fn();
+
+      const result = invokers.get('redirectTo')?.({ url: path, fail });
+
+      expect(result).toBe(false);
+      expect(fail).toHaveBeenCalledWith({ errMsg: 'redirectTo:fail intercepted' });
+    } finally {
+      delete PAGE_ROLES[path];
+    }
+  });
+
+  it('switchTab 未登录被拦截时以失败结束本次调用', () => {
+    const fail = vi.fn();
+
+    const result = invokers.get('switchTab')?.({ url: '/pages-sub/order/list/index', fail });
+
+    expect(result).toBe(false);
+    expect(fail).toHaveBeenCalledWith({ errMsg: 'switchTab:fail intercepted' });
   });
 });
