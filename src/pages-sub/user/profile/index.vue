@@ -372,9 +372,5 @@ function handleSave() {
       color: var(--color-text-secondary);
     }
   }
-
-  :deep(.u-menu-group__list) {
-    padding: 0 24rpx;
-  }
 }
 </style>

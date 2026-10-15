@@ -41,8 +41,8 @@ withDefaults(defineProps<Props>(), {
     font-size: var(--font-size-sm);
   }
 
+  // 不设左右内边距，菜单项的按下态铺满整行；行内留白由 UMenuItem / UFormItem 自身提供
   &__list {
-    padding: 0 var(--spacing-base);
     overflow: hidden;
     border-radius: var(--radius-lg);
     background: var(--color-bg-card);

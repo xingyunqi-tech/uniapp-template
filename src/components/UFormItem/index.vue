@@ -140,11 +140,11 @@ function handleClick() {
   }
 }
 
-// 覆盖 uni-forms-item 默认样式：去掉为校验提示预留的下边距，上下留白一致，标签与内容垂直居中
+// 覆盖 uni-forms-item 默认样式：去掉为校验提示预留的下边距，左右留白与 UMenuItem 一致，标签与内容垂直居中
 .u-form-item :deep(.uni-forms-item) {
   align-items: center;
   margin-bottom: 0;
-  padding: var(--spacing-base) 0;
+  padding: var(--spacing-base) var(--spacing-lg);
 }
 
 .u-form-item--top :deep(.uni-forms-item) {
