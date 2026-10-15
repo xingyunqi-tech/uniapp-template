@@ -38,9 +38,9 @@
         @send="handleSendCode"
       />
 
-      <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleLogin">
+      <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleLogin">
         {{ loading ? '登录中...' : '登录' }}
-      </button>
+      </UButton>
 
       <view class="login-agreement">
         <UAgreementCheck v-model="agreed" prefix="登录即表示同意" />
@@ -343,24 +343,7 @@ function goToForgotPassword() {
   gap: 32rpx;
 
   .submit-btn {
-    width: 100%;
-    height: 96rpx;
     margin-top: 16rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-    font-weight: 500;
-    line-height: 96rpx;
-
-    &:active {
-      opacity: 0.8;
-    }
-
-    &[disabled] {
-      opacity: 0.6;
-    }
   }
 }
 

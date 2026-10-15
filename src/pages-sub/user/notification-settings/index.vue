@@ -5,7 +5,7 @@
 
     <!-- 错误状态 -->
     <UEmpty v-else-if="error" type="error" text="加载失败，请重试">
-      <button class="retry-button" @click="loadSettings">重试</button>
+      <UButton type="primary" size="small" text="重试" @click="loadSettings" />
     </UEmpty>
 
     <!-- 空状态 -->
@@ -205,19 +205,6 @@ async function handleToggle(
     color: var(--color-text-secondary);
     font-size: 24rpx;
     line-height: 1.6;
-  }
-}
-
-.retry-button {
-  padding: 16rpx 48rpx;
-  border: none;
-  border-radius: 8rpx;
-  background: var(--color-primary);
-  color: var(--color-bg);
-  font-size: 28rpx;
-
-  &::after {
-    border: none;
   }
 }
 </style>

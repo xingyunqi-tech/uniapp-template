@@ -4,15 +4,14 @@
     用于表单提交、确认操作等场景
   -->
   <view class="u-fixed-button">
-    <button
-      :class="['u-fixed-btn', type, { 'button-disabled': disabled || loading }]"
-      :disabled="disabled || loading"
+    <UButton
+      :type="type"
+      block
+      :text="loading ? loadingText : text"
+      :loading="loading"
+      :disabled="disabled"
       @click="handleClick"
-    >
-      <slot>
-        {{ loading ? loadingText : text }}
-      </slot>
-    </button>
+    />
   </view>
 </template>
 
@@ -69,45 +68,5 @@ function handleClick() {
   padding-bottom: calc(var(--spacing-base) + var(--safe-area-inset-bottom));
   background: var(--color-bg);
   box-shadow: var(--shadow-light);
-
-  .u-fixed-btn {
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    color: var(--color-text-inverse);
-    font-size: var(--font-size-lg);
-    line-height: 96rpx;
-
-    &::after {
-      display: none;
-    }
-
-    &.primary {
-      background: var(--color-primary);
-    }
-
-    &.danger {
-      background: var(--color-error);
-    }
-
-    &.default {
-      border: var(--border-width-base) solid var(--color-border);
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
-  }
-
-  .u-fixed-btn.button-disabled {
-    opacity: var(--opacity-disabled);
-  }
-
-  .u-fixed-btn:active {
-    opacity: var(--opacity-hover);
-  }
-
-  .u-fixed-btn.button-disabled:active {
-    opacity: var(--opacity-disabled);
-  }
 }
 </style>

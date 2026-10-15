@@ -21,11 +21,15 @@
 
     <!-- 操作按钮 -->
     <view class="actions">
-      <button v-if="orderId && (state === 'unpaid' || state === 'error')" class="btn-primary" @tap="handleRefresh">
-        刷新支付结果
-      </button>
-      <button v-if="orderId" class="btn-default" @tap="handleViewOrder">查看订单</button>
-      <button class="btn-default" @tap="handleBackHome">返回首页</button>
+      <UButton
+        v-if="orderId && (state === 'unpaid' || state === 'error')"
+        type="primary"
+        block
+        text="刷新支付结果"
+        @click="handleRefresh"
+      />
+      <UButton v-if="orderId" block text="查看订单" @click="handleViewOrder" />
+      <UButton block text="返回首页" @click="handleBackHome" />
     </view>
   </view>
 </template>
@@ -181,23 +185,5 @@ function handleBackHome() {
   flex-direction: column;
   width: 100%;
   gap: 24rpx;
-
-  button {
-    width: 100%;
-    height: 88rpx;
-    border: none;
-    border-radius: 16rpx;
-    font-size: 32rpx;
-
-    &.btn-primary {
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-    }
-
-    &.btn-default {
-      background: var(--color-bg-grey);
-      color: var(--color-text);
-    }
-  }
 }
 </style>

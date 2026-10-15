@@ -12,8 +12,8 @@
     <view v-if="error" class="error-state">
       <UEmpty type="error" text="页面加载失败">
         <view class="error-actions">
-          <button v-if="url" class="retry-btn" @click="handleRetry">重新加载</button>
-          <button class="back-btn" @click="handleBack">返回上一页</button>
+          <UButton v-if="url" type="primary" size="medium" text="重新加载" @click="handleRetry" />
+          <UButton size="medium" text="返回上一页" @click="handleBack" />
         </view>
       </UEmpty>
       <text class="error-desc">{{ errorMessage }}</text>
@@ -280,31 +280,6 @@ function handleBack() {
   .error-actions {
     display: flex;
     gap: 24rpx;
-
-    .retry-btn,
-    .back-btn {
-      width: 240rpx;
-      height: 80rpx;
-      border-radius: var(--radius-base);
-      font-size: 28rpx;
-      line-height: 80rpx;
-
-      &::after {
-        display: none;
-      }
-    }
-
-    .retry-btn {
-      border: none;
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-    }
-
-    .back-btn {
-      border: 1px solid var(--color-border);
-      background: var(--color-bg);
-      color: var(--color-text);
-    }
   }
 }
 </style>

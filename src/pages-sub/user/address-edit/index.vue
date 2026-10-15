@@ -50,7 +50,7 @@
 
     <!-- 删除地址按钮 -->
     <view v-if="isEdit" class="delete-section">
-      <button class="delete-btn" @click="handleDelete">删除地址</button>
+      <UButton class="delete-btn" type="danger" plain block text="删除地址" @click="handleDelete" />
     </view>
 
     <!-- 保存按钮 -->
@@ -307,23 +307,7 @@ function handleDelete() {
   padding: 48rpx 24rpx;
 
   .delete-btn {
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
     box-shadow: var(--shadow-sm);
-    color: var(--color-error);
-    font-size: 32rpx;
-    line-height: 96rpx;
-
-    &::after {
-      display: none;
-    }
-
-    &:active {
-      opacity: 0.8;
-    }
   }
 }
 </style>

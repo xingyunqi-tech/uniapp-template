@@ -30,10 +30,10 @@
 
     <!-- 添加地址按钮 -->
     <view class="add-btn-wrapper">
-      <button class="add-btn" @click="handleAdd">
+      <UButton class="add-btn" type="primary" block @click="handleAdd">
         <uni-icons type="plusempty" color="inherit" size="36rpx" />
         <text>添加新地址</text>
-      </button>
+      </UButton>
     </view>
   </view>
 </template>
@@ -208,21 +208,7 @@ function handleDelete(item: Address) {
   box-shadow: var(--shadow-light);
 
   .add-btn {
-    display: flex;
     gap: 12rpx;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-
-    &::after {
-      display: none;
-    }
   }
 }
 </style>

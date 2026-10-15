@@ -21,6 +21,8 @@ export default defineManifestConfig({
       minified: true,
     },
     usingComponents: true,
+    // virtualHost 组件把父级传入的 class / style 合并到根节点（UButton 依赖）
+    mergeVirtualHostAttributes: true,
     // 按需注入组件，优化启动性能
     lazyCodeLoading: 'requiredComponents',
     // 分包优化
@@ -35,6 +37,8 @@ export default defineManifestConfig({
     usingComponents: true,
     // 启用 component2 编译模式
     component2: true,
+    // virtualHost 组件把父级传入的 class / style 合并到根节点（UButton 依赖）
+    mergeVirtualHostAttributes: true,
   },
 
   /* 百度小程序配置 */

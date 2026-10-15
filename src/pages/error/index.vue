@@ -7,8 +7,8 @@
       <!-- 使用 UEmpty 显示错误状态 -->
       <UEmpty type="error" :text="errorTitle" :icon="errorIcon">
         <view class="error-actions">
-          <button class="action-btn primary" @click="goHome">返回首页</button>
-          <button v-if="canGoBack" class="action-btn" @click="goBack">返回上页</button>
+          <UButton type="primary" block text="返回首页" @click="goHome" />
+          <UButton v-if="canGoBack" block text="返回上页" @click="goBack" />
         </view>
       </UEmpty>
 
@@ -142,30 +142,5 @@ function goBack() {
   flex-direction: column;
   gap: 24rpx;
   width: 100%;
-
-  .action-btn {
-    width: 100%;
-    height: 88rpx;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    color: var(--color-text);
-    font-size: 30rpx;
-    line-height: 88rpx;
-
-    &::after {
-      display: none;
-    }
-
-    &:active {
-      opacity: 0.8;
-    }
-
-    &.primary {
-      border: none;
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-    }
-  }
 }
 </style>

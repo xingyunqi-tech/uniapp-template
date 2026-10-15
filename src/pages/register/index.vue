@@ -34,9 +34,9 @@
         :clearable="true"
       />
 
-      <button class="submit-btn" :loading="loading" :disabled="loading" @click="handleRegister">
+      <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleRegister">
         {{ loading ? '注册中...' : '注册' }}
-      </button>
+      </UButton>
     </view>
 
     <!-- 登录链接 -->
@@ -167,24 +167,7 @@ function goToLogin() {
   gap: 32rpx;
 
   .submit-btn {
-    width: 100%;
-    height: 96rpx;
     margin-top: 16rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-    font-weight: 500;
-    line-height: 96rpx;
-
-    &:active {
-      opacity: 0.8;
-    }
-
-    &[disabled] {
-      opacity: 0.6;
-    }
   }
 }
 

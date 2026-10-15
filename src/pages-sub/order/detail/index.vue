@@ -7,7 +7,7 @@
       <view class="status-card" :class="getOrderStatusClass(order.status)">
         <view class="status-info">
           <text class="status-text">{{ getOrderStatusText(order.status) }}</text>
-          <text class="status-time">{{ formatTime(order.createdAt) }}</text>
+          <text class="status-time">{{ formatDateTime(order.createdAt) }}</text>
         </view>
       </view>
 
@@ -22,11 +22,11 @@
         </view>
         <view class="info-row">
           <text class="label">创建时间</text>
-          <text class="value">{{ formatTime(order.createdAt) }}</text>
+          <text class="value">{{ formatDateTime(order.createdAt) }}</text>
         </view>
         <view v-if="order.paidAt" class="info-row">
           <text class="label">支付时间</text>
-          <text class="value">{{ formatTime(order.paidAt) }}</text>
+          <text class="value">{{ formatDateTime(order.paidAt) }}</text>
         </view>
         <view v-if="order.paymentChannel" class="info-row">
           <text class="label">支付渠道</text>
@@ -41,11 +41,11 @@
         </view>
         <view v-if="order.refundedAt" class="info-row">
           <text class="label">退款时间</text>
-          <text class="value">{{ formatTime(order.refundedAt) }}</text>
+          <text class="value">{{ formatDateTime(order.refundedAt) }}</text>
         </view>
         <view v-if="order.closedAt" class="info-row">
           <text class="label">关闭时间</text>
-          <text class="value">{{ formatTime(order.closedAt) }}</text>
+          <text class="value">{{ formatDateTime(order.closedAt) }}</text>
         </view>
       </view>
 
@@ -54,15 +54,15 @@
         <view class="card-title">金额明细</view>
         <view class="amount-row">
           <text class="label">订单总额</text>
-          <text class="value">¥{{ formatAmount(order.totalAmount) }}</text>
+          <text class="value">¥{{ formatMoney(order.totalAmount) }}</text>
         </view>
         <view v-if="order.paidAmount" class="amount-row total">
           <text class="label">实付金额</text>
-          <text class="value">¥{{ formatAmount(order.paidAmount) }}</text>
+          <text class="value">¥{{ formatMoney(order.paidAmount) }}</text>
         </view>
         <view v-if="order.refundedAmount > 0" class="amount-row">
           <text class="label">已退款</text>
-          <text class="value">-¥{{ formatAmount(order.refundedAmount) }}</text>
+          <text class="value">-¥{{ formatMoney(order.refundedAmount) }}</text>
         </view>
       </view>
 
@@ -78,8 +78,16 @@
 
     <!-- 底部操作栏 -->
     <view v-if="order && (canCancel || canPay)" class="footer-actions">
-      <button v-if="canCancel" class="action-btn cancel" @click="handleCancel">取消订单</button>
-      <button v-if="canPay" class="action-btn primary" :disabled="paying" @click="handlePay">立即支付</button>
+      <UButton v-if="canCancel" class="action-btn" size="medium" text="取消订单" @click="handleCancel" />
+      <UButton
+        v-if="canPay"
+        class="action-btn"
+        type="primary"
+        size="medium"
+        text="立即支付"
+        :loading="paying"
+        @click="handlePay"
+      />
     </view>
 
     <UPrivacyPopup />
@@ -97,10 +105,9 @@ import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { usePayment } from '@/composables';
 import { useGlobalStore, useOrderStore } from '@/store';
-import { OrderStatus, getOrderStatusText, getOrderStatusClass } from '@/constants';
-import { confirm } from '@/utils';
+import { OrderStatus, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
+import { confirm, formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
-import type { OrderPaymentChannel } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
@@ -144,25 +151,6 @@ async function loadOrderDetail() {
   } finally {
     loading.value = false;
   }
-}
-
-// 格式化时间
-function formatTime(time: string): string {
-  return formatDateTime(time);
-}
-
-// 格式化金额（分转元）
-function formatAmount(amount: number): string {
-  return (amount / 100).toFixed(2);
-}
-
-// 获取支付渠道文本
-function getPaymentChannelText(channel: OrderPaymentChannel): string {
-  const channelMap: Record<OrderPaymentChannel, string> = {
-    WECHAT: '微信支付',
-    ALIPAY: '支付宝',
-  };
-  return channelMap[channel] || channel;
 }
 
 // 复制订单号
@@ -356,28 +344,6 @@ async function handlePay() {
 
   .action-btn {
     flex: 1;
-    height: 80rpx;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    background: var(--color-bg);
-    color: var(--color-text);
-    font-size: 28rpx;
-    line-height: 78rpx;
-
-    &::after {
-      display: none;
-    }
-
-    &.primary {
-      border-color: var(--color-primary);
-      background: var(--color-primary);
-      color: var(--color-text-inverse);
-    }
-
-    &.cancel {
-      border-color: var(--color-text-secondary);
-      color: var(--color-text-secondary);
-    }
   }
 }
 </style>

@@ -45,6 +45,7 @@
     "__usePrivacyCheck__": true,
     "darkmode": true,
     "themeLocation": "theme.json",
+    "mergeVirtualHostAttributes": true,
     "lazyCodeLoading": "requiredComponents",
     "optimization": {
       "subPackages": true
@@ -53,7 +54,8 @@
   "mp-alipay": {
     "usingComponents": true,
     "appid": "2021006117665527",
-    "component2": true
+    "component2": true,
+    "mergeVirtualHostAttributes": true
   },
   "mp-baidu": {
     "usingComponents": true

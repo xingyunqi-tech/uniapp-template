@@ -31,7 +31,7 @@
         @send="handleSendCode"
       />
 
-      <button class="submit-btn" @click="handleNext">下一步</button>
+      <UButton class="submit-btn" type="primary" block text="下一步" @click="handleNext" />
     </view>
 
     <!-- 第二步：设置新密码 -->
@@ -63,9 +63,9 @@
         :has-number="pwdStrength.hasNumber.value"
       />
 
-      <button class="submit-btn" :loading="submitting" :disabled="submitting" @click="handleReset">
+      <UButton class="submit-btn" type="primary" block :loading="submitting" @click="handleReset">
         {{ submitting ? '提交中...' : '重置密码' }}
-      </button>
+      </UButton>
     </view>
 
     <!-- 返回登录 -->
@@ -260,24 +260,7 @@ function goBack() {
   gap: 32rpx;
 
   .submit-btn {
-    width: 100%;
-    height: 96rpx;
     margin-top: 16rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-    font-weight: 500;
-    line-height: 96rpx;
-
-    &:active {
-      opacity: 0.8;
-    }
-
-    &[disabled] {
-      opacity: 0.6;
-    }
   }
 }
 

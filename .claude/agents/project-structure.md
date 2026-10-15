@@ -165,6 +165,8 @@ src/components/
 │   └── index.vue
 ├── UFormItem/              # 表单项
 │   └── index.vue
+├── UButton/                # 按钮
+│   └── index.vue
 ├── UFixedButton/           # 固定按钮
 │   └── index.vue
 ├── URichText/              # 富文本

@@ -20,6 +20,10 @@ export { default as UBanner } from './UBanner/index.vue';
 // 空状态组件 (uni-ui 无此组件)
 export { default as UEmpty } from './UEmpty/index.vue';
 
+// 按钮 (类型、尺寸、加载与禁用状态、小程序 open-type)
+export { default as UButton } from './UButton/index.vue';
+export type { UButtonProps, ButtonType, ButtonSize } from './UButton/index.vue';
+
 // 固定位置按钮
 export { default as UFixedButton } from './UFixedButton/index.vue';
 

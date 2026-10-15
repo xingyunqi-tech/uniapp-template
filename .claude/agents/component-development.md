@@ -146,6 +146,7 @@ easycom: {
 | `UMenuItem` | 菜单项 |
 | `UMenuGroup` | 菜单组 |
 | `UFormItem` | 表单项 |
+| `UButton` | 按钮 |
 | `UFixedButton` | 固定按钮 |
 | `URichText` | 富文本 |
 | `USmsInput` | 短信验证码输入 |

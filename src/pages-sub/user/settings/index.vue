@@ -59,7 +59,7 @@
 
     <!-- 退出登录按钮 -->
     <view v-if="isLoggedIn" class="logout-section">
-      <button class="logout-btn" @click="handleLogout">退出登录</button>
+      <UButton class="logout-btn" type="danger" plain block text="退出登录" @click="handleLogout" />
       <text class="delete-account" @click="handleDeleteAccount">注销账号</text>
     </view>
 
@@ -87,14 +87,13 @@
           />
           <text class="delete-form__switch" @click="verifyMode = 'password'">使用密码验证</text>
         </template>
-        <button
-          class="delete-form__submit"
+        <UButton
+          type="danger"
+          block
+          text="确认注销"
           :loading="deleteAccountAction.loading.value"
-          :disabled="deleteAccountAction.loading.value"
           @click="handleConfirmDelete"
-        >
-          确认注销
-        </button>
+        />
       </view>
     </UPopup>
   </view>
@@ -317,23 +316,7 @@ function handleToggleLocale(checked: boolean) {
   }
 
   .logout-btn {
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
     box-shadow: var(--shadow-sm);
-    color: var(--color-error);
-    font-size: 32rpx;
-    line-height: 96rpx;
-
-    &:active {
-      opacity: 0.8;
-    }
-
-    &::after {
-      display: none;
-    }
   }
 }
 
@@ -354,25 +337,6 @@ function handleToggleLocale(checked: boolean) {
     align-self: flex-end;
     color: var(--color-primary);
     font-size: 26rpx;
-  }
-
-  &__submit {
-    width: 100%;
-    height: 96rpx;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: var(--color-error);
-    color: var(--color-text-inverse);
-    font-size: 32rpx;
-    line-height: 96rpx;
-
-    &[disabled] {
-      opacity: 0.6;
-    }
-
-    &::after {
-      display: none;
-    }
   }
 }
 </style>

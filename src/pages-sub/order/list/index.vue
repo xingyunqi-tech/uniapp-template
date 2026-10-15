@@ -14,7 +14,7 @@
     >
       <!-- 空状态 -->
       <UEmpty v-if="!loading && orderList.length === 0" type="cart" text="暂无订单">
-        <button class="empty-btn" @click="handleGoShopping">去逛逛</button>
+        <UButton type="primary" size="small" text="去逛逛" @click="handleGoShopping" />
       </UEmpty>
 
       <!-- 订单卡片 -->
@@ -34,15 +34,15 @@
         <view class="order-info">
           <view class="info-row">
             <text class="info-label">订单金额</text>
-            <text class="info-value price">¥{{ formatAmount(order.totalAmount) }}</text>
+            <text class="info-value price">¥{{ formatMoney(order.totalAmount) }}</text>
           </view>
           <view v-if="order.paidAmount" class="info-row">
             <text class="info-label">已付金额</text>
-            <text class="info-value">¥{{ formatAmount(order.paidAmount) }}</text>
+            <text class="info-value">¥{{ formatMoney(order.paidAmount) }}</text>
           </view>
           <view class="info-row">
             <text class="info-label">下单时间</text>
-            <text class="info-value">{{ formatTime(order.createdAt) }}</text>
+            <text class="info-value">{{ formatDateTime(order.createdAt, 'YYYY-MM-DD HH:mm') }}</text>
           </view>
           <view v-if="order.paymentChannel" class="info-row">
             <text class="info-label">支付渠道</text>
@@ -51,22 +51,21 @@
         </view>
 
         <view class="order-footer">
-          <view class="order-actions">
-            <button
+          <view class="order-actions" @click.stop>
+            <UButton
               v-if="order.status === OrderStatus.UNPAID"
-              class="action-btn cancel"
-              @click.stop="handleCancel(orderStore.getOrderIdString(order.id))"
-            >
-              取消订单
-            </button>
-            <button
+              size="small"
+              text="取消订单"
+              @click="handleCancel(orderStore.getOrderIdString(order.id))"
+            />
+            <UButton
               v-if="order.status === OrderStatus.UNPAID"
-              class="action-btn primary"
+              type="primary"
+              size="small"
+              text="立即支付"
               :disabled="paying"
-              @click.stop="handlePay(order)"
-            >
-              立即支付
-            </button>
+              @click="handlePay(order)"
+            />
           </view>
         </view>
       </view>
@@ -87,12 +86,13 @@ definePage({
 import { ref, computed } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
-import { confirm } from '@/utils';
+import { confirm, formatMoney } from '@/utils';
+import { formatDateTime } from '@/utils/datetime';
 import { usePayment } from '@/composables';
 import type { LoadMoreStatus, TabItem } from '@/components';
-import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass } from '@/constants';
+import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
 import { PAGES } from '@/constants';
-import type { Order, OrderPaymentChannel } from '@/api';
+import type { Order } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
@@ -217,26 +217,6 @@ function handleGoShopping() {
     url: PAGES.HOME,
   });
 }
-
-// 格式化金额（分转元）
-function formatAmount(amount: number): string {
-  return (amount / 100).toFixed(2);
-}
-
-// 格式化时间
-function formatTime(time: string): string {
-  const date = new Date(time);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-// 获取支付渠道文本
-function getPaymentChannelText(channel: OrderPaymentChannel): string {
-  const channelMap: Record<OrderPaymentChannel, string> = {
-    WECHAT: '微信支付',
-    ALIPAY: '支付宝',
-  };
-  return channelMap[channel] || channel;
-}
 </script>
 
 <style scoped lang="scss">
@@ -253,22 +233,6 @@ function getPaymentChannelText(channel: OrderPaymentChannel): string {
   flex: 1;
   width: 100%;
   padding: 24rpx;
-}
-
-// 空状态按钮
-.empty-btn {
-  width: 240rpx;
-  height: 72rpx;
-  border: none;
-  border-radius: var(--radius-base);
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  font-size: 28rpx;
-  line-height: 72rpx;
-
-  &::after {
-    display: none;
-  }
 }
 
 // 订单卡片
@@ -358,32 +322,6 @@ function getPaymentChannelText(channel: OrderPaymentChannel): string {
     .order-actions {
       display: flex;
       gap: 16rpx;
-
-      .action-btn {
-        height: 60rpx;
-        padding: 0 24rpx;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-base);
-        background: var(--color-bg);
-        color: var(--color-text);
-        font-size: 26rpx;
-        line-height: 58rpx;
-
-        &::after {
-          display: none;
-        }
-
-        &.primary {
-          border-color: var(--color-primary);
-          background: var(--color-primary);
-          color: var(--color-text-inverse);
-        }
-
-        &.cancel {
-          border-color: var(--color-text-secondary);
-          color: var(--color-text-secondary);
-        }
-      }
     }
   }
 }

@@ -4,7 +4,7 @@
  * 注意: 订单状态直接从 API 导入，确保与后端保持一致
  */
 
-import { OrderStatus } from '@/api';
+import { OrderStatus, type OrderPaymentChannel } from '@/api';
 
 // 重导出 API 类型，供其他模块使用
 export { OrderStatus };
@@ -55,6 +55,21 @@ export function getOrderStatusText(status: OrderStatus): string {
  */
 export function getOrderStatusClass(status: OrderStatus): string {
   return ORDER_STATUS_MAP[status]?.class ?? '';
+}
+
+/**
+ * 支付渠道显示文本
+ */
+export const PAYMENT_CHANNEL_TEXT: Record<OrderPaymentChannel, string> = {
+  WECHAT: '微信支付',
+  ALIPAY: '支付宝',
+};
+
+/**
+ * 获取支付渠道文本
+ */
+export function getPaymentChannelText(channel: OrderPaymentChannel): string {
+  return PAYMENT_CHANNEL_TEXT[channel] ?? channel;
 }
 
 /**
