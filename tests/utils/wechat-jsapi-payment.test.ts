@@ -28,7 +28,7 @@ describe('createJsapiPayment', () => {
     vi.mocked(uni).requestPayment = vi.fn(({ success }) => success({})) as never;
 
     await expect(createJsapiPayment(params)).resolves.toMatchObject({ success: true, status: PaymentStatus.SUCCESS });
-    expect(createJsapi).toHaveBeenCalledWith({ ...params, code: 'LOGIN1' });
+    expect(createJsapi).toHaveBeenCalledWith({ ...params, code: 'LOGIN1' }, { showError: false });
     expect(uni.requestPayment).toHaveBeenCalledWith(expect.objectContaining({ provider: 'wxpay', ...paymentData }));
   });
 

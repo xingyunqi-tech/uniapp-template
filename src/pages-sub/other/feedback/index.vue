@@ -79,7 +79,8 @@ definePage({
 
 import { reactive, computed, ref } from 'vue';
 import type { UFormExpose } from '@/components/UForm/context';
-import { useAsyncAction, useSafeBack } from '@/composables';
+import { isUserDenied, promptOpenSettings, useAsyncAction, useSafeBack } from '@/composables';
+import { isUserCancel } from '@/utils/platform';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFeedbackStore } from '@/store/modules/feedback';
 import { PAGES, PHONE_LENGTH } from '@/constants';
@@ -158,6 +159,16 @@ function chooseImage() {
       const start = formData.images.length;
       formData.images.push(...(res.tempFilePaths as string[]).map(path => ({ path, url: '' })));
       formData.images.slice(start).forEach(uploadImage);
+    },
+    fail: (err: { errMsg?: string }) => {
+      if (isUserCancel(err)) return;
+      console.error('选择图片失败:', err);
+      if (isUserDenied(err)) {
+        promptOpenSettings('需要相册或相机权限才能添加图片，请在设置中开启');
+        return;
+      }
+      const privacyDenied = err.errMsg?.includes('privacy');
+      uni.showToast({ title: privacyDenied ? '未获得相册或相机使用授权' : '无法选择图片', icon: 'none' });
     },
   });
 }

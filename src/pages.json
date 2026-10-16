@@ -231,6 +231,13 @@
           "style": {
             "navigationBarTitleText": "加载中..."
           }
+        },
+        {
+          "path": "component-demo/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "组件演示"
+          }
         }
       ]
     }

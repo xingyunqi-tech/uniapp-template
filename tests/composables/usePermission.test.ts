@@ -7,7 +7,7 @@ vi.mock('@/utils/platform', () => ({
   isAlipay: () => platform.alipay,
 }));
 
-import { usePermission } from '@/composables/usePermission';
+import { isUserDenied, promptOpenSettings, usePermission } from '@/composables/usePermission';
 
 const uniMock = uni as unknown as Record<string, ReturnType<typeof vi.fn>>;
 
@@ -71,5 +71,44 @@ describe('usePermission', () => {
 
     await expect(request()).resolves.toBe(false);
     expect(uniMock.showModal).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('isUserDenied', () => {
+  it.each([
+    'chooseImage:fail auth deny',
+    'authorize:fail auth denied',
+    'chooseImage:fail permission denied',
+    'chooseImage:fail No Permission',
+  ])('%s 视为用户拒绝', errMsg => {
+    expect(isUserDenied({ errMsg })).toBe(true);
+  });
+
+  it('其他失败不视为用户拒绝', () => {
+    expect(isUserDenied({ errMsg: 'chooseImage:fail cancel' })).toBe(false);
+  });
+});
+
+describe('promptOpenSettings', () => {
+  beforeEach(() => {
+    uniMock.openSetting = vi.fn(({ complete }) => complete?.());
+    uniMock.openAppAuthorizeSetting = vi.fn(({ complete }) => complete?.());
+  });
+
+  it('确认后打开设置页', async () => {
+    uniMock.showModal = vi.fn(({ success }) => success({ confirm: true }));
+
+    await expect(promptOpenSettings('需要相册权限')).resolves.toBe(true);
+    expect(uniMock.showModal).toHaveBeenCalledWith(
+      expect.objectContaining({ content: '需要相册权限', confirmText: '去设置' }),
+    );
+    expect(uniMock.openSetting).toHaveBeenCalled();
+  });
+
+  it('取消时不打开设置页', async () => {
+    uniMock.showModal = vi.fn(({ success }) => success({ confirm: false }));
+
+    await expect(promptOpenSettings('需要相册权限')).resolves.toBe(false);
+    expect(uniMock.openSetting).not.toHaveBeenCalled();
   });
 });

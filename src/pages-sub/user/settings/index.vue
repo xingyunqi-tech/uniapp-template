@@ -49,14 +49,12 @@
           icon="font"
           :title="$t('settings.international')"
           :right-text="isEnglish ? 'English' : '中文'"
-          :border="isDev"
           show-switch
           :switch-checked="isEnglish"
           @switch-change="handleToggleLocale"
         />
-        <!-- 仅开发环境 -->
         <UMenuItem
-          v-if="showDevOptions && isDev"
+          v-if="showDevOptions"
           icon="paperclip"
           title="组件演示"
           :border="false"
@@ -142,7 +140,6 @@ let devModeTimer: ReturnType<typeof setTimeout> | null = null;
 
 // 使用 global store 中的 showDevOptions 状态（持久化）
 const showDevOptions = computed(() => globalStore.showDevOptions);
-const isDev = import.meta.env.DEV;
 
 // 主题和语言状态
 const isDarkMode = computed(() => globalStore.currentTheme === THEME_TYPE.DARK);

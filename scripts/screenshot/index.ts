@@ -2,7 +2,7 @@
  * H5 页面截图：启动本地静态服务托管 H5 构建产物，用模拟接口数据渲染页面并截图，用于改动前后的视觉对比
  *
  * 用法：
- *   pnpm build:h5 （包含组件演示页需用 npx uni build -p h5 --mode development）
+ *   pnpm build:h5
  *   pnpm screenshot [页面路径...] [--dark] [--full] [--mock=data|empty|error] [--press=选择器] [--out=目录]
  *
  * 示例：

@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { parseQuery } from '@/utils/router';
+import { isUserCancel } from '@/utils/platform';
 
 export interface ScanCodeResult {
   /** 扫描结果内容 */
@@ -107,7 +108,7 @@ export function useScanCode(options: UseScanCodeOptions = {}): UseScanCodeReturn
           },
           fail: err => {
             // 用户取消扫码不算错误
-            if (err.errMsg?.includes('cancel')) {
+            if (isUserCancel(err)) {
               resolve(null);
             } else {
               reject(new Error(err.errMsg || '扫码失败'));

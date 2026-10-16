@@ -40,6 +40,7 @@ definePage({
 });
 
 import { useGlobalStore } from '@/store/modules/global';
+import { isUserCancel } from '@/utils/platform';
 
 const globalStore = useGlobalStore();
 
@@ -51,7 +52,7 @@ function handleCall() {
   uni.makePhoneCall({
     phoneNumber,
     fail: err => {
-      if (err?.errMsg?.includes('cancel')) return;
+      if (isUserCancel(err)) return;
       uni.showToast({
         title: '拨打失败',
         icon: 'none',

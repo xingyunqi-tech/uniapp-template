@@ -40,17 +40,25 @@ describe('createAppPayment', () => {
     });
   });
 
-  it('收银台返回非取消的失败时以订单状态为准', async () => {
-    vi.mocked(uni).requestPayment = vi.fn(({ fail }) => fail({ errMsg: 'requestPayment:fail' })) as never;
+  it('未能拉起微信支付等非取消的失败时返回失败', async () => {
+    vi.mocked(uni).requestPayment = vi.fn(({ fail }) => fail({ errMsg: 'requestPayment:fail not install' })) as never;
 
-    await expect(createAppPayment(params)).resolves.toMatchObject({ status: PaymentStatus.PROCESSING });
+    await expect(createAppPayment(params)).resolves.toMatchObject({
+      message: '支付失败，请稍后重试',
+      status: PaymentStatus.FAILED,
+    });
   });
 
-  it('下单失败时返回失败状态且不拉起支付', async () => {
-    createApp.mockRejectedValue(new Error('422'));
+  it('下单失败时返回接口错误信息、不拉起支付，请求不弹出错误提示', async () => {
+    createApp.mockRejectedValue(new Error('订单已支付'));
     vi.mocked(uni).requestPayment = vi.fn() as never;
 
-    await expect(createAppPayment(params)).resolves.toMatchObject({ success: false, status: PaymentStatus.FAILED });
+    await expect(createAppPayment(params)).resolves.toMatchObject({
+      success: false,
+      message: '订单已支付',
+      status: PaymentStatus.FAILED,
+    });
     expect(uni.requestPayment).not.toHaveBeenCalled();
+    expect(createApp).toHaveBeenCalledWith(params, { showError: false });
   });
 });

@@ -386,3 +386,23 @@ export function getSharePlatform(): SharePlatformType {
 
   return 'H5';
 }
+
+/** 支付宝取消操作的错误码 */
+const ALIPAY_CANCEL_CODE = 11;
+
+/**
+ * 是否为用户主动取消（选图、扫码、定位、支付等 uni API 的 fail 回调）
+ */
+export function isUserCancel(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const { errMsg, errorMessage, errCode, error } = err as {
+    errMsg?: string;
+    errorMessage?: string;
+    errCode?: number;
+    error?: number;
+  };
+  const text = `${errMsg ?? ''} ${errorMessage ?? ''}`;
+  return (
+    /cancel/i.test(text) || text.includes('取消') || errCode === ALIPAY_CANCEL_CODE || error === ALIPAY_CANCEL_CODE
+  );
+}

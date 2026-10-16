@@ -86,13 +86,24 @@ export default defineManifestConfig({
       autoclose: true,
       delay: 0,
     },
-    modules: {},
+    modules: {
+      Payment: {},
+    },
     distribute: {
       android: {
         permissions: [],
       },
       ios: {},
-      sdkConfigs: {},
+      sdkConfigs: {
+        payment: {
+          // 微信开放平台移动应用 appid（与小程序 appid 不同），iOS 需同时配置通用链接
+          weixin: {
+            __platform__: ['ios', 'android'],
+            appid: '',
+            UniversalLinks: '',
+          },
+        },
+      },
     },
   },
 

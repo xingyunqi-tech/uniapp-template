@@ -9,6 +9,7 @@ import {
 } from '@/api';
 import type { CreateWechatJsapiPaymentDto, CreateWechatAppPaymentDto } from '@/api';
 import { PaymentStatus } from '@/constants';
+import { isUserCancel } from '@/utils/platform';
 
 /**
  * 支付结果
@@ -25,16 +26,26 @@ function toSuccessResult(outTradeNo: string): PaymentResult {
   return { success: true, message: '支付成功', outTradeNo, status: PaymentStatus.SUCCESS };
 }
 
-/** 收银台已拉起，非取消的失败可能已扣款，以订单状态为准 */
-function toFailResult(err: { errMsg?: string }, outTradeNo: string): PaymentResult {
-  const cancelled = err.errMsg?.includes('cancel') ?? false;
+/**
+ * 支付失败结果；pendingOnError 为 true 时非取消的失败按处理中返回（小程序收银台已拉起，可能已扣款，以订单状态为准），
+ * 否则按失败返回（App 未拉起微信，如未安装微信或 SDK 未配置）
+ */
+function toFailResult(err: { errMsg?: string }, outTradeNo: string, pendingOnError: boolean): PaymentResult {
+  const cancelled = isUserCancel(err);
   if (!cancelled) console.error('微信支付失败:', err);
-  return {
-    success: false,
-    message: cancelled ? '已取消支付' : '支付结果确认中，请稍后在订单中查看',
-    outTradeNo,
-    status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.PROCESSING,
-  };
+  if (cancelled) {
+    return { success: false, message: '已取消支付', outTradeNo, status: PaymentStatus.CANCELLED };
+  }
+  return pendingOnError
+    ? { success: false, message: '支付结果确认中，请稍后在订单中查看', outTradeNo, status: PaymentStatus.PROCESSING }
+    : { success: false, message: '支付失败，请稍后重试', outTradeNo, status: PaymentStatus.FAILED };
+}
+
+/** 下单失败结果，优先使用接口返回的错误信息 */
+function toCreateFailResult(error: unknown): PaymentResult {
+  console.error('创建支付订单失败:', error);
+  const message = error instanceof Error && error.message ? error.message : '创建支付订单失败';
+  return { success: false, message, status: PaymentStatus.FAILED };
 }
 
 /** 获取小程序登录 code，供后端换取付款用户的 openid */
@@ -55,7 +66,7 @@ export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDt
   try {
     // #ifdef MP-WEIXIN
     const code = await getLoginCode();
-    const paymentData = await wechatPayControllerCreateJsapiPaymentV1({ ...params, code });
+    const paymentData = await wechatPayControllerCreateJsapiPaymentV1({ ...params, code }, { showError: false });
 
     return await new Promise(resolve => {
       uni.requestPayment({
@@ -66,7 +77,7 @@ export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDt
         signType: paymentData.signType,
         paySign: paymentData.paySign,
         success: () => resolve(toSuccessResult(params.outTradeNo)),
-        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo)),
+        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo, true)),
       });
     });
     // #endif
@@ -78,11 +89,7 @@ export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDt
     };
     // #endif
   } catch (error) {
-    console.error('创建支付订单失败:', error);
-    return {
-      success: false,
-      message: '创建支付订单失败',
-    };
+    return toCreateFailResult(error);
   }
 }
 
@@ -93,7 +100,7 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
   try {
     // #ifdef APP-PLUS
     // 1. 调用后端接口创建支付订单
-    const paymentData = await wechatPayControllerCreateAppPaymentV1(params);
+    const paymentData = await wechatPayControllerCreateAppPaymentV1(params, { showError: false });
 
     // 2. 调用微信支付
     return new Promise(resolve => {
@@ -101,7 +108,7 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
         provider: 'wxpay',
         orderInfo: { ...paymentData },
         success: () => resolve(toSuccessResult(params.outTradeNo)),
-        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo)),
+        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo, false)),
       });
     });
     // #endif
@@ -113,12 +120,7 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
     };
     // #endif
   } catch (error) {
-    console.error('创建支付订单失败:', error);
-    return {
-      success: false,
-      message: '创建支付订单失败',
-      status: PaymentStatus.FAILED,
-    };
+    return toCreateFailResult(error);
   }
 }
 

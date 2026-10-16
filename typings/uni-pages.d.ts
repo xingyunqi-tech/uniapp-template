@@ -23,6 +23,7 @@ type _LocationUrl =
   "/pages-sub/user/profile/index" |
   "/pages-sub/user/settings/index" |
   "/pages-sub/other/about/index" |
+  "/pages-sub/other/component-demo/index" |
   "/pages-sub/other/contact/index" |
   "/pages-sub/other/feedback/index" |
   "/pages-sub/other/webview/index";

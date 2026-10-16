@@ -67,10 +67,34 @@ const ALIPAY_AUTH_KEYS: Partial<Record<PermissionType, string>> = {
   'scope.writePhotosAlbum': 'album',
 };
 
-/** 微信 authorize 用户拒绝时的 errMsg，如 "authorize:fail auth deny"、"authorize:fail auth denied" */
-function isUserDenied(error: unknown): boolean {
+/** 用户拒绝授权的 errMsg，如微信 "auth deny"、"auth denied"，App "permission denied"、"No Permission" */
+export function isUserDenied(error: unknown): boolean {
   const errMsg = (error as { errMsg?: unknown } | null)?.errMsg;
-  return typeof errMsg === 'string' && /auth den(y|ied)/i.test(errMsg);
+  return typeof errMsg === 'string' && /auth den(y|ied)|permission denied|no permission/i.test(errMsg);
+}
+
+/**
+ * 提示权限被拒绝并引导前往设置页，返回是否已打开设置页
+ */
+export function promptOpenSettings(content: string): Promise<boolean> {
+  return new Promise(resolve => {
+    uni.showModal({
+      title: '权限申请',
+      content,
+      confirmText: '去设置',
+      cancelText: '取消',
+      success: res => {
+        if (!res.confirm) return resolve(false);
+        // #ifdef APP-PLUS
+        uni.openAppAuthorizeSetting({ complete: () => resolve(true) });
+        // #endif
+        // #ifndef APP-PLUS
+        uni.openSetting({ complete: () => resolve(true) });
+        // #endif
+      },
+      fail: () => resolve(false),
+    });
+  });
 }
 
 export interface UsePermissionOptions {

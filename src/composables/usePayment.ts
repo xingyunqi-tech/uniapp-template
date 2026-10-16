@@ -41,7 +41,7 @@ function toPayResult(result: WechatPay.PaymentResult | AlipayPay.PaymentResult):
 }
 
 /**
- * 微信小程序支付，订阅消息授权须在点击事件中先于其它异步操作发起
+ * 微信支付（小程序 JSAPI / App），订阅消息授权须在点击事件中先于其它异步操作发起，App 端不申请订阅
  */
 export async function payOnWechat(order: PayOrder): Promise<PayResult> {
   await requestSubscribe(['orderPaid']);
@@ -92,7 +92,7 @@ export function usePayment() {
     }
     paying.value = true;
     try {
-      // #ifdef MP-WEIXIN
+      // #ifdef MP-WEIXIN || APP-PLUS
       return await payOnWechat(order);
       // #endif
 
@@ -104,7 +104,7 @@ export function usePayment() {
       return await payOnH5(order);
       // #endif
 
-      // #ifndef MP-WEIXIN || MP-ALIPAY || H5
+      // #ifndef MP-WEIXIN || MP-ALIPAY || H5 || APP-PLUS
       return { status: PaymentStatus.FAILED, message: '当前平台暂不支持支付' };
       // #endif
     } catch (error) {

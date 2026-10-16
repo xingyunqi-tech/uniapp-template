@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue';
+import { isUserCancel } from '@/utils/platform';
 
 export interface LocationInfo {
   /** 纬度 */
@@ -194,7 +195,7 @@ export function useLocation(options: UseLocationOptions = {}): UseLocationReturn
           },
           fail: err => {
             // 用户取消不算错误
-            if (err.errMsg?.includes('cancel')) {
+            if (isUserCancel(err)) {
               resolve(null);
             } else {
               reject(new Error(err.errMsg || '选择位置失败'));
