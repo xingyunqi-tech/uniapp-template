@@ -1,5 +1,9 @@
 <template>
   <view class="demo-page" :class="globalStore.themeClass">
+    <USticky>
+      <view class="demo-sticky">USticky 吸顶</view>
+    </USticky>
+
     <!-- 主题切换 -->
     <UCard class="demo-section" title="主题">
       <view class="demo-row">
@@ -137,6 +141,21 @@
       </UList>
     </UCard>
 
+    <UCard class="demo-section" title="UPrice 金额">
+      <view class="demo-row">
+        <UPrice :value="129900" size="large" />
+        <UPrice :value="159900" original size="small" />
+        <UPrice :value="-2050" type="default" />
+        <UPrice :value="99.5" unit="yuan" trim-zero type="primary" />
+      </view>
+    </UCard>
+
+    <UCard class="demo-section" title="UDivider 分割线">
+      <UDivider />
+      <UDivider text="居中文字" />
+      <UDivider text="左侧文字" align="left" dashed />
+    </UCard>
+
     <UCard class="demo-section" title="UEmpty / ULoadMore">
       <UEmpty type="search" text="没有搜索结果" />
       <ULoadMore status="loading" />
@@ -158,6 +177,7 @@
     <UPopup ref="dialogRef" type="dialog" dialog-mode="input" title="输入对话框" dialog-value="默认值" />
     <UActionSheet ref="actionSheetRef" title="操作菜单" :actions="actions" />
     <ULoading v-if="loadingVisible" visible text="加载中" />
+    <UBackTop :scroll-top="scrollTop" :threshold="BACK_TOP_THRESHOLD" />
   </view>
 </template>
 
@@ -169,6 +189,7 @@ definePage({
 });
 
 import { computed, ref } from 'vue';
+import { onPageScroll } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { THEME_TYPE, type ThemeType } from '@/constants';
 import type { ActionItem, TabItem } from '@/components';
@@ -194,6 +215,15 @@ const dialogRef = ref<{ open: () => void } | null>(null);
 const actionSheetRef = ref<{ open: () => void } | null>(null);
 
 const loadingVisible = ref(false);
+
+const BACK_TOP_THRESHOLD = 400;
+const scrollTop = ref(0);
+// 只在越过阈值时更新，避免每次滚动都 setData
+onPageScroll(e => {
+  if (e.scrollTop > BACK_TOP_THRESHOLD !== scrollTop.value > BACK_TOP_THRESHOLD) {
+    scrollTop.value = e.scrollTop;
+  }
+});
 
 function setTheme(theme: ThemeType) {
   globalStore.setTheme(theme);
@@ -237,6 +267,15 @@ function showLoading() {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+.demo-sticky {
+  margin-bottom: var(--spacing-base);
+  padding: var(--spacing-sm) var(--spacing-base);
+  border-radius: var(--radius-base);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-sm);
 }
 
 .demo-text {

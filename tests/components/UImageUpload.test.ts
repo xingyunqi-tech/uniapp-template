@@ -8,6 +8,7 @@ const FilePickerStub = defineComponent({
     modelValue: { type: Array, default: () => [] },
     limit: { type: Number, default: 9 },
     imageStyles: { type: Object, default: () => ({}) },
+    fileExtname: { type: Array, default: undefined },
   },
   emits: ['update:modelValue', 'select', 'delete'],
   setup(_, { slots }) {
@@ -69,6 +70,24 @@ describe('UImageUpload', () => {
 
     expect(wrapper.emitted('select')).toHaveLength(1);
     expect(wrapper.emitted('delete')).toHaveLength(1);
+  });
+
+  it('图片类型默认限制常见图片扩展名', () => {
+    const wrapper = mount(UImageUpload, { global });
+
+    expect(wrapper.findComponent(FilePickerStub).props('fileExtname')).toEqual(['png', 'jpg', 'jpeg', 'gif', 'webp']);
+  });
+
+  it.each(['video', 'all'] as const)('%s 类型默认不限制扩展名', mediaType => {
+    const wrapper = mount(UImageUpload, { props: { mediaType }, global });
+
+    expect(wrapper.findComponent(FilePickerStub).props('fileExtname')).toEqual([]);
+  });
+
+  it('传入 fileExtname 时按传入值过滤', () => {
+    const wrapper = mount(UImageUpload, { props: { mediaType: 'video', fileExtname: ['mp4'] }, global });
+
+    expect(wrapper.findComponent(FilePickerStub).props('fileExtname')).toEqual(['mp4']);
   });
 
   it('clear 清空已选图片并同步到 v-model', async () => {

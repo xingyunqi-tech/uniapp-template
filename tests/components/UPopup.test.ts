@@ -64,6 +64,14 @@ describe('UPopup', () => {
     expect(popupApi.close).toHaveBeenCalledTimes(1);
   });
 
+  it('底部弹窗 bodyPadding 为 false 时内容区去掉内边距', () => {
+    const padded = mount(UPopup, { props: { type: 'bottom' }, global });
+    const flush = mount(UPopup, { props: { type: 'bottom', bodyPadding: false }, global });
+
+    expect(padded.find('.u-popup__body').classes()).not.toContain('u-popup__body--flush');
+    expect(flush.find('.u-popup__body').classes()).toContain('u-popup__body--flush');
+  });
+
   it('基础对话框确认时传出 undefined', () => {
     const wrapper = mount(UPopup, { props: { type: 'dialog' }, global });
 

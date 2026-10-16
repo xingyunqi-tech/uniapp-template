@@ -3,7 +3,7 @@
     UImage - 图片组件
     封装懒加载、错误处理、重试等功能
   -->
-  <view class="u-image" :class="{ 'u-image--round': round }" :style="imageStyle">
+  <view class="u-image" :class="imageClasses" :style="imageStyle">
     <!-- 加载中状态 -->
     <view v-if="loading" class="u-image__loading">
       <slot name="loading">
@@ -134,16 +134,30 @@ const loading = ref(props.showLoading);
 const error = ref(false);
 const retryKey = ref(0); // 用于强制重新加载图片
 
+/** 高度自适应且处于加载态或失败态 */
+const isStatePlaceholder = computed(
+  () => props.height === 'auto' && (loading.value || (error.value && props.showError)),
+);
+
+const imageClasses = computed(() => ({
+  'u-image--round': props.round,
+  'u-image--state': isStatePlaceholder.value,
+}));
+
 // 计算样式
 const imageStyle = computed(() => {
   const width = typeof props.width === 'number' ? `${props.width}rpx` : props.width;
   const height = typeof props.height === 'number' ? `${props.height}rpx` : props.height;
   const radius = props.round ? '50%' : typeof props.radius === 'number' ? `${props.radius}rpx` : props.radius;
 
+  // 固定宽度时占位为正方形，百分比或 auto 宽度使用样式中的默认高度
+  const fixedWidth = !/%$|^auto$/.test(width);
+
   return {
     width,
     height,
     borderRadius: radius,
+    ...(isStatePlaceholder.value && fixedWidth ? { minHeight: width } : {}),
   };
 });
 
@@ -202,6 +216,11 @@ function handleRetry() {
 
   &--round {
     border-radius: 50%;
+  }
+
+  /* 高度自适应且宽度为百分比时，加载态、失败态的占位高度 */
+  &--state {
+    min-height: 200rpx;
   }
 
   &__img {

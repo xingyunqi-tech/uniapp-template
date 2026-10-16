@@ -70,9 +70,26 @@ export type { LoadMoreStatus } from './ULoadMore/index.vue';
 export { default as UTag } from './UTag/index.vue';
 export type { TagType, TagSize } from './UTag/index.vue';
 
+// 金额展示 (整数小数分开字号、划线原价)
+export { default as UPrice } from './UPrice/index.vue';
+export type { UPriceProps, PriceUnit, PriceType, PriceSize } from './UPrice/index.vue';
+
+// 分割线 (支持文字、虚线)
+export { default as UDivider } from './UDivider/index.vue';
+export type { UDividerProps, DividerAlign } from './UDivider/index.vue';
+
+// 吸顶容器 (支持自定义导航栏偏移)
+export { default as USticky } from './USticky/index.vue';
+export type { UStickyProps } from './USticky/index.vue';
+
+// 回到顶部
+export { default as UBackTop } from './UBackTop/index.vue';
+export type { UBackTopProps } from './UBackTop/index.vue';
+
 // ==================== 表单组件 ====================
 // 表单项包装组件
 export { default as UFormItem } from './UFormItem/index.vue';
+export type { FormItemRule } from './UFormItem/index.vue';
 
 // 密码强度指示器
 export { default as UPasswordStrength } from './UPasswordStrength/index.vue';

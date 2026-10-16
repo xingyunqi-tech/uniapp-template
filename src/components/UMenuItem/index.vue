@@ -28,14 +28,16 @@
     <view class="u-menu-item__right">
       <text v-if="rightText" class="u-menu-item__right-text">{{ rightText }}</text>
       <text v-if="badge" class="u-menu-item__badge">{{ badge }}</text>
-      <switch
-        v-if="showSwitch"
-        :checked="switchChecked"
-        :disabled="disabled"
-        :color="globalStore.primaryColor"
-        class="u-menu-item__switch"
-        @change="handleSwitchChange"
-      />
+      <!-- 阻止开关的点击冒泡到整行 -->
+      <view v-if="showSwitch" class="u-menu-item__switch-wrap" hover-stop-propagation @click.stop>
+        <switch
+          :checked="switchChecked"
+          :disabled="disabled"
+          :color="globalStore.primaryColor"
+          class="u-menu-item__switch"
+          @change="handleSwitchChange"
+        />
+      </view>
       <uni-icons
         v-if="showArrow && !showSwitch"
         type="right"
@@ -234,6 +236,11 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
 
   &__arrow {
     flex-shrink: 0;
+  }
+
+  &__switch-wrap {
+    display: flex;
+    align-items: center;
   }
 
   &__switch {

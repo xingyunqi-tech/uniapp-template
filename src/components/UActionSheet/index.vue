@@ -10,8 +10,10 @@
     :mask-closable="maskClosable"
     :show-close="false"
     :border-radius="24"
+    :body-padding="false"
     class="u-action-sheet"
     @change="handleChange"
+    @mask-click="handleMaskClick"
   >
     <view class="u-action-sheet__content">
       <!-- 标题 -->
@@ -93,7 +95,7 @@ interface Props {
   maskClosable?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   title: '',
   description: '',
   showCancel: true,
@@ -142,6 +144,11 @@ function handleCancel() {
   close();
 }
 
+/** 点击遮罩关闭视为取消 */
+function handleMaskClick() {
+  if (props.maskClosable) emit('cancel');
+}
+
 /** 处理弹窗状态变化 */
 function handleChange(e: { show: boolean }) {
   emit('change', e);
@@ -167,10 +174,6 @@ defineExpose({
 
 <style scoped lang="scss">
 .u-action-sheet {
-  &__content {
-    width: 100vw;
-  }
-
   &__header {
     padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-sm);
     text-align: center;

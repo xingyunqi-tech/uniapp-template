@@ -185,6 +185,14 @@ src/components/
 │   └── index.vue
 ├── UTag/                   # 标签
 │   └── index.vue
+├── UPrice/                 # 金额展示
+│   └── index.vue
+├── UDivider/               # 分割线
+│   └── index.vue
+├── USticky/                # 吸顶容器
+│   └── index.vue
+├── UBackTop/               # 回到顶部
+│   └── index.vue
 └── AuthLayout/             # 认证页面布局
     └── index.vue
 ```

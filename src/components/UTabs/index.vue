@@ -1,10 +1,17 @@
 <template>
   <view class="u-tabs" :class="tabsClasses">
     <!-- 可滚动模式 -->
-    <scroll-view v-if="scrollable" scroll-x class="u-tabs__scroll">
+    <scroll-view
+      v-if="scrollable"
+      scroll-x
+      scroll-with-animation
+      :scroll-into-view="scrollIntoView"
+      class="u-tabs__scroll"
+    >
       <view class="u-tabs__list">
         <view
-          v-for="tab in tabs"
+          v-for="(tab, index) in tabs"
+          :id="`u-tabs-item-${index}`"
           :key="tab.value"
           class="u-tabs__item"
           :class="getItemClasses(tab)"
@@ -44,7 +51,7 @@ definePage({
   },
 });
 
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 defineOptions({
   name: 'UTabs',
@@ -101,6 +108,24 @@ const tabsClasses = computed(() => ({
   'u-tabs--scrollable': props.scrollable,
   'u-tabs--card': props.type === 'card',
 }));
+
+/** 滚动到选中项的前一项，使选中项左侧保留一个标签 */
+const scrollIntoView = ref('');
+
+watch(
+  () => [props.modelValue, props.tabs],
+  async () => {
+    const index = props.tabs.findIndex(tab => tab.value === props.modelValue);
+    const target = index < 0 ? '' : `u-tabs-item-${Math.max(index - 1, 0)}`;
+    // 目标不变时先清空，scroll-into-view 值变化才会再次滚动
+    if (target && target === scrollIntoView.value) {
+      scrollIntoView.value = '';
+      await nextTick();
+    }
+    scrollIntoView.value = target;
+  },
+  { immediate: true },
+);
 
 // ==================== Methods ====================
 

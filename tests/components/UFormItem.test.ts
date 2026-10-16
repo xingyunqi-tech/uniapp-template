@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
-import UFormItem from '@/components/UFormItem/index.vue';
+import UFormItem, { type FormItemRule } from '@/components/UFormItem/index.vue';
 
 const global = {
   stubs: {
-    'uni-forms-item': { props: ['label', 'required'], template: '<div class="forms-item">{{ label }}<slot /></div>' },
+    'uni-forms-item': {
+      name: 'UniFormsItemStub',
+      props: ['label', 'required', 'rules'],
+      template: '<div class="forms-item">{{ label }}<slot /></div>',
+    },
     'uni-icons': true,
   },
 };
@@ -21,6 +25,16 @@ describe('UFormItem', () => {
 
     expect(wrapper.find('.u-form-item__placeholder').exists()).toBe(false);
     expect(wrapper.find('.u-form-item__value').text()).toBe('0');
+  });
+
+  it('校验规则原样传给 uni-forms-item', () => {
+    const rules: FormItemRule[] = [
+      { required: true, errorMessage: '请输入昵称' },
+      { validateFunction: (_rule, value, _data, callback) => (value ? true : callback('昵称不能为空')) },
+    ];
+    const wrapper = mount(UFormItem, { props: { label: '昵称', name: 'nickname', rules }, global });
+
+    expect(wrapper.findComponent({ name: 'UniFormsItemStub' }).props('rules')).toEqual(rules);
   });
 
   it('alignTop 时添加顶部对齐样式类', () => {

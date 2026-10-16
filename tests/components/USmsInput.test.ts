@@ -48,6 +48,39 @@ describe('USmsInput', () => {
     expect(wrapper.find('.u-sms-btn').attributes('disabled')).toBeDefined();
   });
 
+  it('只传外部 countdown 时按秒数大于 0 判断倒计时', async () => {
+    const wrapper = mount(USmsInput, { props: { modelValue: '', countdown: 10 }, global });
+    const button = () => wrapper.find('.u-sms-btn');
+
+    expect(button().text()).toBe('10s');
+    expect(button().attributes('disabled')).toBeDefined();
+
+    await wrapper.setProps({ countdown: 0 });
+
+    expect(button().text()).toBe('获取验证码');
+  });
+
+  it('暴露的倒计时状态与外部传入值一致', () => {
+    const wrapper = mount(USmsInput, { props: { modelValue: '', countdown: 42, isCounting: true }, global });
+    const exposed = wrapper.vm as unknown as { isCounting: boolean; countdown: number };
+
+    expect(exposed.isCounting).toBe(true);
+    expect(exposed.countdown).toBe(42);
+  });
+
+  it('受控模式下 autoStart 与 startCountdown 不启动内部倒计时', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const wrapper = mount(USmsInput, { props: { modelValue: '', countdown: 0, autoStart: true }, global });
+
+    await wrapper.find('.u-sms-btn').trigger('click');
+    (wrapper.vm as unknown as { startCountdown: () => void }).startCountdown();
+    await wrapper.setProps({ countdown: undefined });
+
+    expect(wrapper.find('.u-sms-btn').text()).toBe('获取验证码');
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
   it('禁用时点击不触发 send', async () => {
     const wrapper = mount(USmsInput, { props: { modelValue: '', disabled: true }, global });
 

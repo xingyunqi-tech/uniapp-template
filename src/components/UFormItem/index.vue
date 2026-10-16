@@ -48,14 +48,8 @@ defineOptions({
   },
 });
 
-interface FormRule {
-  required?: boolean;
-  message?: string;
-  pattern?: RegExp;
-  minLength?: number;
-  maxLength?: number;
-  validateFunction?: (rule: any, value: any, callback: (error?: string) => void) => void;
-}
+/** uni-forms 校验规则：提示文案字段为 errorMessage，validateFunction 签名为 (rule, value, data, callback) */
+export type FormItemRule = UniHelper.UniFormsItemRules[number];
 
 interface Props {
   /** 表单域的属性名，用于表单验证 */
@@ -71,7 +65,7 @@ interface Props {
   /** 错误提示信息 */
   errorMessage?: string;
   /** 验证规则 */
-  rules?: FormRule[];
+  rules?: FormItemRule[];
   /** 是否显示右侧箭头 */
   showArrow?: boolean;
   /** 当前值（用于显示） */

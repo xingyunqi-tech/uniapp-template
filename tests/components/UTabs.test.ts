@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import UTabs, { type TabItem } from '@/components/UTabs/index.vue';
 
 const tabs: TabItem[] = [
@@ -39,6 +39,37 @@ describe('UTabs', () => {
 
     expect(wrapper.emitted('update:modelValue')).toBeUndefined();
     expect(wrapper.emitted('change')).toBeUndefined();
+  });
+
+  it('可滚动模式滚动到选中项的前一项，选中第一项时滚动到第一项', async () => {
+    const wrapper = mount(UTabs, { props: { modelValue: 'closed', tabs, scrollable: true } });
+    const scrollView = () => wrapper.find('scroll-view');
+
+    expect(scrollView().attributes('scroll-into-view')).toBe('u-tabs-item-1');
+    expect(wrapper.findAll('.u-tabs__item')[1].attributes('id')).toBe('u-tabs-item-1');
+
+    await wrapper.setProps({ modelValue: 'all' });
+
+    expect(scrollView().attributes('scroll-into-view')).toBe('u-tabs-item-0');
+  });
+
+  it('滚动目标不变时重新触发滚动', async () => {
+    const wrapper = mount(UTabs, { props: { modelValue: 'unpaid', tabs, scrollable: true } });
+    const scrollView = () => wrapper.find('scroll-view');
+
+    expect(scrollView().attributes('scroll-into-view')).toBe('u-tabs-item-0');
+
+    await wrapper.setProps({ modelValue: 'all' });
+    expect(scrollView().attributes('scroll-into-view')).toBeFalsy();
+
+    await flushPromises();
+    expect(scrollView().attributes('scroll-into-view')).toBe('u-tabs-item-0');
+  });
+
+  it('选中值不在列表中时不滚动', () => {
+    const wrapper = mount(UTabs, { props: { modelValue: 'missing', tabs, scrollable: true } });
+
+    expect(wrapper.find('scroll-view').attributes('scroll-into-view')).toBeFalsy();
   });
 
   it('可滚动与卡片类型添加对应样式类', () => {

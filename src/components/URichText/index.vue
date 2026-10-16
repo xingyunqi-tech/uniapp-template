@@ -50,7 +50,7 @@ function addClassToTag(html: string, tag: string, className: string): string {
   html = html.replace(withClassRegex, `<${tag}$1 class="$2 ${className}"`);
 
   // 匹配没有 class 的情况
-  const withoutClassRegex = new RegExp(`<${tag}(?=[\\s/>])(?![^>]*class=)([^>]*)>`, 'gi');
+  const withoutClassRegex = new RegExp(`<${tag}(?=[\\s/>])(?![^>]*\\sclass=)([^>]*)>`, 'gi');
   html = html.replace(withoutClassRegex, `<${tag} class="${className}"$1>`);
 
   return html;
@@ -69,16 +69,17 @@ const parsedNodes = computed<RichTextNodes>(() => {
   let html = props.content;
 
   // 处理图片：添加最大宽度限制（img 标签会在后面统一添加 class）
-  html = html.replace(/<img(?![^>]*style=)/gi, '<img style="max-width:100%;height:auto;"');
+  html = html.replace(/<img(?![^>]*\sstyle=)/gi, '<img style="max-width:100%;height:auto;"');
 
   // 处理视频标签（小程序不支持，转换为提示）
+  // 先替换成对标签，再处理剩余的单独开始标签（含自闭合写法）
   html = html.replace(
-    /<video[^>]*>.*?<\/video>/gi,
-    '<p class="u-rt-p" style="color:var(--color-text-secondary);text-align:center;">[视频内容请在APP中查看]</p>',
+    /<video\b[^>]*>[\s\S]*?<\/video>|<video\b[^>]*>/gi,
+    '<p style="color:var(--color-text-secondary);text-align:center;">[视频内容请在APP中查看]</p>',
   );
 
   // 处理 iframe（小程序不支持）
-  html = html.replace(/<iframe[^>]*>.*?<\/iframe>/gi, '');
+  html = html.replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>|<iframe\b[^>]*>/gi, '');
 
   // 为标签添加 class（小程序不支持标签选择器）
   const tagClassMap: Record<string, string> = {

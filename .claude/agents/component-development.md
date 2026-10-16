@@ -158,6 +158,10 @@ easycom: {
 | `UTag` | 标签 |
 | `UAgreementCheck` | 协议勾选 |
 | `UPrivacyPopup` | 微信隐私授权弹窗 |
+| `UPrice` | 金额展示 |
+| `UDivider` | 分割线 |
+| `USticky` | 吸顶容器 |
+| `UBackTop` | 回到顶部 |
 
 另有布局组件 `AuthLayout`（认证页面布局），同样通过 easycom 自动导入。
 

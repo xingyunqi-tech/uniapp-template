@@ -15,7 +15,7 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 27 个组件（26 个 `U` 前缀组件 + `AuthLayout`）
+- **自定义组件库**: 31 个组件（30 个 `U` 前缀组件 + `AuthLayout`）
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
@@ -102,6 +102,10 @@ uniapp-template/
 │   │   ├── UTag/              # 标签
 │   │   ├── UAgreementCheck/   # 协议勾选
 │   │   ├── UPrivacyPopup/     # 微信隐私授权弹窗
+│   │   ├── UPrice/            # 金额展示
+│   │   ├── UDivider/          # 分割线
+│   │   ├── USticky/           # 吸顶容器
+│   │   ├── UBackTop/          # 回到顶部
 │   │   └── AuthLayout/        # 认证布局
 │   ├── composables/           # Composition API
 │   │   ├── useRouter.ts       # 路由导航封装

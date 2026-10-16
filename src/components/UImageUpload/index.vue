@@ -9,7 +9,7 @@
       :limit="maxCount"
       :mode="mode"
       :file-mediatype="mediaType"
-      :file-extname="fileExtname"
+      :file-extname="extnameList"
       :title="title"
       :disabled="disabled"
       :readonly="readonly"
@@ -99,7 +99,7 @@ interface Props {
   mode?: UploadMode;
   /** 媒体类型: image 图片 | video 视频 | all 全部 */
   mediaType?: MediaType;
-  /** 允许的文件扩展名 */
+  /** 允许的文件扩展名，默认 image 类型限制常见图片格式，其余类型不限制 */
   fileExtname?: string[];
   /** 组件标题 */
   title?: string;
@@ -122,7 +122,7 @@ const props = withDefaults(defineProps<Props>(), {
   maxCount: 9,
   mode: 'grid',
   mediaType: 'image',
-  fileExtname: () => ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+  fileExtname: undefined,
   title: '',
   disabled: false,
   readonly: false,
@@ -145,10 +145,15 @@ const emit = defineEmits<{
 
 // ==================== State ====================
 
-/** 内部文件列表 - 使用 shallowRef 提高性能 */
+/** 内部文件列表 */
 const fileList = ref<FileItem[]>([]);
 
 // ==================== Computed ====================
+
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+
+/** 传给 uni-file-picker 的扩展名，空数组表示不过滤 */
+const extnameList = computed(() => props.fileExtname ?? (props.mediaType === 'image' ? IMAGE_EXTENSIONS : []));
 
 if (import.meta.env.DEV && props.maxCount > 9) {
   console.warn('[UImageUpload] maxCount 最大为 9，超出部分不生效');

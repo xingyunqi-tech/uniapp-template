@@ -46,7 +46,7 @@
           </view>
         </view>
         <!-- 内容 -->
-        <view class="u-popup__body">
+        <view class="u-popup__body" :class="{ 'u-popup__body--flush': !bodyPadding }">
           <slot />
         </view>
       </view>
@@ -107,6 +107,8 @@ interface Props {
   borderRadius?: number;
   /** 底部弹窗最大高度 (vh) */
   maxHeight?: number;
+  /** 底部弹窗内容区是否保留内边距 */
+  bodyPadding?: boolean;
   // 对话框专属属性
   /** 对话框类型 */
   dialogType?: DialogType;
@@ -135,6 +137,7 @@ const props = withDefaults(defineProps<Props>(), {
   showClose: true,
   borderRadius: 24,
   maxHeight: 70,
+  bodyPadding: true,
   dialogType: 'info',
   dialogMode: 'base',
   content: '',
@@ -263,6 +266,10 @@ defineExpose({
     flex: 1;
     padding: var(--spacing-base);
     overflow-y: auto;
+
+    &--flush {
+      padding: 0;
+    }
   }
 
   &__content {

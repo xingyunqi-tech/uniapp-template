@@ -21,14 +21,14 @@
       </view>
 
       <!-- 标题区域 -->
-      <view class="u-nav-bar__title">
+      <view class="u-nav-bar__title" :style="titleStyle">
         <slot name="title">
           <text class="u-nav-bar__title-text">{{ title }}</text>
         </slot>
       </view>
 
       <!-- 右侧区域 -->
-      <view class="u-nav-bar__right" @click="handleRightClick">
+      <view class="u-nav-bar__right" :style="rightStyle" @click="handleRightClick">
         <slot name="right" />
       </view>
     </view>
@@ -45,15 +45,17 @@ definePage({
   },
 });
 
-import { ref, computed, onMounted } from 'vue';
+import { computed, useSlots } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
 import { safeBack } from '@/utils/router';
+import { getNavBarLayout } from '@/composables/useStatusBar';
 
 defineOptions({
   name: 'UNavBar',
 });
 
 const globalStore = useGlobalStore();
+const slots = useSlots();
 
 // ==================== Props ====================
 
@@ -103,8 +105,31 @@ const emit = defineEmits<{
 
 // ==================== State ====================
 
-const statusBarHeight = ref('0px');
-const navBarHeight = ref('44px');
+/** 胶囊与右侧区域、右侧区域与标题之间的间距 (px) */
+const CAPSULE_GAP = 8;
+
+/** 左右区域最小宽度 (rpx)，与样式中的 min-width 一致 */
+const SIDE_MIN_WIDTH = 80;
+
+/** 标题默认最大宽度占比，与样式中的 max-width 一致 */
+const TITLE_MAX_RATIO = 0.6;
+
+const layout = getNavBarLayout();
+const statusBarHeight = `${layout.statusBarHeight}px`;
+const navBarHeight = `${layout.navBarHeight}px`;
+
+/** 微信胶囊左侧让出的右侧区域定位与标题最大宽度，有右侧插槽时标题再让出右侧区域 */
+const capsuleLayout = computed(() => {
+  const { menuButton, windowWidth } = layout;
+  if (!menuButton) return undefined;
+  const rightEdge = menuButton.left - CAPSULE_GAP;
+  const titleEdge = slots.right ? rightEdge - uni.upx2px(SIDE_MIN_WIDTH) - CAPSULE_GAP : rightEdge;
+  const titleMaxWidth = Math.min(windowWidth * TITLE_MAX_RATIO, (titleEdge - windowWidth / 2) * 2);
+  return {
+    right: windowWidth - rightEdge,
+    titleMaxWidth: Math.max(titleMaxWidth, 0),
+  };
+});
 
 // ==================== Computed ====================
 
@@ -123,9 +148,13 @@ const navBarStyle = computed(() => {
   return style;
 });
 
-const placeholderStyle = computed(() => ({
-  height: `calc(${statusBarHeight.value} + ${navBarHeight.value})`,
-}));
+const placeholderStyle = {
+  height: `calc(${statusBarHeight} + ${navBarHeight})`,
+};
+
+const rightStyle = computed(() => capsuleLayout.value && { right: `${capsuleLayout.value.right}px` });
+
+const titleStyle = computed(() => capsuleLayout.value && { maxWidth: `${capsuleLayout.value.titleMaxWidth}px` });
 
 // 返回按钮图标颜色 - 使用 CSS 变量，自动适配主题
 const backIconColor = computed(() => {
@@ -137,43 +166,11 @@ const backIconColor = computed(() => {
   return 'var(--color-text)';
 });
 
-// ==================== Lifecycle ====================
-
-onMounted(() => {
-  // 使用同步 API 避免闪烁
-  const systemInfo = uni.getSystemInfoSync();
-
-  // 默认状态栏高度
-  statusBarHeight.value = `${systemInfo.statusBarHeight ?? 20}px`;
-
-  // #ifdef MP-ALIPAY
-  // 支付宝小程序：根据 transparentTitle 判断原生导航栏是否透明
-  const transparentTitle = (systemInfo as { transparentTitle?: boolean }).transparentTitle;
-  if (transparentTitle) {
-    // 原生导航栏透明，需要自己处理状态栏占位
-    statusBarHeight.value = `${systemInfo.safeArea?.top || systemInfo.statusBarHeight || 25}px`;
-  } else {
-    // 原生导航栏存在，不需要状态栏占位（页面已从导航栏下方开始）
-    statusBarHeight.value = '0px';
-  }
-  navBarHeight.value = '48px';
-  // #endif
-
-  // #ifdef MP-WEIXIN
-  // 微信小程序：根据胶囊按钮计算导航栏高度
-  const menuButtonInfo = uni.getMenuButtonBoundingClientRect?.();
-  if (menuButtonInfo) {
-    const navHeight = (menuButtonInfo.top - (systemInfo.statusBarHeight || 0)) * 2 + menuButtonInfo.height;
-    navBarHeight.value = `${navHeight}px`;
-  }
-  // #endif
-});
-
 // ==================== Methods ====================
 
 function handleLeftClick() {
   emit('clickLeft');
-  if (props.showBack) {
+  if (props.showBack && !slots.left) {
     if (props.customBack) {
       emit('back');
     } else {

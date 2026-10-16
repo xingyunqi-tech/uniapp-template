@@ -56,11 +56,11 @@ const props = withDefaults(
     defaultText?: string;
     /** 倒计时文案模板，{s} 会被替换为秒数 */
     countdownTemplate?: string;
-    /** 是否点击后自动开始倒计时 (默认 false，需外部调用 startCountdown) */
+    /** 是否点击后自动开始倒计时 (默认 false，需外部调用 startCountdown)，受控模式下不生效 */
     autoStart?: boolean;
     /** 外部倒计时秒数，传入后由 countdown/isCounting 控制按钮状态 */
     countdown?: number;
-    /** 外部是否正在倒计时，与 countdown 一起传入 */
+    /** 外部是否正在倒计时，不传时按 countdown > 0 判断 */
     isCounting?: boolean;
   }>(),
   {
@@ -70,6 +70,8 @@ const props = withDefaults(
     defaultText: '获取验证码',
     countdownTemplate: '{s}s',
     autoStart: false,
+    countdown: undefined,
+    isCounting: undefined,
   },
 );
 
@@ -90,8 +92,10 @@ const {
 });
 
 const isControlled = computed(() => props.countdown !== undefined);
-const counting = computed(() => (isControlled.value ? props.isCounting : isCounting.value));
-const remainingSeconds = computed(() => (isControlled.value ? props.countdown : countdown.value));
+const counting = computed(() =>
+  isControlled.value ? (props.isCounting ?? (props.countdown ?? 0) > 0) : isCounting.value,
+);
+const remainingSeconds = computed(() => (isControlled.value ? (props.countdown ?? 0) : countdown.value));
 
 // 按钮是否禁用
 const isButtonDisabled = computed(() => props.disabled || counting.value);
@@ -104,6 +108,17 @@ const buttonText = computed(() => {
   return props.defaultText;
 });
 
+/** 开始内部倒计时，受控模式下由外部 countdown 控制，不启动内部计时 */
+function startInternalCountdown(seconds = props.countdownSeconds) {
+  if (isControlled.value) {
+    if (import.meta.env.DEV) {
+      console.warn('[USmsInput] 已传入 countdown，倒计时由外部控制，startCountdown / autoStart 不生效');
+    }
+    return;
+  }
+  startCountdown(seconds);
+}
+
 // 点击发送
 function handleClick() {
   if (isButtonDisabled.value) return;
@@ -111,22 +126,22 @@ function handleClick() {
   // 如果配置了 autoStart，则立即开始倒计时
   // 否则需要外部在发送成功后调用 startCountdown()
   if (props.autoStart) {
-    startCountdown(props.countdownSeconds);
+    startInternalCountdown();
   }
 }
 
 // 暴露方法供外部调用
 defineExpose({
   /** 手动开始倒计时 */
-  startCountdown: (seconds?: number) => startCountdown(seconds ?? props.countdownSeconds),
+  startCountdown: startInternalCountdown,
   /** 手动停止倒计时 */
   stopCountdown,
   /** 重置倒计时 */
   resetCountdown,
   /** 当前是否在倒计时 */
-  isCounting,
+  isCounting: counting,
   /** 当前倒计时秒数 */
-  countdown,
+  countdown: remainingSeconds,
 });
 </script>
 
