@@ -93,6 +93,23 @@ describe('createPagedList', () => {
     await retry;
   });
 
+  it('刷新失败时保留已有列表、页码与是否还有更多，下一次加载接着往后请求', async () => {
+    const { list, page, hasMore, load, calls } = setup();
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2], totalPages: 2 });
+    await first;
+    const failed = load(undefined, true);
+    calls[1].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+
+    expect(list.value).toEqual([1, 2]);
+    expect(page.value).toBe(1);
+    expect(hasMore.value).toBe(true);
+    void load();
+    expect(calls[2].params).toMatchObject({ page: 2 });
+  });
+
   it('被作废的请求失败时不抛出也不标记 error', async () => {
     const { error, load, reset, calls } = setup();
 

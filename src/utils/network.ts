@@ -9,14 +9,6 @@ import { ref, readonly, type Ref } from 'vue';
 /** 网络类型 */
 export type NetworkType = 'wifi' | '2g' | '3g' | '4g' | '5g' | 'ethernet' | 'unknown' | 'none';
 
-/** 网络状态接口 */
-export interface NetworkState {
-  /** 是否连接 */
-  isConnected: boolean;
-  /** 网络类型 */
-  networkType: NetworkType;
-}
-
 /** 网络监听配置 */
 export interface NetworkListenerOptions {
   /** 断网提示文案 */
@@ -159,61 +151,6 @@ export function onNetworkChange(callback: NetworkChangeCallback): () => void {
       callbacks.splice(index, 1);
     }
   };
-}
-
-/**
- * 检查当前网络状态
- * @returns Promise<NetworkState> 网络状态
- */
-export async function checkNetworkStatus(): Promise<NetworkState> {
-  try {
-    const res = await uni.getNetworkType();
-    const isConnected = res.networkType !== 'none';
-    updateNetworkState(isConnected, res.networkType as NetworkType);
-    return {
-      isConnected,
-      networkType: res.networkType as NetworkType,
-    };
-  } catch {
-    return {
-      isConnected: false,
-      networkType: 'unknown',
-    };
-  }
-}
-
-/**
- * 确保有网络连接后执行操作
- * @param action 要执行的操作
- * @param errorMessage 无网络时的提示
- *
- * @example
- * ```ts
- * await withNetworkRequired(
- *   () => api.fetchData(),
- *   '请检查网络后重试'
- * );
- * ```
- */
-export async function withNetworkRequired<T>(action: () => Promise<T>, errorMessage?: string): Promise<T> {
-  const state = await checkNetworkStatus();
-
-  if (!state.isConnected) {
-    uni.showToast({
-      title: errorMessage || '网络已断开，请检查网络设置',
-      icon: 'none',
-    });
-    return Promise.reject(new Error('No network connection'));
-  }
-
-  return action();
-}
-
-/**
- * 判断是否是 WiFi 网络
- */
-export function isWifiNetwork(): boolean {
-  return _networkType.value === 'wifi';
 }
 
 /**

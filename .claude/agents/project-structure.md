@@ -226,7 +226,7 @@ src/components/
 | `useRouter` | 路由导航封装 |
 | `useLoading` | 加载状态管理 |
 | `useForm` | 表单处理 |
-| `useList` | 列表加载（分页、刷新） |
+| `useList` | 页面级分页列表（基于 createPagedList：refresh / loadMore / retry / refreshing / hasMore，默认每页 10 条） |
 | `useSendSms` | 发送短信验证码 |
 | `useAsyncAction` | 异步操作封装 |
 | `useDebounce` | 防抖 |

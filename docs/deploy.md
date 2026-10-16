@@ -168,13 +168,16 @@ base64 -i private.wx.key | tr -d '\n'
 
 ### GitHub Actions
 
-项目配置了三个工作流：
+项目配置了四个工作流：
 
 | 工作流 | 文件 | 触发条件 | 说明 |
 |--------|------|---------|------|
-| Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被部署工作流调用 | lint:check、type-check、test |
-| Deploy H5 | `.github/workflows/deploy-h5.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器 |
-| Deploy MiniProgram | `.github/workflows/deploy-mp.yml` | Tag 推送 (`v*.*.*`) / 手动触发 | 先调用 Check，构建并上传微信 / 支付宝小程序 |
+| Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被其他工作流调用 | lint:check、checkCssVars、type-check、test:coverage |
+| Release | `.github/workflows/release.yml` | Tag 推送 (`v*.*.*`) | 跑一次 Check，通过后并行调用 Deploy H5 与 Deploy MiniProgram |
+| Deploy H5 | `.github/workflows/deploy-h5.yml` | 被 Release 调用 / 手动触发 | 手动触发时先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器（`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并告警） |
+| Deploy MiniProgram | `.github/workflows/deploy-mp.yml` | 被 Release 调用 / 手动触发 | 手动触发时先调用 Check，构建并上传微信 / 支付宝小程序；手动预览时微信二维码作为构建产物上传 |
+
+并发：Release、Deploy H5、Deploy MiniProgram 各用固定的并发组，运行中的部署不会被取消；同组最多一个运行、一个等待，再次触发时等待中的那个会被取消。发布进行中不要手动触发部署，以免 H5 与小程序停在不同版本。
 
 ### Secrets 配置
 
@@ -192,8 +195,17 @@ base64 -i private.wx.key | tr -d '\n'
 | `ALIYUN_USER` | SSH 用户名 | H5 部署必填 |
 | `ALIYUN_SSH_KEY` | SSH 私钥 (完整内容) | H5 部署必填 |
 | `ALIYUN_DEPLOY_PATH` | 部署目标路径 (如 `/var/www/h5`) | H5 部署必填 |
+| `ALIYUN_KNOWN_HOSTS` | 服务器 known_hosts 行，用于固定主机指纹 | 可选（推荐） |
 
 > 支付宝 secrets 未配置时：Tag 触发会跳过支付宝上传；手动选择支付宝平台则直接失败。
+
+`ALIYUN_KNOWN_HOSTS` 未配置时，每次部署在运行时用 `ssh-keyscan` 获取主机公钥，若获取时已被中间人冒充则无法发现，工作流会输出警告。获取方式：在可信网络中执行
+
+```bash
+ssh-keyscan -p <port> -H <host>
+```
+
+用 `ssh-keygen -lf <(ssh-keyscan -p <port> <host>)` 输出的指纹与服务器上 `ssh-keygen -lf /etc/ssh/ssh_host_*_key.pub` 的结果核对一致后，把第一条命令的输出整段存为该 secret。非 22 端口时行内主机名为 `[host]:port` 格式，`-p` 参数会自动生成。
 
 ### 自动触发部署
 

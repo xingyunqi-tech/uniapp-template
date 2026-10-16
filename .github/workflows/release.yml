@@ -1,0 +1,42 @@
+# 发布工作流
+# 推送 tag (v*.*.*) 时运行一次代码检查，通过后并行部署 H5 与小程序
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# 发布不中途取消；同组最多一个运行、一个等待，新的等待项会取消旧的等待项
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    uses: ./.github/workflows/check.yml
+
+  deploy-h5:
+    name: Deploy H5
+    needs: check
+    uses: ./.github/workflows/deploy-h5.yml
+    with:
+      skip-check: true
+      deploy: true
+    secrets: inherit
+
+  deploy-mp:
+    name: Deploy MiniProgram
+    needs: check
+    uses: ./.github/workflows/deploy-mp.yml
+    with:
+      skip-check: true
+      platform: all
+      action: upload
+      optional-alipay: true
+    secrets: inherit

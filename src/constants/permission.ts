@@ -27,12 +27,3 @@ export const ROLE_LEVEL: Record<ROLE, number> = {
   [ROLE.USER]: 10,
   [ROLE.ADMIN]: 100,
 };
-
-/**
- * 角色显示名称
- */
-export const ROLE_LABELS: Record<ROLE, string> = {
-  [ROLE.GUEST]: '游客',
-  [ROLE.USER]: '普通用户',
-  [ROLE.ADMIN]: '管理员',
-};

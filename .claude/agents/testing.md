@@ -401,7 +401,7 @@ describe('UserManagement Integration', () => {
 ```
 ## 📊 测试覆盖率配置
 
-覆盖率配置见上方 `vitest.config.ts` 的 `coverage` 字段（v8，排除 `src/api/generated/**` 等），未配置 `thresholds`。运行 `pnpm test:coverage` 生成报告到 `coverage/`。
+覆盖率配置见上方 `vitest.config.ts` 的 `coverage` 字段（v8，排除 `src/api/generated/**` 等），阈值为语句/分支/函数/行 70/68/67/70，低于阈值时 `pnpm test:coverage` 与 CI 的 Check 失败。运行 `pnpm test:coverage` 生成报告到 `coverage/`。
 
 ## 🎯 常见测试场景
 

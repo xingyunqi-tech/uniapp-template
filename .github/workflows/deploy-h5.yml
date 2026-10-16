@@ -2,7 +2,7 @@
 # 构建 H5 版本并通过 SSH + rsync 部署到阿里云服务器
 #
 # 触发条件:
-#   1. 推送 tag (v*.*.*)   - 自动部署
+#   1. 推送 tag (v*.*.*)   - 由 release 工作流调用，自动部署
 #   2. 手动触发            - 可选择是否部署
 #
 # 配置步骤:
@@ -12,13 +12,23 @@
 #     - ALIYUN_USER: SSH 用户名
 #     - ALIYUN_SSH_KEY: SSH 私钥 (完整内容，包括 BEGIN/END)
 #     - ALIYUN_DEPLOY_PATH: 部署目标路径 (如 /var/www/h5)
+#     - ALIYUN_KNOWN_HOSTS: 服务器 known_hosts 行 (可选，未配置时用 ssh-keyscan 获取)
 
 name: Deploy H5
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_call:
+    inputs:
+      skip-check:
+        description: '调用方已完成代码检查时跳过 check'
+        required: false
+        default: false
+        type: boolean
+      deploy:
+        description: '是否部署到服务器'
+        required: false
+        default: true
+        type: boolean
 
   # 手动触发
   workflow_dispatch:
@@ -29,10 +39,10 @@ on:
         default: true
         type: boolean
 
-# 并发控制: 同一分支只运行一个部署任务
+# 并发控制: 固定 group、不中途取消；同组最多一个运行、一个等待，新的等待项会取消旧的等待项
 concurrency:
-  group: deploy-h5-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-h5
+  cancel-in-progress: false
 
 env:
   PNPM_VERSION: '11'
@@ -41,12 +51,14 @@ jobs:
   # ==================== 代码质量检查 ====================
   check:
     name: Check
+    if: ${{ !inputs.skip-check }}
     uses: ./.github/workflows/check.yml
 
   # ==================== 构建任务 ====================
   build:
     name: Build H5
     needs: check
+    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
 
     steps:
@@ -104,24 +116,29 @@ jobs:
     name: Deploy to Aliyun
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event.inputs.deploy == 'true'
+    if: ${{ !cancelled() && !failure() && inputs.deploy }}
 
     steps:
       - name: Check secrets
+        env:
+          ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
+          ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
+          ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
+          ALIYUN_DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
         run: |
-          if [[ -z "${{ secrets.ALIYUN_HOST }}" ]]; then
+          if [[ -z "$ALIYUN_HOST" ]]; then
             echo "::error::缺少 ALIYUN_HOST secret"
             exit 1
           fi
-          if [[ -z "${{ secrets.ALIYUN_USER }}" ]]; then
+          if [[ -z "$ALIYUN_USER" ]]; then
             echo "::error::缺少 ALIYUN_USER secret"
             exit 1
           fi
-          if [[ -z "${{ secrets.ALIYUN_SSH_KEY }}" ]]; then
+          if [[ -z "$ALIYUN_SSH_KEY" ]]; then
             echo "::error::缺少 ALIYUN_SSH_KEY secret"
             exit 1
           fi
-          if [[ -z "${{ secrets.ALIYUN_DEPLOY_PATH }}" ]]; then
+          if [[ -z "$ALIYUN_DEPLOY_PATH" ]]; then
             echo "::error::缺少 ALIYUN_DEPLOY_PATH secret"
             exit 1
           fi
@@ -134,29 +151,52 @@ jobs:
           path: dist/build/h5
 
       - name: Setup SSH
+        env:
+          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
+          SSH_PORT: ${{ secrets.ALIYUN_PORT || 22 }}
+          SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.ALIYUN_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.ALIYUN_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.ALIYUN_PORT || 22 }} -H ${{ secrets.ALIYUN_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          if [[ -n "$SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/deploy_known_hosts
+          else
+            echo "::warning::未配置 ALIYUN_KNOWN_HOSTS，主机指纹未固定，本次通过 ssh-keyscan 临时获取；建议配置该 secret"
+            # 非 22 端口时 ssh-keyscan 以 [host]:port 格式写入
+            if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/deploy_known_hosts || [[ ! -s ~/.ssh/deploy_known_hosts ]]; then
+              echo "::error::ssh-keyscan 获取主机公钥失败: $SSH_HOST:$SSH_PORT"
+              exit 1
+            fi
+          fi
 
       - name: Deploy via rsync
+        env:
+          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
+          SSH_PORT: ${{ secrets.ALIYUN_PORT || 22 }}
+          SSH_USER: ${{ secrets.ALIYUN_USER }}
+          DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
         run: |
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.ALIYUN_PORT || 22 }} -o StrictHostKeyChecking=no" \
+            -e "ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/deploy_known_hosts" \
             dist/build/h5/ \
-            ${{ secrets.ALIYUN_USER }}@${{ secrets.ALIYUN_HOST }}:${{ secrets.ALIYUN_DEPLOY_PATH }}/
+            "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
 
       - name: Cleanup SSH key
         if: always()
-        run: rm -f ~/.ssh/deploy_key
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/deploy_known_hosts
 
       - name: Deployment notification
         if: success()
+        env:
+          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
+          DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
         run: |
           echo "✅ H5 部署成功!"
-          echo "🖥️ 服务器: ${{ secrets.ALIYUN_HOST }}"
-          echo "📁 路径: ${{ secrets.ALIYUN_DEPLOY_PATH }}"
+          echo "🖥️ 服务器: $SSH_HOST"
+          echo "📁 路径: $DEPLOY_PATH"
 
   # ==================== 通知任务 ====================
   notify:

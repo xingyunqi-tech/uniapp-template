@@ -20,7 +20,8 @@ model: inherit
 ```
 .
 ├── .github/workflows/
-│   ├── check.yml        # lint / type-check / test
+│   ├── check.yml        # lint / CSS 变量 / type-check / test
+│   ├── release.yml      # tag 触发：跑一次 check 后并行调用两个部署工作流
 │   ├── deploy-h5.yml    # H5 构建并通过 SSH + rsync 部署到服务器
 │   └── deploy-mp.yml    # 微信 / 支付宝小程序构建并上传
 ├── scripts/
@@ -53,16 +54,18 @@ pnpm dev:app          # App
 
 ### H5 部署 (deploy-h5.yml)
 
-- **触发**: 推送 `v*.*.*` tag，或手动触发
-- **流程**: 调用 `check.yml` → `pnpm build:h5` → rsync 同步 `dist/build/h5/` 到服务器
-- **Secrets**: `ALIYUN_HOST`、`ALIYUN_PORT`（可选，默认 22）、`ALIYUN_USER`、`ALIYUN_SSH_KEY`、`ALIYUN_DEPLOY_PATH`
+- **触发**: 推送 `v*.*.*` tag 时由 `release.yml` 调用，或手动触发
+- **流程**: 手动触发时先调用 `check.yml` → `pnpm build:h5` → rsync 同步 `dist/build/h5/` 到服务器（`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并输出警告，指纹未固定）
+- **Secrets**: `ALIYUN_HOST`、`ALIYUN_PORT`（可选，默认 22）、`ALIYUN_USER`、`ALIYUN_SSH_KEY`、`ALIYUN_DEPLOY_PATH`；`ALIYUN_KNOWN_HOSTS`（可选，在可信网络执行 `ssh-keyscan -p <port> -H <host>` 并核对指纹后填入）
 
 ### 小程序部署 (deploy-mp.yml)
 
-- **触发**: 推送 `v*.*.*` tag（上传微信与支付宝），或手动触发（选择平台与 upload / preview）
-- **流程**: 调用 `check.yml` → 构建 → 检查包体大小 → `scripts/mp-upload.ts` 上传
+- **触发**: 推送 `v*.*.*` tag 时由 `release.yml` 调用（上传微信与支付宝），或手动触发（选择平台与 upload / preview）
+- **流程**: 手动触发时先调用 `check.yml` → 构建 → 检查包体大小 → `scripts/mp-upload.ts` 上传
+- **预览二维码**: 手动 preview 时微信二维码作为构建产物 `mp-weixin-preview-qrcode` 上传，保留 7 天
 - **Secrets**: `WEIXIN_APPID`、`WEIXIN_PRIVATE_KEY`（base64）；`ALIPAY_APPID`、`ALIPAY_PRIVATE_KEY`、`ALIPAY_TOOL_ID`
-- tag 触发时未配置支付宝 secrets 会跳过支付宝上传；手动选择支付宝时缺失则失败
+- `release.yml` 调用时显式传入 `platform: all`、`action: upload`、`optional-alipay: true`：未配置支付宝 secrets 会跳过支付宝上传；手动选择支付宝时缺失则失败
+- 并发：`release`、`deploy-h5`、`deploy-mp` 各用固定 group，`cancel-in-progress: false`，运行中的部署不会被取消；同组最多一个运行、一个等待，再触发时等待中的那个会被取消，发布期间不要手动触发部署
 
 ### 本地上传小程序
 

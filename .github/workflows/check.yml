@@ -4,9 +4,10 @@
 # 触发条件:
 #   1. push 到 master/main 分支
 #   2. Pull Request
-#   3. 被其他工作流调用 (workflow_call)
+#   3. 手动触发 (workflow_dispatch)
+#   4. 被其他工作流调用 (workflow_call)
 #
-# 注意: 不在 tag 时独立触发，由 deploy 工作流调用以避免重复运行
+# 注意: 不在 tag 时独立触发，tag 发布由 release 工作流调用一次
 
 name: Check
 
@@ -45,6 +46,9 @@ jobs:
 
       - name: Run linter
         run: pnpm run lint:check
+
+      - name: Check CSS variables
+        run: pnpm run checkCssVars
 
       - name: Run type check
         run: pnpm run type-check

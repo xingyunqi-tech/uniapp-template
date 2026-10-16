@@ -1,4 +1,3 @@
-import type { IconName } from '@/components';
 /**
  * 支付相关常量
  */
@@ -32,29 +31,6 @@ export enum PaymentStatus {
   /** 已退款 */
   REFUNDED = 'refunded',
 }
-
-/**
- * 支付方式配置映射
- */
-export const PAYMENT_METHOD_MAP: Record<
-  PaymentMethod,
-  {
-    text: string;
-    icon?: IconName;
-  }
-> = {
-  [PaymentMethod.WECHAT]: {
-    text: '微信支付',
-    icon: 'weixin',
-  },
-  [PaymentMethod.ALIPAY]: {
-    text: '支付宝',
-  },
-  [PaymentMethod.BALANCE]: {
-    text: '余额支付',
-    icon: 'wallet',
-  },
-};
 
 /**
  * 支付状态配置映射
@@ -91,13 +67,6 @@ export const PAYMENT_STATUS_MAP: Record<
     class: 'info',
   },
 };
-
-/**
- * 获取支付方式文本
- */
-export function getPaymentMethodText(method: PaymentMethod): string {
-  return PAYMENT_METHOD_MAP[method]?.text ?? '未知支付方式';
-}
 
 /**
  * 获取支付状态文本

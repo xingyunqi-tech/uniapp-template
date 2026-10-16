@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { useList } from '@/composables/useList';
+import type { PageResult } from '@/store/helpers/paged-list';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -12,12 +13,12 @@ function deferred<T>() {
 }
 
 function setup() {
-  const calls: { page: number; result: ReturnType<typeof deferred<number[]>> }[] = [];
+  const calls: { page: number; limit: number; result: ReturnType<typeof deferred<PageResult<number>>> }[] = [];
   const list = useList<number>({
-    pageSize: 2,
-    fetchData: ({ page }) => {
-      const result = deferred<number[]>();
-      calls.push({ page, result });
+    limit: 2,
+    fetchPage: ({ page, limit }) => {
+      const result = deferred<PageResult<number>>();
+      calls.push({ page, limit, result });
       return result.promise;
     },
   });
@@ -25,198 +26,193 @@ function setup() {
 }
 
 describe('useList', () => {
-  it('按页追加数据并在不足一页时标记没有更多', async () => {
-    const { list, noMore, loadData, calls } = setup();
+  it('loadMore 按页追加，最后一页后标记没有更多且不再请求', async () => {
+    const { list, page, hasMore, total, loadMore, calls } = setup();
 
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1, 2], total: 3, totalPages: 2 });
     await first;
-    const second = loadData();
-    calls[1].result.resolve([3]);
+    const second = loadMore();
+    calls[1].result.resolve({ list: [3], total: 3, totalPages: 2 });
     await second;
+    await loadMore();
 
-    expect(calls.map(c => c.page)).toEqual([1, 2]);
+    expect(calls.map(c => [c.page, c.limit])).toEqual([
+      [1, 2],
+      [2, 2],
+    ]);
     expect(list.value).toEqual([1, 2, 3]);
-    expect(noMore.value).toBe(true);
+    expect(page.value).toBe(2);
+    expect(total.value).toBe(3);
+    expect(hasMore.value).toBe(false);
   });
 
-  it('刷新进行中时触底不发起加载', async () => {
-    const { loadData, refresh, calls } = setup();
+  it('refresh 从第 1 页重新加载并替换列表', async () => {
+    const { list, page, hasMore, loadMore, refresh, calls } = setup();
 
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1, 2], totalPages: 1 });
+    await first;
     const refreshing = refresh();
-    await loadData();
-    calls[0].result.resolve([1, 2]);
+    calls[1].result.resolve({ list: [9, 8], totalPages: 2 });
     await refreshing;
+
+    expect(calls[1].page).toBe(1);
+    expect(list.value).toEqual([9, 8]);
+    expect(page.value).toBe(1);
+    expect(hasMore.value).toBe(true);
+  });
+
+  it('isEmpty 随列表是否为空变化', async () => {
+    const { isEmpty, loadMore, calls } = setup();
+
+    expect(isEmpty.value).toBe(true);
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1], totalPages: 1 });
+    await first;
+
+    expect(isEmpty.value).toBe(false);
+  });
+
+  it('加载中时 loadMore 不发起请求', async () => {
+    const { loadMore, refresh, calls } = setup();
+
+    void refresh();
+    await loadMore();
 
     expect(calls).toHaveLength(1);
   });
 
-  it('加载更多进行中刷新时丢弃加载结果，下一页从第 2 页开始', async () => {
-    const { list, page, loading, loadData, refresh, calls } = setup();
+  it('加载失败时标记 error 并抛出，重试时清除', async () => {
+    const { error, loadMore, calls } = setup();
 
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
+    const failed = loadMore();
+    calls[0].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+    expect(error.value).toBe(true);
+
+    const retry = loadMore();
+    expect(error.value).toBe(false);
+    calls[1].result.resolve({ list: [1], totalPages: 1 });
+    await retry;
+    expect(calls[1].page).toBe(1);
+  });
+
+  it('刷新失败时保留已有列表、页码与是否还有更多，继续上拉从原页码往后加载', async () => {
+    const { list, total, error, hasMore, loadMore, refresh, calls } = setup();
+
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1, 2], total: 4, totalPages: 2 });
+    await first;
+    const failed = refresh();
+    calls[1].result.reject(new Error('network'));
+    await expect(failed).rejects.toThrow('network');
+
+    expect(list.value).toEqual([1, 2]);
+    expect(total.value).toBe(4);
+    expect(error.value).toBe(true);
+    expect(hasMore.value).toBe(true);
+
+    const next = loadMore();
+    calls[2].result.resolve({ list: [3, 4], total: 4, totalPages: 2 });
+    await next;
+    expect(calls[2].page).toBe(2);
+    expect(list.value).toEqual([1, 2, 3, 4]);
+  });
+
+  it('加载更多进行中刷新时丢弃加载更多的结果', async () => {
+    const { list, page, loading, loadMore, refresh, calls } = setup();
+
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1, 2], totalPages: 3 });
     await first;
 
-    const loadingMore = loadData();
+    const loadingMore = loadMore();
     const refreshing = refresh();
-    expect(loading.value).toBe(false);
-
-    calls[2].result.resolve([10, 11]);
+    calls[2].result.resolve({ list: [10, 11], totalPages: 3 });
     await refreshing;
-    calls[1].result.resolve([3, 4]);
+    calls[1].result.resolve({ list: [3, 4], totalPages: 3 });
     await loadingMore;
 
     expect(list.value).toEqual([10, 11]);
-    expect(page.value).toBe(2);
-  });
-
-  it('刷新失败时保留原列表并抛出错误', async () => {
-    const { list, page, refreshing, loadData, refresh, calls } = setup();
-
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
-    await first;
-
-    const pending = refresh();
-    calls[1].result.reject(new Error('network'));
-
-    await expect(pending).rejects.toThrow('network');
-    expect(list.value).toEqual([1, 2]);
-    expect(page.value).toBe(2);
-    expect(refreshing.value).toBe(false);
-  });
-
-  it('加载失败时标记 error，再次加载时清除', async () => {
-    const { error, loadData, calls } = setup();
-
-    const failed = loadData();
-    calls[0].result.reject(new Error('500'));
-    await expect(failed).rejects.toThrow('500');
-    expect(error.value).toBe(true);
-
-    const retry = loadData();
-    expect(error.value).toBe(false);
-    calls[1].result.resolve([1, 2]);
-    await retry;
-    expect(error.value).toBe(false);
-  });
-
-  it('已无更多数据时再次加载保留 error', async () => {
-    const { error, noMore, loadData, refresh, calls } = setup();
-
-    const first = loadData();
-    calls[0].result.resolve([1]);
-    await first;
-    expect(noMore.value).toBe(true);
-
-    const failed = refresh();
-    calls[1].result.reject(new Error('500'));
-    await expect(failed).rejects.toThrow('500');
-    expect(error.value).toBe(true);
-    expect(noMore.value).toBe(true);
-
-    await loadData();
-    expect(error.value).toBe(true);
-    expect(calls).toHaveLength(2);
-  });
-
-  it('加载进行中再次加载不清除 error', async () => {
-    const { error, loadData, calls } = setup();
-
-    const failed = loadData();
-    calls[0].result.reject(new Error('500'));
-    await expect(failed).rejects.toThrow('500');
-
-    const retry = loadData();
-    expect(error.value).toBe(false);
-    error.value = true;
-    await loadData();
-    expect(error.value).toBe(true);
-    calls[1].result.resolve([1, 2]);
-    await retry;
-  });
-
-  it('刷新失败时保留刷新前的页码与 noMore', async () => {
-    const { page, noMore, loadData, refresh, calls } = setup();
-
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
-    await first;
-
-    const failed = refresh();
-    calls[1].result.reject(new Error('500'));
-    await expect(failed).rejects.toThrow('500');
-
-    expect(page.value).toBe(2);
-    expect(noMore.value).toBe(false);
-  });
-
-  it('重置后丢弃进行中请求的结果', async () => {
-    const { list, loading, loadData, reset, calls } = setup();
-
-    const pending = loadData();
-    reset();
-    calls[0].result.resolve([1, 2]);
-    await pending;
-
-    expect(list.value).toEqual([]);
+    expect(page.value).toBe(1);
     expect(loading.value).toBe(false);
   });
 
-  it('作废请求失败时不抛出错误', async () => {
-    const { loadData, reset, calls } = setup();
+  it('重置后丢弃进行中请求的结果，作废请求失败时不抛出', async () => {
+    const { list, loading, error, loadMore, reset, calls } = setup();
 
-    const pending = loadData();
+    const pending = loadMore();
     reset();
     calls[0].result.reject(new Error('network'));
 
     await expect(pending).resolves.toBeUndefined();
+    expect(list.value).toEqual([]);
+    expect(loading.value).toBe(false);
+    expect(error.value).toBe(false);
   });
 
-  it('加载更多时替换数组引用，不修改原数组', async () => {
-    const { list, loadData, calls } = setup();
+  it('默认每页 10 条', async () => {
+    const limits: number[] = [];
+    const { loadMore } = useList<number>({
+      fetchPage: async ({ limit }) => {
+        limits.push(limit);
+        return { list: [], totalPages: 1 };
+      },
+    });
+    await loadMore();
+    expect(limits).toEqual([10]);
+  });
 
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
+  it('刷新期间 refreshing 为 true，并发刷新复用同一次请求', async () => {
+    const { refreshing, refresh, calls } = setup();
+
+    const a = refresh();
+    const b = refresh();
+    expect(a).toBe(b);
+    expect(refreshing.value).toBe(true);
+    expect(calls).toHaveLength(1);
+
+    calls[0].result.resolve({ list: [1, 2], totalPages: 1 });
+    await a;
+    expect(refreshing.value).toBe(false);
+  });
+
+  it('全部加载完后刷新失败，retry 重新刷新并清除错误', async () => {
+    const { list, error, hasMore, refresh, retry, calls } = setup();
+
+    const first = refresh();
+    calls[0].result.resolve({ list: [1, 2], totalPages: 1 });
     await first;
-    const firstPage = list.value;
+    expect(hasMore.value).toBe(false);
 
-    const second = loadData();
-    calls[1].result.resolve([3, 4]);
-    await second;
+    const failed = refresh();
+    calls[1].result.reject(new Error('network'));
+    await expect(failed).rejects.toThrow('network');
+    expect(error.value).toBe(true);
 
-    expect(list.value).not.toBe(firstPage);
-    expect(firstPage).toEqual([1, 2]);
+    const again = retry();
+    expect(calls[2].page).toBe(1);
+    calls[2].result.resolve({ list: [3, 4], totalPages: 1 });
+    await again;
+    expect(error.value).toBe(false);
+    expect(list.value).toEqual([3, 4]);
+  });
+
+  it('加载更多失败后 retry 重新加载同一页', async () => {
+    const { list, loadMore, retry, calls } = setup();
+
+    const first = loadMore();
+    calls[0].result.resolve({ list: [1, 2], totalPages: 3 });
+    await first;
+    const failed = loadMore();
+    calls[1].result.reject(new Error('network'));
+    await expect(failed).rejects.toThrow('network');
+
+    const again = retry();
+    expect(calls[2].page).toBe(2);
+    calls[2].result.resolve({ list: [3, 4], totalPages: 3 });
+    await again;
     expect(list.value).toEqual([1, 2, 3, 4]);
-  });
-
-  it('updateItem 替换匹配项并生成新数组', async () => {
-    const { list, loadData, updateItem, calls } = setup();
-
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
-    await first;
-    const before = list.value;
-
-    updateItem(
-      item => item === 2,
-      item => item * 10,
-    );
-
-    expect(list.value).toEqual([1, 20]);
-    expect(list.value).not.toBe(before);
-  });
-
-  it('removeItem 移除匹配项', async () => {
-    const { list, loadData, removeItem, calls } = setup();
-
-    const first = loadData();
-    calls[0].result.resolve([1, 2]);
-    await first;
-
-    removeItem(item => item === 1);
-
-    expect(list.value).toEqual([2]);
   });
 });

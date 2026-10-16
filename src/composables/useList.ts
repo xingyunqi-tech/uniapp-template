@@ -1,184 +1,81 @@
-import { ref, shallowRef, computed, type Ref, type ShallowRef, type ComputedRef } from 'vue';
+import { computed, ref } from 'vue';
+import { createPagedList, type PagedListOptions } from '@/store/helpers/paged-list';
 
-export interface UseListOptions<T> {
-  /** 获取数据的函数，返回数据列表 */
-  fetchData: (params: { page: number; pageSize: number }) => Promise<T[]>;
-  /** 每页数量，默认 10 */
-  pageSize?: number;
-  /** 是否立即加载，默认 false */
-  immediate?: boolean;
-  /** 判断是否还有更多数据，默认根据返回数量判断 */
-  hasMore?: (data: T[], page: number, pageSize: number) => boolean;
-}
+export type UseListOptions<T> = PagedListOptions<T, object>;
 
-export interface UseListReturn<T> {
-  /** 数据列表 (shallowRef：原地修改不会触发更新，用 updateItem / removeItem 修改) */
-  list: ShallowRef<T[]>;
-  /** 是否正在加载 */
-  loading: Ref<boolean>;
-  /** 是否正在刷新 */
-  refreshing: Ref<boolean>;
-  /** 是否没有更多数据 */
-  noMore: Ref<boolean>;
-  /** 最近一次加载或刷新是否失败 */
-  error: Ref<boolean>;
-  /** 当前页码 */
-  page: Ref<number>;
-  /** 是否为空 */
-  isEmpty: ComputedRef<boolean>;
-  /** 加载数据 */
-  loadData: () => Promise<void>;
-  /** 刷新数据 */
-  refresh: () => Promise<void>;
-  /** 重置列表 */
-  reset: () => void;
-  /** 更新匹配的列表项 */
-  updateItem: (predicate: (item: T) => boolean, updater: (item: T) => T) => void;
-  /** 移除匹配的列表项 */
-  removeItem: (predicate: (item: T) => boolean) => void;
-}
+/** 每页条数默认值 */
+const DEFAULT_LIMIT = 10;
 
 /**
- * 列表分页 Composable
- * 封装分页加载、下拉刷新、上拉加载更多逻辑
+ * 页面级分页列表，基于 createPagedList，供不需要 store 的页面使用
+ * 默认每页 10 条；page 为已加载到的页码，0 表示尚未加载；refresh 与 loadMore 失败时抛出错误
  *
  * @example
- * ```typescript
- * // 基本用法
- * const { list, loading, noMore, loadData, refresh } = useList({
- *   fetchData: async ({ page, pageSize }) => {
- *     const res = await api.getList({ page, pageSize });
- *     return res.data;
- *   },
+ * ```ts
+ * const { list, loading, refreshing, error, hasMore, isEmpty, refresh, loadMore, retry } = useList({
+ *   fetchPage: ({ page, limit }) => getArticles({ page, limit }),
  * });
- *
- * // 修改列表项
- * updateItem(item => item.id === id, item => ({ ...item, liked: true }));
- * removeItem(item => item.id === id);
  * ```
  */
-export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
-  const { fetchData, pageSize = 10, immediate = false, hasMore: customHasMore } = options;
+export function useList<T>(options: UseListOptions<T>) {
+  const pager = createPagedList<T>({ limit: DEFAULT_LIMIT, ...options });
 
-  // 状态
-  const list = shallowRef<T[]>([]);
-  const loading = ref(false);
+  /** 是否正在刷新，刷新时列表底部不显示加载更多 */
   const refreshing = ref(false);
-  const noMore = ref(false);
-  const error = ref(false);
-  const page = ref(1);
+  /** 列表为空，对应 UList 的 empty */
+  const isEmpty = computed(() => pager.list.value.length === 0);
 
-  // 是否为空
-  const isEmpty = computed(() => !loading.value && !refreshing.value && list.value.length === 0);
+  let refreshTask: Promise<void> | null = null;
+  let lastFailed: 'refresh' | 'loadMore' | null = null;
 
-  // 默认判断是否还有更多
-  const defaultHasMore = (data: T[], _page: number, _pageSize: number) => {
-    return data.length >= _pageSize;
-  };
-
-  const checkHasMore = customHasMore || defaultHasMore;
-
-  /** 最近一次请求的序号，refresh/reset 时递增使进行中的请求作废 */
-  let requestId = 0;
-
-  // 加载数据
-  async function loadData() {
-    if (loading.value || refreshing.value || noMore.value) return;
-    error.value = false;
-
-    const id = ++requestId;
-    const currentPage = page.value;
-    loading.value = true;
-
-    let data: T[];
-    try {
-      data = await fetchData({ page: currentPage, pageSize });
-    } catch (err) {
-      if (id !== requestId) return;
-      error.value = true;
-      throw err;
-    } finally {
-      if (id === requestId) loading.value = false;
-    }
-    if (id !== requestId) return;
-
-    list.value = currentPage === 1 ? data : [...list.value, ...data];
-
-    // 检查是否还有更多
-    if (checkHasMore(data, currentPage, pageSize)) {
-      page.value = currentPage + 1;
-    } else {
-      noMore.value = true;
-    }
-  }
-
-  // 刷新数据
-  async function refresh() {
-    if (refreshing.value) return;
-
-    const id = ++requestId;
-    loading.value = false;
+  /** 从第 1 页重新加载；刷新进行中时复用同一次刷新 */
+  function refresh(): Promise<void> {
+    if (refreshTask) return refreshTask;
     refreshing.value = true;
-    error.value = false;
+    refreshTask = pager
+      .loadPage(undefined, true)
+      .then(({ stale }) => {
+        if (!stale) lastFailed = null;
+      })
+      .catch(error => {
+        lastFailed = 'refresh';
+        throw error;
+      })
+      .finally(() => {
+        refreshing.value = false;
+        refreshTask = null;
+      });
+    return refreshTask;
+  }
 
-    let data: T[];
+  /** 加载下一页，加载中或没有更多时直接返回 */
+  async function loadMore(): Promise<void> {
     try {
-      data = await fetchData({ page: 1, pageSize });
-    } catch (err) {
-      if (id !== requestId) return;
-      error.value = true;
-      throw err;
-    } finally {
-      if (id === requestId) refreshing.value = false;
-    }
-    if (id !== requestId) return;
-
-    list.value = data;
-
-    if (checkHasMore(data, 1, pageSize)) {
-      page.value = 2;
-      noMore.value = false;
-    } else {
-      noMore.value = true;
+      const { stale } = await pager.loadPage();
+      if (!stale) lastFailed = null;
+    } catch (error) {
+      lastFailed = 'loadMore';
+      throw error;
     }
   }
 
-  // 重置列表
-  function reset() {
-    requestId++;
-    list.value = [];
-    page.value = 1;
-    noMore.value = false;
-    error.value = false;
-    loading.value = false;
-    refreshing.value = false;
-  }
-
-  function updateItem(predicate: (item: T) => boolean, updater: (item: T) => T) {
-    list.value = list.value.map(item => (predicate(item) ? updater(item) : item));
-  }
-
-  function removeItem(predicate: (item: T) => boolean) {
-    list.value = list.value.filter(item => !predicate(item));
-  }
-
-  // 立即加载
-  if (immediate) {
-    loadData();
+  /** 重新执行上一次失败的刷新或加载更多 */
+  function retry(): Promise<void> {
+    return lastFailed === 'loadMore' ? loadMore() : refresh();
   }
 
   return {
-    list,
-    loading,
+    list: pager.list,
+    loading: pager.loading,
     refreshing,
-    noMore,
-    error,
-    page,
+    error: pager.error,
+    hasMore: pager.hasMore,
+    page: pager.page,
+    total: pager.total,
     isEmpty,
-    loadData,
     refresh,
-    reset,
-    updateItem,
-    removeItem,
+    loadMore,
+    retry,
+    reset: pager.reset,
   };
 }

@@ -44,21 +44,26 @@ export function createPagedList<T, P extends object = object>(options: PagedList
   const total = ref(0);
 
   let requestId = 0;
+  /** 当前列表数据对应的查询参数 */
+  let loadedKey = '';
+
+  function paramsKey(params?: P): string {
+    return JSON.stringify(params ?? {});
+  }
 
   /**
    * 加载下一页；refresh 为 true 时从第 1 页重新加载并作废进行中的请求
-   * 加载中或没有更多时直接返回当前列表；请求失败时抛出错误，被作废的请求失败时不抛出并标记 stale
+   * 加载中或没有更多时直接返回当前列表；页码与是否还有更多只在请求成功后更新，
+   * 查询参数变化后的刷新失败时，下一次加载从第 1 页开始
+   * 请求失败时抛出错误，被作废的请求失败时不抛出并标记 stale
    */
   async function loadPage(params?: P, refresh = false): Promise<PagedLoadResult<T>> {
-    if (refresh) {
-      page.value = 0;
-      hasMore.value = true;
-    } else if (loading.value || !hasMore.value) {
+    if (!refresh && (loading.value || !hasMore.value)) {
       return { list: list.value, stale: false };
     }
 
     const id = ++requestId;
-    const next = page.value + 1;
+    const next = refresh ? 1 : page.value + 1;
     loading.value = true;
     error.value = false;
     try {
@@ -70,10 +75,15 @@ export function createPagedList<T, P extends object = object>(options: PagedList
       total.value = result.total ?? list.value.length;
       hasMore.value = result.totalPages !== undefined ? next < result.totalPages : list.value.length < total.value;
       page.value = next;
+      loadedKey = paramsKey(params);
       onPageLoaded?.(items, next);
       return { list: list.value, stale: false };
     } catch (err) {
       if (id !== requestId) return { list: list.value, stale: true };
+      if (refresh && paramsKey(params) !== loadedKey) {
+        page.value = 0;
+        hasMore.value = true;
+      }
       error.value = true;
       throw err;
     } finally {
@@ -95,6 +105,7 @@ export function createPagedList<T, P extends object = object>(options: PagedList
     hasMore.value = true;
     page.value = 0;
     total.value = 0;
+    loadedKey = '';
   }
 
   return { list, loading, error, hasMore, page, total, load, loadPage, reset };

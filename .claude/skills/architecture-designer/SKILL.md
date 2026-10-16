@@ -208,7 +208,7 @@ export const PAGE_ROLES: Record<string, ROLE[]> = {
              ▼
 ┌─────────────────────────────────────────┐
 │ 2. 页面加载，调用 useList              │
-│    useList({ fetchData: getUsers })     │
+│    useList({ fetchPage: getUsers })     │
 └────────────┬────────────────────────────┘
              ▼
 ┌─────────────────────────────────────────┐

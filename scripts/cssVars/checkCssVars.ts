@@ -25,7 +25,8 @@ const colorPattern =
 const varUsagePattern = /var\(\s*--([a-zA-Z0-9_-]+)/g;
 // `//` 紧跟在 `:`、引号、`(`、`=` 之后时是 URL（如 `https://`、`url(//cdn...)`），不算注释
 const commentStartPattern = /(?<![:'"(=])\/\/|\/\*|<!--/;
-const varDefinitionPattern = /(?:^|[\s{;'"`])--([a-zA-Z0-9_-]+)\s*['"`]?\s*:/gm;
+// 定义包括样式声明 `--x:`、对象字面量 `'--x':` 与下标赋值 `style['--x'] =`
+const varDefinitionPattern = /(?:^|[\s{;'"`[])--([a-zA-Z0-9_-]+)\s*['"`]?\s*(?::|\]\s*=(?![=>]))/gm;
 
 interface Issue {
   file: string;

@@ -385,7 +385,7 @@ const userStore = useUserStore();
 ### 公共类型模板
 
 ```typescript
-// src/interface/common.ts
+// src/interface/<模块>.ts（新建文件后在 src/interface/index.ts 中导出）
 
 /**
  * 分页响应

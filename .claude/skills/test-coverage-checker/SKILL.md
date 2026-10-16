@@ -13,7 +13,7 @@ metadata:
 
 ## 功能概述
 
-自动运行测试覆盖率检查,对比项目 80% 覆盖率目标,列出覆盖率不足的文件,并可选自动生成测试模板。
+自动运行测试覆盖率检查,对比 `vitest.config.ts` 中的阈值(当前语句/分支/函数/行为 70/68/67/70,长期目标 80%),列出覆盖率不足的文件,并可选自动生成测试模板。
 
 ## 使用方式
 
@@ -425,7 +425,7 @@ describe('useProductStore', () => {
 
 ### vitest.config.ts
 
-项目 `vitest.config.ts` 的 coverage 未配置 `thresholds`，80% 为覆盖率目标；需要强制阈值时在 coverage 中添加:
+项目 `vitest.config.ts` 的 coverage 已配置 `thresholds`，低于阈值时 `pnpm test:coverage` 与 CI 的 Check 失败。阈值随覆盖率提升逐步上调，长期目标 80%:
 
 ```typescript
 // vitest.config.ts
@@ -435,10 +435,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       thresholds: {
-        statements: 80,
-        branches: 80,
-        functions: 80,
-        lines: 80,
+        statements: 70,
+        branches: 68,
+        functions: 67,
+        lines: 70,
       },
     },
   },

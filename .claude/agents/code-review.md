@@ -673,7 +673,7 @@ const createUser = async (userData: CreateUserRequest): Promise<UserInfo> => {
 
 ```typescript
 import { useUserStore } from '@/store/modules/user';
-import { ROLE, ROLE_LABELS } from '@/constants/permission';
+import { ROLE } from '@/constants/permission';
 
 // ✅ 检查点：角色验证（使用 Store 方法）
 const userStore = useUserStore();
@@ -682,7 +682,6 @@ const isUserOrAbove = userStore.hasRoleOrAbove(ROLE.USER);
 
 // ✅ 在组件中使用
 const canManage = computed(() => userStore.isAdmin);
-const roleDisplayName = computed(() => ROLE_LABELS[userStore.role]);
 
 // ✅ 页面级权限：在 src/constants/pages.ts 的 PAGE_ROLES 中配置，
 // 由 src/utils/router-interceptor.ts 的 uni 路由拦截器统一校验

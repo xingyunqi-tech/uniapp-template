@@ -2,7 +2,7 @@
 # 支持微信小程序和支付宝小程序的自动构建和上传
 #
 # 触发条件:
-#   1. 推送 tag (v*.*.*)   - 自动上传到体验版
+#   1. 推送 tag (v*.*.*)   - 由 release 工作流调用，自动上传到体验版
 #   2. 手动触发            - 可选择平台和操作类型
 #
 # 注意: 不在 push 分支时触发，避免每次合并都自动部署
@@ -22,9 +22,38 @@
 name: Deploy MiniProgram
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_call:
+    inputs:
+      skip-check:
+        description: '调用方已完成代码检查时跳过 check'
+        required: false
+        default: false
+        type: boolean
+      platform:
+        description: '目标平台 (weixin / alipay / all)'
+        required: false
+        default: 'weixin'
+        type: string
+      action:
+        description: '操作类型 (upload / preview)'
+        required: false
+        default: 'upload'
+        type: string
+      version:
+        description: '版本号 (留空则使用 tag 或 package.json 版本)'
+        required: false
+        default: ''
+        type: string
+      description:
+        description: '版本描述'
+        required: false
+        default: ''
+        type: string
+      optional-alipay:
+        description: '支付宝 secrets 缺失时跳过支付宝上传，而不是失败'
+        required: false
+        default: false
+        type: boolean
 
   # 手动触发
   workflow_dispatch:
@@ -47,18 +76,20 @@ on:
           - upload
           - preview
       version:
-        description: '版本号 (留空则使用 package.json 版本)'
+        description: '版本号 (留空则使用 tag 或 package.json 版本)'
         required: false
+        default: ''
         type: string
       description:
         description: '版本描述'
         required: false
+        default: ''
         type: string
 
-# 并发控制: 同一分支只运行一个部署任务
+# 并发控制: 固定 group、不中途取消；同组最多一个运行、一个等待，新的等待项会取消旧的等待项
 concurrency:
-  group: deploy-mp-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-mp
+  cancel-in-progress: false
 
 env:
   PNPM_VERSION: '11'
@@ -67,12 +98,14 @@ jobs:
   # ==================== 代码质量检查 ====================
   check:
     name: Check
+    if: ${{ !inputs.skip-check }}
     uses: ./.github/workflows/check.yml
 
   # ==================== 构建任务 ====================
   build:
     name: Build
     needs: check
+    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -96,11 +129,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate inputs
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          case "$PLATFORM" in weixin|alipay|all) ;; *) echo "::error::platform 取值无效: $PLATFORM"; exit 1 ;; esac
+          case "$ACTION" in upload|preview) ;; *) echo "::error::action 取值无效: $ACTION"; exit 1 ;; esac
+
       - name: Get version info
         id: version
         env:
-          INPUT_VERSION: ${{ github.event.inputs.version }}
-          INPUT_DESC: ${{ github.event.inputs.description }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_DESC: ${{ inputs.description }}
         run: |
           # 判断触发类型获取版本
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
@@ -108,7 +149,6 @@ jobs:
             VERSION="${GITHUB_REF#refs/tags/v}"
             DESC="Release $VERSION - $(date '+%Y-%m-%d %H:%M')"
           else
-            # 手动触发
             VERSION="$INPUT_VERSION"
             if [[ -z "$VERSION" ]]; then
               VERSION=$(node -p "require('./package.json').version")
@@ -127,20 +167,14 @@ jobs:
 
       # 构建微信小程序
       - name: Build WeChat MiniProgram
-        if: |
-          github.event_name == 'push' ||
-          github.event.inputs.platform == 'weixin' ||
-          github.event.inputs.platform == 'all'
+        if: inputs.platform == 'weixin' || inputs.platform == 'all'
         run: pnpm build:mp-weixin
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
       # 构建支付宝小程序
       - name: Build Alipay MiniProgram
-        if: |
-          github.event_name == 'push' ||
-          github.event.inputs.platform == 'alipay' ||
-          github.event.inputs.platform == 'all'
+        if: inputs.platform == 'alipay' || inputs.platform == 'all'
         run: pnpm build:mp-alipay
         env:
           NODE_OPTIONS: --max-old-space-size=8192
@@ -226,10 +260,7 @@ jobs:
 
       # 上传构建产物
       - name: Upload WeChat build artifact
-        if: |
-          github.event_name == 'push' ||
-          github.event.inputs.platform == 'weixin' ||
-          github.event.inputs.platform == 'all'
+        if: inputs.platform == 'weixin' || inputs.platform == 'all'
         uses: actions/upload-artifact@v4
         with:
           name: mp-weixin-build
@@ -237,10 +268,7 @@ jobs:
           retention-days: 1
 
       - name: Upload Alipay build artifact
-        if: |
-          github.event_name == 'push' ||
-          github.event.inputs.platform == 'alipay' ||
-          github.event.inputs.platform == 'all'
+        if: inputs.platform == 'alipay' || inputs.platform == 'all'
         uses: actions/upload-artifact@v4
         with:
           name: mp-alipay-build
@@ -252,19 +280,23 @@ jobs:
     name: Deploy WeChat
     needs: build
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' ||
-      github.event.inputs.platform == 'weixin' ||
-      github.event.inputs.platform == 'all'
+    if: >-
+      ${{ !cancelled() && !failure() && (
+        inputs.platform == 'weixin' ||
+        inputs.platform == 'all'
+      ) }}
 
     steps:
       - name: Check secrets
+        env:
+          WEIXIN_APPID: ${{ secrets.WEIXIN_APPID }}
+          WEIXIN_PRIVATE_KEY: ${{ secrets.WEIXIN_PRIVATE_KEY }}
         run: |
-          if [[ -z "${{ secrets.WEIXIN_APPID }}" ]]; then
+          if [[ -z "$WEIXIN_APPID" ]]; then
             echo "::error::缺少 WEIXIN_APPID secret，请在仓库 Settings -> Secrets 中配置"
             exit 1
           fi
-          if [[ -z "${{ secrets.WEIXIN_PRIVATE_KEY }}" ]]; then
+          if [[ -z "$WEIXIN_PRIVATE_KEY" ]]; then
             echo "::error::缺少 WEIXIN_PRIVATE_KEY secret，请在仓库 Settings -> Secrets 中配置"
             exit 1
           fi
@@ -299,9 +331,18 @@ jobs:
           WEIXIN_PRIVATE_KEY: ${{ secrets.WEIXIN_PRIVATE_KEY }}
           MP_VERSION: ${{ needs.build.outputs.version }}
           MP_DESC: ${{ needs.build.outputs.description }}
-        run: |
-          ACTION="${{ github.event.inputs.action || 'upload' }}"
-          pnpm tsx scripts/mp-upload.ts weixin $ACTION
+          MP_ACTION: ${{ inputs.action }}
+        run: pnpm tsx scripts/mp-upload.ts weixin "$MP_ACTION"
+
+      - name: Upload preview QR code
+        if: always() && inputs.action == 'preview'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mp-weixin-preview-qrcode
+          path: .temp/preview-qrcode.png
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload result notification
         if: success()
@@ -323,16 +364,18 @@ jobs:
     name: Deploy Alipay
     needs: build
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' ||
-      github.event.inputs.platform == 'alipay' ||
-      github.event.inputs.platform == 'all'
+    if: >-
+      ${{ !cancelled() && !failure() && (
+        inputs.platform == 'alipay' ||
+        inputs.platform == 'all'
+      ) }}
 
     steps:
-      # tag 触发时未配置支付宝 secrets 则跳过后续步骤；手动选择支付宝时缺失直接失败
+      # optional-alipay 为 true 时缺少支付宝 secrets 则跳过后续步骤，否则直接失败
       - name: Check secrets
         id: secrets
         env:
+          OPTIONAL_ALIPAY: ${{ inputs.optional-alipay }}
           ALIPAY_APPID: ${{ secrets.ALIPAY_APPID }}
           ALIPAY_PRIVATE_KEY: ${{ secrets.ALIPAY_PRIVATE_KEY }}
           ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
@@ -343,7 +386,7 @@ jobs:
           [[ -z "$ALIPAY_TOOL_ID" ]] && missing+=(ALIPAY_TOOL_ID)
 
           if [[ ${#missing[@]} -gt 0 ]]; then
-            if [[ "${{ github.event_name }}" == "push" ]]; then
+            if [[ "$OPTIONAL_ALIPAY" == "true" ]]; then
               echo "::notice::未配置支付宝小程序 secrets（${missing[*]}），跳过支付宝上传"
               echo "configured=false" >> $GITHUB_OUTPUT
               exit 0
@@ -392,9 +435,8 @@ jobs:
           MP_DESC: ${{ needs.build.outputs.description }}
           # Node.js 22 使用 OpenSSL 3.x，需要启用 legacy provider 以支持支付宝私钥签名
           NODE_OPTIONS: --openssl-legacy-provider
-        run: |
-          ACTION="${{ github.event.inputs.action || 'upload' }}"
-          pnpm tsx scripts/mp-upload.ts alipay $ACTION
+          MP_ACTION: ${{ inputs.action }}
+        run: pnpm tsx scripts/mp-upload.ts alipay "$MP_ACTION"
 
       - name: Upload result notification
         if: success() && steps.secrets.outputs.configured == 'true'

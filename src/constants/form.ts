@@ -92,15 +92,3 @@ export const DELAY_TIMES = {
   /** 长延迟 - 成功后导航跳转 */
   LONG: 1500,
 } as const;
-
-/**
- * 客服信息
- */
-export const CUSTOMER_SERVICE = {
-  /** 客服电话 */
-  PHONE: '400-123-4567',
-  /** 服务时间 */
-  SERVICE_TIME: '工作日 9:00-18:00',
-  /** 在线时间 */
-  ONLINE_TIME: '9:00-18:00',
-} as const;

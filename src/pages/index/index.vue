@@ -27,11 +27,11 @@
     <!-- 示例文章列表 -->
     <UList
       class="news-list"
-      :empty="newsList.length === 0"
-      :loading="loading"
-      :finished="noMore"
+      :empty="isEmpty"
+      :loading="loading && !refreshing"
+      :finished="!hasMore"
       :error="loadError"
-      @retry="loadNews"
+      @retry="handleRetry"
     >
       <UCard v-for="item in newsList" :key="item.id" class="news-item" clickable @click="handleNewsClick(item)">
         <view class="news-content">
@@ -131,21 +131,21 @@ const mockTags = ['推荐', '教程', undefined];
 const {
   list: newsList,
   loading,
-  noMore,
+  refreshing,
   error: loadError,
-  loadData,
+  hasMore,
+  isEmpty,
   refresh,
+  loadMore,
+  retry,
 } = useList<NewsItem>({
-  pageSize: 10,
-  fetchData: async ({ page, pageSize }) => {
+  limit: 10,
+  fetchPage: async ({ page, limit }) => {
     // 模拟接口请求延迟
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 模拟最多 3 页数据
-    if (page > 3) return [];
-
-    const baseId = (page - 1) * pageSize;
-    return Array.from({ length: pageSize }, (_, index) => ({
+    const baseId = (page - 1) * limit;
+    const list = Array.from({ length: limit }, (_, index) => ({
       id: baseId + index + 1,
       title: mockTitles[index % mockTitles.length],
       summary: '这是一段示例摘要，用于展示列表卡片的标题、摘要、作者与标签布局。',
@@ -154,16 +154,26 @@ const {
       image: index % 3 === 0 ? `https://picsum.photos/200/150?random=${baseId + index + 1}` : undefined,
       tag: mockTags[index % mockTags.length],
     }));
+    // 模拟共 3 页数据
+    return { list, totalPages: 3 };
   },
-  hasMore: (data, page) => data.length > 0 && page < 3,
 });
 
 // 加载文章列表，失败由列表显示重试
 async function loadNews() {
   try {
-    await loadData();
+    await loadMore();
   } catch (error) {
     console.error('加载文章失败:', error);
+  }
+}
+
+// 重试上一次失败的刷新或加载更多
+async function handleRetry() {
+  try {
+    await retry();
+  } catch (error) {
+    console.error('重试失败:', error);
   }
 }
 
@@ -206,7 +216,7 @@ onPullDownRefresh(async () => {
 
 // 上拉加载更多
 onReachBottom(() => {
-  if (!noMore.value) {
+  if (hasMore.value) {
     loadNews();
   }
 });
