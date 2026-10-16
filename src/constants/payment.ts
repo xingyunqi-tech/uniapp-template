@@ -1,3 +1,4 @@
+import type { IconName } from '@/components';
 /**
  * 支付相关常量
  */
@@ -39,7 +40,7 @@ export const PAYMENT_METHOD_MAP: Record<
   PaymentMethod,
   {
     text: string;
-    icon?: UniIconsType;
+    icon?: IconName;
   }
 > = {
   [PaymentMethod.WECHAT]: {

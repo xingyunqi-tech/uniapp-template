@@ -20,16 +20,9 @@
               <UInput v-model="formData.phone" type="number" placeholder="请输入手机号" :maxlength="PHONE_LENGTH" />
             </UFormItem>
 
-            <!-- 统一使用 uni-data-picker，各平台使用相同的 API 数据 -->
-            <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
-            <uni-data-picker
-              :localdata="regionStore.regionTree"
-              popup-title="请选择所在地区"
-              :value="regionPickerValue"
-              @change="handleRegionChange"
-            >
-              <UFormItem label="所在地区" prop="province" :value="regionText" placeholder="请选择省市区" show-arrow />
-            </uni-data-picker>
+            <URegionPicker v-slot="{ text }" v-model="region">
+              <UFormItem label="所在地区" prop="province" :value="text" placeholder="请选择省市区" show-arrow />
+            </URegionPicker>
 
             <UFormItem label="详细地址" prop="address" align-top>
               <UTextarea
@@ -87,6 +80,7 @@ import { useAddressStore } from '@/store/modules/address';
 import { useRegionStore } from '@/store/modules/region';
 import { PAGES, PHONE_LENGTH } from '@/constants';
 import { phoneRules, type FormRules } from '@/utils/form-rules';
+import type { RegionValue } from '@/components';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
@@ -128,21 +122,9 @@ onUnload(() => {
   backTimer = null;
 });
 
-// 地区文本（将编码转换为名称显示）
-const regionText = computed(() => {
-  if (formData.province && formData.city && formData.district) {
-    const names = regionStore.codesToNamesSync(formData.province, formData.city, formData.district);
-    return `${names.province} ${names.city} ${names.district}`;
-  }
-  return '';
-});
-
-// 地区选择器值 (uni-data-picker 使用编码数组)
-const regionPickerValue = computed((): UniDataPickerValueArray => {
-  if (formData.province && formData.city && formData.district) {
-    return [formData.province, formData.city, formData.district];
-  }
-  return [];
+const region = computed<RegionValue>({
+  get: () => ({ province: formData.province, city: formData.city, district: formData.district }),
+  set: value => Object.assign(formData, value),
 });
 
 onLoad(async options => {
@@ -161,6 +143,7 @@ onLoad(async options => {
     uni.setNavigationBarTitle({ title: '新增地址' });
   }
 
+  // 与地址详情并行预取地区树，URegionPicker 挂载时复用同一请求
   const loadRegionTree = regionStore.fetchRegionTree().catch(error => {
     console.error('加载地区数据失败:', error);
   });
@@ -188,30 +171,12 @@ async function loadAddressDetail(id: number) {
       formData.province = address.provinceCode;
       formData.city = address.cityCode;
       formData.district = address.districtCode;
-      await regionStore
-        .codesToNames(address.provinceCode, address.cityCode, address.districtCode)
-        .catch(error => console.error('加载地区名称失败:', error));
     }
   } catch (error) {
     console.error('加载地址详情失败:', error);
     detailError.value = true;
   } finally {
     detailLoading.value = false;
-  }
-}
-
-// 地区选择变更 (uni-data-picker 直接返回编码)
-interface DataPickerChangeEvent {
-  detail: {
-    value: Array<{ value: string; text: string }>;
-  };
-}
-function handleRegionChange(e: DataPickerChangeEvent) {
-  const values = e.detail.value;
-  if (values && values.length >= 3) {
-    formData.province = values[0].value;
-    formData.city = values[1].value;
-    formData.district = values[2].value;
   }
 }
 

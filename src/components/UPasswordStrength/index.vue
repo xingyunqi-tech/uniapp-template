@@ -20,19 +20,19 @@
       <text v-if="showRulesTitle" class="rules-title">密码要求：</text>
       <view :class="['rules-list', { horizontal: horizontal }]">
         <view :class="['rule-item', { valid: isLengthValid }]">
-          <uni-icons :type="isLengthValid ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <UIcon :name="isLengthValid ? 'checkmarkempty' : 'closeempty'" />
           <text>长度{{ mergedRules.minLength }}-{{ mergedRules.maxLength }}位</text>
         </view>
         <view v-if="mergedRules.requireLetter" :class="['rule-item', { valid: hasLetter }]">
-          <uni-icons :type="hasLetter ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <UIcon :name="hasLetter ? 'checkmarkempty' : 'closeempty'" />
           <text>包含字母</text>
         </view>
         <view v-if="mergedRules.requireNumber" :class="['rule-item', { valid: hasNumber }]">
-          <uni-icons :type="hasNumber ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <UIcon :name="hasNumber ? 'checkmarkempty' : 'closeempty'" />
           <text>包含数字</text>
         </view>
         <view v-if="mergedRules.requireSpecialChar" :class="['rule-item', { valid: hasSpecialChar }]">
-          <uni-icons :type="hasSpecialChar ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
+          <UIcon :name="hasSpecialChar ? 'checkmarkempty' : 'closeempty'" />
           <text>包含特殊字符</text>
         </view>
       </view>

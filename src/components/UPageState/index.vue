@@ -46,6 +46,7 @@ definePage({
 });
 
 import { computed, ref, useSlots, watch } from 'vue';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UPageState',
@@ -73,13 +74,13 @@ export interface UPageStateProps {
   /** 空状态类型 */
   emptyType?: EmptyType;
   /** 空状态图标，覆盖 emptyType 对应的图标 */
-  emptyIcon?: UniIconsType;
+  emptyIcon?: IconName;
   /** 错误默认文案，error 为字符串时以其为准 */
   errorText?: string;
   /** 错误状态类型 */
   errorType?: EmptyType;
   /** 错误状态图标，覆盖 errorType 对应的图标 */
-  errorIcon?: UniIconsType;
+  errorIcon?: IconName;
   /** 是否显示重试按钮 */
   showRetry?: boolean;
   /** 重试按钮文字 */

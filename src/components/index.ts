@@ -10,6 +10,10 @@ export { default as AuthLayout } from './AuthLayout/index.vue';
 export { default as UNavBar } from './UNavBar/index.vue';
 
 // ==================== 基础组件 ====================
+// 图标 (基于 uni-icons 封装，尺寸默认 rpx)
+export { default as UIcon } from './UIcon/index.vue';
+export type { UIconProps, IconName } from './UIcon/index.vue';
+
 // 操作菜单组件 (底部弹出选项列表)
 export { default as UActionSheet } from './UActionSheet/index.vue';
 export type { ActionItem } from './UActionSheet/index.vue';
@@ -117,6 +121,10 @@ export { default as UPasswordStrength } from './UPasswordStrength/index.vue';
 
 // 短信验证码输入组件 (内置倒计时)
 export { default as USmsInput } from './USmsInput/index.vue';
+
+// 省市区选择 (基于 uni-data-picker 封装，v-model 绑定编码)
+export { default as URegionPicker } from './URegionPicker/index.vue';
+export type { URegionPickerProps, RegionValue, RegionChangeDetail } from './URegionPicker/index.vue';
 
 // 图片上传组件 (基于 uni-file-picker 封装)
 export { default as UImageUpload } from './UImageUpload/index.vue';

@@ -7,7 +7,7 @@
     <!-- 自定义导航栏：状态栏占位 + 返回按钮 -->
     <view class="auth-nav" :style="navStyle">
       <view class="auth-nav__back" @click="goBack">
-        <uni-icons type="left" size="44rpx" color="var(--color-text)" />
+        <UIcon name="left" size="44rpx" color="var(--color-text)" />
       </view>
     </view>
 

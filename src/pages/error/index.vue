@@ -30,6 +30,7 @@ import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { canGoBack as checkCanGoBack } from '@/utils/router';
 import { PAGES } from '@/constants';
+import type { IconName } from '@/components';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -41,7 +42,7 @@ type ErrorType = '404' | '403' | '500' | 'network';
 const errorCode = ref('404');
 
 // 错误信息配置
-const errorConfig: Record<ErrorType, { title: string; desc: string; icon: UniIconsType }> = {
+const errorConfig: Record<ErrorType, { title: string; desc: string; icon: IconName }> = {
   '404': {
     title: '页面不存在',
     desc: '抱歉，您访问的页面不存在或已被移除',

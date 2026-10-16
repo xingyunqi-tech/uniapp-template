@@ -22,11 +22,11 @@
         </view>
         <view class="address-actions">
           <view class="action-item" @click.stop="handleSetDefault(item)">
-            <uni-icons type="checkbox" :color="item.isDefault ? 'var(--color-primary)' : 'inherit'" size="32rpx" />
+            <UIcon name="checkbox" :color="item.isDefault ? 'var(--color-primary)' : 'inherit'" size="32rpx" />
             <text class="action-text">默认</text>
           </view>
           <view class="action-item" @click.stop="handleDelete(item)">
-            <uni-icons type="trash" color="inherit" size="32rpx" />
+            <UIcon name="trash" size="32rpx" />
             <text class="action-text">删除</text>
           </view>
         </view>
@@ -36,7 +36,7 @@
     <!-- 添加地址按钮 -->
     <view class="add-btn-wrapper">
       <UButton class="add-btn" type="primary" block @click="handleAdd">
-        <uni-icons type="plusempty" color="inherit" size="36rpx" />
+        <UIcon name="plusempty" size="36rpx" />
         <text>添加新地址</text>
       </UButton>
     </view>

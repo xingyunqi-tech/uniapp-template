@@ -20,7 +20,7 @@
       <view class="tabs-actions">
         <text class="action-text" @tap="handleMarkAllRead">已读</text>
         <view class="action-icon" @tap="navigateToSettings">
-          <uni-icons type="gear" size="20" color="var(--color-text-secondary)" />
+          <UIcon name="gear" size="40rpx" color="var(--color-text-secondary)" />
         </view>
       </view>
     </view>
@@ -58,7 +58,7 @@
 
             <!-- 通知图标 -->
             <view class="notification-icon" :class="`category-${item.category}`">
-              <uni-icons :type="getIconType(item.category) as any" size="20" color="var(--color-text-inverse)" />
+              <UIcon :name="getIconType(item.category)" size="40rpx" color="var(--color-text-inverse)" />
             </view>
 
             <!-- 通知内容 -->
@@ -72,7 +72,7 @@
 
             <!-- 删除按钮 -->
             <view class="notification-actions" @tap.stop="handleDelete(item)">
-              <uni-icons type="trash" size="18" color="var(--color-text-secondary)" />
+              <UIcon name="trash" size="36rpx" color="var(--color-text-secondary)" />
             </view>
           </view>
         </UList>
@@ -99,6 +99,7 @@ import { formatRelativeTime } from '@/utils/datetime';
 import { getPathFromUrl, isRouteIntercepted, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
 import { PAGES } from '@/constants';
 import { useDialog } from '@/composables';
+import type { IconName } from '@/components';
 
 // ==================== Store ====================
 const notificationStore = useNotificationStore();
@@ -257,8 +258,8 @@ function navigateToSettings() {
 /**
  * 获取分类图标
  */
-function getIconType(category: string): string {
-  const iconMap: Record<string, string> = {
+function getIconType(category: string): IconName {
+  const iconMap: Record<string, IconName> = {
     [NotificationCategory.SYSTEM]: 'notification',
     [NotificationCategory.ORDER]: 'cart',
     [NotificationCategory.PAYMENT]: 'wallet',

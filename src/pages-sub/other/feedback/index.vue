@@ -32,7 +32,7 @@
           <view v-for="(img, index) in formData.images" :key="img.path" class="image-item">
             <image :src="img.path" mode="aspectFill" @click="previewImage(img.path)" />
             <view class="remove-btn" @click="removeImage(index)">
-              <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
+              <UIcon name="closeempty" color="var(--color-text-inverse)" size="24rpx" />
             </view>
             <!-- 上传中状态 -->
             <view v-if="!img.url" class="uploading-mask">
@@ -40,7 +40,7 @@
             </view>
           </view>
           <view v-if="formData.images.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
-            <uni-icons type="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
+            <UIcon name="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
             <text class="upload-text">添加图片</text>
           </view>
         </view>

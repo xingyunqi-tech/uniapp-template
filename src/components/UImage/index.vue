@@ -11,7 +11,7 @@
         <image v-if="placeholder" class="u-image__placeholder" :src="placeholder" :mode="mode" />
         <!-- 无占位图时显示图标 -->
         <view v-else class="u-image__icon">
-          <uni-icons type="image" color="inherit" size="inherit" />
+          <UIcon name="image" />
         </view>
       </slot>
     </view>
@@ -24,7 +24,7 @@
         <!-- 无错误图时显示图标 -->
         <template v-else>
           <view class="u-image__icon">
-            <uni-icons type="info" color="inherit" size="inherit" />
+            <UIcon name="info" />
           </view>
           <text class="u-image__error-text">加载失败</text>
         </template>

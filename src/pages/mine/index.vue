@@ -9,7 +9,7 @@
           <text class="desc">{{ isLoggedIn ? userInfo?.phone || '完善个人信息' : '点击登录账号' }}</text>
         </view>
         <view class="arrow">
-          <uni-icons type="right" color="inherit" size="inherit" />
+          <UIcon name="right" />
         </view>
       </view>
     </view>

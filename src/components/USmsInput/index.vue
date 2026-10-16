@@ -33,6 +33,7 @@ definePage({
 import { computed } from 'vue';
 import { SMS_CODE_LENGTH } from '@/constants/form';
 import { useCountdown } from '@/composables';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'USmsInput',
@@ -54,7 +55,7 @@ const props = withDefaults(
     /** 输入框占位文字 */
     placeholder?: string;
     /** 输入框前缀图标 (uni-icons 的 type)，传空字符串不显示 */
-    prefixIcon?: UniIconsType | '';
+    prefixIcon?: IconName | '';
     /** 默认文案 */
     defaultText?: string;
     /** 倒计时文案模板，{s} 会被替换为秒数 */

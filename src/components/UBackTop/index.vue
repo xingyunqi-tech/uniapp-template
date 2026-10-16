@@ -5,7 +5,7 @@
   -->
   <view v-if="visible" class="u-back-top" :style="backTopStyle" hover-class="u-back-top--hover" @click="handleClick">
     <slot>
-      <uni-icons type="top" size="40rpx" color="var(--color-text-secondary)" />
+      <UIcon name="top" size="40rpx" color="var(--color-text-secondary)" />
     </slot>
   </view>
 </template>

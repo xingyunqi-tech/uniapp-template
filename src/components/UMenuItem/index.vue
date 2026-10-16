@@ -16,7 +16,7 @@
     <!-- 左侧图标 -->
     <view v-if="icon || $slots.icon" class="u-menu-item__icon">
       <slot name="icon">
-        <uni-icons :type="icon" :size="`${iconSize}rpx`" :color="iconColorValue" />
+        <UIcon :name="icon" :size="iconSize" :color="iconColorValue" />
       </slot>
     </view>
 
@@ -46,10 +46,10 @@
           @change="handleSwitchChange"
         />
       </view>
-      <uni-icons
+      <UIcon
         v-if="showArrow && !showSwitch"
-        type="right"
-        size="16"
+        name="right"
+        size="32rpx"
         color="var(--color-text-placeholder)"
         class="u-menu-item__arrow"
       />
@@ -71,6 +71,7 @@ definePage({
 
 import { computed } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UMenuItem',
@@ -84,7 +85,7 @@ interface Props {
   /** 右侧文字 */
   rightText?: string;
   /** 左侧图标 (uni-icons 的 type) */
-  icon?: UniIconsType;
+  icon?: IconName;
   /** 图标颜色 */
   iconColor?: string;
   /** 图标大小 (rpx) */

@@ -4,7 +4,7 @@
     <UNavBar title="首页" :show-back="false">
       <template #left>
         <view class="nav-left-icon">
-          <uni-icons type="home" size="22" color="var(--color-text)" />
+          <UIcon name="home" size="44rpx" color="var(--color-text)" />
         </view>
       </template>
     </UNavBar>
@@ -17,7 +17,7 @@
       <view class="category-grid">
         <view v-for="item in categoryList" :key="item.id" class="category-item" @click="handleCategoryClick(item)">
           <view class="category-icon">
-            <uni-icons :type="item.icon" size="28" color="var(--color-primary)" />
+            <UIcon :name="item.icon" size="56rpx" color="var(--color-primary)" />
           </view>
           <text class="category-name">{{ item.name }}</text>
         </view>
@@ -61,6 +61,7 @@ import { ref } from 'vue';
 import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { useList } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import type { IconName } from '@/components';
 
 const globalStore = useGlobalStore();
 
@@ -75,7 +76,7 @@ interface BannerItem {
 interface CategoryItem {
   id: number;
   name: string;
-  icon: UniIconsType;
+  icon: IconName;
 }
 
 // 示例文章数据类型

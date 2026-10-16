@@ -5,11 +5,15 @@
 
 import { vi, afterEach } from 'vitest';
 import { config } from '@vue/test-utils';
+import UIcon from '@/components/UIcon/index.vue';
 
 // 配置Vue Test Utils全局设置
 config.global.stubs = {
   // 全局组件存根
 };
+
+// 与 easycom 一致，UIcon 全局可用
+config.global.components = { UIcon };
 
 // Mock uni 全局对象：存储为内存实现，交互与网络 API 打桩，单个测试按需 mockImplementation
 const uniStorage = new Map<string, unknown>();

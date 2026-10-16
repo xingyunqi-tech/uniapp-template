@@ -29,7 +29,7 @@
     @launchapp="emit('launchapp', $event)"
     @agreeprivacyauthorization="emit('agreeprivacyauthorization', $event)"
   >
-    <uni-icons v-if="icon && !loading" class="u-button__icon" :type="icon" color="inherit" size="inherit" />
+    <UIcon v-if="icon && !loading" class="u-button__icon" :name="icon" />
     <slot>{{ text }}</slot>
   </button>
 </template>
@@ -40,6 +40,8 @@ definePage({
     isComponent: true,
   },
 });
+
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UButton',
@@ -71,7 +73,7 @@ export interface UButtonProps {
   /** 在 form 中点击时触发 submit / reset */
   formType?: UniHelper.ButtonFormType;
   /** 文字左侧图标 (uni-icons 的 type)，加载中时不显示 */
-  icon?: UniIconsType;
+  icon?: IconName;
   /** 胶囊圆角 */
   round?: boolean;
 }

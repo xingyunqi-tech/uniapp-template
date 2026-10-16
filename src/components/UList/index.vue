@@ -33,6 +33,7 @@ definePage({
 
 import { computed } from 'vue';
 import type { LoadMoreStatus } from '../ULoadMore/index.vue';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UList',
@@ -55,7 +56,7 @@ export interface UListProps {
   /** 空状态类型 */
   emptyType?: 'default' | 'search' | 'network' | 'error' | 'cart' | 'message';
   /** 空状态图标，覆盖 emptyType 对应的图标 */
-  emptyIcon?: UniIconsType;
+  emptyIcon?: IconName;
   /** 首次加载失败的文字 */
   errorText?: string;
 }

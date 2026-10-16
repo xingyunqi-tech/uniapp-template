@@ -48,6 +48,7 @@ definePage({
 import { computed, inject } from 'vue';
 import { useGlobalStore } from '@/store/modules/global';
 import { U_FORM_ITEM_KEY, type UFormItemContext } from '../UForm/context';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UInput',
@@ -77,9 +78,9 @@ export interface UInputProps {
   /** 键盘右下角按钮文字 */
   confirmType?: 'send' | 'search' | 'next' | 'go' | 'done';
   /** 前缀图标（uni-icons 的 type） */
-  prefixIcon?: UniIconsType | '';
+  prefixIcon?: IconName | '';
   /** 后缀图标（uni-icons 的 type） */
-  suffixIcon?: UniIconsType | '';
+  suffixIcon?: IconName | '';
   /** type 为 password 时是否显示密码可见切换 */
   passwordIcon?: boolean;
   /** 是否显示字数统计，maxlength 大于 0 时生效 */

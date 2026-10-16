@@ -19,7 +19,7 @@
   >
     <!-- 左侧图标 -->
     <view v-if="icon" class="u-tag__icon">
-      <uni-icons :type="icon" color="inherit" size="inherit" />
+      <UIcon :name="icon" />
     </view>
 
     <!-- 文本内容 -->
@@ -29,7 +29,7 @@
 
     <!-- 关闭按钮 -->
     <view v-if="closeable" class="u-tag__close" @click.stop="handleClose">
-      <uni-icons type="closeempty" color="inherit" size="inherit" />
+      <UIcon name="closeempty" />
     </view>
   </view>
 </template>
@@ -42,6 +42,7 @@ definePage({
 });
 
 import { computed } from 'vue';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UTag',
@@ -68,7 +69,7 @@ interface Props {
   /** 是否可关闭 */
   closeable?: boolean;
   /** 左侧图标 (uni-icons 的 type) */
-  icon?: UniIconsType;
+  icon?: IconName;
   /** 自定义颜色 */
   color?: string;
   /** 自定义背景色 */

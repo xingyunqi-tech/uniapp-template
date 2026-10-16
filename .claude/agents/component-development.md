@@ -59,8 +59,10 @@ easycom: {
 ```vue
 <template>
   <!-- uni-ui 组件自动导入 -->
-  <uni-icons type="home" size="24" />
   <uni-badge text="99+" />
+
+  <!-- 图标使用 UIcon，不直接使用 uni-icons -->
+  <UIcon name="home" size="48rpx" />
 
   <!-- 自定义 U 前缀组件自动导入 -->
   <UNavBar title="页面标题" />
@@ -258,22 +260,21 @@ easycom: {
 
 ## 图标和图片使用规范
 
-### 1. uni-icons 图标
+### 1. UIcon 图标
 
-优先使用 uni-ui 内置图标：
+使用 `UIcon`（基于 uni-icons 封装），不直接使用 `uni-icons`。`name` 为 uni-icons 图标名，类型为 `IconName`；`size` 数字按 rpx 处理，`size`、`color` 默认跟随父级：
 
 ```vue
 <template>
-  <!-- uni-icons 图标 -->
-  <uni-icons type="home" size="24" color="#333" />
-  <uni-icons type="search" size="20" />
-  <uni-icons type="cart" size="28" color="var(--color-primary)" />
+  <UIcon name="home" size="48rpx" color="var(--color-text)" />
+  <UIcon name="search" :size="40" />
+  <UIcon name="cart" color="var(--color-primary)" />
 </template>
 ```
 
 ### 2. 自定义 SVG 图标
 
-当 uni-icons 不满足需求时，使用 `<image>` 标签引用 SVG 文件：
+当 UIcon 不满足需求时，使用 `<image>` 标签引用 SVG 文件：
 
 ```vue
 <template>
@@ -499,16 +500,18 @@ const emit = defineEmits<{
       class="menu-item"
       @click="handleClick(item)"
     >
-      <uni-icons :type="item.icon" size="24" />
+      <UIcon :name="item.icon" size="48rpx" />
       <text>{{ item.label }}</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
+import type { IconName } from '@/components';
+
 interface MenuItem {
   id: string;
-  icon: string;
+  icon: IconName;
   label: string;
   path: string;
 }
@@ -522,11 +525,11 @@ const props = defineProps<{
 <template>
   <view class="menu-list">
     <view class="menu-item">
-      <uni-icons type="home" />
+      <UIcon name="home" />
       <text>首页</text>
     </view>
     <view class="menu-item">
-      <uni-icons type="person" />
+      <UIcon name="person" />
       <text>我的</text>
     </view>
   </view>
@@ -673,7 +676,7 @@ const onShareAppMessage = () => ({
 - [ ] 删除无意义的包装元素
 
 ### 图标图片检查
-- [ ] 优先使用 uni-icons
+- [ ] 图标使用 UIcon，不直接使用 uni-icons
 - [ ] 自定义图标使用 `<image>` 标签
 - [ ] 禁止内联 SVG
 - [ ] 图片使用 lazy-load 属性

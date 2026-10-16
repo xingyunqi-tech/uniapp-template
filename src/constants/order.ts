@@ -5,6 +5,7 @@
  */
 
 import { OrderStatus, type OrderPaymentChannel } from '@/api';
+import type { IconName } from '@/components';
 
 // 重导出 API 类型，供其他模块使用
 export { OrderStatus };
@@ -18,7 +19,7 @@ export const ORDER_STATUS_MAP: Record<
   {
     text: string;
     class: string;
-    icon?: UniIconsType;
+    icon?: IconName;
   }
 > = {
   [OrderStatus.UNPAID]: {

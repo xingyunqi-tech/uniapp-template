@@ -7,7 +7,7 @@
     <!-- 搜索输入区域 -->
     <view class="u-search-bar__input-wrapper">
       <slot name="left">
-        <uni-icons type="search" size="18" color="var(--color-text-secondary)" class="u-search-bar__icon" />
+        <UIcon name="search" size="36rpx" color="var(--color-text-secondary)" class="u-search-bar__icon" />
       </slot>
 
       <!-- 输入框 -->
@@ -29,7 +29,7 @@
 
       <!-- 清空按钮 -->
       <view v-if="modelValue && !disabled" class="u-search-bar__clear" @click="handleClear">
-        <uni-icons type="clear" size="16" color="var(--color-text-placeholder)" />
+        <UIcon name="clear" size="32rpx" color="var(--color-text-placeholder)" />
       </view>
 
       <slot name="right" />
@@ -49,7 +49,7 @@
       <view class="u-search-bar__section-header">
         <text class="u-search-bar__section-title">搜索历史</text>
         <view class="u-search-bar__section-action" @click="handleClearHistory">
-          <uni-icons type="trash" size="16" color="var(--color-text-secondary)" />
+          <UIcon name="trash" size="32rpx" color="var(--color-text-secondary)" />
         </view>
       </view>
       <view class="u-search-bar__tags">
@@ -61,7 +61,7 @@
         >
           <text class="u-search-bar__tag-text">{{ item }}</text>
           <view class="u-search-bar__tag-close" @click.stop="handleRemoveHistory(item)">
-            <uni-icons type="close" size="12" color="var(--color-text-placeholder)" />
+            <UIcon name="close" size="24rpx" color="var(--color-text-placeholder)" />
           </view>
         </view>
       </view>

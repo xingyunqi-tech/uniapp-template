@@ -21,8 +21,8 @@ model: inherit
 **Uni-app 图标使用方式**:
 
 ```vue
-<!-- ✅ 正确 1: 使用 uni-icons 组件 -->
-<uni-icons type="home" size="24" color="#333" />
+<!-- ✅ 正确 1: 使用 UIcon 组件（基于 uni-icons 封装） -->
+<UIcon name="home" size="48rpx" color="var(--color-text)" />
 
 <!-- ✅ 正确 2: 使用 image 标签 (静态资源) -->
 <image src="/static/icons/home.png" mode="aspectFit" class="icon" />

@@ -2,7 +2,7 @@
   <view class="payment-result-page" :class="globalStore.themeClass">
     <!-- 结果图标 -->
     <view class="result-icon" :class="{ spinning: state === 'checking' }">
-      <uni-icons :type="view.icon" :size="80" :color="view.color" />
+      <UIcon :name="view.icon" size="160rpx" :color="view.color" />
     </view>
 
     <!-- 结果标题 -->
@@ -46,13 +46,14 @@ import { onLoad } from '@dcloudio/uni-app';
 import { PAGES } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
 import { useOrderPaymentStatus, type OrderPaymentState } from '@/composables/useOrderPaymentStatus';
+import type { IconName } from '@/components';
 
 const globalStore = useGlobalStore();
 const { state, orderNo, check } = useOrderPaymentStatus();
 
 const orderId = ref(0);
 
-const STATE_VIEW: Record<OrderPaymentState, { icon: UniIconsType; color: string; title: string; desc: string }> = {
+const STATE_VIEW: Record<OrderPaymentState, { icon: IconName; color: string; title: string; desc: string }> = {
   checking: {
     icon: 'spinner-cycle',
     color: 'var(--color-primary)',

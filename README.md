@@ -15,7 +15,7 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 36 个组件（35 个 `U` 前缀组件 + `AuthLayout`）
+- **自定义组件库**: 38 个组件（37 个 `U` 前缀组件 + `AuthLayout`）
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
@@ -359,9 +359,10 @@ src/api/
 ```vue
 <template>
   <!-- uni-ui 组件，自动导入 -->
-  <uni-icons type="home" />
+  <uni-badge text="99+" />
 
   <!-- 自定义组件，自动导入（使用 PascalCase 标签） -->
+  <UIcon name="home" size="44rpx" />
   <ULoading />
   <UEmpty />
   <UNavBar title="标题" />

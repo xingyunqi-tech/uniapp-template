@@ -33,7 +33,7 @@
             <text v-else class="u-form-item__value">{{ value }}</text>
           </slot>
           <view v-if="showArrow" class="u-form-item__arrow">
-            <uni-icons type="arrow-right" size="16" color="var(--color-text-placeholder)" />
+            <UIcon name="arrow-right" size="32rpx" color="var(--color-text-placeholder)" />
           </view>
         </view>
         <text v-if="fieldError" class="u-form-item__error">{{ fieldError }}</text>

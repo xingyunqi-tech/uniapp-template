@@ -68,7 +68,7 @@
 
       <view class="social-login">
         <button class="social-btn wechat" @click="handleWechatLogin">
-          <uni-icons type="weixin" color="var(--color-brand-wechat)" size="48rpx" />
+          <UIcon name="weixin" color="var(--color-brand-wechat)" size="48rpx" />
         </button>
       </view>
     </view>

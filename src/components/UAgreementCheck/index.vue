@@ -1,7 +1,7 @@
 <template>
   <view class="u-agreement-check">
     <view class="u-agreement-check__box" :class="{ checked: modelValue }" @click="toggle">
-      <uni-icons v-if="modelValue" type="checkmarkempty" color="var(--color-text-inverse)" size="24rpx" />
+      <UIcon v-if="modelValue" name="checkmarkempty" color="var(--color-text-inverse)" size="24rpx" />
     </view>
     <text class="u-agreement-check__text" @click="toggle">
       {{ prefix }}

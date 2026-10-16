@@ -14,7 +14,7 @@
       <view class="u-nav-bar__left" @click="handleLeftClick">
         <slot name="left">
           <view v-if="showBack" class="u-nav-bar__back">
-            <uni-icons type="left" size="22" :color="backIconColor" class="u-nav-bar__back-icon" />
+            <UIcon name="left" size="44rpx" :color="backIconColor" class="u-nav-bar__back-icon" />
             <text v-if="backText" class="u-nav-bar__back-text">{{ backText }}</text>
           </view>
         </slot>

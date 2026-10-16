@@ -56,7 +56,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. **分包优化** - `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 4. **easycom 自动注册** - 组件无需手动导入
 5. **主题系统** - CSS 变量支持 Light/Dark 主题切换
-6. **自定义组件库** - 36 个组件（35 个 `U` 前缀组件 + `AuthLayout`）
+6. **自定义组件库** - 38 个组件（37 个 `U` 前缀组件 + `AuthLayout`）
 
 ---
 
@@ -207,9 +207,10 @@ easycom: {
 ```vue
 <template>
   <!-- uni-ui 组件，自动导入 -->
-  <uni-icons type="home" />
+  <uni-badge text="99+" />
 
   <!-- 自定义组件，自动导入（使用 PascalCase 标签） -->
+  <UIcon name="home" size="44rpx" />
   <ULoading />
   <UEmpty />
   <UNavBar title="标题" />
@@ -234,6 +235,7 @@ easycom: {
 | `ULoadMore` | 加载更多 | `USearchBar` | 搜索栏 |
 | `UAgreementCheck` | 协议勾选 | `UPrivacyPopup` | 微信隐私授权弹窗 |
 | `UTag` | 标签 | `AuthLayout` | 认证布局 |
+| `UIcon` | 图标（尺寸默认 rpx） | `URegionPicker` | 省市区选择 |
 | `UButton` | 按钮 | `UCard` | 卡片容器 |
 | `UList` | 分页列表状态 | `UPrice` | 金额展示 |
 | `UDivider` | 分割线 | `USticky` | 吸顶容器 |

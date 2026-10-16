@@ -3,7 +3,7 @@
     <!-- 顶部图标区域 -->
     <view class="header-section">
       <view class="header-icon">
-        <uni-icons type="headphones" size="48" color="var(--color-primary)" />
+        <UIcon name="headphones" size="96rpx" color="var(--color-primary)" />
       </view>
       <text class="header-title">我们随时为您服务</text>
       <text class="header-desc">工作日 9:00-18:00</text>

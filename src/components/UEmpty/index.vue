@@ -6,7 +6,7 @@
   <view class="u-empty">
     <view class="u-empty__icon">
       <slot name="icon">
-        <uni-icons :type="iconType" size="128rpx" color="var(--color-text-placeholder)" />
+        <UIcon :name="iconType" size="128rpx" color="var(--color-text-placeholder)" />
       </slot>
     </view>
 
@@ -26,6 +26,7 @@ definePage({
 });
 
 import { computed } from 'vue';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UEmpty',
@@ -40,7 +41,7 @@ export interface Props {
   /** 描述文字 */
   text?: string;
   /** 自定义图标 (uni-icons 的 type) */
-  icon?: UniIconsType;
+  icon?: IconName;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -49,7 +50,7 @@ const props = withDefaults(defineProps<Props>(), {
   icon: undefined,
 });
 
-const iconMap: Record<NonNullable<Props['type']>, UniIconsType> = {
+const iconMap: Record<NonNullable<Props['type']>, IconName> = {
   default: 'image',
   search: 'search',
   network: 'refresh',

@@ -20,7 +20,7 @@
           </view>
         </view>
         <view class="item-action" @click.stop="handleRemove(item)">
-          <uni-icons type="closeempty" color="var(--color-text-secondary)" size="28rpx" />
+          <UIcon name="closeempty" color="var(--color-text-secondary)" size="28rpx" />
         </view>
       </UCard>
     </UList>

@@ -32,7 +32,7 @@
           @click="handleSelect(action, index)"
         >
           <view v-if="action.icon" class="u-action-sheet__icon">
-            <uni-icons :type="action.icon" color="inherit" size="inherit" />
+            <UIcon :name="action.icon" />
           </view>
           <text class="u-action-sheet__text">{{ action.label }}</text>
           <text v-if="action.subLabel" class="u-action-sheet__sub-text">{{ action.subLabel }}</text>
@@ -56,6 +56,7 @@ definePage({
 
 import { ref } from 'vue';
 import UPopup from '../UPopup/index.vue';
+import type { IconName } from '../UIcon/index.vue';
 
 defineOptions({
   name: 'UActionSheet',
@@ -71,7 +72,7 @@ export interface ActionItem {
   /** 副文本 */
   subLabel?: string;
   /** 左侧图标 (uni-icons 的 type) */
-  icon?: UniIconsType;
+  icon?: IconName;
   /** 是否为危险操作 */
   danger?: boolean;
   /** 是否禁用 */

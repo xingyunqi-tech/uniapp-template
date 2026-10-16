@@ -36,7 +36,7 @@
         <view v-if="title || showClose" class="u-popup__header">
           <text v-if="title" class="u-popup__title">{{ title }}</text>
           <view v-if="showClose" class="u-popup__close" @click="close">
-            <uni-icons type="closeempty" color="inherit" size="inherit" />
+            <UIcon name="closeempty" />
           </view>
         </view>
         <!-- 内容 -->

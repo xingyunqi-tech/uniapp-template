@@ -26,7 +26,7 @@
       <slot>
         <view class="u-image-upload__add">
           <view class="u-image-upload__add-icon">
-            <uni-icons type="plusempty" color="inherit" size="inherit" />
+            <UIcon name="plusempty" />
           </view>
           <text v-if="addText" class="u-image-upload__add-text">{{ addText }}</text>
         </view>
