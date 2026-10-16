@@ -3,7 +3,7 @@ import {
   cloneFormValue,
   hasRequiredRule,
   toRuleArray,
-  validateRules,
+  validateRulesSync,
   type FormModel,
   type FormRule,
 } from '@/utils/form-rules';
@@ -138,7 +138,12 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
    */
   function validateField(field: keyof T): FieldValidation {
     const fieldKey = field as string;
-    const message = validateRules(formData[field], toRuleArray(rules[field]), formData) as string;
+    let message: string;
+    try {
+      message = validateRulesSync(formData[field], toRuleArray(rules[field]), formData);
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
 
     if (message) {
       ensureError(fieldKey).value = message;

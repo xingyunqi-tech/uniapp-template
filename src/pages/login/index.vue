@@ -9,41 +9,43 @@
     </view>
 
     <!-- 登录表单 -->
-    <view class="auth-form">
-      <UInput
-        v-model="formData.phone"
-        placeholder="请输入手机号"
-        prefix-icon="phone"
-        type="number"
-        :maxlength="PHONE_LENGTH"
-      />
+    <UForm ref="formRef" :model="formData" :rules="rules">
+      <view class="auth-form">
+        <UInput
+          v-model="formData.phone"
+          placeholder="请输入手机号"
+          prefix-icon="phone"
+          type="number"
+          :maxlength="PHONE_LENGTH"
+        />
 
-      <!-- 密码登录 -->
-      <UInput
-        v-if="loginType === 'password'"
-        v-model="formData.password"
-        type="password"
-        placeholder="请输入密码"
-        prefix-icon="locked"
-      />
+        <!-- 密码登录 -->
+        <UInput
+          v-if="loginType === 'password'"
+          v-model="formData.password"
+          type="password"
+          placeholder="请输入密码"
+          prefix-icon="locked"
+        />
 
-      <!-- 验证码登录 -->
-      <USmsInput
-        v-else
-        v-model="formData.code"
-        :countdown="sms.countdown.value"
-        :is-counting="sms.isCounting.value"
-        @send="handleSendCode"
-      />
+        <!-- 验证码登录 -->
+        <USmsInput
+          v-else
+          v-model="formData.code"
+          :countdown="sms.countdown.value"
+          :is-counting="sms.isCounting.value"
+          @send="handleSendCode"
+        />
 
-      <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleLogin">
-        {{ loading ? '登录中...' : '登录' }}
-      </UButton>
+        <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleLogin">
+          {{ loading ? '登录中...' : '登录' }}
+        </UButton>
 
-      <view class="login-agreement">
-        <UAgreementCheck v-model="agreed" prefix="登录即表示同意" />
+        <view class="login-agreement">
+          <UAgreementCheck v-model="agreed" prefix="登录即表示同意" />
+        </view>
       </view>
-    </view>
+    </UForm>
 
     <!-- 其他登录方式 (仅小程序显示) -->
     <!-- #ifdef MP-WEIXIN -->
@@ -102,6 +104,7 @@ definePage({
 
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
 import { AuthSendCodeDtoType } from '@/api';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
@@ -110,6 +113,7 @@ import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue } from '@/utils';
 import { getPathFromUrl, isTabBarPage } from '@/utils/router';
 import { getAlipayAuthCode } from '@/utils/alipay-pay';
+import { phoneRules, smsCodeRules, type FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -156,20 +160,18 @@ function navigateAfterLogin() {
   });
 }
 
-// 表单验证
-function validateForm(): boolean {
-  if (!sms.validatePhone(formData.phone)) return false;
+const formRef = ref<UFormExpose | null>(null);
 
-  if (loginType.value === 'password') {
-    if (!formData.password) {
-      uni.showToast({ title: '请输入密码', icon: 'none' });
-      return false;
-    }
-  } else {
-    if (!sms.validateCode(formData.code)) return false;
-  }
+const rules: FormRules<typeof formData> = {
+  phone: phoneRules(),
+  password: { required: true, message: '请输入密码' },
+  code: smsCodeRules(),
+};
 
-  return true;
+// 表单验证，按登录方式校验对应字段
+async function validateForm(): Promise<boolean> {
+  const fields = loginType.value === 'password' ? ['phone', 'password'] : ['phone', 'code'];
+  return (await formRef.value?.validate(fields)) ?? false;
 }
 
 // 发送验证码
@@ -270,8 +272,8 @@ function checkAgreed(): boolean {
 }
 
 // 处理登录
-function handleLogin() {
-  if (!validateForm() || !checkAgreed()) return;
+async function handleLogin() {
+  if (!(await validateForm()) || !checkAgreed()) return;
   startLogin(loginWithForm);
 }
 

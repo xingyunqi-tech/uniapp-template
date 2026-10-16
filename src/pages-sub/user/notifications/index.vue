@@ -78,6 +78,8 @@
         </UList>
       </scroll-view>
     </view>
+
+    <UDialog />
   </view>
 </template>
 
@@ -96,10 +98,12 @@ import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
 import { getPathFromUrl, isRouteIntercepted, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
 import { PAGES } from '@/constants';
+import { useDialog } from '@/composables';
 
 // ==================== Store ====================
 const notificationStore = useNotificationStore();
 const globalStore = useGlobalStore();
+const dialog = useDialog();
 
 // ==================== 状态 ====================
 const activeTab = ref<string>('all');
@@ -215,36 +219,32 @@ async function openLink(url: string) {
 /**
  * 删除通知
  */
-function handleDelete(item: Notification) {
-  uni.showModal({
+async function handleDelete(item: Notification) {
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要删除这条通知吗？',
-    success: async res => {
-      if (res.confirm) {
-        await notificationStore.removeNotification(String(item.id));
-      }
-    },
   });
+  if (confirmed) {
+    await notificationStore.removeNotification(String(item.id));
+  }
 }
 
 /**
  * 全部已读
  */
-function handleMarkAllRead() {
+async function handleMarkAllRead() {
   if (notificationStore.unreadCount === 0 && notifications.value.every(n => n.isRead)) {
     uni.showToast({ title: '已全部已读', icon: 'none' });
     return;
   }
 
-  uni.showModal({
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要标记全部通知为已读吗？',
-    success: async res => {
-      if (res.confirm) {
-        await notificationStore.markAllAsRead();
-      }
-    },
   });
+  if (confirmed) {
+    await notificationStore.markAllAsRead();
+  }
 }
 
 /**

@@ -74,31 +74,35 @@
 
     <!-- 注销账号身份验证 -->
     <UPopup ref="deletePopupRef" type="bottom" title="注销账号">
-      <view class="delete-form">
-        <text class="delete-form__tip">注销后账号及相关数据将被删除且无法恢复，请先验证身份</text>
-        <template v-if="verifyMode === 'password'">
-          <UInput v-model="deleteForm.password" type="password" placeholder="请输入当前密码" prefix-icon="locked" />
-          <text v-if="boundPhone" class="delete-form__switch" @click="verifyMode = 'sms'">没有密码？用短信验证</text>
-        </template>
-        <template v-else>
-          <text class="delete-form__phone">验证码将发送至 {{ formatPhone(boundPhone) }}</text>
-          <USmsInput
-            v-model="deleteForm.code"
-            :countdown="sms.countdown.value"
-            :is-counting="sms.isCounting.value"
-            @send="handleSendVerifyCode"
+      <UForm ref="deleteFormRef" :model="deleteForm" :rules="deleteRules">
+        <view class="delete-form">
+          <text class="delete-form__tip">注销后账号及相关数据将被删除且无法恢复，请先验证身份</text>
+          <template v-if="verifyMode === 'password'">
+            <UInput v-model="deleteForm.password" type="password" placeholder="请输入当前密码" prefix-icon="locked" />
+            <text v-if="boundPhone" class="delete-form__switch" @click="verifyMode = 'sms'">没有密码？用短信验证</text>
+          </template>
+          <template v-else>
+            <text class="delete-form__phone">验证码将发送至 {{ formatPhone(boundPhone) }}</text>
+            <USmsInput
+              v-model="deleteForm.code"
+              :countdown="sms.countdown.value"
+              :is-counting="sms.isCounting.value"
+              @send="handleSendVerifyCode"
+            />
+            <text class="delete-form__switch" @click="verifyMode = 'password'">使用密码验证</text>
+          </template>
+          <UButton
+            type="danger"
+            block
+            text="确认注销"
+            :loading="deleteAccountAction.loading.value"
+            @click="handleConfirmDelete"
           />
-          <text class="delete-form__switch" @click="verifyMode = 'password'">使用密码验证</text>
-        </template>
-        <UButton
-          type="danger"
-          block
-          text="确认注销"
-          :loading="deleteAccountAction.loading.value"
-          @click="handleConfirmDelete"
-        />
-      </view>
+        </view>
+      </UForm>
     </UPopup>
+
+    <UDialog />
   </view>
 </template>
 
@@ -113,14 +117,17 @@ import { ref, computed, reactive } from 'vue';
 import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useAsyncAction, useRouter, useSendSms } from '@/composables';
+import { useAsyncAction, useDialog, useRouter, useSendSms } from '@/composables';
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
-import { confirm, formatFileSize, formatPhone, storage } from '@/utils';
+import { formatFileSize, formatPhone, storage } from '@/utils';
+import { smsCodeRules, type FormRules } from '@/utils/form-rules';
 import { AuthSendCodeDtoType } from '@/api';
+import type { UFormExpose } from '@/components/UForm/context';
 
 const router = useRouter();
 const userStore = useUserStore();
 const globalStore = useGlobalStore();
+const dialog = useDialog();
 
 // 计算属性
 const isLoggedIn = computed(() => userStore.isLoggedIn);
@@ -157,7 +164,7 @@ function calculateCacheSize() {
 
 // 清除缓存（搜索历史、浏览记录、草稿），不影响登录状态与偏好设置
 async function handleClearCache() {
-  const confirmed = await confirm('确定要清除缓存吗？');
+  const confirmed = await dialog.confirm('确定要清除缓存吗？');
   if (!confirmed) return;
 
   storage.clearCache();
@@ -190,7 +197,7 @@ const logoutAction = useAsyncAction({
 });
 
 async function handleLogout() {
-  const confirmed = await confirm('确定要退出登录吗？');
+  const confirmed = await dialog.confirm('确定要退出登录吗？');
   if (confirmed) logoutAction.execute();
 }
 
@@ -198,6 +205,11 @@ async function handleLogout() {
 const deletePopupRef = ref<{ open: () => void; close: () => void } | null>(null);
 const verifyMode = ref<'password' | 'sms'>('password');
 const deleteForm = reactive({ password: '', code: '' });
+const deleteFormRef = ref<UFormExpose | null>(null);
+const deleteRules: FormRules<typeof deleteForm> = {
+  password: { required: true, message: '请输入当前密码' },
+  code: smsCodeRules(),
+};
 const boundPhone = computed(() => userStore.userInfo?.phone || '');
 
 const sms = useSendSms({
@@ -233,12 +245,9 @@ async function handleSendVerifyCode() {
   }
 }
 
-function handleConfirmDelete() {
-  if (verifyMode.value === 'password' && !deleteForm.password) {
-    uni.showToast({ title: '请输入当前密码', icon: 'none' });
-    return;
-  }
-  if (verifyMode.value === 'sms' && !sms.validateCode(deleteForm.code)) return;
+async function handleConfirmDelete() {
+  const field = verifyMode.value === 'password' ? 'password' : 'code';
+  if (!(await deleteFormRef.value?.validate(field))) return;
   deleteAccountAction.execute();
 }
 

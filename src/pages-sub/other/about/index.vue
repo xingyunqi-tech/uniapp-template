@@ -31,6 +31,8 @@
       </view>
       <!-- #endif -->
     </view>
+
+    <UDialog />
   </view>
 </template>
 
@@ -42,14 +44,15 @@ definePage({
 });
 
 import { ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables';
+import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { useDialog, useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES } from '@/constants';
 import { APP_NAME, COPYRIGHT, ICP_LICENSE, ICP_LINK } from '@/constants/system';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
+const dialog = useDialog();
 
 const version = ref('1.0.0');
 const hasUpdate = ref(false);
@@ -76,27 +79,35 @@ function handleMenuClick(type: string) {
   }
 }
 
+let checkTimer: ReturnType<typeof setTimeout> | undefined;
+
+onUnload(() => {
+  if (!checkTimer) return;
+  clearTimeout(checkTimer);
+  checkTimer = undefined;
+  uni.hideLoading();
+});
+
 // 检查更新
 function checkUpdate() {
   uni.showLoading({ title: '检查中...' });
 
-  setTimeout(() => {
+  checkTimer = setTimeout(async () => {
+    checkTimer = undefined;
     uni.hideLoading();
 
     if (hasUpdate.value) {
-      uni.showModal({
+      const confirmed = await dialog.confirm({
         title: '发现新版本',
         content: '是否立即更新到最新版本？',
-        success: res => {
-          if (res.confirm) {
-            // TODO: 执行更新逻辑
-            uni.showToast({
-              title: '请前往应用商店更新',
-              icon: 'none',
-            });
-          }
-        },
       });
+      if (confirmed) {
+        // TODO: 执行更新逻辑
+        uni.showToast({
+          title: '请前往应用商店更新',
+          icon: 'none',
+        });
+      }
     } else {
       uni.showToast({
         title: '已是最新版本',

@@ -27,6 +27,18 @@ describe('useForm', () => {
     expect(form.errors.phone.value).toBe('');
   });
 
+  it('规则返回 Promise 时字段校验失败而不抛出', () => {
+    const form = useForm({
+      initialValues: { name: 'a' },
+      rules: { name: { validator: (() => Promise.resolve(true)) as never } },
+    });
+
+    const result = form.validateField('name');
+
+    expect(result.valid).toBe(false);
+    expect(form.errors.name.value).not.toBe('');
+  });
+
   it('表单数据与初始值的数组和对象互不共享', () => {
     const initialValues = { tags: ['a'], address: { city: 'x' } };
     const form = useForm({ initialValues });

@@ -16,7 +16,7 @@
           <text class="item-title">{{ item.title || '未命名' }}</text>
           <text class="item-desc">{{ item.targetType }}</text>
           <view class="item-meta">
-            <text class="item-time">{{ formatTime(item.createdAt) }}</text>
+            <text class="item-time">{{ formatRelativeTime(item.createdAt) }}</text>
           </view>
         </view>
         <view class="item-action" @click.stop="handleRemove(item)">
@@ -24,6 +24,8 @@
         </view>
       </UCard>
     </UList>
+
+    <UDialog />
   </view>
 </template>
 
@@ -36,6 +38,7 @@ definePage({
 
 import { computed, ref } from 'vue';
 import { onLoad, onReachBottom } from '@dcloudio/uni-app';
+import { useDialog } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFavoriteStore } from '@/store/modules/favorite';
 import { formatRelativeTime } from '@/utils/datetime';
@@ -43,11 +46,7 @@ import type { Favorite } from '@/api';
 
 const globalStore = useGlobalStore();
 const favoriteStore = useFavoriteStore();
-
-// 格式化时间
-function formatTime(dateStr: string): string {
-  return formatRelativeTime(new Date(dateStr));
-}
+const dialog = useDialog();
 
 // 使用 store 的状态
 const loading = computed(() => favoriteStore.loading);
@@ -82,25 +81,23 @@ function handleItemClick(item: Favorite) {
 }
 
 // 移除收藏
-function handleRemove(item: Favorite) {
-  uni.showModal({
+async function handleRemove(item: Favorite) {
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要取消收藏吗？',
-    success: async res => {
-      if (res.confirm) {
-        try {
-          await favoriteStore.removeFavorite(item.id);
-          if (favoriteStore.hasMore) fetchList(true);
-          uni.showToast({
-            title: '已取消收藏',
-            icon: 'success',
-          });
-        } catch (error) {
-          console.error('取消收藏失败:', error);
-        }
-      }
-    },
   });
+  if (!confirmed) return;
+
+  try {
+    await favoriteStore.removeFavorite(item.id);
+    if (favoriteStore.hasMore) fetchList(true);
+    uni.showToast({
+      title: '已取消收藏',
+      icon: 'success',
+    });
+  } catch (error) {
+    console.error('取消收藏失败:', error);
+  }
 }
 </script>
 

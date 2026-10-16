@@ -1,10 +1,13 @@
 <template>
   <view class="address-edit-page" :class="globalStore.themeClass">
-    <ULoading v-if="detailLoading" visible />
-    <UEmpty v-if="detailError" type="error" text="地址加载失败">
-      <UButton v-if="isEdit" type="primary" size="small" text="重试" @click="loadAddressDetail(formData.id)" />
-    </UEmpty>
-    <template v-else>
+    <UPageState
+      :loading="detailLoading"
+      :error="detailError ? '地址加载失败' : false"
+      error-type="error"
+      :show-retry="isEdit"
+      retry-text="重试"
+      @retry="loadAddressDetail(formData.id)"
+    >
       <!-- 表单区域 -->
       <view class="form-section">
         <UForm ref="formRef" :model="formData" :rules="rules">
@@ -62,7 +65,9 @@
 
       <!-- 保存按钮 -->
       <UFixedButton text="保存" loading-text="保存中..." :loading="saveAction.loading.value" @click="handleSave" />
-    </template>
+    </UPageState>
+
+    <UDialog />
   </view>
 </template>
 
@@ -76,7 +81,7 @@ definePage({
 import { ref, reactive, computed } from 'vue';
 import type { UFormExpose } from '@/components/UForm/context';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
-import { useAsyncAction, useSafeBack } from '@/composables';
+import { useAsyncAction, useDialog, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { useRegionStore } from '@/store/modules/region';
@@ -87,6 +92,7 @@ const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
 const goBack = useSafeBack(PAGES.ADDRESS);
 const regionStore = useRegionStore();
+const dialog = useDialog();
 
 // 表单数据（province/city/district 存储行政区划代码）
 const formData = reactive({
@@ -103,7 +109,7 @@ const formData = reactive({
 // 是否编辑模式
 const isEdit = ref(false);
 
-// 编辑模式下地址详情加载中，加载完成前遮挡表单
+// 编辑模式下地址详情加载状态
 const detailLoading = ref(false);
 const detailError = ref(false);
 
@@ -186,7 +192,6 @@ async function loadAddressDetail(id: number) {
         .codesToNames(address.provinceCode, address.cityCode, address.districtCode)
         .catch(error => console.error('加载地区名称失败:', error));
     }
-    formRef.value?.setInitialValues();
   } catch (error) {
     console.error('加载地址详情失败:', error);
     detailError.value = true;
@@ -259,27 +264,25 @@ async function handleSave() {
 }
 
 // 删除地址
-function handleDelete() {
-  uni.showModal({
+async function handleDelete() {
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要删除该地址吗？',
-    success: async res => {
-      if (res.confirm) {
-        try {
-          await addressStore.removeAddress(formData.id);
-
-          uni.showToast({
-            title: '删除成功',
-            icon: 'success',
-          });
-
-          delayBack();
-        } catch (error) {
-          console.error('删除地址失败:', error);
-        }
-      }
-    },
   });
+  if (!confirmed) return;
+
+  try {
+    await addressStore.removeAddress(formData.id);
+
+    uni.showToast({
+      title: '删除成功',
+      icon: 'success',
+    });
+
+    delayBack();
+  } catch (error) {
+    console.error('删除地址失败:', error);
+  }
 }
 </script>
 

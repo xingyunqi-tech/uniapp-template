@@ -123,6 +123,30 @@ describe('UDialog', () => {
     expect(popupOf(wrapper).exists()).toBe(false);
   });
 
+  it('内容相同的调用在前一个未处理完时直接按取消返回，只弹一次', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(UDialog, { global });
+    const dialog = useDialog();
+    const first = dialog.confirm('确定删除吗？');
+    const repeated = dialog.confirm('确定删除吗？');
+    await nextTick();
+
+    await expect(repeated).resolves.toBe(false);
+    popupOf(wrapper).vm.$emit('confirm');
+    popupOf(wrapper).vm.$emit('close');
+    await expect(first).resolves.toBe(true);
+
+    vi.advanceTimersByTime(300);
+    await flushPromises();
+    expect(popupOf(wrapper).exists()).toBe(false);
+
+    const again = dialog.confirm('确定删除吗？');
+    await nextTick();
+    expect(popupOf(wrapper).props('content')).toBe('确定删除吗？');
+    popupOf(wrapper).vm.$emit('close');
+    await expect(again).resolves.toBe(false);
+  });
+
   it('关闭后切换到下一个调用期间卸载时，下一个调用按取消处理', async () => {
     vi.useFakeTimers();
     const wrapper = mount(UDialog, { global });

@@ -76,7 +76,28 @@ function show(request: DialogRequest) {
   current.value = request;
 }
 
+const SAME_REQUEST_KEYS = [
+  'mode',
+  'title',
+  'content',
+  'confirmText',
+  'cancelText',
+  'type',
+  'placeholder',
+  'defaultValue',
+] as const;
+
+function isSameRequest(a: DialogRequest, b: DialogRequest) {
+  return SAME_REQUEST_KEYS.every(key => a[key] === b[key]);
+}
+
+/** 与正在显示或排队中的调用内容相同时按取消返回，连续点击只弹一次 */
 function enqueue(request: DialogRequest) {
+  const active = current.value && !settled ? [current.value, ...queue] : queue;
+  if (active.some(item => isSameRequest(item, request))) {
+    request.resolve({ confirmed: false });
+    return;
+  }
   if (current.value || switching) {
     queue.push(request);
     return;

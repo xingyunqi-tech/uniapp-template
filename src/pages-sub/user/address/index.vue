@@ -40,6 +40,8 @@
         <text>添加新地址</text>
       </UButton>
     </view>
+
+    <UDialog />
   </view>
 </template>
 
@@ -53,7 +55,7 @@ definePage({
 
 import { computed, ref } from 'vue';
 import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app';
-import { useRouter } from '@/composables';
+import { useDialog, useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { PAGES } from '@/constants';
@@ -62,6 +64,7 @@ import type { Address } from '@/api';
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
 const router = useRouter();
+const dialog = useDialog();
 
 // 地址列表
 const addressList = computed(() => addressStore.addressList);
@@ -121,25 +124,23 @@ async function handleSetDefault(item: Address) {
 }
 
 // 删除地址
-function handleDelete(item: Address) {
-  uni.showModal({
+async function handleDelete(item: Address) {
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要删除该地址吗？',
-    success: async res => {
-      if (res.confirm) {
-        try {
-          await addressStore.removeAddress(item.id);
-          if (addressStore.hasMore) loadAddressList(true);
-          uni.showToast({
-            title: '删除成功',
-            icon: 'success',
-          });
-        } catch (error) {
-          console.error('删除地址失败:', error);
-        }
-      }
-    },
   });
+  if (!confirmed) return;
+
+  try {
+    await addressStore.removeAddress(item.id);
+    if (addressStore.hasMore) loadAddressList(true);
+    uni.showToast({
+      title: '删除成功',
+      icon: 'success',
+    });
+  } catch (error) {
+    console.error('删除地址失败:', error);
+  }
 }
 </script>
 

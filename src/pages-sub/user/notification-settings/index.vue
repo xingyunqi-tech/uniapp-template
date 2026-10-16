@@ -1,68 +1,68 @@
 <template>
   <view class="notification-settings-page" :class="globalStore.themeClass">
-    <!-- 加载中 -->
-    <ULoading v-if="loading" visible />
+    <UPageState
+      :loading="loading"
+      :error="error"
+      :empty="settings.length === 0"
+      error-text="加载失败，请重试"
+      error-type="error"
+      retry-text="重试"
+      empty-text="暂无通知设置"
+      @retry="loadSettings"
+    >
+      <!-- 设置列表 -->
+      <view class="settings-list">
+        <view v-for="setting in settings" :key="setting.category" class="setting-group">
+          <view class="group-header">
+            <text class="group-title">{{ getCategoryName(setting.category) }}</text>
+            <text class="group-desc">{{ getCategoryDesc(setting.category) }}</text>
+          </view>
 
-    <!-- 错误状态 -->
-    <UEmpty v-else-if="error" type="error" text="加载失败，请重试">
-      <UButton type="primary" size="small" text="重试" @click="loadSettings" />
-    </UEmpty>
+          <view class="group-items">
+            <view class="setting-item">
+              <text class="setting-label">应用内通知</text>
+              <switch
+                :checked="setting.enableInApp"
+                :color="globalStore.primaryColor"
+                @change="handleToggle(setting, 'enableInApp', $event)"
+              />
+            </view>
 
-    <!-- 空状态 -->
-    <UEmpty v-else-if="settings.length === 0" type="default" text="暂无通知设置" />
+            <view class="setting-item">
+              <text class="setting-label">推送通知</text>
+              <switch
+                :checked="setting.enablePush"
+                :color="globalStore.primaryColor"
+                @change="handleToggle(setting, 'enablePush', $event)"
+              />
+            </view>
 
-    <!-- 设置列表 -->
-    <view v-else class="settings-list">
-      <view v-for="setting in settings" :key="setting.category" class="setting-group">
-        <view class="group-header">
-          <text class="group-title">{{ getCategoryName(setting.category) }}</text>
-          <text class="group-desc">{{ getCategoryDesc(setting.category) }}</text>
+            <view class="setting-item">
+              <text class="setting-label">邮件通知</text>
+              <switch
+                :checked="setting.enableEmail"
+                :color="globalStore.primaryColor"
+                @change="handleToggle(setting, 'enableEmail', $event)"
+              />
+            </view>
+
+            <view class="setting-item">
+              <text class="setting-label">短信通知</text>
+              <switch
+                :checked="setting.enableSms"
+                :color="globalStore.primaryColor"
+                @change="handleToggle(setting, 'enableSms', $event)"
+              />
+            </view>
+          </view>
         </view>
 
-        <view class="group-items">
-          <view class="setting-item">
-            <text class="setting-label">应用内通知</text>
-            <switch
-              :checked="setting.enableInApp"
-              :color="globalStore.primaryColor"
-              @change="handleToggle(setting, 'enableInApp', $event)"
-            />
-          </view>
-
-          <view class="setting-item">
-            <text class="setting-label">推送通知</text>
-            <switch
-              :checked="setting.enablePush"
-              :color="globalStore.primaryColor"
-              @change="handleToggle(setting, 'enablePush', $event)"
-            />
-          </view>
-
-          <view class="setting-item">
-            <text class="setting-label">邮件通知</text>
-            <switch
-              :checked="setting.enableEmail"
-              :color="globalStore.primaryColor"
-              @change="handleToggle(setting, 'enableEmail', $event)"
-            />
-          </view>
-
-          <view class="setting-item">
-            <text class="setting-label">短信通知</text>
-            <switch
-              :checked="setting.enableSms"
-              :color="globalStore.primaryColor"
-              @change="handleToggle(setting, 'enableSms', $event)"
-            />
-          </view>
+        <!-- 说明（只在有数据时显示）-->
+        <view class="tips">
+          <text class="tips-text">关闭后将不再通过对应渠道接收该类型的通知</text>
         </view>
       </view>
-
-      <!-- 说明（只在有数据时显示）-->
-      <view class="tips">
-        <text class="tips-text">关闭后将不再通过对应渠道接收该类型的通知</text>
-      </view>
-    </view>
+    </UPageState>
   </view>
 </template>
 

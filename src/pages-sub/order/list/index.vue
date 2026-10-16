@@ -68,6 +68,8 @@
         </UCard>
       </UList>
     </scroll-view>
+
+    <UDialog />
   </view>
 </template>
 
@@ -81,8 +83,9 @@ definePage({
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
-import { confirm, formatMoney } from '@/utils';
+import { formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
+import { useDialog } from '@/composables';
 import { usePayment } from '@/composables/usePayment';
 import type { TabItem } from '@/components';
 import { OrderStatus, ORDER_TABS, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
@@ -92,6 +95,7 @@ import type { Order } from '@/api';
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
 const { paying, pay, handlePayResult } = usePayment();
+const dialog = useDialog();
 
 // 标签配置
 const tabs = ref<TabItem[]>(
@@ -195,7 +199,7 @@ function handleOrderDetail(id: string) {
 
 // 取消订单
 async function handleCancel(id: string) {
-  const confirmed = await confirm({
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要取消该订单吗？',
   });
