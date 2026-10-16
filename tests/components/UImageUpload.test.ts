@@ -10,6 +10,7 @@ const FilePickerStub = defineComponent({
     imageStyles: { type: Object, default: () => ({}) },
     fileExtname: { type: Array, default: undefined },
     autoUpload: { type: Boolean, default: true },
+    sizeType: { type: Array, default: undefined },
   },
   emits: ['update:modelValue', 'select', 'delete'],
   setup(_, { slots }) {
@@ -106,6 +107,16 @@ describe('UImageUpload', () => {
     const wrapper = mount(UImageUpload, { props: { mediaType }, global });
 
     expect(wrapper.findComponent(FilePickerStub).props('fileExtname')).toEqual([]);
+  });
+
+  it('sizeType 默认原图与压缩图均可，传入时以传入值为准', () => {
+    const uploadFn: UploadFn = async () => '';
+    const sizeTypeOf = (props: Record<string, unknown>) =>
+      mount(UImageUpload, { props, global }).findComponent(FilePickerStub).props('sizeType');
+
+    expect(sizeTypeOf({})).toEqual(['original', 'compressed']);
+    expect(sizeTypeOf({ uploadFn })).toEqual(['original', 'compressed']);
+    expect(sizeTypeOf({ sizeType: ['original'], uploadFn })).toEqual(['original']);
   });
 
   it('传入 fileExtname 时按传入值过滤', () => {

@@ -10,6 +10,7 @@
       :mode="mode"
       :file-mediatype="mediaType"
       :file-extname="extnameList"
+      :size-type="sizeType"
       :title="title"
       :disabled="disabled"
       :readonly="readonly"
@@ -122,6 +123,8 @@ interface Props {
   autoUpload?: boolean;
   /** 自定义上传函数，传入后选择文件即通过它上传到自有后端 */
   uploadFn?: UploadFn;
+  /** 图片尺寸类型，上传前自行压缩时可传 ['original'] */
+  sizeType?: UniHelper.UniFilePickerSizeType;
   /** 添加按钮文案 */
   addText?: string;
   /** 图片宽度 (rpx) */
@@ -141,6 +144,7 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   autoUpload: false,
   uploadFn: undefined,
+  sizeType: () => ['original', 'compressed'],
   addText: '',
   imageWidth: 200,
   imageHeight: 200,

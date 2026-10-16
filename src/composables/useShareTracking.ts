@@ -6,6 +6,8 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useShareStore } from '@/store';
 import { getSharePlatform } from '@/utils/platform';
+import { SHARE_CODE_KEYS } from '@/utils/router';
+import { resolveLaunchParams, type LaunchParams } from './useLaunchParams';
 import type { Share, TrackShareDtoAction } from '@/api';
 
 /** 分享追踪配置选项 */
@@ -142,10 +144,9 @@ export function useShareTracking(options: UseShareTrackingOptions = {}): UseShar
     }
   }
 
-  // 页面加载时检测分享参数
+  // 页面加载时检测分享参数（含小程序码 scene）
   onLoad(query => {
-    // 支持 sc 或 shareCode 参数
-    const code = query?.sc || query?.shareCode || '';
+    const code = pickShareCode(resolveLaunchParams(query));
     if (code) {
       handleShareSource(code);
     }
@@ -161,6 +162,11 @@ export function useShareTracking(options: UseShareTrackingOptions = {}): UseShar
   };
 }
 
+/** 从启动参数中取分享码（sc 或 shareCode） */
+function pickShareCode(params: LaunchParams): string {
+  return SHARE_CODE_KEYS.map(key => params[key]).find(Boolean) || '';
+}
+
 /**
  * 获取当前页面的分享码
  * 用于非 setup 环境
@@ -174,5 +180,5 @@ export function getShareCodeFromUrl(): string {
 
   // @ts-expect-error - $page 是运行时属性
   const options = currentPage.options || currentPage.$page?.options || {};
-  return options.sc || options.shareCode || '';
+  return pickShareCode(resolveLaunchParams(options));
 }

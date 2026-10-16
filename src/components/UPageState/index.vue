@@ -14,13 +14,13 @@
     <template v-else-if="state === 'error'">
       <slot v-if="$slots.error" name="error" />
       <view v-else class="u-page-state__panel">
-        <UEmpty v-if="hasErrorAction" :type="errorType" :icon="errorIcon" :text="errorMessage">
+        <UEmpty v-if="hasErrorAction" :type="currentErrorType" :icon="currentErrorIcon" :text="errorMessage">
           <view class="u-page-state__actions">
             <UButton v-if="showRetry" type="primary" size="small" :text="retryText" @click="emit('retry')" />
             <slot name="error-action" />
           </view>
         </UEmpty>
-        <UEmpty v-else :type="errorType" :icon="errorIcon" :text="errorMessage" />
+        <UEmpty v-else :type="currentErrorType" :icon="currentErrorIcon" :text="errorMessage" />
       </view>
     </template>
 
@@ -45,8 +45,11 @@ definePage({
   },
 });
 
-import { computed, ref, useSlots, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useSlots, watch } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import type { IconName } from '../UIcon/index.vue';
+import { isOnline } from '@/utils/network';
+import { getTopPage } from '@/composables/useDialog';
 
 defineOptions({
   name: 'UPageState',
@@ -87,6 +90,10 @@ export interface UPageStateProps {
   retryText?: string;
   /** 撑满父容器剩余高度（父容器需为纵向 flex） */
   fullHeight?: boolean;
+  /** 离线时的错误文案 */
+  offlineText?: string;
+  /** 处于错误状态时，网络恢复后自动触发 retry */
+  autoRetryOnReconnect?: boolean;
 }
 
 const props = withDefaults(defineProps<UPageStateProps>(), {
@@ -104,6 +111,8 @@ const props = withDefaults(defineProps<UPageStateProps>(), {
   showRetry: true,
   retryText: '重新加载',
   fullHeight: false,
+  offlineText: '网络连接已断开，请检查网络设置',
+  autoRetryOnReconnect: true,
 });
 
 const emit = defineEmits<{
@@ -132,7 +141,71 @@ watch(
   { immediate: true },
 );
 
-const errorMessage = computed(() => (typeof props.error === 'string' && props.error ? props.error : props.errorText));
+/** 出错后该时长 (ms) 内断网，视为离线导致的错误 */
+const OFFLINE_AFTER_ERROR_WINDOW = 5000;
+
+/** 当前错误由离线导致 */
+const offlineAtError = ref(false);
+
+let errorAt = 0;
+
+watch(
+  [state, () => props.error],
+  ([value], previous) => {
+    if (value !== 'error') {
+      offlineAtError.value = false;
+      return;
+    }
+    if (!previous || previous[0] !== 'error' || previous[1] !== props.error) {
+      errorAt = Date.now();
+      offlineAtError.value = !isOnline.value;
+    }
+  },
+  { immediate: true },
+);
+
+const showOffline = computed(() => offlineAtError.value && !isOnline.value);
+
+const errorMessage = computed(() => {
+  if (showOffline.value) return props.offlineText;
+  return typeof props.error === 'string' && props.error ? props.error : props.errorText;
+});
+
+const currentErrorType = computed<EmptyType>(() => (showOffline.value ? 'network' : props.errorType));
+
+const currentErrorIcon = computed(() => (showOffline.value ? undefined : props.errorIcon));
+
+/** 组件所在页面实例 */
+let ownerPage: object | undefined;
+let unmounted = false;
+
+onMounted(() => {
+  ownerPage = getTopPage();
+});
+
+onUnmounted(() => {
+  unmounted = true;
+});
+
+function retryAfterReconnect() {
+  if (unmounted || !props.autoRetryOnReconnect || !isOnline.value) return;
+  if (state.value !== 'error' || !offlineAtError.value) return;
+  if (ownerPage && getTopPage() !== ownerPage) return;
+  offlineAtError.value = false;
+  emit('retry');
+}
+
+watch(isOnline, (online, wasOnline) => {
+  if (online && !wasOnline) {
+    retryAfterReconnect();
+    return;
+  }
+  if (!online && state.value === 'error' && Date.now() - errorAt <= OFFLINE_AFTER_ERROR_WINDOW) {
+    offlineAtError.value = true;
+  }
+});
+
+onShow(retryAfterReconnect);
 
 const hasErrorAction = computed(() => props.showRetry || !!slots['error-action']);
 

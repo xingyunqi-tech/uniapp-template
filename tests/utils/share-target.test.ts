@@ -37,6 +37,24 @@ describe('getShareTarget', () => {
     expect(getShareTarget()).toEqual({ path: '/pages-sub/other/about/index?id=1', query: 'id=1' });
   });
 
+  it('小程序码 scene 展开为普通参数并去掉来源方分享码', () => {
+    onPage('pages-sub/other/about/index', { scene: encodeURIComponent('sc=AAA&id=9') });
+
+    expect(getShareTarget()).toEqual({ path: '/pages-sub/other/about/index?id=9', query: 'id=9' });
+  });
+
+  it('scene 展开后的值重新编码', () => {
+    onPage('pages-sub/other/about/index', { scene: encodeURIComponent('n=a b&id=1'), id: '2' });
+
+    expect(getShareTarget().query).toBe('n=a%20b&id=2');
+  });
+
+  it('不含键值的 scene 原值保留', () => {
+    onPage('pages-sub/other/about/index', { scene: 'promo01' });
+
+    expect(getShareTarget().query).toBe('scene=promo01');
+  });
+
   it('登录等页面分享为首页', () => {
     onPage('pages/login/index', { redirect: 'x' });
 

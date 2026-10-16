@@ -18,6 +18,7 @@
           v-model="avatarList"
           :max-count="1"
           :auto-upload="false"
+          :size-type="['original']"
           add-text="更换头像"
           @select="handleAvatarSelect"
           @delete="handleAvatarDelete"

@@ -62,6 +62,19 @@ function safeDecode(value: string): string {
   }
 }
 
+/** 按 & 拆分查询串：值按第一个 = 拆分，忽略空键，无值的键取空串 */
+function splitQueryString(queryString: string, decode: (value: string) => string): Record<string, string> {
+  return queryString.split('&').reduce<Record<string, string>>((params, pair) => {
+    const separatorIndex = pair.indexOf('=');
+    const key = separatorIndex === -1 ? pair : pair.slice(0, separatorIndex);
+    const value = separatorIndex === -1 ? '' : pair.slice(separatorIndex + 1);
+    if (key) {
+      params[decode(key)] = decode(value);
+    }
+    return params;
+  }, {});
+}
+
 /**
  * 解析 URL 查询参数：值按第一个 = 拆分，忽略 # 之后的片段，编码格式错误时保留原值
  */
@@ -70,19 +83,7 @@ export function parseQuery(url: string): QueryParams {
   if (queryIndex === -1) return {};
   const queryString = url.slice(queryIndex + 1).split('#')[0];
   if (!queryString) return {};
-
-  return queryString.split('&').reduce(
-    (params, pair) => {
-      const separatorIndex = pair.indexOf('=');
-      const key = separatorIndex === -1 ? pair : pair.slice(0, separatorIndex);
-      const value = separatorIndex === -1 ? '' : pair.slice(separatorIndex + 1);
-      if (key) {
-        params[safeDecode(key)] = safeDecode(value);
-      }
-      return params;
-    },
-    {} as Record<string, string>,
-  );
+  return splitQueryString(queryString, safeDecode);
 }
 
 /**
@@ -237,11 +238,47 @@ export function getCurrentQuery(): QueryParams {
 }
 
 /** 拼接查询参数，小程序 options 为原始编码值，不再编码 */
-function joinRawQuery(query: QueryParams, excludeKeys: readonly string[] = []): string {
+function joinRawQuery(query: QueryParams): string {
   return Object.entries(query)
-    .filter(([key, value]) => value !== undefined && !excludeKeys.includes(key))
+    .filter(([, value]) => value !== undefined)
     .map(([key, value]) => `${key}=${value}`)
     .join('&');
+}
+
+/** 启动参数，值均为解码后的字符串 */
+export type LaunchParams = Record<string, string>;
+
+/** scene 参数名 */
+export const SCENE_KEY = 'scene';
+
+/**
+ * 解析微信小程序码 scene（最长 32 字符，约定短键名 `k=v&k2=v2`，如 `sc=AB12&id=9`；不含 `=` 时整体保留为 `scene`）
+ * @param scene 经 decodeQueryValue 解码后的 scene，解析时不解码
+ */
+export function parseSceneParams(scene: string | undefined | null): LaunchParams {
+  if (!scene) return {};
+  if (!scene.includes('=')) return { [SCENE_KEY]: scene };
+  return splitQueryString(scene, value => value);
+}
+
+/**
+ * 将页面 onLoad 参数解析为启动参数：各参数经 decode 解码，scene 展开后合并，同名时普通参数优先
+ * @param query 页面 onLoad 参数或页面实例 options
+ * @param decode 参数值解码函数，默认 decodeQueryValue
+ */
+export function resolveLaunchParams(
+  query: Record<string, unknown> | undefined | null,
+  decode: (value: string) => string = decodeQueryValue,
+): LaunchParams {
+  if (!query) return {};
+  const params: LaunchParams = {};
+  for (const [key, value] of Object.entries(query)) {
+    if (key === SCENE_KEY || value === undefined || value === null) continue;
+    params[key] = decode(String(value));
+  }
+  const scene = query[SCENE_KEY];
+  const sceneParams = scene === undefined || scene === null ? {} : parseSceneParams(decode(String(scene)));
+  return { ...sceneParams, ...params };
 }
 
 /** 分享码参数名，转发时不透传来源方的分享码 */
@@ -263,12 +300,15 @@ export function isPrivatePage(url: string): boolean {
 }
 
 /**
- * 当前页面的分享路径与参数，私有页与登录等页面分享为首页
+ * 当前页面的分享路径与参数：私有页与登录等页面分享为首页，参数按 resolveLaunchParams 合并后去掉来源方的分享码并重新编码
  */
 export function getShareTarget(): { path: string; query: string } {
   const route = getCurrentRoute();
   if (!route || UNSHAREABLE_PAGES.includes(route) || isPrivatePage(route)) return { path: PAGES.HOME, query: '' };
-  const query = joinRawQuery(getCurrentQuery(), SHARE_CODE_KEYS);
+  const query = Object.entries(resolveLaunchParams(getCurrentQuery()))
+    .filter(([key]) => !SHARE_CODE_KEYS.includes(key))
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
   return { path: query ? `${route}?${query}` : route, query };
 }
 

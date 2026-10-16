@@ -37,4 +37,24 @@ describe('useShareTracking', () => {
     expect(isFromShare.value).toBe(true);
     expect(shareCode.value).toBe('FROM');
   });
+
+  it('从小程序码 scene 中读取分享码', async () => {
+    const { isFromShare, shareCode } = useShareTracking();
+
+    hooks.load?.({ scene: 'sc%3DFROM%26id%3D1' });
+
+    await vi.waitFor(() => expect(stores.trackShareAction).toHaveBeenCalledWith('FROM', 'VIEW', expect.any(Object)));
+    expect(stores.fetchShareByCode).toHaveBeenCalledWith('FROM');
+    expect(isFromShare.value).toBe(true);
+    expect(shareCode.value).toBe('FROM');
+  });
+
+  it('无分享码时不请求分享记录', () => {
+    const { isFromShare } = useShareTracking();
+
+    hooks.load?.({ scene: 'id%3D1' });
+
+    expect(stores.fetchShareByCode).not.toHaveBeenCalled();
+    expect(isFromShare.value).toBe(false);
+  });
 });

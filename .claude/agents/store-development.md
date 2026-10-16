@@ -570,6 +570,26 @@ export const useAwardStore = defineStore(
 - 插件自动处理 `key` 和 `storage`，无需手动配置
 - 全局默认使用 `uniStorage` 适配器，无需指定存储类型
 
+## 🌐 远程配置 Store
+
+`useConfigStore` 缓存后端公开配置（`getConfig(key)`），持久化后启动即可读取上次的值：
+
+```typescript
+import { useConfigStore } from '@/store';
+
+const configStore = useConfigStore();
+// 同步读取，未加载或加载失败返回默认值
+const notice = configStore.get<{ text: string }>('app.notice', { text: '' });
+// 按需拉取（并发、静默、单个失败不影响其他、不会 reject）
+await configStore.load(['app.notice']);
+```
+
+- 启动预加载的 key 定义在 `src/constants/config.ts` 的 `PRELOAD_CONFIG_KEYS`，按业务调整
+- 配置接口为公开接口、无需登录：`App.vue` 在 `onLaunch` 中后台加载，不阻塞启动，加载完成前使用缓存或默认值
+- 配置返回 404（不存在或未公开）时清除对应缓存，其余失败保留缓存
+- `App.vue` 启动时以 `load(PRELOAD_CONFIG_KEYS, { prune: true })` 加载：本次 key 全部加载完成且无失败（404 除外）后删除缓存中不在列表里的 key；按需 `load` 不剪枝
+- 加载失败（不含 404）的 key 会被记录，网络从离线恢复在线时自动重试，也可手动调用 `retryFailed()`
+
 ## 📂 Store组织结构
 
 ### 按业务领域划分

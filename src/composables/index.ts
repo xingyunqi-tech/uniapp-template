@@ -3,6 +3,7 @@
  * 支付（usePayment、useOrderPaymentStatus）与分享（useShare、useShareTracking）从对应文件导入
  */
 export * from './useRouter';
+export * from './useLaunchParams';
 export * from './useSafeBack';
 export * from './useList';
 export * from './usePageReady';

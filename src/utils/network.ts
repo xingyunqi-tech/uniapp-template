@@ -17,6 +17,8 @@ export interface NetworkListenerOptions {
   onlineMessage?: string;
   /** 是否显示提示 */
   showToast?: boolean;
+  /** 状态稳定该时长 (ms) 后才提示，期间来回切换不提示 */
+  toastDelay?: number;
 }
 
 /** 网络状态变化回调 */
@@ -36,6 +38,9 @@ export const globalNetworkState = {
   networkType: readonly(_networkType) as Readonly<Ref<NetworkType>>,
 };
 
+/** 是否在线 (只读) */
+export const isOnline = globalNetworkState.isConnected;
+
 /** 监听回调列表 */
 const callbacks: NetworkChangeCallback[] = [];
 
@@ -44,6 +49,13 @@ let isInitialized = false;
 
 /** 全局配置 */
 let globalOptions: NetworkListenerOptions = {};
+
+/** 最近一次已提示（或启动时确认）的连接状态 */
+let notifiedConnected = true;
+
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+let hasStatusEvent = false;
 
 // ==================== 内部方法 ====================
 
@@ -55,39 +67,50 @@ function updateNetworkState(isConnected: boolean, networkType: NetworkType): voi
   _networkType.value = networkType;
 }
 
+function clearToastTimer(): void {
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+}
+
+function notifyIfChanged(): void {
+  const isConnected = _isConnected.value;
+  if (isConnected === notifiedConnected) return;
+  notifiedConnected = isConnected;
+
+  const { offlineMessage = '网络已断开', onlineMessage = '网络已恢复' } = globalOptions;
+  uni.showToast(
+    isConnected
+      ? { title: onlineMessage, icon: 'none', duration: 1500 }
+      : { title: offlineMessage, icon: 'none', duration: 3000 },
+  );
+}
+
 /**
  * 网络状态变化处理
  */
 function handleNetworkChange(res: UniApp.OnNetworkStatusChangeSuccess): void {
-  const {
-    showToast = true,
-    offlineMessage = '网络已断开，请检查网络设置',
-    onlineMessage = '网络已恢复',
-  } = globalOptions;
+  const { showToast = true, toastDelay = 1000 } = globalOptions;
 
-  const wasConnected = _isConnected.value;
+  hasStatusEvent = true;
   updateNetworkState(res.isConnected, res.networkType as NetworkType);
 
   // 触发所有回调
   callbacks.forEach(cb => cb(res.isConnected, res.networkType as NetworkType));
 
-  if (showToast) {
-    // 从有网变成无网
-    if (wasConnected && !res.isConnected) {
-      uni.showToast({
-        title: offlineMessage,
-        icon: 'none',
-        duration: 2000,
-      });
-    }
-    // 从无网恢复有网
-    else if (!wasConnected && res.isConnected) {
-      uni.showToast({
-        title: onlineMessage,
-        icon: 'success',
-        duration: 1500,
-      });
-    }
+  clearToastTimer();
+  if (!showToast) {
+    notifiedConnected = res.isConnected;
+    return;
+  }
+  if (toastDelay > 0) {
+    toastTimer = setTimeout(() => {
+      toastTimer = null;
+      notifyIfChanged();
+    }, toastDelay);
+  } else {
+    notifyIfChanged();
   }
 }
 
@@ -120,7 +143,10 @@ export function setupNetworkListener(options: NetworkListenerOptions = {}): void
   // 获取初始网络状态
   uni.getNetworkType({
     success: res => {
-      updateNetworkState(res.networkType !== 'none', res.networkType as NetworkType);
+      if (hasStatusEvent) return;
+      const isConnected = res.networkType !== 'none';
+      updateNetworkState(isConnected, res.networkType as NetworkType);
+      notifiedConnected = isConnected;
     },
   });
 

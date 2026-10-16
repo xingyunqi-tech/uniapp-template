@@ -16,11 +16,12 @@ import {
 } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
+import { useConfigStore } from '@/store/modules/config';
 import { checkUpdate } from '@/utils/update';
 import { setupNetworkListener, onNetworkChange } from '@/utils/network';
 import { initErrorReporter, resetReportFailureCount } from '@/utils/error-reporter';
 import { initPerformanceReporter } from '@/utils/performance-reporter';
-import { PAGES, type ThemeType } from '@/constants';
+import { PAGES, PRELOAD_CONFIG_KEYS, type ThemeType } from '@/constants';
 
 // 错误处理器 (在 onLaunch 中初始化后使用)
 let errorHandlers: ReturnType<typeof initErrorReporter>;
@@ -36,6 +37,9 @@ onLaunch(options => {
 
   // 后台恢复登录态，不阻塞启动
   useUserStore().ensureSession();
+
+  // 后台加载公开远程配置，未加载前读取持久化缓存，加载完成后清理不在预加载列表里的缓存
+  useConfigStore().load(PRELOAD_CONFIG_KEYS, { prune: true });
 
   // 初始化全局网络状态监听
   setupNetworkListener({

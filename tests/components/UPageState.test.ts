@@ -1,7 +1,39 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { nextTick, type Ref } from 'vue';
 import UPageState from '@/components/UPageState/index.vue';
 import UButton from '@/components/UButton/index.vue';
+import { isOnline as networkOnline } from '@/utils/network';
+
+vi.mock('@/utils/network', async () => {
+  const { ref } = await import('vue');
+  return { isOnline: ref(true) };
+});
+
+const showCallbacks: (() => void)[] = [];
+
+vi.mock('@dcloudio/uni-app', () => ({
+  onShow: (callback: () => void) => showCallbacks.push(callback),
+}));
+
+const isOnline = networkOnline as Ref<boolean>;
+
+let pageStack: object[] = [];
+
+beforeEach(() => {
+  isOnline.value = true;
+  showCallbacks.length = 0;
+  pageStack = [];
+  vi.mocked(getCurrentPages).mockImplementation(() => pageStack as never);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+function triggerShow() {
+  showCallbacks.forEach(callback => callback());
+}
 
 const global = {
   stubs: {
@@ -145,5 +177,154 @@ describe('UPageState', () => {
 
     expect((UPageState as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
     expect(wrapper.classes()).toEqual(expect.arrayContaining(['u-page-state', 'u-page-state--full', 'page-body']));
+  });
+
+  it('离线时错误态显示网络异常类型与离线文案', () => {
+    isOnline.value = false;
+    const wrapper = mount(UPageState, {
+      props: { error: '订单加载失败', errorType: 'error', errorIcon: 'star' },
+      global,
+    });
+
+    const empty = wrapper.find('.empty');
+    expect(empty.text()).toContain('网络连接已断开，请检查网络设置');
+    expect(empty.attributes('data-type')).toBe('network');
+    expect(empty.attributes('data-icon')).toBeUndefined();
+  });
+
+  it('网络恢复后错误态自动触发一次 retry，并恢复原文案', async () => {
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: '订单加载失败' }, global });
+
+    isOnline.value = true;
+    await nextTick();
+
+    expect(wrapper.emitted('retry')).toHaveLength(1);
+    expect(wrapper.find('.empty').text()).toContain('订单加载失败');
+  });
+
+  it('autoRetryOnReconnect 为 false 时网络恢复不触发 retry', async () => {
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: true, autoRetryOnReconnect: false }, global });
+
+    isOnline.value = true;
+    await nextTick();
+
+    expect(wrapper.emitted('retry')).toBeUndefined();
+  });
+
+  it('非错误态时网络恢复不触发 retry', async () => {
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { slots: content, global });
+
+    isOnline.value = true;
+    await nextTick();
+
+    expect(wrapper.emitted('retry')).toBeUndefined();
+    expect(wrapper.find('.content').exists()).toBe(true);
+  });
+
+  it('出错 5 秒内断网视为离线错误，显示离线文案并在恢复后触发 retry', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(UPageState, { props: { error: '订单加载失败', errorType: 'error' }, global });
+
+    vi.advanceTimersByTime(5000);
+    isOnline.value = false;
+    await nextTick();
+    expect(wrapper.find('.empty').text()).toContain('网络连接已断开');
+    expect(wrapper.find('.empty').attributes('data-type')).toBe('network');
+
+    isOnline.value = true;
+    await nextTick();
+    expect(wrapper.emitted('retry')).toHaveLength(1);
+    expect(wrapper.find('.empty').text()).toContain('订单加载失败');
+  });
+
+  it('出错超过 5 秒后断网保持原文案，恢复网络不触发 retry', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(UPageState, { props: { error: '订单加载失败', errorType: 'error' }, global });
+
+    vi.advanceTimersByTime(5001);
+    isOnline.value = false;
+    await nextTick();
+    expect(wrapper.find('.empty').text()).toContain('订单加载失败');
+    expect(wrapper.find('.empty').attributes('data-type')).toBe('error');
+
+    isOnline.value = true;
+    await nextTick();
+    expect(wrapper.emitted('retry')).toBeUndefined();
+  });
+
+  it('离线时由加载转为错误显示离线文案，恢复后触发 retry', async () => {
+    const wrapper = mount(UPageState, { props: { loading: true }, global });
+
+    isOnline.value = false;
+    await wrapper.setProps({ loading: false, error: '订单加载失败' });
+    expect(wrapper.find('.empty').text()).toContain('网络连接已断开');
+
+    isOnline.value = true;
+    await nextTick();
+    expect(wrapper.emitted('retry')).toHaveLength(1);
+  });
+
+  it('错误文案在离线时变更会重新按离线处理', async () => {
+    const wrapper = mount(UPageState, { props: { error: '订单加载失败' }, global });
+
+    isOnline.value = false;
+    await wrapper.setProps({ error: '请求超时' });
+    expect(wrapper.find('.empty').text()).toContain('网络连接已断开');
+  });
+
+  it('所在页面不在栈顶时网络恢复不触发 retry，重新显示后触发一次', async () => {
+    const page = {};
+    pageStack = [page];
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: true }, global });
+
+    pageStack = [page, {}];
+    isOnline.value = true;
+    await nextTick();
+    expect(wrapper.emitted('retry')).toBeUndefined();
+
+    pageStack = [page];
+    triggerShow();
+    triggerShow();
+    expect(wrapper.emitted('retry')).toHaveLength(1);
+  });
+
+  it('所在页面为栈顶时网络恢复触发 retry，页面再次显示不重复触发', async () => {
+    const page = {};
+    pageStack = [page];
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: true }, global });
+
+    isOnline.value = true;
+    await nextTick();
+    triggerShow();
+    expect(wrapper.emitted('retry')).toHaveLength(1);
+  });
+
+  it('页面显示时仍离线不触发 retry', () => {
+    pageStack = [{}];
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: true }, global });
+
+    triggerShow();
+    expect(wrapper.emitted('retry')).toBeUndefined();
+  });
+
+  it('卸载后页面显示不触发 retry', async () => {
+    const page = {};
+    pageStack = [page];
+    isOnline.value = false;
+    const wrapper = mount(UPageState, { props: { error: true }, global });
+    pageStack = [page, {}];
+    isOnline.value = true;
+    await nextTick();
+
+    wrapper.unmount();
+    pageStack = [page];
+    triggerShow();
+    expect(wrapper.emitted('retry')).toBeUndefined();
   });
 });

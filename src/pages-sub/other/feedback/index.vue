@@ -153,7 +153,7 @@ const submitAction = useAsyncAction({
 function chooseImage() {
   uni.chooseImage({
     count: FEEDBACK_IMAGE_MAX_COUNT - formData.images.length,
-    sizeType: ['compressed'],
+    sizeType: ['original'],
     sourceType: ['album', 'camera'],
     success: res => {
       const start = formData.images.length;

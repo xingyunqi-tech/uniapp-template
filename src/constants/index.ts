@@ -7,3 +7,4 @@ export * from './form';
 export * from './order';
 export * from './payment';
 export * from './permission';
+export * from './config';

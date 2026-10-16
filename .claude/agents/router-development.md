@@ -294,6 +294,27 @@ if (query.id) {
 }
 ```
 
+### 启动参数（含小程序码 scene）
+
+页面可能通过普通链接、分享卡片或小程序码进入，统一用 `useLaunchParams` 取参数：
+
+```typescript
+import { onLoad } from '@dcloudio/uni-app';
+import { useLaunchParams } from '@/composables';
+
+const { params, get } = useLaunchParams();
+onLoad(() => {
+  fetchDetail(get('id'));
+});
+```
+
+- 普通 query（H5 / App / 支付宝小程序码 / 分享卡片）：值经 `decodeQueryValue` 解码后直接使用
+- 微信小程序码（`getUnlimitedQRCode`）：参数在 `query.scene`，解码后按 `k=v&k2=v2` 展开；不含 `=` 时保留为 `params.scene`
+- scene 最长 32 字符，用短键名（如 `sc=AB12&id=9`）；与普通参数同名时普通参数优先
+- 非 setup 环境用纯函数 `resolveLaunchParams(options)`（`@/utils/router`，`@/composables` 同名导出）；`parseSceneParams(scene)` 只做拆分，入参需先经 `decodeQueryValue` 解码
+- `onLoad` 执行前读取 `get()` / `params` 时取组件所在页面实例的参数（组件内调用沿 parent 找页面根实例，不读页面栈栈顶）：H5 / App / 支付宝小程序在 setup 时已可读到；微信小程序页面实例的参数在 `onLoad` 时才写入，此前可能为空对象，需在 `onLoad` 及之后读取
+- `useShareTracking` 已通过它读取 `sc` / `shareCode`，小程序码带 `sc` 同样会被追踪
+
 ---
 
 ## 页面路径常量
