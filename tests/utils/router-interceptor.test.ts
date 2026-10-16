@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { useUserStore } from '@/store/modules/user';
 import { guardCurrentPage, setupRouterInterceptor } from '@/utils/router-interceptor';
 import { isRouteIntercepted } from '@/utils/router';
-import { PAGE_ROLES, ROLE } from '@/constants';
+import { PAGES, PAGE_ROLES, ROLE } from '@/constants';
 
 const getCurrentPagesMock = getCurrentPages as unknown as Mock;
 const loginWithRedirect = (path: string) => `/pages/login/index?redirect=${encodeURIComponent(path)}`;
@@ -157,5 +157,52 @@ describe('路由拦截器', () => {
 
     expect(result).toBe(false);
     expect(fail).toHaveBeenCalledWith({ errMsg: 'switchTab:fail intercepted' });
+  });
+
+  it('switchTab 未登录时打开登录页并携带 redirect', () => {
+    invokers.get('switchTab')?.({ url: '/pages-sub/order/list/index' });
+    vi.runAllTimers();
+
+    expect(uni.redirectTo).toHaveBeenCalledWith({ url: loginWithRedirect('/pages-sub/order/list/index') });
+  });
+
+  describe('无页面权限', () => {
+    const path = '/pages-sub/order/list/index';
+    const forbiddenUrl = `${PAGES.FORBIDDEN}?type=403`;
+
+    beforeEach(() => {
+      PAGE_ROLES[path] = [ROLE.ADMIN];
+      useUserStore().setToken('token');
+    });
+
+    afterEach(() => {
+      delete PAGE_ROLES[path];
+    });
+
+    it('navigateTo 时以 navigateTo 打开 403 页，保留当前页', () => {
+      invokers.get('navigateTo')?.({ url: path });
+      vi.runAllTimers();
+
+      expect(uni.navigateTo).toHaveBeenCalledWith({ url: forbiddenUrl });
+      expect(uni.redirectTo).not.toHaveBeenCalled();
+    });
+
+    it('navigateTo 且页面栈已满时以 redirectTo 打开 403 页', () => {
+      getCurrentPagesMock.mockReturnValue(Array.from({ length: 10 }, () => ({})));
+
+      invokers.get('navigateTo')?.({ url: path });
+      vi.runAllTimers();
+
+      expect(uni.navigateTo).not.toHaveBeenCalled();
+      expect(uni.redirectTo).toHaveBeenCalledWith({ url: forbiddenUrl });
+    });
+
+    it('redirectTo 时以 redirectTo 打开 403 页', () => {
+      invokers.get('redirectTo')?.({ url: path });
+      vi.runAllTimers();
+
+      expect(uni.navigateTo).not.toHaveBeenCalled();
+      expect(uni.redirectTo).toHaveBeenCalledWith({ url: forbiddenUrl });
+    });
   });
 });

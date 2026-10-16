@@ -62,13 +62,7 @@
     </UCard>
 
     <!-- 保存按钮 -->
-    <UFixedButton
-      text="确认修改"
-      loading-text="提交中..."
-      :loading="saveAction.loading.value"
-      :disabled="!canSubmit"
-      @click="handleSave"
-    />
+    <UFixedButton text="确认修改" loading-text="提交中..." :loading="saveAction.loading.value" @click="handleSave" />
   </view>
 </template>
 
@@ -79,7 +73,7 @@ definePage({
   },
 });
 
-import { ref, reactive, computed, toRef } from 'vue';
+import { ref, reactive, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
@@ -115,18 +109,6 @@ const saveAction = useAsyncAction({
 
 // 密码强度
 const pwdStrength = usePasswordStrength(toRef(formData, 'newPassword'));
-
-// 是否可提交
-const canSubmit = computed(() => {
-  return (
-    formData.oldPassword.length >= PASSWORD_MIN_LENGTH &&
-    formData.newPassword.length >= PASSWORD_MIN_LENGTH &&
-    formData.confirmPassword.length >= PASSWORD_MIN_LENGTH &&
-    pwdStrength.hasLetter.value &&
-    pwdStrength.hasNumber.value &&
-    formData.newPassword === formData.confirmPassword
-  );
-});
 
 // 保存密码
 function handleSave() {

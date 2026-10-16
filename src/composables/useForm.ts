@@ -1,4 +1,4 @@
-import { ref, reactive, computed, type Ref, type ComputedRef } from 'vue';
+import { ref, reactive, shallowReactive, computed, type Ref, type ComputedRef } from 'vue';
 import { validateValue, type ValidationRule, type ValidationResult } from '@/utils/validator';
 
 /**
@@ -65,8 +65,33 @@ export interface UseFormReturn<T extends Record<string, unknown>> {
   clearFieldError: (field: keyof T) => void;
   /** 清除所有错误 */
   clearErrors: () => void;
+  /** 字段失焦处理，validateTrigger 为 'blur' 时校验该字段 */
+  handleBlur: (field: keyof T) => void;
   /** 提交表单 */
   handleSubmit: (onSubmit: (values: T) => Promise<void> | void) => Promise<void>;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object') return false;
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+}
+
+/**
+ * 深拷贝数组与普通对象，其他值原样返回
+ */
+function cloneValue<V>(value: V): V {
+  if (Array.isArray(value)) {
+    return value.map(item => cloneValue(item)) as V;
+  }
+  if (isPlainObject(value)) {
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(value)) {
+      result[key] = cloneValue(value[key]);
+    }
+    return result as V;
+  }
+  return value;
 }
 
 /**
@@ -120,6 +145,9 @@ function formRuleToValidationRules<T>(
  *   }
  * });
  *
+ * // validateTrigger: 'blur' 时绑定失焦校验
+ * // <input v-model="formData.phone" @blur="handleBlur('phone')" />
+ *
  * // 提交表单
  * await handleSubmit(async (values) => {
  *   await login(values);
@@ -130,7 +158,7 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
   const { initialValues, rules = {} as Partial<Record<keyof T, FormRule>>, validateTrigger = 'submit' } = options;
 
   // 表单数据
-  const formData = reactive<T>({ ...initialValues }) as T;
+  const formData = reactive<T>(cloneValue(initialValues)) as T;
 
   // 初始值快照 (用于判断是否有改动)
   const initialSnapshot = JSON.stringify(initialValues);
@@ -138,10 +166,17 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
   // 提交状态
   const submitting = ref(false);
 
-  // 错误消息 - 使用类型断言确保类型安全
-  const errors: Record<string, Ref<string>> = {};
+  // 错误消息，未在 initialValues 中声明的字段按需创建
+  const errors = shallowReactive<Record<string, Ref<string>>>({});
   for (const key of Object.keys(initialValues)) {
     errors[key] = ref('');
+  }
+
+  function ensureError(field: string): Ref<string> {
+    if (!errors[field]) {
+      errors[field] = ref('');
+    }
+    return errors[field];
   }
 
   // 是否有改动
@@ -167,11 +202,11 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
 
     if (!result.valid) {
       const message = result.message || '验证失败';
-      errors[fieldKey].value = message;
+      ensureError(fieldKey).value = message;
       return { valid: false, message };
     }
 
-    errors[fieldKey].value = '';
+    if (errors[fieldKey]) errors[fieldKey].value = '';
     return { valid: true, message: '' };
   }
 
@@ -224,7 +259,7 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
    * 重置表单
    */
   function reset() {
-    Object.assign(formData, { ...initialValues });
+    Object.assign(formData, cloneValue(initialValues));
     clearErrors();
   }
 
@@ -244,16 +279,15 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
    * 设置字段错误
    */
   function setFieldError(field: keyof T, message: string) {
-    const fieldKey = field as string;
-    errors[fieldKey].value = message;
+    ensureError(field as string).value = message;
   }
 
   /**
    * 清除字段错误
    */
   function clearFieldError(field: keyof T) {
-    const fieldKey = field as string;
-    errors[fieldKey].value = '';
+    const error = errors[field as string];
+    if (error) error.value = '';
   }
 
   /**
@@ -262,6 +296,12 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
   function clearErrors() {
     for (const key of Object.keys(errors)) {
       errors[key].value = '';
+    }
+  }
+
+  function handleBlur(field: keyof T) {
+    if (validateTrigger === 'blur') {
+      validateField(field);
     }
   }
 
@@ -303,6 +343,7 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
     setFieldError,
     clearFieldError,
     clearErrors,
+    handleBlur,
     handleSubmit,
   };
 }

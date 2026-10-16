@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, type Mock } from 'vitest';
-import { getCurrentFullPath, getShareTarget } from '@/utils/router';
+import { getCurrentFullPath, getShareTarget, isPrivatePage } from '@/utils/router';
 import { PAGES } from '@/constants/pages';
 
 const getCurrentPagesMock = getCurrentPages as unknown as Mock;
@@ -14,12 +14,27 @@ describe('getShareTarget', () => {
   });
 
   it('分享当前页面并携带原始参数', () => {
-    onPage('pages-sub/order/detail/index', { id: '1', from: 'a%20b' });
+    onPage('pages-sub/other/about/index', { id: '1', from: 'a%20b' });
 
     expect(getShareTarget()).toEqual({
-      path: '/pages-sub/order/detail/index?id=1&from=a%20b',
+      path: '/pages-sub/other/about/index?id=1&from=a%20b',
       query: 'id=1&from=a%20b',
     });
+  });
+
+  it.each(['pages-sub/order/detail/index', 'pages-sub/order/payment-result/index', 'pages-sub/user/address/index'])(
+    '私有页 %s 分享为首页',
+    route => {
+      onPage(route, { id: '1' });
+
+      expect(getShareTarget()).toEqual({ path: PAGES.HOME, query: '' });
+    },
+  );
+
+  it('不透传来源方的分享码', () => {
+    onPage('pages-sub/other/about/index', { id: '1', sc: 'AAA', shareCode: 'BBB' });
+
+    expect(getShareTarget()).toEqual({ path: '/pages-sub/other/about/index?id=1', query: 'id=1' });
   });
 
   it('登录等页面分享为首页', () => {
@@ -52,5 +67,18 @@ describe('getCurrentFullPath', () => {
 
   it('页面栈为空时返回空串', () => {
     expect(getCurrentFullPath()).toBe('');
+  });
+});
+
+describe('isPrivatePage', () => {
+  it('订单与用户分包为私有页，忽略查询参数', () => {
+    expect(isPrivatePage('/pages-sub/order/list/index?status=1')).toBe(true);
+    expect(isPrivatePage('/pages-sub/user/settings/index')).toBe(true);
+  });
+
+  it('其他页面不是私有页', () => {
+    expect(isPrivatePage('/pages/index/index')).toBe(false);
+    expect(isPrivatePage('/pages-sub/other/about/index')).toBe(false);
+    expect(isPrivatePage('/pages-sub/orders/index')).toBe(false);
   });
 });

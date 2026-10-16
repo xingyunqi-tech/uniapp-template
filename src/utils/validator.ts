@@ -29,6 +29,10 @@ export interface ValidationResult {
 /** 字段验证规则映射 */
 export type ValidationRules = Record<string, ValidationRule[]>;
 
+function isBlank(value: unknown): boolean {
+  return value === undefined || value === null || value === '';
+}
+
 /**
  * 验证单个值
  * @param value 要验证的值
@@ -40,7 +44,9 @@ export function validateValue(value: unknown, rules: ValidationRule[]): Validati
     // 必填验证
     if (rule.required) {
       const isEmpty =
-        value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
+        isBlank(value) ||
+        (typeof value === 'string' && value.trim() === '') ||
+        (Array.isArray(value) && value.length === 0);
 
       if (isEmpty) {
         return {
@@ -51,7 +57,7 @@ export function validateValue(value: unknown, rules: ValidationRule[]): Validati
     }
 
     // 如果值为空且非必填，跳过后续验证
-    if (value === undefined || value === null || value === '') {
+    if (isBlank(value)) {
       continue;
     }
 
@@ -169,9 +175,22 @@ export function isEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value);
 }
 
-/** 验证身份证号 */
+const ID_CARD_WEIGHTS = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+const ID_CARD_CHECK_CODES = '10X98765432';
+
+/** 验证 18 位身份证号：格式、出生日期合法且不晚于今天、末位校验码 */
 export function isIdCard(value: string): boolean {
-  return ID_CARD_PATTERN.test(value);
+  if (!ID_CARD_PATTERN.test(value)) return false;
+
+  const year = Number(value.slice(6, 10));
+  const month = Number(value.slice(10, 12));
+  const day = Number(value.slice(12, 14));
+  const birth = new Date(year, month - 1, day);
+  if (birth.getFullYear() !== year || birth.getMonth() !== month - 1 || birth.getDate() !== day) return false;
+  if (birth.getTime() > Date.now()) return false;
+
+  const sum = ID_CARD_WEIGHTS.reduce((acc, weight, i) => acc + weight * Number(value[i]), 0);
+  return ID_CARD_CHECK_CODES[sum % 11] === value[17].toUpperCase();
 }
 
 /** 验证 URL */

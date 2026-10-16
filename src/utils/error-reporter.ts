@@ -199,6 +199,13 @@ function getCurrentPage(): string {
 }
 
 /**
+ * 是否配置了上报目标（reportUrl 或 customReport）
+ */
+function hasReportTarget(): boolean {
+  return Boolean(globalOptions.reportUrl) || typeof globalOptions.customReport === 'function';
+}
+
+/**
  * 是否应该采样上报
  */
 function shouldSample(): boolean {
@@ -248,26 +255,30 @@ function addToQueue(errorInfo: ErrorInfo): void {
     return;
   }
 
-  // 队列满时移除最早的错误
-  if (errorQueue.length >= globalOptions.maxCacheSize) {
-    errorQueue.shift();
-  }
-
-  errorQueue.push(errorInfo);
-
   // 控制台打印
   if (globalOptions.consoleLog) {
     const logMethod =
       errorInfo.level === 'error' ? console.error : errorInfo.level === 'warn' ? console.warn : console.log;
     logMethod(`[ErrorReporter] ${errorInfo.type}:`, errorInfo.message, errorInfo);
   }
+
+  if (!hasReportTarget()) {
+    return;
+  }
+
+  // 队列满时移除最早的错误
+  if (errorQueue.length >= globalOptions.maxCacheSize) {
+    errorQueue.shift();
+  }
+
+  errorQueue.push(errorInfo);
 }
 
 /**
  * 执行上报
  */
 async function doReport(): Promise<void> {
-  if (errorQueue.length === 0 || isReporting || Date.now() < reportPausedUntil) {
+  if (errorQueue.length === 0 || isReporting || Date.now() < reportPausedUntil || !hasReportTarget()) {
     return;
   }
 
@@ -336,7 +347,7 @@ export function resetReportFailureCount(): void {
  * 启动定时上报
  */
 function startReportTimer(): void {
-  if (reportTimer) {
+  if (reportTimer || !hasReportTarget()) {
     return;
   }
 
@@ -529,8 +540,8 @@ export async function flushErrors(): Promise<void> {
 export function updateErrorReporterOptions(options: Partial<ErrorReporterOptions>): void {
   globalOptions = { ...globalOptions, ...options };
 
-  // 根据 enabled 状态控制定时器
-  if (globalOptions.enabled) {
+  // 根据 enabled 状态与上报目标控制定时器
+  if (globalOptions.enabled && hasReportTarget()) {
     startReportTimer();
   } else {
     stopReportTimer();
@@ -557,7 +568,8 @@ let isGlobalListenersSetup = false;
  */
 function setupH5GlobalListeners(): void {
   // #ifdef H5
-  // 全局 JS 错误监听
+  // 全局 JS 错误监听，保留并调用已有的 onerror
+  const previousOnError = window.onerror;
   window.onerror = (message, source, lineno, colno, error) => {
     if (globalOptions.consoleLog) {
       console.error('[H5 GlobalError]', { message, source, lineno, colno, error });
@@ -568,8 +580,7 @@ function setupH5GlobalListeners(): void {
       line: lineno,
       column: colno,
     });
-    // 返回 true 阻止默认错误处理
-    return true;
+    return previousOnError ? previousOnError.call(window, message, source, lineno, colno, error) : false;
   };
 
   // 未处理的 Promise 拒绝

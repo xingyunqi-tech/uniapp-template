@@ -45,6 +45,15 @@
     "__usePrivacyCheck__": true,
     "darkmode": true,
     "themeLocation": "theme.json",
+    "requiredPrivateInfos": [
+      "getLocation",
+      "chooseLocation"
+    ],
+    "permission": {
+      "scope.userLocation": {
+        "desc": "用于获取当前位置，提供附近服务与地址选择"
+      }
+    },
     "mergeVirtualHostAttributes": true,
     "lazyCodeLoading": "requiredComponents",
     "optimization": {

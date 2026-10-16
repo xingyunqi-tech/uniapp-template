@@ -105,10 +105,12 @@ definePage({
 import { reactive, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
+import { AuthSendCodeDtoType } from '@/api';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH } from '@/constants';
-import { decodeQueryValue, encryptPassword } from '@/utils';
+import { decodeQueryValue } from '@/utils';
+import { getPathFromUrl, isTabBarPage } from '@/utils/router';
 import { getAlipayAuthCode } from '@/utils/alipay-pay';
 
 const globalStore = useGlobalStore();
@@ -127,7 +129,9 @@ const formData = reactive({
 
 // 短信验证码
 const sms = useSendSms({
-  sendApi: phone => userStore.sendSmsCode(phone),
+  sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.login),
+  scene: AuthSendCodeDtoType.login,
+  phone: () => formData.phone,
 });
 
 // 重定向地址
@@ -145,13 +149,13 @@ onLoad(options => {
   }
 });
 
-// 登录后跳转
+// 登录后跳转，回跳目标为 TabBar 页时用 switchTab，跳转失败时恢复按钮
 function navigateAfterLogin() {
-  if (redirectUrl) {
-    router.replace(redirectUrl);
-  } else {
-    router.switchTab(PAGES.HOME);
-  }
+  const target = redirectUrl || PAGES.HOME;
+  const navigation = isTabBarPage(target) ? router.switchTab(getPathFromUrl(target)) : router.replace(target);
+  navigation.catch(() => {
+    loading.value = false;
+  });
 }
 
 // 表单验证
@@ -183,7 +187,7 @@ async function loginWithForm() {
   if (loginType.value === 'password') {
     await userStore.login({
       phone: formData.phone,
-      password: encryptPassword(formData.password),
+      password: formData.password,
     });
   } else {
     await userStore.smsLogin({

@@ -3,6 +3,8 @@
  * 统一处理多端差异判断
  */
 
+import { getNavBarLayout } from '@/composables/useStatusBar';
+
 // ==================== 平台类型 ====================
 
 /** 平台类型 */
@@ -214,8 +216,19 @@ export interface DeviceInfo {
     left: number;
     right: number;
   };
+  /** 底部安全区高度 */
+  safeAreaInsetBottom: number;
   /** 设备像素比 */
   pixelRatio: number;
+}
+
+/** 优先取 safeAreaInsets.bottom，缺失时按 screenHeight - safeArea.bottom 计算 */
+function resolveSafeAreaInsetBottom(windowInfo: UniApp.GetWindowInfoResult): number {
+  const inset = windowInfo.safeAreaInsets?.bottom;
+  if (typeof inset === 'number' && inset >= 0) return inset;
+  const { screenHeight, safeArea } = windowInfo;
+  if (!screenHeight || !safeArea?.bottom) return 0;
+  return Math.max(0, screenHeight - safeArea.bottom);
 }
 
 /** 设备信息缓存 */
@@ -251,6 +264,7 @@ export function getDeviceInfo(refresh = false): DeviceInfo {
         left: windowInfo.safeArea?.left || 0,
         right: windowInfo.safeArea?.right || 0,
       },
+      safeAreaInsetBottom: resolveSafeAreaInsetBottom(windowInfo),
       pixelRatio: windowInfo.pixelRatio || 2,
     };
   } catch {
@@ -266,6 +280,7 @@ export function getDeviceInfo(refresh = false): DeviceInfo {
       windowHeight: 667,
       statusBarHeight: 0,
       safeArea: { top: 0, bottom: 0, left: 0, right: 0 },
+      safeAreaInsetBottom: 0,
       pixelRatio: 2,
     };
   }
@@ -284,15 +299,15 @@ export function getStatusBarHeight(): number {
  * 获取安全区域底部高度 (px)
  */
 export function getSafeAreaBottom(): number {
-  return getDeviceInfo().safeArea.bottom;
+  return getDeviceInfo().safeAreaInsetBottom;
 }
 
 /**
- * 获取导航栏高度 (px)
- * 状态栏 + 导航栏内容区 (44px)
+ * 获取导航栏高度 (px)：状态栏 + 导航栏内容区，与 UNavBar 的布局一致
  */
 export function getNavBarHeight(): number {
-  return getStatusBarHeight() + 44;
+  const { statusBarHeight, navBarHeight } = getNavBarLayout();
+  return statusBarHeight + navBarHeight;
 }
 
 // ==================== 平台特定功能检测 ====================

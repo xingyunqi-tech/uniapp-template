@@ -7,10 +7,9 @@ import {
   alipayControllerCreateMobilePaymentV1,
   alipayControllerCreateWebPaymentV1,
   alipayControllerQueryOrderV1,
-  alipayControllerRefundV1,
   alipayControllerCloseOrderV1,
 } from '@/api';
-import type { CreatePaymentDto, RefundDto } from '@/api';
+import type { CreatePaymentDto } from '@/api';
 import { PaymentStatus } from '@/constants';
 
 /**
@@ -236,21 +235,6 @@ export async function queryOrderStatus(outTradeNo: string): Promise<any> {
 }
 
 /**
- * 申请退款
- */
-export async function refundOrder(params: RefundDto): Promise<boolean> {
-  try {
-    await alipayControllerRefundV1(params);
-    uni.showToast({ title: '退款申请已提交', icon: 'success' });
-    return true;
-  } catch (error) {
-    console.error('申请退款失败:', error);
-    uni.showToast({ title: '退款申请失败', icon: 'none' });
-    return false;
-  }
-}
-
-/**
  * 关闭订单
  */
 export async function closeOrder(outTradeNo: string): Promise<boolean> {
@@ -263,6 +247,13 @@ export async function closeOrder(outTradeNo: string): Promise<boolean> {
     uni.showToast({ title: '关闭订单失败', icon: 'none' });
     return false;
   }
+}
+
+/** iPadOS 默认以桌面版 Safari 的 UA 访问，按 Macintosh + 触摸点识别 */
+export function isMobileBrowser(): boolean {
+  const ua = navigator.userAgent;
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true;
+  return /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
 }
 
 /**
@@ -278,8 +269,7 @@ export async function pay(params: CreatePaymentDto): Promise<PaymentResult> {
   // #endif
 
   // #ifdef H5
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  return isMobile ? createMobilePayment(params) : createWebPayment(params);
+  return isMobileBrowser() ? createMobilePayment(params) : createWebPayment(params);
   // #endif
 
   // #ifdef MP-WEIXIN

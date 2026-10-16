@@ -110,6 +110,7 @@ const tabs = [
   { label: '系统', value: NotificationCategory.SYSTEM },
   { label: '订单', value: NotificationCategory.ORDER },
   { label: '支付', value: NotificationCategory.PAYMENT },
+  { label: '优惠', value: NotificationCategory.PROMOTION },
   { label: '活动', value: NotificationCategory.ACTIVITY },
 ];
 
@@ -169,14 +170,23 @@ async function handleTabChange(value: string) {
 /**
  * 点击通知项
  */
-async function handleItemClick(item: Notification) {
-  // 标记为已读
-  if (!item.isRead) {
-    await notificationStore.markAsRead(String(item.id));
-  }
+let itemClicking = false;
 
-  if (typeof item.metadata?.url === 'string' && item.metadata.url) {
-    await openLink(item.metadata.url);
+async function handleItemClick(item: Notification) {
+  if (itemClicking) return;
+  itemClicking = true;
+  try {
+    if (!item.isRead) {
+      await notificationStore.markAsRead(String(item.id)).catch(error => {
+        console.error('标记已读失败:', error);
+      });
+    }
+
+    if (typeof item.metadata?.url === 'string' && item.metadata.url) {
+      await openLink(item.metadata.url);
+    }
+  } finally {
+    itemClicking = false;
   }
 }
 

@@ -2,6 +2,15 @@
  * 日期时间工具函数
  */
 
+function toDate(date: Date | number | string): Date {
+  if (date instanceof Date) return date;
+  if (typeof date === 'string') return str2Date(date) ?? new Date(NaN);
+  return new Date(date);
+}
+
+/** 未来时间在此范围内视为时钟偏差，按「刚刚」显示 */
+const CLOCK_SKEW_MS = 5 * 60 * 1000;
+
 /**
  * 格式化日期时间
  * @param date 日期对象、时间戳或日期字符串
@@ -18,7 +27,7 @@
  * @returns 格式化后的日期字符串
  */
 export function formatDateTime(date: Date | number | string, format = 'YYYY-MM-DD HH:mm:ss'): string {
-  const d = date instanceof Date ? date : new Date(date);
+  const d = toDate(date);
 
   if (isNaN(d.getTime())) {
     return '';
@@ -50,10 +59,10 @@ export function formatDateTime(date: Date | number | string, format = 'YYYY-MM-D
 /**
  * 格式化相对时间
  * @param date 日期对象、时间戳或日期字符串
- * @returns 相对时间字符串，如 "刚刚"、"5分钟前"
+ * @returns 相对时间字符串，如 "刚刚"、"5分钟前"；超出时钟偏差范围的未来时间返回具体日期
  */
 export function formatRelativeTime(date: Date | number | string): string {
-  const d = date instanceof Date ? date : new Date(date);
+  const d = toDate(date);
 
   if (isNaN(d.getTime())) {
     return '';
@@ -61,6 +70,10 @@ export function formatRelativeTime(date: Date | number | string): string {
 
   const now = Date.now();
   const diff = now - d.getTime();
+
+  if (diff < -CLOCK_SKEW_MS) {
+    return formatDateTime(d, 'YYYY-MM-DD HH:mm');
+  }
 
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);

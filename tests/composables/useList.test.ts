@@ -102,7 +102,7 @@ describe('useList', () => {
     expect(error.value).toBe(false);
   });
 
-  it('刷新失败后已无更多数据时，再次加载清除 error', async () => {
+  it('已无更多数据时再次加载保留 error', async () => {
     const { error, noMore, loadData, refresh, calls } = setup();
 
     const first = loadData();
@@ -114,9 +114,42 @@ describe('useList', () => {
     calls[1].result.reject(new Error('500'));
     await expect(failed).rejects.toThrow('500');
     expect(error.value).toBe(true);
+    expect(noMore.value).toBe(true);
 
     await loadData();
+    expect(error.value).toBe(true);
+    expect(calls).toHaveLength(2);
+  });
+
+  it('加载进行中再次加载不清除 error', async () => {
+    const { error, loadData, calls } = setup();
+
+    const failed = loadData();
+    calls[0].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+
+    const retry = loadData();
     expect(error.value).toBe(false);
+    error.value = true;
+    await loadData();
+    expect(error.value).toBe(true);
+    calls[1].result.resolve([1, 2]);
+    await retry;
+  });
+
+  it('刷新失败时保留刷新前的页码与 noMore', async () => {
+    const { page, noMore, loadData, refresh, calls } = setup();
+
+    const first = loadData();
+    calls[0].result.resolve([1, 2]);
+    await first;
+
+    const failed = refresh();
+    calls[1].result.reject(new Error('500'));
+    await expect(failed).rejects.toThrow('500');
+
+    expect(page.value).toBe(2);
+    expect(noMore.value).toBe(false);
   });
 
   it('重置后丢弃进行中请求的结果', async () => {

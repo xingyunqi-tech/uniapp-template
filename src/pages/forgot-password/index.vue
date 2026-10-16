@@ -123,6 +123,8 @@ const submitting = resetAction.loading;
 // 短信验证码
 const sms = useSendSms({
   sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.reset_password),
+  scene: AuthSendCodeDtoType.reset_password,
+  phone: () => formData.phone,
 });
 
 // 密码强度

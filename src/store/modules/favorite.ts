@@ -43,6 +43,15 @@ export const useFavoriteStore = defineStore('favorite', () => {
   const favoriteCount = computed(() => favoriteList.value.length);
 
   // ==================== Actions ====================
+  /** 已加载列表且收藏符合当前筛选类型时插入列表头部 */
+  function insertIfMatches(favorite: Favorite) {
+    if (currentPage.value === 0) return;
+    if (currentTargetType.value && favorite.targetType !== currentTargetType.value) return;
+    if (favoriteList.value.some(item => item.id === favorite.id)) return;
+    favoriteList.value.unshift(favorite);
+    pager.total.value++;
+  }
+
   /**
    * 生成缓存 key
    */
@@ -92,9 +101,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
    */
   async function addFavorite(data: CreateFavoriteDto): Promise<Favorite> {
     const favorite = await createFavorite(data);
-
-    // 添加到列表头部
-    favoriteList.value.unshift(favorite);
+    insertIfMatches(favorite);
 
     // 更新缓存
     const cacheKey = getCacheKey(data.targetType, data.targetId);
@@ -136,11 +143,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     const isFavorited = response.isFavorited ?? false;
 
     if (isFavorited && response.favorite) {
-      // 添加到列表（使用字符串比较）
-      const exists = favoriteList.value.some(item => item.id === response.favorite!.id);
-      if (!exists) {
-        favoriteList.value.unshift(response.favorite);
-      }
+      insertIfMatches(response.favorite);
     } else {
       // 从列表中移除（使用 targetType 和 targetId 比较）
       const index = favoriteList.value.findIndex(

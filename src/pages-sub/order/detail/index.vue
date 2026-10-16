@@ -2,6 +2,15 @@
   <view class="order-detail-page" :class="globalStore.themeClass">
     <ULoading v-if="loading" visible />
 
+    <UEmpty
+      v-else-if="loadError"
+      class="detail-error"
+      :type="loadError === 'notFound' ? 'default' : 'network'"
+      :text="loadError === 'notFound' ? '订单不存在' : '订单加载失败'"
+    >
+      <UButton v-if="loadError === 'failed'" type="primary" size="small" text="重新加载" @click="loadOrderDetail" />
+    </UEmpty>
+
     <scroll-view v-else-if="order" scroll-y class="detail-content">
       <!-- 订单状态 -->
       <UCard class="detail-card status-card" :class="getOrderStatusClass(order.status)">
@@ -106,12 +115,14 @@ import { useGlobalStore, useOrderStore } from '@/store';
 import { OrderStatus, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
 import { confirm, formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
+import { ApiError } from '@/api';
 
 const globalStore = useGlobalStore();
 const orderStore = useOrderStore();
 
 const orderId = ref('');
 const loading = ref(false);
+const loadError = ref<'notFound' | 'failed' | null>(null);
 
 const order = computed(() => orderStore.currentOrder);
 
@@ -125,8 +136,11 @@ const canPay = computed(() => order.value?.status === OrderStatus.UNPAID);
 
 onLoad(options => {
   orderStore.clearCurrentOrder();
-  if (options?.id) {
-    orderId.value = options.id as string;
+  const id = String(options?.id ?? '');
+  if (/^[1-9]\d*$/.test(id)) {
+    orderId.value = id;
+  } else {
+    loadError.value = 'notFound';
   }
 });
 
@@ -142,10 +156,12 @@ async function loadOrderDetail() {
   const isCurrent = !!order.value && orderStore.getOrderIdString(order.value.id) === orderId.value;
   if (!isCurrent) orderStore.clearCurrentOrder();
   loading.value = !isCurrent;
+  loadError.value = null;
   try {
-    await orderStore.fetchOrderDetail(orderId.value, { showError: !isCurrent });
+    await orderStore.fetchOrderDetail(orderId.value, { showError: false });
   } catch (error) {
     console.error('加载订单详情失败:', error);
+    if (!isCurrent) loadError.value = error instanceof ApiError && error.status === 404 ? 'notFound' : 'failed';
   } finally {
     loading.value = false;
   }
@@ -199,6 +215,10 @@ async function handlePay() {
   box-sizing: border-box;
   flex: 1;
   padding: 24rpx;
+}
+
+.detail-error {
+  flex: 1;
 }
 
 .detail-card {

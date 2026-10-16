@@ -50,7 +50,8 @@ const phoneNumber = '400-123-4567';
 function handleCall() {
   uni.makePhoneCall({
     phoneNumber,
-    fail: () => {
+    fail: err => {
+      if (err?.errMsg?.includes('cancel')) return;
       uni.showToast({
         title: '拨打失败',
         icon: 'none',

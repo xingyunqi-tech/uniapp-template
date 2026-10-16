@@ -116,12 +116,12 @@ definePage({
 });
 
 import { ref, computed, reactive } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
-import { confirm, encryptPassword, formatFileSize, formatPhone, storage } from '@/utils';
+import { confirm, formatFileSize, formatPhone, storage } from '@/utils';
 import { AuthSendCodeDtoType } from '@/api';
 
 const router = useRouter();
@@ -149,6 +149,11 @@ const isEnglish = computed(() => globalStore.currentLocale === LOCALE_TYPE.EN_US
 
 onShow(() => {
   calculateCacheSize();
+});
+
+onUnload(() => {
+  if (devModeTimer) clearTimeout(devModeTimer);
+  devModeTimer = null;
 });
 
 // 计算缓存大小
@@ -203,14 +208,14 @@ const boundPhone = computed(() => userStore.userInfo?.phone || '');
 
 const sms = useSendSms({
   sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.verify_identity),
+  scene: AuthSendCodeDtoType.verify_identity,
+  phone: () => boundPhone.value,
 });
 
 const deleteAccountAction = useAsyncAction({
   action: async () => {
     await userStore.deleteAccount(
-      verifyMode.value === 'password'
-        ? { oldPassword: encryptPassword(deleteForm.password) }
-        : { smsCode: deleteForm.code },
+      verifyMode.value === 'password' ? { oldPassword: deleteForm.password } : { smsCode: deleteForm.code },
     );
     deletePopupRef.value?.close();
   },
@@ -267,6 +272,7 @@ function handleAboutClick() {
   if (devModeClickCount.value >= 5) {
     if (devModeTimer) {
       clearTimeout(devModeTimer);
+      devModeTimer = null;
     }
     devModeClickCount.value = 0;
     globalStore.toggleDevOptions();

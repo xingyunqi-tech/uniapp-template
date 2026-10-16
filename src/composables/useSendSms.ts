@@ -1,5 +1,6 @@
-import { ref, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { isPhone } from '@/utils/validator';
+import { storage } from '@/utils/storage';
 import { useCountdown } from './useCountdown';
 import { SMS_CODE_LENGTH, SMS_COUNTDOWN_SECONDS } from '@/constants/form';
 
@@ -8,6 +9,10 @@ export interface UseSendSmsOptions {
   countdownSeconds?: number;
   /** 发送验证码的 API 函数，失败提示由请求层统一弹出 */
   sendApi?: (phone: string) => Promise<unknown>;
+  /** 发送场景，设置后倒计时截止时间按手机号 + 场景持久化 */
+  scene?: string;
+  /** 当前手机号，配合 scene 在进入页面或手机号变化时恢复剩余倒计时 */
+  phone?: () => string;
 }
 
 export interface UseSendSmsReturn {
@@ -23,6 +28,23 @@ export interface UseSendSmsReturn {
   validatePhone: (phone: string) => boolean;
   /** 验证验证码格式 */
   validateCode: (code: string) => boolean;
+  /** 恢复该手机号未结束的倒计时，返回是否恢复 */
+  restore: (phone: string) => boolean;
+}
+
+/** 存储结构：`${scene}:${phone}` -> 倒计时截止时间戳 (毫秒) */
+const SMS_DEADLINE_KEY = 'sms_countdown_deadline';
+
+function readDeadlines(): Record<string, number> {
+  const data = storage.get<Record<string, number>>(SMS_DEADLINE_KEY);
+  return data && typeof data === 'object' ? data : {};
+}
+
+function writeDeadline(key: string, deadline: number): void {
+  const now = Date.now();
+  const deadlines = Object.fromEntries(Object.entries(readDeadlines()).filter(([, value]) => value > now));
+  deadlines[key] = deadline;
+  storage.set(SMS_DEADLINE_KEY, deadlines);
 }
 
 /**
@@ -43,7 +65,7 @@ export interface UseSendSmsReturn {
  * ```
  */
 export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
-  const { countdownSeconds = SMS_COUNTDOWN_SECONDS, sendApi } = options;
+  const { countdownSeconds = SMS_COUNTDOWN_SECONDS, sendApi, scene, phone: getPhone } = options;
 
   const { countdown, isCounting, start } = useCountdown({
     seconds: countdownSeconds,
@@ -80,11 +102,20 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
       return false;
     }
 
-    if (code.length !== SMS_CODE_LENGTH) {
+    if (code.length !== SMS_CODE_LENGTH || !/^\d+$/.test(code)) {
       uni.showToast({ title: `验证码为${SMS_CODE_LENGTH}位数字`, icon: 'none' });
       return false;
     }
 
+    return true;
+  }
+
+  function restore(phone: string): boolean {
+    if (!scene || !phone || isCounting.value) return false;
+    const deadline = readDeadlines()[`${scene}:${phone}`];
+    const remaining = deadline ? Math.ceil((deadline - Date.now()) / 1000) : 0;
+    if (remaining <= 0) return false;
+    start(remaining);
     return true;
   }
 
@@ -97,7 +128,7 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
     if (!validatePhone(phone)) return false;
 
     // 如果正在倒计时，不允许发送
-    if (isCounting.value) return false;
+    if (isCounting.value || restore(phone)) return false;
 
     // 如果正在发送，不允许重复发送
     if (sending.value) return false;
@@ -109,6 +140,8 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
       if (sendApi) {
         await sendApi(phone);
       }
+
+      if (scene) writeDeadline(`${scene}:${phone}`, Date.now() + countdownSeconds * 1000);
 
       // 组件已卸载，不执行后续操作
       if (isUnmounted) return false;
@@ -127,6 +160,10 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
     }
   }
 
+  if (getPhone) {
+    watch(getPhone, value => restore(value), { immediate: true });
+  }
+
   // 组件卸载时标记
   onUnmounted(() => {
     isUnmounted = true;
@@ -139,5 +176,6 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
     send,
     validatePhone,
     validateCode,
+    restore,
   };
 }

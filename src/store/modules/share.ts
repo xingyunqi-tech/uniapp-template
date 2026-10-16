@@ -72,7 +72,7 @@ export const useShareStore = defineStore('share', () => {
   async function fetchShareByCode(code: string): Promise<Share | null> {
     loading.value = true;
     try {
-      const share = await getShareByCode(code);
+      const share = await getShareByCode(code, { showError: false, skipAuthHandling: true });
       currentShare.value = share;
       return share;
     } catch (error) {
@@ -123,10 +123,7 @@ export const useShareStore = defineStore('share', () => {
     metadata?: Record<string, unknown>,
   ): Promise<void> {
     try {
-      await trackShare(shareCode, {
-        action,
-        metadata,
-      });
+      await trackShare(shareCode, { action, metadata }, { showError: false, skipAuthHandling: true });
     } catch (error) {
       // 追踪失败不影响主流程，仅打印日志
       console.warn('分享追踪失败:', error);

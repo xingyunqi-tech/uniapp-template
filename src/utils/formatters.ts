@@ -30,14 +30,22 @@ export function formatNumber(num: number): string {
 }
 
 /**
- * 格式化金额
- * @param amount 金额（分）
+ * 格式化金额，按分做整数运算，舍入时四舍五入（远离零）
+ * @param amount 金额（分），null、undefined 或非有限数按 0 处理
  * @param decimals 小数位数，默认 2
  * @returns 格式化后的金额字符串
  */
-export function formatMoney(amount: number, decimals = 2): string {
-  const yuan = amount / 100;
-  return yuan.toFixed(decimals);
+export function formatMoney(amount: number | null | undefined, decimals = 2): string {
+  const places = Math.max(0, Math.floor(decimals));
+  const fen = amount != null && Number.isFinite(amount) ? Math.round(Math.abs(amount)) : 0;
+  const kept = Math.min(places, 2);
+  const unit = 10 ** (2 - kept);
+  const scaled = Math.round(fen / unit);
+  const base = 10 ** kept;
+  const integer = Math.floor(scaled / base);
+  const fraction = kept > 0 ? `.${String(scaled % base).padStart(kept, '0')}${'0'.repeat(places - kept)}` : '';
+  const sign = amount != null && amount < 0 && scaled > 0 ? '-' : '';
+  return `${sign}${integer}${fraction}`;
 }
 
 /**
@@ -57,7 +65,7 @@ export function formatPhone(phone: string): string {
  */
 export function formatIdCard(idCard: string): string {
   if (!idCard || idCard.length < 15) return idCard;
-  return idCard.replace(/(\d{4})\d+(\d{4})/, '$1**********$2');
+  return idCard.replace(/^(\d{4})\d+(\d{3}[\dXx])$/, '$1**********$2');
 }
 
 /**

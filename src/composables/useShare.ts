@@ -2,11 +2,11 @@
  * 分享功能 Composable
  * 用于配置页面分享到朋友和朋友圈，并对接后端 API 追踪分享数据
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { onShareAppMessage, onShareTimeline } from '@dcloudio/uni-app';
-import { useShareStore } from '@/store';
+import { useShareStore, useUserStore } from '@/store';
 import { getSharePlatform } from '@/utils/platform';
-import { getShareTarget } from '@/utils/router';
+import { SHARE_CODE_KEYS, getShareTarget } from '@/utils/router';
 import type { ShareTargetType, Share } from '@/api';
 
 /** 分享参数接口 */
@@ -55,13 +55,13 @@ export interface UseShareOptions {
 }
 
 /**
- * 合并查询参数：保留已有参数，同名参数以 extra 为准
+ * 合并查询参数：保留已有参数（去掉分享码），同名参数以 extra 为准
  * @param baseQuery 已有查询字符串（原始编码值）
  * @param extra 追加的查询参数
  */
 function mergeQuery(baseQuery: string, extra: Record<string, string | number> = {}): string {
-  const extraKeys = Object.keys(extra);
-  const kept = baseQuery.split('&').filter(pair => pair && !extraKeys.includes(pair.split('=')[0]));
+  const droppedKeys = [...SHARE_CODE_KEYS, ...Object.keys(extra)];
+  const kept = baseQuery.split('&').filter(pair => pair && !droppedKeys.includes(pair.split('=')[0]));
   const added = Object.entries(extra).map(
     ([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
   );
@@ -128,6 +128,7 @@ export function useShare(options: UseShareOptions = {}) {
   } = options;
 
   const shareStore = useShareStore();
+  const userStore = useUserStore();
 
   /** 当前分享参数（可动态修改） */
   const shareParams = ref<ShareParams>({ ...defaultShare });
@@ -150,11 +151,16 @@ export function useShare(options: UseShareOptions = {}) {
   /** 是否正在加载 */
   const loading = computed(() => shareStore.loading);
 
+  /** 是否需要在分享时创建分享记录：启用追踪、已登录且尚无分享码 */
+  function shouldCreateRecord(): boolean {
+    return enableTracking && Boolean(targetType && targetId) && userStore.isLoggedIn && !shareCode.value;
+  }
+
   /**
-   * 创建分享记录（获取分享码）
+   * 创建分享记录（获取分享码），未登录时不创建
    */
   async function createShareRecord(): Promise<Share | null> {
-    if (!enableTracking || !targetType || !targetId) {
+    if (!enableTracking || !targetType || !targetId || !userStore.isLoggedIn) {
       return null;
     }
 
@@ -191,13 +197,6 @@ export function useShare(options: UseShareOptions = {}) {
     shareParams.value = { ...defaultShare };
   }
 
-  // 启用追踪时，组件挂载后创建分享记录
-  if (enableTracking && targetType && targetId) {
-    onMounted(() => {
-      createShareRecord();
-    });
-  }
-
   // 分享给朋友
   onShareAppMessage((res): Page.CustomShareContent => {
     const from = res.from as ShareFrom;
@@ -206,19 +205,29 @@ export function useShare(options: UseShareOptions = {}) {
     // 触发分享前回调
     onBeforeShare?.(from, target);
 
-    // 合并分享参数
     const params = { ...shareParams.value, ...friendShare };
 
-    // 构建分享路径（包含分享码）
-    const query = { ...params.query };
-    if (shareCode.value) {
-      query.sc = shareCode.value;
+    const buildContent = (): Page.CustomShareContent => {
+      const query = { ...params.query };
+      if (shareCode.value) {
+        query.sc = shareCode.value;
+      }
+      return {
+        title: params.title || '',
+        path: buildSharePath(params.path, query),
+        imageUrl: params.imageUrl,
+      };
+    };
+
+    const content = buildContent();
+    if (!shouldCreateRecord()) {
+      return content;
     }
 
+    // 分享时创建分享记录，创建成功后以带分享码的内容分享
     return {
-      title: params.title || '',
-      path: buildSharePath(params.path, query),
-      imageUrl: params.imageUrl,
+      ...content,
+      promise: createShareRecord().then(buildContent),
     };
   });
 
@@ -229,7 +238,11 @@ export function useShare(options: UseShareOptions = {}) {
       // 触发分享前回调
       onBeforeShare?.('menu');
 
-      // 合并分享参数
+      // 朋友圈不支持异步内容，本次分享先创建记录，分享码用于后续分享
+      if (shouldCreateRecord()) {
+        createShareRecord();
+      }
+
       const params = { ...shareParams.value, ...timelineShare };
 
       // 构建查询参数（包含分享码）

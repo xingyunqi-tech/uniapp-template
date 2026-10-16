@@ -37,9 +37,6 @@ export const useFeedbackStore = defineStore('feedback', () => {
   /** 反馈数量 */
   const feedbackCount = computed(() => feedbackList.value.length);
 
-  /** 是否有未读回复 */
-  const hasUnreadReply = computed(() => feedbackList.value.some(item => item.reply && item.status === 'resolved'));
-
   // ==================== Actions ====================
   /**
    * 获取反馈列表，切换筛选类型时从第一页重新加载
@@ -76,9 +73,10 @@ export const useFeedbackStore = defineStore('feedback', () => {
     submitting.value = true;
     try {
       const feedback = await createFeedback(data);
-
-      // 添加到列表头部
-      feedbackList.value.unshift(feedback);
+      if (currentPage.value > 0 && (!currentType.value || feedback.type === currentType.value)) {
+        feedbackList.value.unshift(feedback);
+        pager.total.value++;
+      }
 
       return feedback;
     } finally {
@@ -105,7 +103,6 @@ export const useFeedbackStore = defineStore('feedback', () => {
     currentType,
     // Getters
     feedbackCount,
-    hasUnreadReply,
     // Actions
     fetchFeedbackList,
     fetchFeedback,

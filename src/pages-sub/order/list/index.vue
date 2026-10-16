@@ -79,7 +79,7 @@ definePage({
 });
 
 import { ref, computed } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { confirm, formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
@@ -111,14 +111,31 @@ const loadError = ref(false);
 const orderList = computed(() => orderStore.orderList);
 const loading = computed(() => orderStore.loading);
 
-onShow(() => {
-  // 每次显示时刷新
-  handleRefresh();
+/** 进入详情的订单，返回列表时静默同步其状态 */
+let viewedOrderId = '';
+
+onLoad(() => {
+  loadOrders(true);
+  loadStats();
 });
 
-// 按「全部」tab 已加载的订单更新待付款 badge
+onShow(() => {
+  if (!viewedOrderId) return;
+  const id = viewedOrderId;
+  viewedOrderId = '';
+  syncViewedOrder(id);
+});
+
+async function syncViewedOrder(id: string) {
+  try {
+    await orderStore.syncOrder(id);
+  } catch (error) {
+    console.error('同步订单状态失败:', error);
+  }
+  loadStats();
+}
+
 async function loadStats() {
-  if (currentTab.value !== 'all') return;
   try {
     const stats = await orderStore.fetchStats();
     // 更新 badge
@@ -142,16 +159,15 @@ async function loadOrders(refresh = false) {
   loadError.value = false;
   try {
     const status = currentTab.value === 'all' ? undefined : (currentTab.value as any);
-    await orderStore.fetchOrderList({ status }, refresh);
+    const { stale } = await orderStore.fetchOrderList({ status }, refresh);
+    if (stale) return;
 
-    // 判断是否还有更多数据
     noMore.value = !orderStore.hasMore;
-    if (refresh) loadStats();
+    refreshing.value = false;
   } catch (error) {
     loadError.value = true;
-    console.error('加载订单列表失败:', error);
-  } finally {
     refreshing.value = false;
+    console.error('加载订单列表失败:', error);
   }
 }
 
@@ -160,6 +176,7 @@ function handleRefresh() {
   noMore.value = false;
   refreshing.value = true;
   loadOrders(true);
+  loadStats();
 }
 
 // 加载更多
@@ -170,6 +187,7 @@ function handleLoadMore() {
 
 // 订单详情
 function handleOrderDetail(id: string) {
+  viewedOrderId = id;
   uni.navigateTo({
     url: `${PAGES.ORDER_DETAIL}?id=${id}`,
   });

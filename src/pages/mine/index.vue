@@ -96,38 +96,17 @@ function handleUserClick() {
 }
 
 // 点击菜单项
+const MENU_PAGES: Record<string, string> = {
+  order: PAGES.ORDER,
+  favorite: PAGES.FAVORITE,
+  notifications: PAGES.NOTIFICATIONS,
+  address: PAGES.ADDRESS,
+  contact: PAGES.CONTACT,
+  settings: PAGES.SETTINGS,
+};
 function handleMenuClick(type: string) {
-  // 部分功能需要登录
-  const needLogin = ['favorite', 'order', 'address', 'notifications'];
-  if (needLogin.includes(type) && !isLoggedIn.value) {
-    uni.showToast({
-      title: '请先登录',
-      icon: 'none',
-    });
-    return;
-  }
-
-  // 根据类型跳转到对应页面
-  switch (type) {
-    case 'order':
-      router.push(PAGES.ORDER);
-      break;
-    case 'favorite':
-      router.push(PAGES.FAVORITE);
-      break;
-    case 'notifications':
-      router.push(PAGES.NOTIFICATIONS);
-      break;
-    case 'address':
-      router.push(PAGES.ADDRESS);
-      break;
-    case 'contact':
-      router.push(PAGES.CONTACT);
-      break;
-    case 'settings':
-      router.push(PAGES.SETTINGS);
-      break;
-  }
+  const page = MENU_PAGES[type];
+  if (page) router.push(page);
 }
 </script>
 

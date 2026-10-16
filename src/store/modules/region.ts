@@ -39,8 +39,12 @@ export const useRegionStore = defineStore('region', () => {
   const regionTree = ref<RegionTreeItem[]>([]);
   /** 代码到名称的映射缓存 */
   const codeToNameMap = ref<Map<string, string>>(new Map());
-  /** 是否正在加载 */
-  const loading = ref(false);
+  /** 进行中的请求，按请求 key 复用 */
+  const inflight = new Map<string, Promise<unknown>>();
+  /** 进行中请求的 key */
+  const loadingKeys = ref(new Set<string>());
+  /** 是否有请求正在加载 */
+  const loading = computed(() => loadingKeys.value.size > 0);
   /** 是否已初始化树形数据 */
   const treeInitialized = ref(false);
 
@@ -53,6 +57,20 @@ export const useRegionStore = defineStore('region', () => {
 
   // ==================== Actions ====================
 
+  function dedupe<T>(key: string, task: () => Promise<T>): Promise<T> {
+    const existing = inflight.get(key);
+    if (existing) return existing as Promise<T>;
+
+    loadingKeys.value.add(key);
+    const promise = task().finally(() => {
+      if (inflight.get(key) !== promise) return;
+      inflight.delete(key);
+      loadingKeys.value.delete(key);
+    });
+    inflight.set(key, promise);
+    return promise;
+  }
+
   /**
    * 获取所有省份
    */
@@ -61,20 +79,14 @@ export const useRegionStore = defineStore('region', () => {
       return provinces.value;
     }
 
-    loading.value = true;
-    try {
+    return dedupe('provinces', async () => {
       const data = await getProvinces();
       provinces.value = data;
-
-      // 更新代码到名称映射
       data.forEach(region => {
         codeToNameMap.value.set(region.code, region.name);
       });
-
       return data;
-    } finally {
-      loading.value = false;
-    }
+    });
   }
 
   /**
@@ -87,20 +99,14 @@ export const useRegionStore = defineStore('region', () => {
       return citiesCache.value.get(provinceCode)!;
     }
 
-    loading.value = true;
-    try {
+    return dedupe(`cities:${provinceCode}`, async () => {
       const data = await getCities(provinceCode);
       citiesCache.value.set(provinceCode, data);
-
-      // 更新代码到名称映射
       data.forEach(region => {
         codeToNameMap.value.set(region.code, region.name);
       });
-
       return data;
-    } finally {
-      loading.value = false;
-    }
+    });
   }
 
   /**
@@ -113,20 +119,14 @@ export const useRegionStore = defineStore('region', () => {
       return districtsCache.value.get(cityCode)!;
     }
 
-    loading.value = true;
-    try {
+    return dedupe(`districts:${cityCode}`, async () => {
       const data = await getDistricts(cityCode);
       districtsCache.value.set(cityCode, data);
-
-      // 更新代码到名称映射
       data.forEach(region => {
         codeToNameMap.value.set(region.code, region.name);
       });
-
       return data;
-    } finally {
-      loading.value = false;
-    }
+    });
   }
 
   /**
@@ -138,22 +138,13 @@ export const useRegionStore = defineStore('region', () => {
       return regionTree.value;
     }
 
-    loading.value = true;
-    try {
-      const data = await getRegionTree();
-
-      // 转换 API 返回的数据为 RegionTreeItem 格式
-      const tree = transformToTreeItems(data);
+    return dedupe('tree', async () => {
+      const tree = transformToTreeItems(await getRegionTree());
       regionTree.value = tree;
       treeInitialized.value = true;
-
-      // 构建代码到名称的映射
       buildCodeToNameMap(tree);
-
       return tree;
-    } finally {
-      loading.value = false;
-    }
+    });
   }
 
   /**
@@ -200,19 +191,21 @@ export const useRegionStore = defineStore('region', () => {
    * @param code 行政区划代码
    */
   async function fetchRegionByCode(code: string): Promise<Region | null> {
-    try {
-      const region = await getRegionByCode(code);
-      // 更新缓存
-      codeToNameMap.value.set(region.code, region.name);
-      return region;
-    } catch {
-      return null;
-    }
+    if (!code) return null;
+    return dedupe(`code:${code}`, async () => {
+      try {
+        const region = await getRegionByCode(code);
+        codeToNameMap.value.set(region.code, region.name);
+        return region;
+      } catch {
+        return null;
+      }
+    });
   }
 
   /**
    * 将省市区编码转换为名称
-   * 优先从缓存获取，缓存没有则从 API 获取
+   * 优先从缓存获取，缓存没有则从 API 获取；空编码不请求，对应名称为空字符串
    */
   async function codesToNames(
     provinceCode: string,
@@ -227,9 +220,9 @@ export const useRegionStore = defineStore('region', () => {
 
     // 如果缓存中没有，从 API 获取
     const missingCodes: string[] = [];
-    if (!result.province) missingCodes.push(provinceCode);
-    if (!result.city) missingCodes.push(cityCode);
-    if (!result.district) missingCodes.push(districtCode);
+    if (provinceCode && !result.province) missingCodes.push(provinceCode);
+    if (cityCode && !result.city) missingCodes.push(cityCode);
+    if (districtCode && !result.district) missingCodes.push(districtCode);
 
     if (missingCodes.length > 0) {
       // 并行获取缺失的地区信息
@@ -290,7 +283,8 @@ export const useRegionStore = defineStore('region', () => {
    */
   function reset() {
     clearCache();
-    loading.value = false;
+    inflight.clear();
+    loadingKeys.value.clear();
   }
 
   return {

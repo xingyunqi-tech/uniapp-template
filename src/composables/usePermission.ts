@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { isMP } from '@/utils/platform';
+import { isAlipay, isMP } from '@/utils/platform';
 
 /**
  * 权限类型
@@ -55,6 +55,24 @@ const PERMISSION_NAMES: Record<PermissionType, string> = {
   'scope.invoice': '发票',
 };
 
+/**
+ * 支付宝 my.getSetting 的 authSetting 键名，未列出的权限支付宝不提供查询
+ */
+const ALIPAY_AUTH_KEYS: Partial<Record<PermissionType, string>> = {
+  'scope.userLocation': 'location',
+  'scope.userLocationBackground': 'location',
+  'scope.userFuzzyLocation': 'location',
+  'scope.record': 'audioRecord',
+  'scope.camera': 'camera',
+  'scope.writePhotosAlbum': 'album',
+};
+
+/** 微信 authorize 用户拒绝时的 errMsg，如 "authorize:fail auth deny"、"authorize:fail auth denied" */
+function isUserDenied(error: unknown): boolean {
+  const errMsg = (error as { errMsg?: unknown } | null)?.errMsg;
+  return typeof errMsg === 'string' && /auth den(y|ied)/i.test(errMsg);
+}
+
 export interface UsePermissionOptions {
   /** 权限类型 */
   type: PermissionType;
@@ -73,7 +91,7 @@ export interface UsePermissionReturn {
   isRequesting: Ref<boolean>;
   /** 检查权限状态 */
   check: () => Promise<PermissionStatus>;
-  /** 请求权限 */
+  /** 请求权限，返回是否可继续调用目标 API */
   request: () => Promise<boolean>;
   /** 打开设置页面 */
   openSettings: () => Promise<void>;
@@ -126,8 +144,9 @@ export function usePermission(options: UsePermissionOptions): UsePermissionRetur
 
     try {
       const res = await uni.getSetting();
-      const authSetting = res.authSetting;
-      const permissionValue = authSetting[type as keyof typeof authSetting];
+      const authSetting = res.authSetting as unknown as Record<string, boolean | undefined>;
+      const settingKey = isAlipay() ? ALIPAY_AUTH_KEYS[type] : type;
+      const permissionValue = settingKey ? authSetting[settingKey] : undefined;
 
       if (permissionValue === true) {
         status.value = 'authorized';
@@ -185,6 +204,11 @@ export function usePermission(options: UsePermissionOptions): UsePermissionRetur
         return false;
       }
 
+      // 支付宝不支持 uni.authorize，由调用方直接调用目标 API 触发授权
+      if (isAlipay()) {
+        return true;
+      }
+
       // 未决定，请求授权
       const res = await uni.authorize({ scope: type });
 
@@ -197,11 +221,10 @@ export function usePermission(options: UsePermissionOptions): UsePermissionRetur
       status.value = 'denied';
       isAuthorized.value = false;
       return false;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[usePermission] request error:', error);
 
-      // 用户拒绝授权
-      if (error?.errMsg?.includes('deny') || error?.errMsg?.includes('auth')) {
+      if (isUserDenied(error)) {
         status.value = 'denied';
         isAuthorized.value = false;
 

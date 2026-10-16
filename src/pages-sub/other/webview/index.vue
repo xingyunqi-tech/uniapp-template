@@ -1,12 +1,13 @@
 <template>
   <view class="webview-page" :class="globalStore.themeClass">
-    <!-- 加载进度条 -->
+    <!-- #ifdef H5 -->
     <view v-if="loading" class="progress-bar">
       <view class="progress-inner" :style="{ width: `${progress}%` }" />
     </view>
+    <!-- #endif -->
 
-    <!-- Webview 容器 -->
-    <web-view v-if="url" :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
+    <!-- 小程序 web-view 铺满整页并覆盖其他内容，出错时不渲染 -->
+    <web-view v-if="url && !error" :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
 
     <!-- 加载失败状态 -->
     <view v-if="error" class="error-state">
@@ -29,12 +30,13 @@ definePage({
 });
 
 import { ref } from 'vue';
-import { onLoad, onUnload } from '@dcloudio/uni-app';
+import { onLoad, onShareAppMessage, onUnload } from '@dcloudio/uni-app';
 import { useRouter, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { decodeQueryValue } from '@/utils/router';
 import { isUrlInHosts } from '@/utils/validator';
-import { WEBVIEW_ALLOWED_HOSTS } from '@/constants';
+import { isH5 } from '@/utils/platform';
+import { PAGES, WEBVIEW_ALLOWED_HOSTS } from '@/constants';
 
 const globalStore = useGlobalStore();
 const router = useRouter();
@@ -53,6 +55,13 @@ let originalUrl = '';
 
 // 进度模拟定时器
 let progressTimer: ReturnType<typeof setInterval> | null = null;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+interface WebviewShareData {
+  title?: string;
+  imageUrl?: string;
+}
+let shareData: WebviewShareData = {};
 
 /**
  * 页面加载
@@ -82,12 +91,33 @@ onUnload(() => {
     clearInterval(progressTimer);
     progressTimer = null;
   }
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
 });
+
+// #ifdef MP-WEIXIN
+onShareAppMessage(options => {
+  const shareTitle = shareData.title || title.value;
+  const query = [`url=${encodeURIComponent(options.webViewUrl || originalUrl)}`];
+  if (shareTitle) query.push(`title=${encodeURIComponent(shareTitle)}`);
+  return {
+    title: shareTitle,
+    imageUrl: shareData.imageUrl,
+    path: `${PAGES.WEBVIEW}?${query.join('&')}`,
+  };
+});
+// #endif
 
 /**
  * 模拟加载进度
  */
 function startProgress() {
+  if (!isH5()) {
+    loading.value = false;
+    return;
+  }
   progress.value = 0;
   progressTimer = setInterval(() => {
     if (progress.value < 90) {
@@ -114,59 +144,60 @@ function finishProgress() {
 
 /**
  * 处理 Webview 消息
- * H5 页面可以通过 postMessage 与小程序通信
+ * 微信小程序仅在后退、分享、销毁时派发 message，只记录分享数据；H5 与支付宝实时派发
  */
-function handleMessage(e: { detail: { data: unknown[] } }) {
-  const messages = e.detail.data;
-  console.log('[Webview] 收到消息:', messages);
+function handleMessage(e: { detail: unknown }) {
+  let messages: unknown[] = [];
+  // #ifdef MP-ALIPAY
+  messages = [e.detail];
+  // #endif
+  // #ifndef MP-ALIPAY
+  messages = (e.detail as { data?: unknown[] })?.data ?? [];
+  // #endif
 
-  // 处理来自 H5 的消息
-  messages.forEach((msg: unknown) => {
-    if (typeof msg === 'object' && msg !== null) {
-      const data = msg as Record<string, unknown>;
+  messages.forEach(msg => {
+    if (typeof msg !== 'object' || msg === null) return;
+    const data = msg as Record<string, unknown>;
 
-      // 更新标题
-      if (data.type === 'setTitle' && typeof data.title === 'string') {
-        title.value = data.title;
-        uni.setNavigationBarTitle({ title: data.title });
-      }
-
-      // 跳转页面
-      if (data.type === 'navigateTo' && typeof data.url === 'string' && /^\/(?!\/)/.test(data.url)) {
-        router.push(data.url);
-      }
-
-      // 返回上一页
-      if (data.type === 'navigateBack') {
-        goBack();
-      }
-
-      // 分享
-      if (data.type === 'share') {
-        // 触发分享
-        uni.showShareMenu({
-          withShareTicket: true,
-          menus: ['shareAppMessage', 'shareTimeline'],
-        });
-      }
-
-      // 复制文本
-      if (data.type === 'copy' && typeof data.text === 'string') {
-        uni.setClipboardData({
-          data: data.text,
-          success: () => {
-            uni.showToast({ title: '复制成功', icon: 'success' });
-          },
-        });
-      }
-
-      // 关闭 Webview
-      if (data.type === 'close') {
-        goBack();
-      }
+    if (data.type === 'share') {
+      shareData = {
+        title: typeof data.title === 'string' ? data.title : undefined,
+        imageUrl: typeof data.imageUrl === 'string' ? data.imageUrl : undefined,
+      };
+      return;
     }
+
+    // #ifndef MP-WEIXIN
+    handleRealtimeMessage(data);
+    // #endif
   });
 }
+
+// #ifndef MP-WEIXIN
+function handleRealtimeMessage(data: Record<string, unknown>) {
+  if (data.type === 'setTitle' && typeof data.title === 'string') {
+    title.value = data.title;
+    uni.setNavigationBarTitle({ title: data.title });
+  }
+
+  if (data.type === 'navigateTo' && typeof data.url === 'string' && /^\/(?!\/)/.test(data.url)) {
+    router.push(data.url);
+  }
+
+  if (data.type === 'navigateBack' || data.type === 'close') {
+    goBack();
+  }
+
+  if (data.type === 'copy' && typeof data.text === 'string') {
+    uni.setClipboardData({
+      data: data.text,
+      success: () => {
+        uni.showToast({ title: '复制成功', icon: 'success' });
+      },
+    });
+  }
+}
+// #endif
 
 /**
  * 从 URL 中解析 hostname
@@ -221,7 +252,9 @@ function handleRetry() {
   startProgress();
   // 通过重新赋值触发 web-view 重新加载
   url.value = '';
-  setTimeout(() => {
+  if (retryTimer) clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
     url.value = originalUrl;
   }, 100);
 }

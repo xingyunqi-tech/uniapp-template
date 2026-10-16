@@ -47,11 +47,12 @@
 definePage({
   style: {
     navigationBarTitleText: '地址管理',
+    enablePullDownRefresh: true,
   },
 });
 
 import { computed, ref } from 'vue';
-import { onReachBottom, onShow } from '@dcloudio/uni-app';
+import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app';
 import { useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
@@ -69,6 +70,14 @@ const loadError = ref(false);
 
 onShow(() => {
   loadAddressList(true);
+});
+
+onPullDownRefresh(async () => {
+  try {
+    await loadAddressList(true);
+  } finally {
+    uni.stopPullDownRefresh();
+  }
 });
 
 onReachBottom(() => {

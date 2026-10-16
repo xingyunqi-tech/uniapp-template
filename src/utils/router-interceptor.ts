@@ -112,10 +112,14 @@ function handleRouteIntercept(method: InterceptMethod, args: { url: string }): b
       icon: 'none',
     });
 
+    // navigateTo 保留当前页，页面栈已满或其他跳转方式时 redirectTo
     setTimeout(() => {
-      uni.redirectTo({
-        url: `${PAGES.FORBIDDEN}?type=403`,
-      });
+      const url = `${PAGES.FORBIDDEN}?type=403`;
+      if (method === 'navigateTo' && getPageStackLength() < MAX_PAGE_STACK) {
+        uni.navigateTo({ url });
+      } else {
+        uni.redirectTo({ url });
+      }
     }, 0);
 
     return false;
@@ -158,7 +162,7 @@ export function setupRouterInterceptor(): void {
     });
   });
 
-  // switchTab 单独处理：白名单放行，未登录跳登录页（不携带 redirect）
+  // switchTab 单独处理：白名单放行，未登录跳登录页并携带 redirect
   uni.addInterceptor('switchTab', {
     invoke(args: InterceptArgs) {
       const userStore = useUserStore();
@@ -171,7 +175,7 @@ export function setupRouterInterceptor(): void {
       if (!userStore.isLoggedIn) {
         setTimeout(() => {
           uni.redirectTo({
-            url: PAGES.LOGIN,
+            url: getLoginUrl(args.url),
           });
         }, 0);
         return rejectNavigation('switchTab', args);

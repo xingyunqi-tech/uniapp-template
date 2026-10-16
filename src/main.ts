@@ -5,7 +5,7 @@ import { setAuthHandlers } from './api';
 import pinia, { useGlobalStore, useNotificationStore, useUserStore } from './store';
 import { i18n } from './utils/locale';
 import { guardCurrentPage, setupRouterInterceptor } from './utils/router-interceptor';
-import { getCurrentRoute, getShareTarget, isTabBarPage } from './utils/router';
+import { getCurrentRoute, getShareTarget, isPrivatePage, isTabBarPage } from './utils/router';
 import { syncTabBarBadge } from './utils/tabbar-badge';
 import { APP_NAME, TAB_BAR_BADGE } from './constants';
 
@@ -14,6 +14,18 @@ function isCurrentPageVm(vm: unknown): boolean {
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1] as { $vm?: unknown } | undefined;
   return currentPage?.$vm === vm;
+}
+
+/** 私有页隐藏转发与分享到朋友圈菜单 */
+function hidePrivatePageShareMenu(): void {
+  // #ifdef MP
+  if (isPrivatePage(getCurrentRoute())) {
+    uni.hideShareMenu({
+      hideShareItems: [],
+      menus: ['shareAppMessage', 'shareTimeline'],
+    } as UniNamespace.HideShareMenuOptions);
+  }
+  // #endif
 }
 
 /**
@@ -43,6 +55,7 @@ export function createApp() {
     onLoad(this: unknown) {
       if (!isCurrentPageVm(this)) return;
       guardCurrentPage();
+      hidePrivatePageShareMenu();
     },
     // 页面显示时重新应用主题，同步原生导航栏与 TabBar 样式
     onShow(this: unknown) {
@@ -56,7 +69,7 @@ export function createApp() {
         if (useUserStore(pinia).isLoggedIn) notificationStore.fetchUnreadCount();
       }
     },
-    // 默认开启转发与分享到朋友圈，页面自行注册时以页面为准
+    // 默认开启转发与分享到朋友圈（私有页除外），页面自行注册时以页面为准
     onShareAppMessage() {
       return { title: APP_NAME, path: getShareTarget().path };
     },

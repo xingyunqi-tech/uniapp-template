@@ -65,7 +65,6 @@ import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, useRouter, useSafeBack, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
-import { encryptPassword } from '@/utils';
 import { AuthSendCodeDtoType } from '@/api';
 
 const globalStore = useGlobalStore();
@@ -87,7 +86,7 @@ const registerAction = useAsyncAction({
   action: () =>
     userStore.register({
       phone: formData.phone,
-      password: encryptPassword(formData.password),
+      password: formData.password,
       code: formData.code,
     }),
   successText: '注册成功',
@@ -103,6 +102,8 @@ const agreed = ref(false);
 // 短信验证码
 const sms = useSendSms({
   sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.register),
+  scene: AuthSendCodeDtoType.register,
+  phone: () => formData.phone,
 });
 
 // 表单验证

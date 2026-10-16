@@ -7,6 +7,12 @@ export interface PageResult<T> {
   totalPages?: number;
 }
 
+/** 一次加载的结果；stale 为 true 表示请求已被更新的请求或 reset 作废，结果未写入列表 */
+export interface PagedLoadResult<T> {
+  list: T[];
+  stale: boolean;
+}
+
 export interface PagedListOptions<T, P> {
   /** 请求一页数据，page 从 1 开始 */
   fetchPage: (params: P & { page: number; limit: number }) => Promise<PageResult<T>>;
@@ -41,14 +47,14 @@ export function createPagedList<T, P extends object = object>(options: PagedList
 
   /**
    * 加载下一页；refresh 为 true 时从第 1 页重新加载并作废进行中的请求
-   * 加载中或没有更多时直接返回当前列表；请求失败时抛出错误，被作废的请求失败时不抛出
+   * 加载中或没有更多时直接返回当前列表；请求失败时抛出错误，被作废的请求失败时不抛出并标记 stale
    */
-  async function load(params?: P, refresh = false): Promise<T[]> {
+  async function loadPage(params?: P, refresh = false): Promise<PagedLoadResult<T>> {
     if (refresh) {
       page.value = 0;
       hasMore.value = true;
     } else if (loading.value || !hasMore.value) {
-      return list.value;
+      return { list: list.value, stale: false };
     }
 
     const id = ++requestId;
@@ -57,7 +63,7 @@ export function createPagedList<T, P extends object = object>(options: PagedList
     error.value = false;
     try {
       const result = await fetchPage({ ...(params ?? ({} as P)), page: next, limit });
-      if (id !== requestId) return list.value;
+      if (id !== requestId) return { list: list.value, stale: true };
 
       const items = result.list ?? [];
       list.value = next === 1 ? items : [...list.value, ...items];
@@ -65,14 +71,19 @@ export function createPagedList<T, P extends object = object>(options: PagedList
       hasMore.value = result.totalPages !== undefined ? next < result.totalPages : list.value.length < total.value;
       page.value = next;
       onPageLoaded?.(items, next);
-      return list.value;
+      return { list: list.value, stale: false };
     } catch (err) {
-      if (id !== requestId) return list.value;
+      if (id !== requestId) return { list: list.value, stale: true };
       error.value = true;
       throw err;
     } finally {
       if (id === requestId) loading.value = false;
     }
+  }
+
+  /** 同 loadPage，只返回列表 */
+  async function load(params?: P, refresh = false): Promise<T[]> {
+    return (await loadPage(params, refresh)).list;
   }
 
   /** 清空列表并作废进行中的请求 */
@@ -86,5 +97,5 @@ export function createPagedList<T, P extends object = object>(options: PagedList
     total.value = 0;
   }
 
-  return { list, loading, error, hasMore, page, total, load, reset };
+  return { list, loading, error, hasMore, page, total, load, loadPage, reset };
 }

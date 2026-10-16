@@ -220,6 +220,14 @@ function parseResponseData(data: unknown): unknown {
   }
 }
 
+/** 客户端校验类错误，不上报 */
+const CLIENT_ERROR_STATUSES = [400, 404, 409, 422];
+
+/** 是否为带业务码的统一响应体 */
+function isApiResponse(data: unknown): data is ApiResponse {
+  return typeof data === 'object' && data !== null && 'code' in data;
+}
+
 // ==================== 创建 Alova 实例 ====================
 
 const alovaInstance = createAlova({
@@ -324,11 +332,23 @@ const alovaInstance = createAlova({
         if (meta?.showError !== false) {
           showRequestToast(msg);
         }
-        reportApiError(method.url, method.type, msg, statusCode);
+        if (!CLIENT_ERROR_STATUSES.includes(statusCode)) {
+          reportApiError(method.url, method.type, msg, statusCode);
+        }
         throw new ApiError(msg, statusCode);
       }
 
-      const result = data as ApiResponse;
+      if (data === '' || data === null || data === undefined) {
+        return { code: 200, message: '', data: undefined } as ApiResponse;
+      }
+      if (!isApiResponse(data)) {
+        if (meta?.showError !== false) {
+          showRequestToast('响应格式错误');
+        }
+        reportApiError(method.url, method.type, '响应格式错误', statusCode);
+        throw new ApiError('响应格式错误', statusCode);
+      }
+      const result = data;
 
       // 业务错误
       if (result.code !== 200 && result.code !== 0) {

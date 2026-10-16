@@ -142,7 +142,7 @@ export const useUserStore = defineStore(
     async function login(params: LoginParams): Promise<string> {
       const response = await loginWithPhone({
         phone: params.phone,
-        password: params.password,
+        password: encryptPassword(params.password),
       });
       handleLoginResponse(response);
       return response.token;
@@ -155,7 +155,7 @@ export const useUserStore = defineStore(
     async function register(params: RegisterParams): Promise<string> {
       const response = await registerWithPhone({
         phone: params.phone,
-        password: params.password,
+        password: encryptPassword(params.password),
         code: params.code,
       });
       handleLoginResponse(response);
@@ -346,10 +346,14 @@ export const useUserStore = defineStore(
     }
 
     /**
-     * 注销账号：有密码的用户传当前密码（MD5），没有密码的用户传 verify_identity 短信验证码；接口成功后清除本地登录态
+     * 注销账号：有密码的用户传当前密码明文（内部做 MD5），没有密码的用户传 verify_identity 短信验证码；接口成功后清除本地登录态
      */
     async function deleteAccount(credentials: AuthDeleteAccountDto): Promise<void> {
-      await deleteCurrentUser(credentials);
+      await deleteCurrentUser(
+        credentials.oldPassword
+          ? { ...credentials, oldPassword: encryptPassword(credentials.oldPassword) }
+          : credentials,
+      );
       resetUserState();
     }
 

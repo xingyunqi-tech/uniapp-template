@@ -115,3 +115,27 @@ describe('createPagedList', () => {
     expect(onPageLoaded).toHaveBeenCalledWith([1, 2], 1);
   });
 });
+
+describe('createPagedList loadPage', () => {
+  it('被作废的请求返回 stale，生效的请求返回 stale 为 false', async () => {
+    const { loadPage, calls } = setup();
+
+    const stale = loadPage(undefined, true);
+    const fresh = loadPage(undefined, true);
+    calls[1].result.resolve({ list: [9], totalPages: 1 });
+    calls[0].result.resolve({ list: [1], totalPages: 1 });
+
+    await expect(fresh).resolves.toEqual({ list: [9], stale: false });
+    await expect(stale).resolves.toEqual({ list: [9], stale: true });
+  });
+
+  it('被作废的请求失败时返回 stale', async () => {
+    const { loadPage, reset, calls } = setup();
+
+    const stale = loadPage(undefined, true);
+    reset();
+    calls[0].result.reject(new Error('500'));
+
+    await expect(stale).resolves.toEqual({ list: [], stale: true });
+  });
+});

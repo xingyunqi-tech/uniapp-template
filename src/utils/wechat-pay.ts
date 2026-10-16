@@ -6,9 +6,8 @@ import {
   wechatPayControllerCreateJsapiPaymentV1,
   wechatPayControllerCreateAppPaymentV1,
   wechatPayControllerQueryOrderV1,
-  wechatPayControllerRefundV1,
 } from '@/api';
-import type { CreateWechatJsapiPaymentDto, CreateWechatAppPaymentDto, WechatRefundDto } from '@/api';
+import type { CreateWechatJsapiPaymentDto, CreateWechatAppPaymentDto } from '@/api';
 import { PaymentStatus } from '@/constants';
 
 /**
@@ -20,6 +19,22 @@ export interface PaymentResult {
   outTradeNo?: string;
   /** 支付状态，未提供时按 success 判断成功或失败 */
   status?: PaymentStatus;
+}
+
+function toSuccessResult(outTradeNo: string): PaymentResult {
+  return { success: true, message: '支付成功', outTradeNo, status: PaymentStatus.SUCCESS };
+}
+
+/** 收银台已拉起，非取消的失败可能已扣款，以订单状态为准 */
+function toFailResult(err: { errMsg?: string }, outTradeNo: string): PaymentResult {
+  const cancelled = err.errMsg?.includes('cancel') ?? false;
+  if (!cancelled) console.error('微信支付失败:', err);
+  return {
+    success: false,
+    message: cancelled ? '已取消支付' : '支付结果确认中，请稍后在订单中查看',
+    outTradeNo,
+    status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.PROCESSING,
+  };
 }
 
 /** 获取小程序登录 code，供后端换取付款用户的 openid */
@@ -50,25 +65,8 @@ export async function createJsapiPayment(params: Omit<CreateWechatJsapiPaymentDt
         package: paymentData.package,
         signType: paymentData.signType,
         paySign: paymentData.paySign,
-        success: () => {
-          resolve({
-            success: true,
-            message: '支付成功',
-            outTradeNo: params.outTradeNo,
-            status: PaymentStatus.SUCCESS,
-          });
-        },
-        // 收银台已拉起，非取消的失败可能已扣款，以订单状态为准
-        fail: (err: { errMsg?: string }) => {
-          const cancelled = err.errMsg?.includes('cancel') ?? false;
-          if (!cancelled) console.error('微信支付失败:', err);
-          resolve({
-            success: false,
-            message: cancelled ? '已取消支付' : '支付结果确认中，请稍后在订单中查看',
-            outTradeNo: params.outTradeNo,
-            status: cancelled ? PaymentStatus.CANCELLED : PaymentStatus.PROCESSING,
-          });
-        },
+        success: () => resolve(toSuccessResult(params.outTradeNo)),
+        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo)),
       });
     });
     // #endif
@@ -102,21 +100,8 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
       uni.requestPayment({
         provider: 'wxpay',
         orderInfo: { ...paymentData },
-        success: () => {
-          resolve({
-            success: true,
-            message: '支付成功',
-            outTradeNo: params.outTradeNo,
-          });
-        },
-        fail: (err: any) => {
-          console.error('微信支付失败:', err);
-          resolve({
-            success: false,
-            message: err.errMsg || '支付失败',
-            outTradeNo: params.outTradeNo,
-          });
-        },
+        success: () => resolve(toSuccessResult(params.outTradeNo)),
+        fail: (err: { errMsg?: string }) => resolve(toFailResult(err, params.outTradeNo)),
       });
     });
     // #endif
@@ -132,6 +117,7 @@ export async function createAppPayment(params: CreateWechatAppPaymentDto): Promi
     return {
       success: false,
       message: '创建支付订单失败',
+      status: PaymentStatus.FAILED,
     };
   }
 }
@@ -146,21 +132,6 @@ export async function queryOrderStatus(outTradeNo: string): Promise<any> {
   } catch (error) {
     console.error('查询订单状态失败:', error);
     throw error;
-  }
-}
-
-/**
- * 申请退款
- */
-export async function refundOrder(params: WechatRefundDto): Promise<boolean> {
-  try {
-    await wechatPayControllerRefundV1(params);
-    uni.showToast({ title: '退款申请已提交', icon: 'success' });
-    return true;
-  } catch (error) {
-    console.error('申请退款失败:', error);
-    uni.showToast({ title: '退款申请失败', icon: 'none' });
-    return false;
   }
 }
 

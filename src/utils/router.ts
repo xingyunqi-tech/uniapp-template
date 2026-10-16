@@ -237,23 +237,38 @@ export function getCurrentQuery(): QueryParams {
 }
 
 /** 拼接查询参数，小程序 options 为原始编码值，不再编码 */
-function joinRawQuery(query: QueryParams): string {
+function joinRawQuery(query: QueryParams, excludeKeys: readonly string[] = []): string {
   return Object.entries(query)
-    .filter(([, value]) => value !== undefined)
+    .filter(([key, value]) => value !== undefined && !excludeKeys.includes(key))
     .map(([key, value]) => `${key}=${value}`)
     .join('&');
 }
 
+/** 分享码参数名，转发时不透传来源方的分享码 */
+export const SHARE_CODE_KEYS: readonly string[] = ['sc', 'shareCode'];
+
 /** 不作为分享落地页的页面，分享时改为首页 */
 const UNSHAREABLE_PAGES: string[] = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.ERROR];
 
+/** 私有页面前缀：页面内容属于当前用户，不开放分享 */
+const PRIVATE_PAGE_PREFIXES: readonly string[] = ['/pages-sub/order/', '/pages-sub/user/'];
+
 /**
- * 当前页面的分享路径与参数
+ * 是否为私有页面（订单、用户分包），私有页不可分享
+ * @param url 页面路径（可带查询参数）
+ */
+export function isPrivatePage(url: string): boolean {
+  const path = getPathFromUrl(url);
+  return PRIVATE_PAGE_PREFIXES.some(prefix => path.startsWith(prefix));
+}
+
+/**
+ * 当前页面的分享路径与参数，私有页与登录等页面分享为首页
  */
 export function getShareTarget(): { path: string; query: string } {
   const route = getCurrentRoute();
-  if (!route || UNSHAREABLE_PAGES.includes(route)) return { path: PAGES.HOME, query: '' };
-  const query = joinRawQuery(getCurrentQuery());
+  if (!route || UNSHAREABLE_PAGES.includes(route) || isPrivatePage(route)) return { path: PAGES.HOME, query: '' };
+  const query = joinRawQuery(getCurrentQuery(), SHARE_CODE_KEYS);
   return { path: query ? `${route}?${query}` : route, query };
 }
 

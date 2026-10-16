@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { getErrorQueueSize, getGlobalErrorHandlers, updateErrorReporterOptions } from '@/utils/error-reporter';
 
 describe('未处理的 Promise 拒绝', () => {
-  updateErrorReporterOptions({ enabled: true, consoleLog: false });
+  updateErrorReporterOptions({ enabled: true, consoleLog: false, customReport: vi.fn() });
   const handlers = getGlobalErrorHandlers();
 
   it('路由拦截产生的失败不上报', () => {

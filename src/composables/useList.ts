@@ -83,8 +83,8 @@ export function useList<T>(options: UseListOptions<T>): UseListReturn<T> {
 
   // 加载数据
   async function loadData() {
-    error.value = false;
     if (loading.value || refreshing.value || noMore.value) return;
+    error.value = false;
 
     const id = ++requestId;
     const currentPage = page.value;

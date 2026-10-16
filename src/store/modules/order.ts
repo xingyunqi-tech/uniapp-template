@@ -16,37 +16,34 @@ import {
   type GetOrdersParams,
   OrderStatus,
 } from '@/api';
-import { createPagedList, type PageResult } from '../helpers/paged-list';
+import { createPagedList, type PageResult, type PagedLoadResult } from '../helpers/paged-list';
 
 /**
  * 订单统计数据
  */
 export interface OrderStats {
   unpaidCount: number;
-  paidCount: number;
-  refundedCount: number;
-  closedCount: number;
 }
+
+type OrderListParams = Omit<GetOrdersParams, 'page' | 'limit'>;
 
 export const useOrderStore = defineStore('order', () => {
   // ==================== State ====================
-  const pager = createPagedList<Order, Omit<GetOrdersParams, 'page' | 'limit'>>({
+  const pager = createPagedList<Order, OrderListParams>({
     fetchPage: async params => (await getOrders(params)) as unknown as PageResult<Order>,
     limit: 10,
   });
   const orderList = pager.list;
   const currentOrder = ref<Order | null>(null);
-  const stats = ref<OrderStats>({
-    unpaidCount: 0,
-    paidCount: 0,
-    refundedCount: 0,
-    closedCount: 0,
-  });
+  const stats = ref<OrderStats>({ unpaidCount: 0 });
   const loading = pager.loading;
   const total = pager.total;
   /** 已加载到的页码，0 表示尚未加载 */
   const currentPage = pager.page;
   const hasMore = pager.hasMore;
+  /** 当前列表的筛选条件 */
+  const listParams = ref<OrderListParams>({});
+  let statsRequestId = 0;
 
   // ==================== Getters ====================
   const unpaidOrders = computed(() => orderList.value.filter(order => order.status === OrderStatus.UNPAID));
@@ -61,12 +58,19 @@ export const useOrderStore = defineStore('order', () => {
 
   /**
    * 获取订单列表，refresh 为 true 时从第 1 页重新加载并作废进行中的请求
+   * 返回结果的 stale 为 true 时表示请求已被作废，列表未更新
    */
-  async function fetchOrderList(
-    params: Omit<GetOrdersParams, 'page' | 'limit'> = {},
-    refresh = false,
-  ): Promise<Order[]> {
-    return pager.load(params, refresh);
+  async function fetchOrderList(params: OrderListParams = {}, refresh = false): Promise<PagedLoadResult<Order>> {
+    if (refresh) listParams.value = { ...params };
+    return pager.loadPage(params, refresh);
+  }
+
+  /** 订单是否符合当前列表的筛选条件 */
+  function matchesListParams(order: Order): boolean {
+    const { status, paymentChannel } = listParams.value;
+    if (status && order.status !== status) return false;
+    if (paymentChannel && order.paymentChannel !== paymentChannel) return false;
+    return true;
   }
 
   /**
@@ -83,8 +87,10 @@ export const useOrderStore = defineStore('order', () => {
    */
   async function create(params: CreateOrderDto) {
     const order = await createOrder(params);
-    orderList.value.unshift(order);
-    total.value++;
+    if (currentPage.value > 0 && matchesListParams(order)) {
+      orderList.value.unshift(order);
+      total.value++;
+    }
     return order;
   }
 
@@ -121,9 +127,26 @@ export const useOrderStore = defineStore('order', () => {
       currentOrder.value.status = OrderStatus.CLOSED;
       currentOrder.value.closedAt = new Date().toISOString();
     }
+  }
 
-    // 刷新统计
-    await fetchStats();
+  /**
+   * 重新获取单个订单并更新列表中的对应项，与当前筛选条件不匹配时移出列表
+   */
+  async function syncOrder(orderId: string) {
+    const order = await getOrder(Number(orderId), { showError: false });
+    const index = orderList.value.findIndex(o => getOrderIdString(o.id) === orderId);
+    if (index > -1) {
+      if (matchesListParams(order)) {
+        orderList.value[index] = order;
+      } else {
+        orderList.value.splice(index, 1);
+        total.value--;
+      }
+    }
+    if (currentOrder.value && getOrderIdString(currentOrder.value.id) === orderId) {
+      currentOrder.value = order;
+    }
+    return order;
   }
 
   /**
@@ -142,17 +165,17 @@ export const useOrderStore = defineStore('order', () => {
   }
 
   /**
-   * 获取订单统计
+   * 获取订单统计：请求 1 条待付款订单取分页 total；被更新的请求作废时不写入
    */
   async function fetchStats() {
-    // 基于当前列表计算统计数据
-    // 如果后端有专门的统计接口，可以替换为 API 调用
-    stats.value = {
-      unpaidCount: orderList.value.filter(o => o.status === OrderStatus.UNPAID).length,
-      paidCount: orderList.value.filter(o => o.status === OrderStatus.PAID).length,
-      refundedCount: orderList.value.filter(o => o.status === OrderStatus.REFUNDED).length,
-      closedCount: orderList.value.filter(o => o.status === OrderStatus.CLOSED).length,
-    };
+    const id = ++statsRequestId;
+    const result = (await getOrders(
+      { status: OrderStatus.UNPAID, page: 1, limit: 1 },
+      { showError: false },
+    )) as unknown as PageResult<Order>;
+    if (id !== statsRequestId) return stats.value;
+
+    stats.value = { unpaidCount: result.total ?? 0 };
     return stats.value;
   }
 
@@ -176,12 +199,9 @@ export const useOrderStore = defineStore('order', () => {
   function reset() {
     clearOrderList();
     clearCurrentOrder();
-    stats.value = {
-      unpaidCount: 0,
-      paidCount: 0,
-      refundedCount: 0,
-      closedCount: 0,
-    };
+    listParams.value = {};
+    statsRequestId++;
+    stats.value = { unpaidCount: 0 };
   }
 
   return {
@@ -204,6 +224,7 @@ export const useOrderStore = defineStore('order', () => {
     create,
     cancel,
     remove,
+    syncOrder,
     fetchStats,
     clearOrderList,
     clearCurrentOrder,

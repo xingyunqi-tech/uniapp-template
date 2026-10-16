@@ -78,11 +78,22 @@ export function useThrottleFn<T extends (...args: any[]) => any>(
 ): UseThrottleFnReturn<T> {
   const { interval = 300, trailing = true, leading = true } = options;
   const isThrottled = ref(false);
+  let lastExecTime = 0;
+  let resetTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function clearResetTimer() {
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+      resetTimer = null;
+    }
+  }
 
   // 复用 utils 的节流函数，包装以支持 isThrottled 响应式状态
   const throttledCore = throttle(
     (...args: Parameters<T>) => {
+      clearResetTimer();
       isThrottled.value = false;
+      lastExecTime = Date.now();
       fn(...args);
     },
     { interval, trailing, leading },
@@ -91,10 +102,21 @@ export function useThrottleFn<T extends (...args: any[]) => any>(
   function throttledFn(...args: Parameters<T>) {
     isThrottled.value = true;
     throttledCore(...args);
+
+    // 不执行尾调用时，被丢弃的调用在节流窗口结束后复位
+    if (!trailing && isThrottled.value) {
+      clearResetTimer();
+      const wait = lastExecTime ? Math.max(0, lastExecTime + interval - Date.now()) : interval;
+      resetTimer = setTimeout(() => {
+        resetTimer = null;
+        isThrottled.value = false;
+      }, wait);
+    }
   }
 
   function cancel() {
     throttledCore.cancel();
+    clearResetTimer();
     isThrottled.value = false;
   }
 

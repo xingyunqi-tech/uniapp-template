@@ -196,12 +196,14 @@ function initFormData() {
 onLoad(async () => {
   // 先用本地缓存数据初始化
   initFormData();
+  const initialSnapshot = JSON.stringify(formData);
 
   // 从接口获取最新用户数据
   try {
     await userStore.getUserInfo();
-    // 更新表单数据
-    initFormData();
+    // 用户未编辑过表单时用最新数据覆盖
+    const untouched = JSON.stringify(formData) === initialSnapshot && !uploadedPhotoId.value && !avatarUploading.value;
+    if (untouched) initFormData();
   } catch (error) {
     console.error('获取用户信息失败:', error);
   }

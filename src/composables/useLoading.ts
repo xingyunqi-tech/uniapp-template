@@ -27,79 +27,104 @@ export interface UseLoadingReturn {
 }
 
 // ==================== 全局单例状态 ====================
-// 说明：Loading 状态设计为全局单例，整个应用共享同一个 Loading 状态
-// 使用引用计数处理并发调用，确保所有异步操作完成后才隐藏 Loading
+// 全局单例，并发调用全部结束后才隐藏
 
 const _visible = ref(false);
 const _text = ref('');
 const _mask = ref(true);
 
-/** 引用计数，用于处理并发调用 */
-let _refCount = 0;
+interface LoadingEntry {
+  text: string;
+  mask: boolean;
+  useNative: boolean;
+  /** 由 withLoading 创建，结束时自行移除 */
+  scoped?: boolean;
+}
 
-/** 是否使用原生 Loading */
-let _useNative = true;
+/** 未结束的 Loading 调用，按显示顺序排列 */
+const _entries: LoadingEntry[] = [];
+
+/** 当前原生 Loading 对应的调用 */
+let _nativeEntry: LoadingEntry | null = null;
+
+function resolveOptions(options?: string | LoadingOptions): LoadingEntry {
+  if (typeof options === 'string') {
+    return { text: options, mask: true, useNative: true };
+  }
+  return {
+    text: options?.text ?? '加载中...',
+    mask: options?.mask ?? true,
+    useNative: options?.useNative ?? true,
+  };
+}
+
+function findLastNative(): LoadingEntry | null {
+  for (let i = _entries.length - 1; i >= 0; i--) {
+    if (_entries[i].useNative) return _entries[i];
+  }
+  return null;
+}
+
+/** 按未结束的调用同步可见状态与原生 Loading */
+function syncState(): void {
+  const top = _entries[_entries.length - 1];
+  _visible.value = !!top;
+  _text.value = top?.text ?? '';
+  _mask.value = top?.mask ?? true;
+
+  const nativeEntry = findLastNative();
+  if (nativeEntry === _nativeEntry) return;
+  _nativeEntry = nativeEntry;
+  if (nativeEntry) {
+    uni.showLoading({ title: nativeEntry.text, mask: nativeEntry.mask });
+  } else {
+    uni.hideLoading();
+  }
+}
+
+function pushEntry(options?: string | LoadingOptions, scoped = false): LoadingEntry {
+  const entry = { ...resolveOptions(options), scoped };
+  _entries.push(entry);
+  syncState();
+  return entry;
+}
+
+function removeEntry(entry: LoadingEntry): void {
+  const index = _entries.lastIndexOf(entry);
+  if (index === -1) return;
+  _entries.splice(index, 1);
+  syncState();
+}
 
 /**
  * 显示 Loading
  * @param options 配置选项或提示文字
  */
 function showLoading(options?: string | LoadingOptions): void {
-  _refCount++;
-
-  let title = '加载中...';
-  let mask = true;
-  let useNative = true;
-
-  if (typeof options === 'string') {
-    title = options;
-  } else if (options) {
-    title = options.text ?? '加载中...';
-    mask = options.mask ?? true;
-    useNative = options.useNative ?? true;
-  }
-
-  _text.value = title;
-  _mask.value = mask;
-  _useNative = useNative;
-  _visible.value = true;
-
-  // 使用原生 Loading
-  if (_useNative) {
-    uni.showLoading({
-      title,
-      mask,
-    });
-  }
+  pushEntry(options);
 }
 
 /**
- * 隐藏 Loading
- * 使用引用计数，只有当所有调用都完成时才真正隐藏
+ * 隐藏最近一次 showLoading 显示的 Loading，所有调用结束后才真正隐藏
  */
 function hideLoading(): void {
-  _refCount = Math.max(0, _refCount - 1);
-
-  if (_refCount === 0) {
-    _visible.value = false;
-    _text.value = '';
-
-    // 隐藏原生 Loading
-    if (_useNative) {
-      uni.hideLoading();
+  for (let i = _entries.length - 1; i >= 0; i--) {
+    if (!_entries[i].scoped) {
+      removeEntry(_entries[i]);
+      return;
     }
   }
 }
 
 /**
- * 强制隐藏 Loading（重置引用计数）
+ * 强制隐藏 Loading（清空所有调用）
  */
 function forceHideLoading(): void {
-  _refCount = 0;
+  _entries.length = 0;
   _visible.value = false;
   _text.value = '';
-
-  // 强制隐藏原生 Loading
+  _mask.value = true;
+  _nativeEntry = null;
   uni.hideLoading();
 }
 
@@ -108,11 +133,11 @@ function forceHideLoading(): void {
  * 支持并发调用，所有操作完成后才隐藏
  */
 async function withLoading<T>(fn: () => Promise<T>, options?: string | LoadingOptions): Promise<T> {
+  const entry = pushEntry(options, true);
   try {
-    showLoading(options);
     return await fn();
   } finally {
-    hideLoading();
+    removeEntry(entry);
   }
 }
 
