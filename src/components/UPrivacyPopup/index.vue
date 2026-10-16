@@ -110,7 +110,7 @@ onUnmounted(() => {
 .u-privacy-popup {
   display: flex;
   position: fixed;
-  z-index: 9999;
+  z-index: var(--z-index-privacy);
   inset: 0;
   align-items: center;
   justify-content: center;

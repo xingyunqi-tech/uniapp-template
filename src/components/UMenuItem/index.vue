@@ -14,19 +14,27 @@
     @click="handleClick"
   >
     <!-- 左侧图标 -->
-    <view v-if="icon" class="u-menu-item__icon">
-      <uni-icons :type="icon" :size="`${iconSize}rpx`" :color="iconColorValue" />
+    <view v-if="icon || $slots.icon" class="u-menu-item__icon">
+      <slot name="icon">
+        <uni-icons :type="icon" :size="`${iconSize}rpx`" :color="iconColorValue" />
+      </slot>
     </view>
 
     <!-- 内容区域 -->
     <view class="u-menu-item__content">
-      <text class="u-menu-item__title">{{ title }}</text>
-      <text v-if="label" class="u-menu-item__label">{{ label }}</text>
+      <slot>
+        <slot name="title">
+          <text class="u-menu-item__title">{{ title }}</text>
+        </slot>
+        <text v-if="label" class="u-menu-item__label">{{ label }}</text>
+      </slot>
     </view>
 
     <!-- 右侧区域 -->
     <view class="u-menu-item__right">
-      <text v-if="rightText" class="u-menu-item__right-text">{{ rightText }}</text>
+      <slot name="value">
+        <text v-if="rightText" class="u-menu-item__right-text">{{ rightText }}</text>
+      </slot>
       <text v-if="badge" class="u-menu-item__badge">{{ badge }}</text>
       <!-- 阻止开关的点击冒泡到整行 -->
       <view v-if="showSwitch" class="u-menu-item__switch-wrap" hover-stop-propagation @click.stop>
@@ -69,8 +77,8 @@ defineOptions({
 });
 
 interface Props {
-  /** 标题 */
-  title: string;
+  /** 标题，可用 title 插槽替代 */
+  title?: string;
   /** 标题下方描述 */
   label?: string;
   /** 右侧文字 */
@@ -102,6 +110,7 @@ interface Props {
 const globalStore = useGlobalStore();
 
 const props = withDefaults(defineProps<Props>(), {
+  title: '',
   label: '',
   rightText: '',
   icon: undefined,
@@ -165,7 +174,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
   }
 
   &--disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-disabled);
   }
 
   &--danger {
@@ -208,7 +217,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
   &__label {
     overflow: hidden;
     color: var(--color-text-secondary);
-    font-size: 24rpx;
+    font-size: var(--font-size-sm);
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -223,7 +232,7 @@ function handleSwitchChange(e: UniHelper.SwitchOnChangeEvent) {
 
   &__right-text {
     color: var(--color-text-secondary);
-    font-size: 28rpx;
+    font-size: var(--font-size-base);
   }
 
   &__badge {

@@ -307,7 +307,6 @@ function handleDelete() {
 .address-edit-page {
   box-sizing: border-box;
   min-height: 100vh;
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 160rpx);
   background: var(--color-bg-grey);
 }
 

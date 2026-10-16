@@ -194,7 +194,7 @@ function handleTabClick(tab: TabItem) {
     }
 
     &--disabled {
-      opacity: 0.5;
+      opacity: var(--opacity-disabled);
       cursor: not-allowed;
 
       .u-tabs__text {

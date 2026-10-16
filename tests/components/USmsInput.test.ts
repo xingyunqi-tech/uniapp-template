@@ -1,8 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import { mount } from '@vue/test-utils';
 import USmsInput from '@/components/USmsInput/index.vue';
 
-const global = { stubs: { 'uni-easyinput': true } };
+vi.mock('@/store/modules/global', () => ({
+  useGlobalStore: () => ({ primaryColor: '#1989fa' }),
+}));
+
+const EasyinputStub = defineComponent({
+  name: 'UniEasyinput',
+  props: {
+    placeholder: { type: String, default: '' },
+    placeholderStyle: { type: String, default: '' },
+    prefixIcon: { type: String, default: '' },
+    styles: { type: Object, default: () => ({}) },
+    primaryColor: { type: String, default: '' },
+  },
+  template: '<div />',
+});
+
+const global = { stubs: { 'uni-easyinput': EasyinputStub } };
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -79,6 +96,32 @@ describe('USmsInput', () => {
     expect(wrapper.find('.u-sms-btn').text()).toBe('获取验证码');
     expect(warn).toHaveBeenCalledTimes(2);
     warn.mockRestore();
+  });
+
+  it('输入框颜色使用主题变量，主色跟随当前主题', () => {
+    const input = mount(USmsInput, { props: { modelValue: '' }, global }).findComponent(EasyinputStub);
+
+    expect(input.props('styles')).toEqual({
+      color: 'var(--color-text)',
+      backgroundColor: 'var(--color-bg)',
+      disableColor: 'var(--color-bg-grey)',
+      borderColor: 'var(--color-border)',
+    });
+    expect(input.props('placeholderStyle')).toBe('color: var(--color-text-placeholder)');
+    expect(input.props('primaryColor')).toBe('#1989fa');
+  });
+
+  it('占位文字与前缀图标可配置，默认为请输入验证码与 email', async () => {
+    const wrapper = mount(USmsInput, { props: { modelValue: '' }, global });
+    const input = () => wrapper.findComponent(EasyinputStub);
+
+    expect(input().props('placeholder')).toBe('请输入验证码');
+    expect(input().props('prefixIcon')).toBe('email');
+
+    await wrapper.setProps({ placeholder: '短信验证码', prefixIcon: '' });
+
+    expect(input().props('placeholder')).toBe('短信验证码');
+    expect(input().props('prefixIcon')).toBe('');
   });
 
   it('禁用时点击不触发 send', async () => {

@@ -3,6 +3,21 @@
  */
 
 /**
+ * uni-easyinput 跟随主题的颜色配置，配合 primary-color 使用
+ */
+export const EASYINPUT_STYLES = {
+  color: 'var(--color-text)',
+  backgroundColor: 'var(--color-bg)',
+  disableColor: 'var(--color-bg-grey)',
+  borderColor: 'var(--color-border)',
+};
+
+/**
+ * uni-easyinput 占位文字样式
+ */
+export const EASYINPUT_PLACEHOLDER_STYLE = 'color: var(--color-text-placeholder)';
+
+/**
  * 短信验证码长度
  */
 export const SMS_CODE_LENGTH = 6;

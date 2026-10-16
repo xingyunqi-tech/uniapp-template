@@ -102,6 +102,43 @@ describe('UMenuItem', () => {
     expect(wrapper.emitted('click')).toBeUndefined();
   });
 
+  it('icon、title、value 插槽替换对应区域默认内容', () => {
+    const wrapper = mount(UMenuItem, {
+      props: { title: '默认标题', label: '描述', rightText: '默认值' },
+      slots: {
+        icon: '<image class="slot-icon" />',
+        title: '<text class="slot-title">自定义标题</text>',
+        value: '<text class="slot-value">自定义值</text>',
+      },
+      global,
+    });
+
+    expect(wrapper.find('.u-menu-item__icon .slot-icon').exists()).toBe(true);
+    expect(wrapper.find('.slot-title').text()).toBe('自定义标题');
+    expect(wrapper.find('.u-menu-item__title').exists()).toBe(false);
+    expect(wrapper.find('.u-menu-item__label').text()).toBe('描述');
+    expect(wrapper.find('.slot-value').text()).toBe('自定义值');
+    expect(wrapper.find('.u-menu-item__right-text').exists()).toBe(false);
+  });
+
+  it('默认插槽替换整个内容区', () => {
+    const wrapper = mount(UMenuItem, {
+      props: { title: '默认标题', label: '描述' },
+      slots: { default: '<view class="slot-content">内容</view>' },
+      global,
+    });
+
+    expect(wrapper.find('.u-menu-item__content .slot-content').text()).toBe('内容');
+    expect(wrapper.find('.u-menu-item__title').exists()).toBe(false);
+    expect(wrapper.find('.u-menu-item__label').exists()).toBe(false);
+  });
+
+  it('未传 icon 且无 icon 插槽时不渲染图标区', () => {
+    const wrapper = mount(UMenuItem, { props: { title: '设置' }, global });
+
+    expect(wrapper.find('.u-menu-item__icon').exists()).toBe(false);
+  });
+
   it('isContact 时渲染客服按钮', () => {
     const wrapper = mount(UMenuItem, { props: { title: '联系客服', isContact: true }, global });
 

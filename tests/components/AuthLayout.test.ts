@@ -57,4 +57,11 @@ describe('AuthLayout', () => {
 
     expect(safeBack).toHaveBeenCalledWith(PAGES.HOME);
   });
+
+  it('开启 virtualHost，父组件 class 合并到根节点', () => {
+    const wrapper = mount(AuthLayout, { attrs: { class: 'dark-theme' }, global });
+
+    expect((AuthLayout as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['auth-page', 'dark-theme']));
+  });
 });

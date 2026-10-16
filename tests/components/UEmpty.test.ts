@@ -26,4 +26,11 @@ describe('UEmpty', () => {
     expect(plain.find('.u-empty__action').exists()).toBe(false);
     expect(withAction.find('.u-empty__action').text()).toBe('重试');
   });
+
+  it('开启 virtualHost，父组件 class 合并到根节点', () => {
+    const wrapper = mount(UEmpty, { attrs: { class: 'detail-error' }, global });
+
+    expect((UEmpty as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['u-empty', 'detail-error']));
+  });
 });

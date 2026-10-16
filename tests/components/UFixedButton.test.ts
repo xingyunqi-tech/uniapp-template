@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import UFixedButton from '@/components/UFixedButton/index.vue';
 
 const UButtonStub = defineComponent({
@@ -19,6 +19,26 @@ const UButtonStub = defineComponent({
 });
 
 const global = { stubs: { UButton: UButtonStub } };
+
+let barHeight = 0;
+const createSelectorQuery = vi.fn(() => {
+  const query = {
+    in: () => query,
+    select: () => query,
+    boundingClientRect: (callback: (rect: { height: number }) => void) => {
+      callback({ height: barHeight });
+      return query;
+    },
+    exec: vi.fn(),
+  };
+  return query;
+});
+
+beforeEach(() => {
+  barHeight = 0;
+  createSelectorQuery.mockClear();
+  (uni as unknown as { createSelectorQuery: typeof createSelectorQuery }).createSelectorQuery = createSelectorQuery;
+});
 
 describe('UFixedButton', () => {
   it('默认渲染撑满的主色按钮与默认文字', () => {
@@ -50,5 +70,53 @@ describe('UFixedButton', () => {
 
     expect(disabled.emitted('click')).toBeUndefined();
     expect(loading.emitted('click')).toBeUndefined();
+  });
+
+  it('默认渲染占位元素，高度取固定按钮区实际高度', async () => {
+    barHeight = 80;
+    const wrapper = mount(UFixedButton, { global });
+    await flushPromises();
+
+    expect((wrapper.find('.u-fixed-button__placeholder').element as HTMLElement).style.height).toBe('80px');
+  });
+
+  it('按钮区内容更新后重新测量占位高度', async () => {
+    barHeight = 80;
+    const wrapper = mount(UFixedButton, { props: { text: '提交' }, global });
+    await flushPromises();
+
+    barHeight = 120;
+    await wrapper.setProps({ text: '再次提交' });
+    await flushPromises();
+
+    expect((wrapper.find('.u-fixed-button__placeholder').element as HTMLElement).style.height).toBe('120px');
+  });
+
+  it('首次未取到高度时重试测量', async () => {
+    vi.useFakeTimers();
+    const wrapper = mount(UFixedButton, { global });
+    await flushPromises();
+    expect((wrapper.find('.u-fixed-button__placeholder').element as HTMLElement).style.height).toBe('');
+
+    barHeight = 90;
+    await vi.advanceTimersByTimeAsync(100);
+    vi.useRealTimers();
+
+    expect((wrapper.find('.u-fixed-button__placeholder').element as HTMLElement).style.height).toBe('90px');
+  });
+
+  it('placeholder 为 false 时不渲染占位元素也不测量', async () => {
+    const wrapper = mount(UFixedButton, { props: { placeholder: false }, global });
+    await flushPromises();
+
+    expect(wrapper.find('.u-fixed-button__placeholder').exists()).toBe(false);
+    expect(createSelectorQuery).not.toHaveBeenCalled();
+  });
+
+  it('默认插槽替换按钮区内容', () => {
+    const wrapper = mount(UFixedButton, { slots: { default: '<view class="custom">自定义</view>' }, global });
+
+    expect(wrapper.find('.u-fixed-button__bar .custom').text()).toBe('自定义');
+    expect(wrapper.findComponent(UButtonStub).exists()).toBe(false);
   });
 });

@@ -36,4 +36,11 @@ describe('ULoadMore', () => {
 
     expect(wrapper.find('.u-load-more__line').exists()).toBe(false);
   });
+
+  it('开启 virtualHost，父组件 class 合并到根节点', () => {
+    const wrapper = mount(ULoadMore, { attrs: { class: 'footer' } });
+
+    expect((ULoadMore as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['u-load-more', 'footer']));
+  });
 });

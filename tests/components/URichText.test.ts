@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { mount } from '@vue/test-utils';
 import URichText from '@/components/URichText/index.vue';
@@ -22,6 +22,13 @@ function nodesOf(content: string) {
   const wrapper = mount(URichText, { props: { content }, global });
   return wrapper.findComponent(RichTextStub).props('nodes') as string;
 }
+
+const previewImage = vi.fn();
+
+beforeEach(() => {
+  previewImage.mockReset();
+  (uni as unknown as { previewImage: typeof previewImage }).previewImage = previewImage;
+});
 
 describe('URichText', () => {
   it('为标签补充对应 class，已有 class 时追加', () => {
@@ -100,5 +107,87 @@ describe('URichText', () => {
     wrapper.findComponent(RichTextStub).vm.$emit('itemclick', { detail });
 
     expect(wrapper.emitted('itemclick')).toEqual([[detail]]);
+  });
+
+  it('开启 previewImage 时点击图片预览内容中的全部图片', () => {
+    const wrapper = mount(URichText, {
+      props: { content: '<img src="a.png"><p>x</p><img class="c" src="b.png" />', previewImage: true },
+      global,
+    });
+
+    wrapper
+      .findComponent(RichTextStub)
+      .vm.$emit('itemclick', { detail: { node: { name: 'img', attrs: { src: 'b.png' } } } });
+
+    expect(previewImage).toHaveBeenCalledWith({ urls: ['a.png', 'b.png'], current: 'b.png' });
+  });
+
+  it('图片地址中的 HTML 实体解码后预览，注释中的图片不计入', () => {
+    const wrapper = mount(URichText, {
+      props: {
+        content: '<!-- <img src="old.png"> --><img src="https://cdn/x.jpg?a=1&amp;b=2"><img src="y&#46;png">',
+        previewImage: true,
+      },
+      global,
+    });
+
+    wrapper
+      .findComponent(RichTextStub)
+      .vm.$emit('itemclick', { detail: { node: { name: 'img', attrs: { src: 'https://cdn/x.jpg?a=1&b=2' } } } });
+
+    expect(previewImage).toHaveBeenCalledWith({
+      urls: ['https://cdn/x.jpg?a=1&b=2', 'y.png'],
+      current: 'https://cdn/x.jpg?a=1&b=2',
+    });
+  });
+
+  it('未开启 previewImage 时点击图片不预览', () => {
+    const wrapper = mount(URichText, { props: { content: '<img src="a.png">' }, global });
+
+    wrapper
+      .findComponent(RichTextStub)
+      .vm.$emit('itemclick', { detail: { node: { name: 'img', attrs: { src: 'a.png' } } } });
+
+    expect(previewImage).not.toHaveBeenCalled();
+  });
+
+  it('previewImages 从节点数组中收集图片，未指定或无效的 current 时从首张开始', () => {
+    const content = [
+      {
+        name: 'div',
+        children: [
+          { name: 'img', attrs: { src: 'x.png' } },
+          { type: 'text' as const, text: 't' },
+        ],
+      },
+      { name: 'img', attrs: { src: 'y.png' } },
+    ];
+    const wrapper = mount(URichText, { props: { content }, global });
+    const vm = wrapper.vm as unknown as { previewImages: (current?: string) => void };
+
+    vm.previewImages();
+    vm.previewImages('y.png');
+    vm.previewImages('z.png');
+
+    expect(previewImage.mock.calls).toEqual([
+      [{ urls: ['x.png', 'y.png'], current: 'x.png' }],
+      [{ urls: ['x.png', 'y.png'], current: 'y.png' }],
+      [{ urls: ['x.png', 'y.png'], current: 'x.png' }],
+    ]);
+  });
+
+  it('内容中没有图片时 previewImages 不调用预览', () => {
+    const wrapper = mount(URichText, { props: { content: '<p>无图</p>' }, global });
+
+    (wrapper.vm as unknown as { previewImages: () => void }).previewImages();
+
+    expect(previewImage).not.toHaveBeenCalled();
+  });
+
+  it('开启 virtualHost，父组件 class 合并到根节点', () => {
+    const wrapper = mount(URichText, { props: { content: 'x' }, attrs: { class: 'article' }, global });
+
+    expect((URichText as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['u-rich-text', 'article']));
   });
 });

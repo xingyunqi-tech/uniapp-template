@@ -42,6 +42,9 @@ import { useStatusBar } from '@/composables/useStatusBar';
 
 defineOptions({
   name: 'AuthLayout',
+  options: {
+    virtualHost: true,
+  },
 });
 
 interface Props {

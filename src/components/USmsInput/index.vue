@@ -6,8 +6,11 @@
   <view class="u-sms-input">
     <uni-easyinput
       :model-value="modelValue"
-      placeholder="请输入验证码"
-      prefix-icon="email"
+      :placeholder="placeholder"
+      :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
+      :prefix-icon="prefixIcon"
+      :styles="EASYINPUT_STYLES"
+      :primary-color="globalStore.primaryColor"
       type="number"
       :maxlength="maxlength"
       :clearable="true"
@@ -32,8 +35,9 @@ definePage({
 });
 
 import { computed } from 'vue';
-import { SMS_CODE_LENGTH } from '@/constants/form';
+import { EASYINPUT_PLACEHOLDER_STYLE, EASYINPUT_STYLES, SMS_CODE_LENGTH } from '@/constants/form';
 import { useCountdown } from '@/composables';
+import { useGlobalStore } from '@/store/modules/global';
 
 defineOptions({
   name: 'USmsInput',
@@ -52,6 +56,10 @@ const props = withDefaults(
     disabled?: boolean;
     /** 最大长度 */
     maxlength?: number;
+    /** 输入框占位文字 */
+    placeholder?: string;
+    /** 输入框前缀图标 (uni-icons 的 type)，传空字符串不显示 */
+    prefixIcon?: UniIconsType | '';
     /** 默认文案 */
     defaultText?: string;
     /** 倒计时文案模板，{s} 会被替换为秒数 */
@@ -67,6 +75,8 @@ const props = withDefaults(
     countdownSeconds: 60,
     disabled: false,
     maxlength: SMS_CODE_LENGTH,
+    placeholder: '请输入验证码',
+    prefixIcon: 'email',
     defaultText: '获取验证码',
     countdownTemplate: '{s}s',
     autoStart: false,
@@ -79,6 +89,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
   send: [];
 }>();
+
+const globalStore = useGlobalStore();
 
 // 使用 useCountdown composable 管理倒计时
 const {

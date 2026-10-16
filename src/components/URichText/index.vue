@@ -20,6 +20,9 @@ import type { RichTextNodes, RichTextNode, RichTextSpace } from '@uni-helper/uni
 
 defineOptions({
   name: 'URichText',
+  options: {
+    virtualHost: true,
+  },
 });
 
 interface Props {
@@ -29,6 +32,8 @@ interface Props {
   selectable?: boolean;
   /** 显示连续空格 ensp | emsp | nbsp */
   space?: RichTextSpace;
+  /** 点击图片时预览内容中的全部图片，仅 H5 / App 生效（小程序 rich-text 不支持节点点击） */
+  previewImage?: boolean;
 }
 
 interface Emits {
@@ -39,6 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
   content: '',
   selectable: true,
   space: 'nbsp',
+  previewImage: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -71,7 +77,7 @@ const parsedNodes = computed<RichTextNodes>(() => {
   // 处理图片：添加最大宽度限制（img 标签会在后面统一添加 class）
   html = html.replace(/<img(?![^>]*\sstyle=)/gi, '<img style="max-width:100%;height:auto;"');
 
-  // 处理视频标签（小程序不支持，转换为提示）
+  // 各端 rich-text 均不渲染 video，转换为提示
   // 先替换成对标签，再处理剩余的单独开始标签（含自闭合写法）
   html = html.replace(
     /<video\b[^>]*>[\s\S]*?<\/video>|<video\b[^>]*>/gi,
@@ -115,10 +121,61 @@ const parsedNodes = computed<RichTextNodes>(() => {
   return html;
 });
 
-// 处理点击事件
+function collectNodeImages(nodes: RichTextNode[], urls: string[]) {
+  for (const node of nodes) {
+    if (node.type === 'text') continue;
+    const src = node.attrs?.src;
+    if (node.name === 'img' && typeof src === 'string' && src) urls.push(src);
+    if (node.children) collectNodeImages(node.children, urls);
+  }
+  return urls;
+}
+
+const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' };
+
+/** 解码属性值中的 HTML 实体，与 rich-text 渲染后的节点属性保持一致 */
+function decodeEntities(value: string): string {
+  return value.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
+    if (code[0] === '#') {
+      const point = code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      return Number.isNaN(point) ? entity : String.fromCodePoint(point);
+    }
+    return NAMED_ENTITIES[code.toLowerCase()] ?? entity;
+  });
+}
+
+/** 内容中的图片地址 */
+const imageUrls = computed<string[]>(() => {
+  const { content } = props;
+  if (!content) return [];
+  if (Array.isArray(content)) return collectNodeImages(content, []);
+  const html = content.replace(/<!--[\s\S]*?-->/g, '');
+  const urls: string[] = [];
+  const imgSrcRegex = /<img\b[^>]*?\ssrc=["']([^"']+)["']/gi;
+  let match: RegExpExecArray | null;
+  while ((match = imgSrcRegex.exec(html))) urls.push(decodeEntities(match[1]));
+  return urls;
+});
+
+/** 预览内容中的全部图片，current 为首张展示的图片地址 */
+function previewImages(current?: string) {
+  const urls = imageUrls.value;
+  if (urls.length === 0) return;
+  uni.previewImage({ urls, current: current && urls.includes(current) ? current : urls[0] });
+}
+
 function handleItemClick(e: { detail: { node: RichTextNode } }) {
   emit('itemclick', e.detail);
+  const { node } = e.detail;
+  if (props.previewImage && node.type !== 'text' && node.name === 'img') {
+    const src = node.attrs?.src;
+    previewImages(typeof src === 'string' ? src : undefined);
+  }
 }
+
+defineExpose({
+  previewImages,
+});
 </script>
 
 <style scoped lang="scss">

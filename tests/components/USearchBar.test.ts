@@ -132,4 +132,33 @@ describe('USearchBar', () => {
     expect(wrapper.find('.u-search-bar__empty').text()).toBe('暂无搜索历史');
     expect(storage.get(HISTORY_KEY)).toBeNull();
   });
+  it('占位文字颜色通过 placeholder-style 使用主题变量', () => {
+    const wrapper = mountBar();
+
+    expect(wrapper.find('input').attributes('placeholder-style')).toBe('color: var(--color-text-placeholder)');
+  });
+
+  it('left、right、action 插槽替换或追加对应区域内容', () => {
+    const wrapper = mount(USearchBar, {
+      props: { historyKey: HISTORY_KEY },
+      slots: {
+        left: '<text class="slot-left">城市</text>',
+        right: '<text class="slot-right">扫码</text>',
+        action: '<text class="slot-action">搜索</text>',
+      },
+      global,
+    });
+    const inputWrapper = wrapper.find('.u-search-bar__input-wrapper');
+
+    expect(inputWrapper.find('.slot-left').exists()).toBe(true);
+    expect(inputWrapper.find('.u-search-bar__icon').exists()).toBe(false);
+    expect(inputWrapper.find('.slot-right').exists()).toBe(true);
+    expect(wrapper.find('.slot-action').text()).toBe('搜索');
+  });
+
+  it('未传插槽时显示默认搜索图标', () => {
+    const wrapper = mountBar();
+
+    expect(wrapper.find('.u-search-bar__icon').exists()).toBe(true);
+  });
 });

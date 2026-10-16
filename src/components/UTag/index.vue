@@ -23,9 +23,9 @@
     </view>
 
     <!-- 文本内容 -->
-    <text class="u-tag__text">
+    <view class="u-tag__text">
       <slot>{{ text }}</slot>
-    </text>
+    </view>
 
     <!-- 关闭按钮 -->
     <view v-if="closeable" class="u-tag__close" @click.stop="handleClose">
@@ -256,6 +256,8 @@ function handleClose() {
   // ==================== 子元素 ====================
 
   &__text {
+    display: flex;
+    align-items: center;
     line-height: 1.2;
     white-space: nowrap;
   }

@@ -67,4 +67,22 @@ describe('ULoading', () => {
     await nextTick();
     expect(wrapper.find('.u-loading').exists()).toBe(false);
   });
+
+  it('全屏时遮罩拦截 touchmove，阻止背后页面滚动', () => {
+    const wrapper = mount(ULoading, { props: { visible: true } });
+    const event = new Event('touchmove', { bubbles: true, cancelable: true });
+
+    wrapper.find('.u-loading__mask').element.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('局部加载不拦截 touchmove', () => {
+    const wrapper = mount(ULoading, { props: { visible: true, fullscreen: false } });
+    const event = new Event('touchmove', { bubbles: true, cancelable: true });
+
+    wrapper.find('.u-loading__mask').element.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+  });
 });

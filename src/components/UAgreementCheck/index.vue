@@ -5,9 +5,10 @@
     </view>
     <text class="u-agreement-check__text" @click="toggle">
       {{ prefix }}
-      <text class="u-agreement-check__link" @click.stop="openAgreement('user')">《用户协议》</text>
-      和
-      <text class="u-agreement-check__link" @click.stop="openAgreement('privacy')">《隐私政策》</text>
+      <template v-for="(item, index) in agreements" :key="index">
+        <text v-if="index > 0"> {{ separator }} </text>
+        <text class="u-agreement-check__link" @click.stop="openAgreement(item)">{{ item.title }}</text>
+      </template>
     </text>
   </view>
 </template>
@@ -20,11 +21,20 @@ definePage({
 });
 
 import { PAGES } from '@/constants/pages';
-import { navigateTo } from '@/utils/router';
+import { navigateTo, type QueryParams } from '@/utils/router';
 
 defineOptions({
   name: 'UAgreementCheck',
 });
+
+export interface AgreementLink {
+  /** 链接文案，如《用户协议》 */
+  title: string;
+  /** 跳转页面路径，默认协议页 */
+  url?: string;
+  /** 跳转参数 */
+  params?: QueryParams;
+}
 
 const props = withDefaults(
   defineProps<{
@@ -32,9 +42,18 @@ const props = withDefaults(
     modelValue: boolean;
     /** 协议链接前的文案 */
     prefix?: string;
+    /** 协议链接列表 */
+    agreements?: AgreementLink[];
+    /** 协议链接之间的连接文案 */
+    separator?: string;
   }>(),
   {
     prefix: '我已阅读并同意',
+    agreements: () => [
+      { title: '《用户协议》', params: { type: 'user' } },
+      { title: '《隐私政策》', params: { type: 'privacy' } },
+    ],
+    separator: '和',
   },
 );
 
@@ -46,8 +65,8 @@ function toggle() {
   emit('update:modelValue', !props.modelValue);
 }
 
-function openAgreement(type: 'user' | 'privacy') {
-  navigateTo(PAGES.AGREEMENT, { type });
+function openAgreement(item: AgreementLink) {
+  navigateTo(item.url ?? PAGES.AGREEMENT, item.params);
 }
 </script>
 

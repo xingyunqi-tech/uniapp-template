@@ -33,6 +33,9 @@ definePage({
 
 defineOptions({
   name: 'ULoadMore',
+  options: {
+    virtualHost: true,
+  },
 });
 
 // ==================== Types ====================

@@ -4,7 +4,15 @@
     支持命令式 API 和组件式调用，可全屏或局部显示
   -->
   <view v-if="isVisible" class="u-loading" :class="[`u-loading--${type}`, { 'u-loading--fullscreen': fullscreen }]">
-    <view class="u-loading__mask" :style="maskStyle" @click="handleMaskClick" />
+    <!-- 全屏时遮罩拦截滑动，阻止背后页面滚动 -->
+    <view
+      v-if="fullscreen"
+      class="u-loading__mask"
+      :style="maskStyle"
+      @click="handleMaskClick"
+      @touchmove.stop.prevent
+    />
+    <view v-else class="u-loading__mask" :style="maskStyle" @click="handleMaskClick" />
     <view class="u-loading__content">
       <!-- 加载图标 -->
       <view class="u-loading__spinner" :class="`u-loading__spinner--${spinnerType}`" :style="spinnerStyle">
@@ -127,13 +135,17 @@ function handleMaskClick() {
 .u-loading {
   display: flex;
   position: absolute;
-  z-index: 9999;
+  z-index: var(--z-index-loading);
   inset: 0;
   align-items: center;
   justify-content: center;
 
   &--fullscreen {
     position: fixed;
+
+    .u-loading__content {
+      pointer-events: none;
+    }
   }
 
   &__mask {

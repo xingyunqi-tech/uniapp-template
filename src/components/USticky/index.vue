@@ -60,9 +60,7 @@ const stickyStyle = computed(() => {
 <style scoped lang="scss">
 .u-sticky {
   position: sticky;
-
-  /* 低于 uni-popup 的 99，弹窗遮罩可覆盖 */
-  z-index: 90;
+  z-index: var(--z-index-sticky);
 
   &--disabled {
     position: static;

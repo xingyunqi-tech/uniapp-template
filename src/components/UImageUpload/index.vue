@@ -14,7 +14,7 @@
       :disabled="disabled"
       :readonly="readonly"
       :del-icon="!disabled && !readonly"
-      :auto-upload="autoUpload"
+      :auto-upload="uploadFn ? false : autoUpload"
       :image-styles="imageStyleConfig"
       :list-styles="listStyleConfig"
       @select="handleSelect"
@@ -42,7 +42,7 @@ definePage({
   },
 });
 
-import { ref, computed, watch, toRaw } from 'vue';
+import { ref, computed, watch, toRaw, onBeforeUnmount } from 'vue';
 
 defineOptions({
   name: 'UImageUpload',
@@ -80,7 +80,18 @@ export interface FileItem {
   progress?: number;
   /** 云存储返回的信息 */
   cloudPath?: string;
+  /** 文件唯一标识 */
+  uuid?: string | number;
 }
+
+/**
+ * 自定义上传函数，resolve 文件访问地址
+ * @example
+ * import { uploadFileByPath } from '@/api';
+ * const uploadFn: UploadFn = file => uploadFileByPath(file.url).then(res => res.path);
+ * // <UImageUpload v-model="files" :upload-fn="uploadFn" />
+ */
+export type UploadFn = (file: FileItem, onProgress: (percent: number) => void) => Promise<string>;
 
 /** 选择结果 (与 uni-file-picker select 事件一致) */
 export interface SelectResult {
@@ -107,8 +118,10 @@ interface Props {
   disabled?: boolean;
   /** 是否只读 */
   readonly?: boolean;
-  /** 是否自动上传（需配置 uniCloud） */
+  /** 是否自动上传（需配置 uniCloud），传入 uploadFn 时不生效 */
   autoUpload?: boolean;
+  /** 自定义上传函数，传入后选择文件即通过它上传到自有后端 */
+  uploadFn?: UploadFn;
   /** 添加按钮文案 */
   addText?: string;
   /** 图片宽度 (rpx) */
@@ -127,6 +140,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   readonly: false,
   autoUpload: false,
+  uploadFn: undefined,
   addText: '',
   imageWidth: 200,
   imageHeight: 200,
@@ -141,6 +155,8 @@ const emit = defineEmits<{
   fail: [event: UniHelper.UniFilePickerOnFailEvent];
   progress: [event: UniHelper.UniFilePickerOnProgressEvent];
   delete: [event: UniHelper.UniFilePickerOnDeleteEvent];
+  'upload-success': [file: FileItem];
+  'upload-fail': [file: FileItem, error: unknown];
 }>();
 
 // ==================== State ====================
@@ -210,9 +226,89 @@ watch(
 
 // ==================== Methods ====================
 
+/** uploadFn 同时上传的最大文件数 */
+const MAX_CONCURRENT_UPLOADS = 3;
+/** 上传进度至少变化该百分点才更新列表 */
+const PROGRESS_STEP = 10;
+
+const uploadQueue: string[] = [];
+let activeUploads = 0;
+let uploadSeq = 0;
+let unmounted = false;
+
+onBeforeUnmount(() => {
+  unmounted = true;
+  uploadQueue.length = 0;
+});
+
+function findFileIndex(uuid: string) {
+  return fileList.value.findIndex(item => item.uuid === uuid);
+}
+
+function patchFile(uuid: string, patch: Partial<FileItem>) {
+  const index = findFileIndex(uuid);
+  if (index === -1) return undefined;
+  const next = { ...fileList.value[index], ...patch };
+  fileList.value = fileList.value.map((item, i) => (i === index ? next : item));
+  return next;
+}
+
+async function uploadFile(uuid: string, uploadFn: UploadFn) {
+  const file = patchFile(uuid, { status: 'uploading', progress: 0 });
+  if (!file) return;
+  let reported = 0;
+  try {
+    const url = await uploadFn({ ...file }, percent => {
+      const progress = Math.min(99, Math.max(0, Math.round(percent)));
+      if (unmounted || progress - reported < PROGRESS_STEP) return;
+      reported = progress;
+      patchFile(uuid, { progress });
+    });
+    if (unmounted) return;
+    const uploaded = patchFile(uuid, { url, status: 'success', progress: 100 });
+    if (uploaded) emit('upload-success', uploaded);
+  } catch (error) {
+    if (unmounted) return;
+    const index = findFileIndex(uuid);
+    if (index === -1) return;
+    const failed: FileItem = { ...fileList.value[index], status: 'error' };
+    fileList.value = fileList.value.filter((_, i) => i !== index);
+    uni.showToast({ title: '上传失败', icon: 'none' });
+    emit('upload-fail', failed, error);
+  }
+}
+
+function runUploadQueue() {
+  const { uploadFn } = props;
+  if (!uploadFn || unmounted) return;
+  while (activeUploads < MAX_CONCURRENT_UPLOADS && uploadQueue.length > 0) {
+    const uuid = uploadQueue.shift()!;
+    if (findFileIndex(uuid) === -1) continue;
+    activeUploads++;
+    void uploadFile(uuid, uploadFn).finally(() => {
+      activeUploads--;
+      runUploadQueue();
+    });
+  }
+}
+
 /** 选择文件 */
 function handleSelect(result: SelectResult) {
   emit('select', result);
+  if (!props.uploadFn) return;
+
+  const added = result.tempFiles.map<FileItem>(file => ({
+    name: file.name,
+    extname: file.extname,
+    url: file.url,
+    size: file.size,
+    uuid: `upload-${Date.now()}-${uploadSeq++}`,
+    status: 'ready',
+    progress: 0,
+  }));
+  fileList.value = [...fileList.value, ...added];
+  uploadQueue.push(...added.map(file => file.uuid as string));
+  runUploadQueue();
 }
 
 /** 上传成功 */
@@ -292,5 +388,29 @@ defineExpose({
 
 :deep(.icon-del-box) {
   background-color: var(--color-bg-mask-light) !important;
+}
+
+:deep(.icon-del) {
+  background-color: var(--color-text-inverse) !important;
+}
+
+:deep(.file-picker__mask) {
+  background-color: var(--color-bg-mask-light) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+:deep(.files__name) {
+  color: var(--color-text-secondary) !important;
+}
+
+// 进度条底色与进度色：H5 为 uni-progress，微信小程序为 wx-progress
+:deep(.uni-progress-bar),
+:deep(.wx-progress-bar) {
+  background-color: var(--color-border) !important;
+}
+
+:deep(.uni-progress-inner-bar),
+:deep(.wx-progress-inner-bar) {
+  background-color: var(--color-primary) !important;
 }
 </style>

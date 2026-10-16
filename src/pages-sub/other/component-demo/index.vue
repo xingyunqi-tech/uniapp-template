@@ -77,14 +77,7 @@
     </UCard>
 
     <UCard class="demo-section" title="UPasswordStrength 密码强度">
-      <UPasswordStrength
-        :strength="2"
-        strength-text="中"
-        strength-class="medium"
-        :is-length-valid="true"
-        :has-letter="true"
-        :has-number="false"
-      />
+      <UPasswordStrength password="abc12345" />
     </UCard>
 
     <UCard class="demo-section" title="UTag 标签">

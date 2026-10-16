@@ -41,4 +41,50 @@ describe('UImage', () => {
 
     expect(wrapper.classes()).not.toContain('u-image--state');
   });
+
+  it('无 src 时直接显示失败态，不渲染图片', () => {
+    const wrapper = mount(UImage, { props: { src: '' }, global });
+
+    expect(wrapper.find('.u-image__loading').exists()).toBe(false);
+    expect(wrapper.find('.u-image__error').exists()).toBe(true);
+    expect(wrapper.find('.u-image__img').exists()).toBe(false);
+  });
+
+  it('src 变为空串时显示失败态', async () => {
+    const wrapper = mount(UImage, { props: { src: '/static/a.png' }, global });
+
+    await wrapper.setProps({ src: '' });
+
+    expect(wrapper.find('.u-image__loading').exists()).toBe(false);
+    expect(wrapper.find('.u-image__error').exists()).toBe(true);
+  });
+
+  it('src 变化时从失败态重置为加载中', async () => {
+    const wrapper = mount(UImage, { props: { src: '/static/a.png' }, global });
+    await wrapper.find('.u-image__img').trigger('error');
+
+    await wrapper.setProps({ src: '/static/b.png' });
+
+    expect(wrapper.find('.u-image__loading').exists()).toBe(true);
+    expect(wrapper.find('.u-image__error').exists()).toBe(false);
+  });
+
+  it('加载中图片保持渲染并透明隐藏，加载完成后正常显示', async () => {
+    const wrapper = mount(UImage, { props: { src: '/static/a.png' }, global });
+    const img = wrapper.find('.u-image__img');
+
+    expect(img.attributes('style') ?? '').not.toContain('display: none');
+    expect(img.classes()).toContain('u-image__img--pending');
+
+    await img.trigger('load');
+
+    expect(wrapper.find('.u-image__img').classes()).not.toContain('u-image__img--pending');
+  });
+
+  it('开启 virtualHost，父组件 class 合并到根节点', () => {
+    const wrapper = mount(UImage, { props: { src: '/static/a.png' }, attrs: { class: 'cover' }, global });
+
+    expect((UImage as { options?: Record<string, unknown> }).options).toMatchObject({ virtualHost: true });
+    expect(wrapper.classes()).toEqual(expect.arrayContaining(['u-image', 'cover']));
+  });
 });

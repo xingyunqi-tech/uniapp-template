@@ -6,7 +6,7 @@ const global = {
   stubs: {
     'uni-forms-item': {
       name: 'UniFormsItemStub',
-      props: ['label', 'required', 'rules'],
+      props: ['label', 'required', 'rules', 'labelWidth'],
       template: '<div class="forms-item">{{ label }}<slot /></div>',
     },
     'uni-icons': true,
@@ -43,7 +43,7 @@ describe('UFormItem', () => {
     expect(wrapper.classes()).toContain('u-form-item--top');
   });
 
-  it('显示箭头时点击触发 click，不显示时不触发', async () => {
+  it('点击内容区触发 click，与是否显示箭头无关', async () => {
     const withArrow = mount(UFormItem, { props: { label: '地区', showArrow: true }, global });
     const plain = mount(UFormItem, { props: { label: '昵称' }, global });
 
@@ -51,6 +51,17 @@ describe('UFormItem', () => {
     await plain.find('.u-form-item__content').trigger('click');
 
     expect(withArrow.emitted('click')).toHaveLength(1);
-    expect(plain.emitted('click')).toBeUndefined();
+    expect(plain.emitted('click')).toHaveLength(1);
+  });
+
+  it('labelWidth 数字按 rpx 传给 uni-forms-item，字符串原样传递，默认 160rpx', () => {
+    const labelWidthOf = (props: Record<string, unknown>) =>
+      mount(UFormItem, { props: { label: '昵称', ...props }, global })
+        .findComponent({ name: 'UniFormsItemStub' })
+        .props('labelWidth');
+
+    expect(labelWidthOf({})).toBe('160rpx');
+    expect(labelWidthOf({ labelWidth: 200 })).toBe('200rpx');
+    expect(labelWidthOf({ labelWidth: '100px' })).toBe('100px');
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
+import { defineComponent, h, nextTick } from 'vue';
+import { flushPromises, mount } from '@vue/test-utils';
 import UPopup from '@/components/UPopup/index.vue';
 
 const popupApi = { open: vi.fn(), close: vi.fn() };
@@ -16,8 +16,9 @@ const UniPopupStub = defineComponent({
 const UniPopupDialogStub = defineComponent({
   props: { modelValue: { type: String, default: '' }, mode: { type: String, default: 'base' } },
   emits: ['confirm', 'close'],
-  setup(props) {
-    return () => h('div', { class: 'uni-popup-dialog', 'data-value': props.modelValue });
+  setup(props, { slots }) {
+    return () =>
+      h('div', { class: 'uni-popup-dialog', 'data-value': props.modelValue, 'data-slot': String(!!slots.default) });
   },
 });
 
@@ -78,5 +79,87 @@ describe('UPopup', () => {
     wrapper.findComponent(UniPopupDialogStub).vm.$emit('confirm');
 
     expect(wrapper.emitted('confirm')).toEqual([[undefined]]);
+  });
+
+  it('uni-popup 背景透明，底部安全区由内容区处理', () => {
+    const wrapper = mount(UPopup, { props: { type: 'bottom', backgroundColor: 'red' }, global });
+    const popup = wrapper.findComponent(UniPopupStub);
+
+    expect(popup.attributes('background-color')).toBe('transparent');
+    expect(popup.attributes('safe-area')).toBe('false');
+    expect(wrapper.find('.u-popup__bottom').classes()).toContain('u-popup__bottom--safe');
+    expect((wrapper.find('.u-popup__bottom').element as HTMLElement).style.background).toBe('red');
+  });
+
+  it('modelValue 控制打开与关闭', async () => {
+    popupApi.open.mockClear();
+    popupApi.close.mockClear();
+    const wrapper = mount(UPopup, { props: { modelValue: true }, global });
+    expect(popupApi.open).toHaveBeenCalledTimes(1);
+
+    wrapper.findComponent(UniPopupStub).vm.$emit('change', { show: true });
+    await wrapper.setProps({ modelValue: false });
+
+    expect(popupApi.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('显隐变化时同步 update:modelValue', () => {
+    const wrapper = mount(UPopup, { global });
+    const popup = wrapper.findComponent(UniPopupStub);
+
+    popup.vm.$emit('change', { show: true });
+    popup.vm.$emit('change', { show: false });
+
+    expect(wrapper.emitted('update:modelValue')).toEqual([[true], [false]]);
+  });
+
+  it('未传默认插槽时不向对话框转发插槽', () => {
+    const plain = mount(UPopup, { props: { type: 'dialog' }, global });
+    const slotted = mount(UPopup, { props: { type: 'dialog' }, slots: { default: '<span>自定义</span>' }, global });
+
+    expect(plain.find('.uni-popup-dialog').attributes('data-slot')).toBe('false');
+    expect(slotted.find('.uni-popup-dialog').attributes('data-slot')).toBe('true');
+  });
+
+  it.each([
+    ['返回 false', () => false],
+    ['reject', () => Promise.reject(new Error('fail'))],
+  ])('beforeConfirm %s 时不确认也不关闭', async (_, beforeConfirm) => {
+    popupApi.close.mockClear();
+    const wrapper = mount(UPopup, { props: { type: 'dialog', beforeConfirm }, global });
+
+    wrapper.findComponent(UniPopupStub).vm.$emit('change', { show: true });
+    wrapper.findComponent(UniPopupDialogStub).vm.$emit('confirm');
+    await flushPromises();
+
+    expect(wrapper.emitted('confirm')).toBeUndefined();
+    expect(popupApi.close).not.toHaveBeenCalled();
+  });
+
+  it('beforeConfirm 等待期间确认按钮进入加载态并忽略重复点击，通过后确认并关闭', async () => {
+    popupApi.close.mockClear();
+    let resolve: (value: boolean) => void = () => {};
+    const beforeConfirm = vi.fn(() => new Promise<boolean>(r => (resolve = r)));
+    const wrapper = mount(UPopup, {
+      props: { type: 'dialog', dialogMode: 'input', beforeConfirm },
+      global,
+    });
+    wrapper.findComponent(UniPopupStub).vm.$emit('change', { show: true });
+    const dialog = wrapper.findComponent(UniPopupDialogStub);
+
+    dialog.vm.$emit('confirm', '值');
+    dialog.vm.$emit('confirm', '值');
+    await nextTick();
+
+    expect(beforeConfirm).toHaveBeenCalledTimes(1);
+    expect(beforeConfirm).toHaveBeenCalledWith('值');
+    expect(wrapper.find('.u-popup__dialog').classes()).toContain('u-popup__dialog--confirming');
+
+    resolve(true);
+    await flushPromises();
+
+    expect(wrapper.find('.u-popup__dialog').classes()).not.toContain('u-popup__dialog--confirming');
+    expect(wrapper.emitted('confirm')).toEqual([['值']]);
+    expect(popupApi.close).toHaveBeenCalledTimes(1);
   });
 });

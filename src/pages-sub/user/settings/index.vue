@@ -79,6 +79,9 @@
         <template v-if="verifyMode === 'password'">
           <uni-easyinput
             v-model="deleteForm.password"
+            :styles="EASYINPUT_STYLES"
+            :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
+            :primary-color="globalStore.primaryColor"
             type="password"
             placeholder="请输入当前密码"
             prefix-icon="locked"
@@ -120,7 +123,7 @@ import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
-import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
+import { EASYINPUT_PLACEHOLDER_STYLE, EASYINPUT_STYLES, PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import { confirm, formatFileSize, formatPhone, storage } from '@/utils';
 import { AuthSendCodeDtoType } from '@/api';
 

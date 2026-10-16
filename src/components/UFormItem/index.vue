@@ -10,7 +10,7 @@
       :name="name"
       :label="label"
       :required="required"
-      :label-width="labelWidth"
+      :label-width="labelWidthValue"
       :label-align="labelAlign"
       :error-message="errorMessage"
       :rules="rules"
@@ -58,8 +58,8 @@ interface Props {
   label: string;
   /** 是否必填 */
   required?: boolean;
-  /** label 宽度，默认 80 */
-  labelWidth?: number;
+  /** label 宽度，数字单位为 rpx，字符串需自带单位 */
+  labelWidth?: number | string;
   /** label 对齐方式 */
   labelAlign?: 'left' | 'center' | 'right';
   /** 错误提示信息 */
@@ -79,7 +79,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   name: '',
   required: false,
-  labelWidth: 80,
+  labelWidth: 160,
   labelAlign: 'left',
   errorMessage: '',
   rules: undefined,
@@ -95,10 +95,13 @@ const emit = defineEmits<{
 
 const isEmptyValue = computed(() => props.value === '' || props.value === undefined || props.value === null);
 
+// uni-forms-item 运行时接受带单位的字符串，类型声明只有 number
+const labelWidthValue = computed(
+  () => (typeof props.labelWidth === 'number' ? `${props.labelWidth}rpx` : props.labelWidth) as unknown as number,
+);
+
 function handleClick() {
-  if (props.showArrow) {
-    emit('click');
-  }
+  emit('click');
 }
 </script>
 

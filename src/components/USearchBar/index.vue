@@ -6,8 +6,9 @@
   <view class="u-search-bar" :class="globalStore.themeClass">
     <!-- 搜索输入区域 -->
     <view class="u-search-bar__input-wrapper">
-      <!-- 搜索图标 -->
-      <uni-icons type="search" size="18" color="var(--color-text-secondary)" class="u-search-bar__icon" />
+      <slot name="left">
+        <uni-icons type="search" size="18" color="var(--color-text-secondary)" class="u-search-bar__icon" />
+      </slot>
 
       <!-- 输入框 -->
       <input
@@ -15,6 +16,7 @@
         type="text"
         :value="modelValue"
         :placeholder="placeholder"
+        :placeholder-style="PLACEHOLDER_STYLE"
         :disabled="disabled"
         :maxlength="maxLength"
         :focus="autoFocus"
@@ -29,12 +31,15 @@
       <view v-if="modelValue && !disabled" class="u-search-bar__clear" @click="handleClear">
         <uni-icons type="clear" size="16" color="var(--color-text-placeholder)" />
       </view>
+
+      <slot name="right" />
     </view>
 
-    <!-- 取消按钮 -->
-    <view v-if="showCancel && isFocused" class="u-search-bar__cancel" @click="handleCancel">
-      <text class="u-search-bar__cancel-text">{{ cancelText }}</text>
-    </view>
+    <slot name="action">
+      <view v-if="showCancel && isFocused" class="u-search-bar__cancel" @click="handleCancel">
+        <text class="u-search-bar__cancel-text">{{ cancelText }}</text>
+      </view>
+    </slot>
   </view>
 
   <!-- 搜索面板 (历史记录 + 热门搜索) -->
@@ -105,6 +110,8 @@ defineOptions({
 });
 
 const globalStore = useGlobalStore();
+
+const PLACEHOLDER_STYLE = 'color: var(--color-text-placeholder)';
 
 // ==================== Props ====================
 
@@ -362,10 +369,6 @@ defineExpose({
     height: 100%;
     color: var(--color-text);
     font-size: var(--font-size-base);
-
-    &::placeholder {
-      color: var(--color-text-placeholder);
-    }
   }
 
   &__clear {

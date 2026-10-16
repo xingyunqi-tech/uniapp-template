@@ -65,12 +65,16 @@
   // ============================================
   // z-index 层级
   // ============================================
+  // 吸顶 / 回到顶部 < 固定底部按钮 < 导航栏 < 弹层 < 全局 loading < 隐私弹窗
   --z-index-dropdown: 900;
-  --z-index-sticky: 950;
+  --z-index-sticky: 900;
+  --z-index-fixed: 950;
+  --z-index-navbar: 980;
   --z-index-popup: 1000;
   --z-index-modal: 1100;
   --z-index-toast: 1200;
   --z-index-loading: 1300;
+  --z-index-privacy: 1400;
 
   // ============================================
   // 边框宽度

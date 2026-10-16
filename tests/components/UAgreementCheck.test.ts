@@ -55,4 +55,41 @@ describe('UAgreementCheck', () => {
     expect(navigateTo).toHaveBeenNthCalledWith(2, PAGES.AGREEMENT, { type: 'privacy' });
     expect(wrapper.emitted('update:modelValue')).toBeUndefined();
   });
+
+  it('按 agreements 渲染自定义协议链接并跳转到指定页面', async () => {
+    const wrapper = mount(UAgreementCheck, {
+      props: {
+        modelValue: false,
+        separator: '、',
+        agreements: [
+          { title: '《服务条款》', url: '/pages/terms/index' },
+          { title: '《隐私政策》', params: { type: 'privacy' } },
+          { title: '《会员协议》', url: '/pages/vip/index', params: { id: 1 } },
+        ],
+      },
+      global,
+    });
+    const links = wrapper.findAll('.u-agreement-check__link');
+
+    expect(links.map(link => link.text())).toEqual(['《服务条款》', '《隐私政策》', '《会员协议》']);
+    expect(wrapper.find('.u-agreement-check__text').text().match(/、/g)).toHaveLength(2);
+
+    for (const link of links) await link.trigger('click');
+
+    expect(vi.mocked(navigateTo).mock.calls).toEqual([
+      ['/pages/terms/index', undefined],
+      [PAGES.AGREEMENT, { type: 'privacy' }],
+      ['/pages/vip/index', { id: 1 }],
+    ]);
+  });
+
+  it('默认显示用户协议和隐私政策', () => {
+    const wrapper = mount(UAgreementCheck, { props: { modelValue: false }, global });
+
+    expect(wrapper.findAll('.u-agreement-check__link').map(link => link.text())).toEqual([
+      '《用户协议》',
+      '《隐私政策》',
+    ]);
+    expect(wrapper.find('.u-agreement-check__text').text()).toContain('和');
+  });
 });

@@ -18,7 +18,7 @@
   >
     <swiper-item v-for="(item, index) in list" :key="item[keyField] ?? index" @click="handleClick(item, index)">
       <view class="u-banner__item">
-        <image class="u-banner__image" :src="item[imageField] ?? ''" :mode="imageMode" />
+        <UImage :src="item[imageField] ?? ''" width="100%" height="100%" :mode="imageMode" />
         <!-- 自定义内容插槽 -->
         <slot name="content" :item="item" :index="index" />
       </view>
@@ -38,6 +38,9 @@ import { NATIVE_COLOR } from '@/constants';
 
 defineOptions({
   name: 'UBanner',
+  options: {
+    virtualHost: true,
+  },
 });
 
 export interface Props {
@@ -136,11 +139,6 @@ function handleClick(item: Record<string, any>, index: number) {
 
   &__item {
     position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  &__image {
     width: 100%;
     height: 100%;
   }

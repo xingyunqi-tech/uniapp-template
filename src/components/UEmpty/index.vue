@@ -29,6 +29,9 @@ import { computed } from 'vue';
 
 defineOptions({
   name: 'UEmpty',
+  options: {
+    virtualHost: true,
+  },
 });
 
 export interface Props {

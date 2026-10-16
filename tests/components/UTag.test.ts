@@ -23,6 +23,15 @@ describe('UTag', () => {
     expect(wrapper.find('.u-tag__text').text()).toBe('插槽');
   });
 
+  it('默认插槽可放入非文本节点', () => {
+    const wrapper = mount(UTag, { slots: { default: '<image class="slot-img" /><text>VIP</text>' }, global });
+    const content = wrapper.find('.u-tag__text');
+
+    expect(content.element.tagName.toLowerCase()).not.toBe('text');
+    expect(content.find('.slot-img').exists()).toBe(true);
+    expect(content.text()).toBe('VIP');
+  });
+
   it('传入 icon 时渲染左侧图标', () => {
     const plain = mount(UTag, { global });
     const withIcon = mount(UTag, { props: { icon: 'star' }, global });

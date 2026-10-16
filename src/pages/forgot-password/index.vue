@@ -17,6 +17,9 @@
     <view v-if="step === 1" class="auth-form">
       <uni-easyinput
         v-model="formData.phone"
+        :styles="EASYINPUT_STYLES"
+        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
+        :primary-color="globalStore.primaryColor"
         placeholder="请输入手机号"
         prefix-icon="phone"
         type="number"
@@ -38,6 +41,9 @@
     <view v-else class="auth-form">
       <uni-easyinput
         v-model="formData.newPassword"
+        :styles="EASYINPUT_STYLES"
+        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
+        :primary-color="globalStore.primaryColor"
         type="password"
         :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
         prefix-icon="locked"
@@ -46,6 +52,9 @@
 
       <uni-easyinput
         v-model="formData.confirmPassword"
+        :styles="EASYINPUT_STYLES"
+        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
+        :primary-color="globalStore.primaryColor"
         type="password"
         placeholder="请再次输入新密码"
         prefix-icon="locked"
@@ -53,15 +62,7 @@
       />
 
       <!-- 密码强度提示 -->
-      <UPasswordStrength
-        v-if="formData.newPassword"
-        :strength="pwdStrength.strength.value"
-        :strength-text="pwdStrength.strengthText.value"
-        :strength-class="pwdStrength.strengthClass.value"
-        :is-length-valid="pwdStrength.isLengthValid.value"
-        :has-letter="pwdStrength.hasLetter.value"
-        :has-number="pwdStrength.hasNumber.value"
-      />
+      <UPasswordStrength v-if="formData.newPassword" :password="formData.newPassword" />
 
       <UButton class="submit-btn" type="primary" block :loading="submitting" @click="handleReset">
         {{ submitting ? '提交中...' : '重置密码' }}
@@ -88,7 +89,14 @@ import { reactive, ref, toRef } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, useSafeBack, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
+import {
+  EASYINPUT_PLACEHOLDER_STYLE,
+  EASYINPUT_STYLES,
+  PAGES,
+  PHONE_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+} from '@/constants';
 import { ApiError, AuthSendCodeDtoType } from '@/api';
 
 const globalStore = useGlobalStore();

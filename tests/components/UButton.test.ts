@@ -26,6 +26,37 @@ describe('UButton', () => {
     expect(wrapper.emitted('click')).toHaveLength(1);
   });
 
+  it('round 添加圆角类，formType 透传给原生按钮', () => {
+    const wrapper = mount(UButton, { props: { round: true, formType: 'submit' } });
+
+    expect(wrapper.classes()).toContain('u-button--round');
+    expect(wrapper.attributes('form-type')).toBe('submit');
+    expect(mount(UButton).classes()).not.toContain('u-button--round');
+  });
+
+  it('传入 icon 时在文字前显示图标，加载中隐藏', () => {
+    const global = { stubs: { 'uni-icons': { props: ['type'], template: '<i class="icon" :data-type="type" />' } } };
+    const wrapper = mount(UButton, { props: { icon: 'plus', text: '新增' }, global });
+    const loading = mount(UButton, { props: { icon: 'plus', loading: true }, global });
+
+    expect(wrapper.find('.icon').attributes('data-type')).toBe('plus');
+    expect(wrapper.text()).toBe('新增');
+    expect(loading.find('.icon').exists()).toBe(false);
+  });
+
+  it.each(['error', 'opensetting', 'launchapp', 'agreeprivacyauthorization', 'getphonenumber'])(
+    '原生按钮的 %s 事件原样转发',
+    async name => {
+      const wrapper = mount(UButton, { props: { openType: 'getPhoneNumber' } });
+      const detail = { errMsg: name };
+
+      await wrapper.trigger(name, { detail });
+
+      expect(wrapper.emitted(name)).toHaveLength(1);
+      expect((wrapper.emitted(name)![0][0] as { detail: unknown }).detail).toEqual(detail);
+    },
+  );
+
   it.each<{ disabled?: boolean; loading?: boolean }>([{ disabled: true }, { loading: true }])(
     '%o 时不触发 click 并禁用原生按钮',
     async props => {

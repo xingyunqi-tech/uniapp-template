@@ -190,7 +190,7 @@ function handleRightClick() {
 
   &--fixed {
     position: fixed;
-    z-index: 999;
+    z-index: var(--z-index-navbar);
     top: 0;
     right: 0;
     left: 0;

@@ -8,17 +8,28 @@
     :class="[
       `u-button--${type}`,
       `u-button--${size}`,
-      { 'u-button--plain': plain, 'u-button--block': block, 'u-button--disabled': disabled || loading },
+      {
+        'u-button--plain': plain,
+        'u-button--block': block,
+        'u-button--round': round,
+        'u-button--disabled': disabled || loading,
+      },
     ]"
     :loading="loading"
     :disabled="disabled || loading"
     :open-type="openType"
+    :form-type="formType"
     hover-class="u-button--hover"
     @click="handleClick"
     @getphonenumber="emit('getphonenumber', $event)"
     @chooseavatar="emit('chooseavatar', $event)"
     @contact="emit('contact', $event)"
+    @error="emit('error', $event)"
+    @opensetting="emit('opensetting', $event)"
+    @launchapp="emit('launchapp', $event)"
+    @agreeprivacyauthorization="emit('agreeprivacyauthorization', $event)"
   >
+    <uni-icons v-if="icon && !loading" class="u-button__icon" :type="icon" color="inherit" size="inherit" />
     <slot>{{ text }}</slot>
   </button>
 </template>
@@ -57,6 +68,12 @@ export interface UButtonProps {
   disabled?: boolean;
   /** 小程序开放能力，如 getPhoneNumber、chooseAvatar、contact */
   openType?: UniHelper.ButtonOpenType;
+  /** 在 form 中点击时触发 submit / reset */
+  formType?: UniHelper.ButtonFormType;
+  /** 文字左侧图标 (uni-icons 的 type)，加载中时不显示 */
+  icon?: UniIconsType;
+  /** 胶囊圆角 */
+  round?: boolean;
 }
 
 const props = withDefaults(defineProps<UButtonProps>(), {
@@ -68,6 +85,9 @@ const props = withDefaults(defineProps<UButtonProps>(), {
   loading: false,
   disabled: false,
   openType: undefined,
+  formType: undefined,
+  icon: undefined,
+  round: false,
 });
 
 const emit = defineEmits<{
@@ -75,6 +95,10 @@ const emit = defineEmits<{
   getphonenumber: [event: unknown];
   chooseavatar: [event: unknown];
   contact: [event: unknown];
+  error: [event: unknown];
+  opensetting: [event: unknown];
+  launchapp: [event: unknown];
+  agreeprivacyauthorization: [event: unknown];
 }>();
 
 function handleClick(event: unknown) {
@@ -118,6 +142,15 @@ function handleClick(event: unknown) {
     border-radius: var(--radius-base);
     font-size: var(--font-size-sm);
     line-height: 60rpx;
+  }
+
+  &--round {
+    border-radius: var(--radius-full);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    margin-right: var(--spacing-xs);
   }
 
   &--block {

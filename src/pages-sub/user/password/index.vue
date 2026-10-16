@@ -49,16 +49,7 @@
 
     <!-- 密码强度提示 -->
     <UCard v-if="formData.newPassword" class="strength-section">
-      <UPasswordStrength
-        :strength="pwdStrength.strength.value"
-        :strength-text="pwdStrength.strengthText.value"
-        :strength-class="pwdStrength.strengthClass.value"
-        :is-length-valid="pwdStrength.isLengthValid.value"
-        :has-letter="pwdStrength.hasLetter.value"
-        :has-number="pwdStrength.hasNumber.value"
-        :horizontal="false"
-        :show-rules-title="true"
-      />
+      <UPasswordStrength :password="formData.newPassword" :horizontal="false" :show-rules-title="true" />
     </UCard>
 
     <!-- 保存按钮 -->
@@ -146,7 +137,6 @@ function handleSave() {
 .password-page {
   box-sizing: border-box;
   min-height: 100vh;
-  padding-bottom: calc(var(--safe-area-inset-bottom) + 140rpx);
   background: var(--color-bg-grey);
 }
 

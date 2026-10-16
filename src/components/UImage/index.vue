@@ -33,9 +33,10 @@
 
     <!-- 图片 -->
     <image
-      v-show="!loading && !error"
+      v-if="src"
       :key="retryKey"
       class="u-image__img"
+      :class="{ 'u-image__img--pending': loading || error }"
       :src="src"
       :mode="mode"
       :lazy-load="lazyLoad"
@@ -59,6 +60,9 @@ import { ref, computed, watch } from 'vue';
 
 defineOptions({
   name: 'UImage',
+  options: {
+    virtualHost: true,
+  },
 });
 
 /** 图片裁剪模式类型 */
@@ -130,8 +134,8 @@ const emit = defineEmits<{
 }>();
 
 // 状态
-const loading = ref(props.showLoading);
-const error = ref(false);
+const loading = ref(props.showLoading && !!props.src);
+const error = ref(!props.src);
 const retryKey = ref(0); // 用于强制重新加载图片
 
 /** 高度自适应且处于加载态或失败态 */
@@ -161,15 +165,11 @@ const imageStyle = computed(() => {
   };
 });
 
-// 监听 src 变化重新加载
 watch(
   () => props.src,
-  (newSrc, oldSrc) => {
-    // 仅当 src 实际变化时重置状态（排除初始化时 undefined -> value 的情况由 image 组件自行处理）
-    if (newSrc && newSrc !== oldSrc) {
-      loading.value = props.showLoading;
-      error.value = false;
-    }
+  newSrc => {
+    loading.value = props.showLoading && !!newSrc;
+    error.value = !newSrc;
   },
 );
 
@@ -227,12 +227,20 @@ function handleRetry() {
     display: block;
     width: 100%;
     height: 100%;
+
+    /* 加载中保留布局尺寸，lazy-load 才能判断进入视口 */
+    &--pending {
+      position: absolute;
+      opacity: 0;
+      inset: 0;
+    }
   }
 
   &__loading,
   &__error {
     display: flex;
     position: absolute;
+    z-index: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;

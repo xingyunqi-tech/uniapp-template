@@ -1,4 +1,4 @@
-import { computed, type Ref, type ComputedRef } from 'vue';
+import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { PASSWORD_RULES } from '@/constants/form';
 
 export interface PasswordRules {
@@ -46,6 +46,8 @@ export interface UsePasswordStrengthReturn {
   isValid: ComputedRef<boolean>;
   /** 完整的验证结果 */
   validation: ComputedRef<PasswordValidation>;
+  /** 合并默认值后的规则 */
+  rules: ComputedRef<PasswordRules>;
 }
 
 /** 默认密码规则 - 从 constants/form.ts 导入 */
@@ -68,44 +70,45 @@ const SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>]/;
  * ```
  */
 export function usePasswordStrength(
-  password: Ref<string>,
-  rules: Partial<PasswordRules> = {},
+  password: MaybeRefOrGetter<string>,
+  rules: MaybeRefOrGetter<Partial<PasswordRules>> = {},
 ): UsePasswordStrengthReturn {
-  const mergedRules = { ...DEFAULT_PASSWORD_RULES, ...rules };
+  const mergedRules = computed<PasswordRules>(() => ({ ...DEFAULT_PASSWORD_RULES, ...toValue(rules) }));
+  const value = computed(() => toValue(password));
 
   // 是否包含字母
-  const hasLetter = computed(() => /[a-zA-Z]/.test(password.value));
+  const hasLetter = computed(() => /[a-zA-Z]/.test(value.value));
 
   // 是否包含数字
-  const hasNumber = computed(() => /\d/.test(password.value));
+  const hasNumber = computed(() => /\d/.test(value.value));
 
   // 是否包含特殊字符
-  const hasSpecialChar = computed(() => SPECIAL_CHAR_REGEX.test(password.value));
+  const hasSpecialChar = computed(() => SPECIAL_CHAR_REGEX.test(value.value));
 
   // 长度是否有效
   const isLengthValid = computed(() => {
-    const len = password.value.length;
-    return len >= mergedRules.minLength && len <= mergedRules.maxLength;
+    const len = value.value.length;
+    return len >= mergedRules.value.minLength && len <= mergedRules.value.maxLength;
   });
 
   // 所有必要规则是否都满足
   const isValid = computed(() => {
     if (!isLengthValid.value) return false;
-    if (mergedRules.requireLetter && !hasLetter.value) return false;
-    if (mergedRules.requireNumber && !hasNumber.value) return false;
-    if (mergedRules.requireSpecialChar && !hasSpecialChar.value) return false;
+    if (mergedRules.value.requireLetter && !hasLetter.value) return false;
+    if (mergedRules.value.requireNumber && !hasNumber.value) return false;
+    if (mergedRules.value.requireSpecialChar && !hasSpecialChar.value) return false;
     return true;
   });
 
   // 密码强度等级 (0-3)
   const strength = computed(() => {
-    const pwd = password.value;
+    const pwd = value.value;
     if (!pwd) return 0;
 
     let level = 0;
 
     // 长度达到最小要求
-    if (pwd.length >= mergedRules.minLength) level++;
+    if (pwd.length >= mergedRules.value.minLength) level++;
 
     // 包含字母和数字
     if (hasLetter.value && hasNumber.value) level++;
@@ -147,5 +150,6 @@ export function usePasswordStrength(
     isLengthValid,
     isValid,
     validation,
+    rules: mergedRules,
   };
 }

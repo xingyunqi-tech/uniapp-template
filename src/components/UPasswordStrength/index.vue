@@ -21,17 +21,17 @@
       <view :class="['rules-list', { horizontal: horizontal }]">
         <view :class="['rule-item', { valid: isLengthValid }]">
           <uni-icons :type="isLengthValid ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
-          <text>长度{{ minLength }}-{{ maxLength }}位</text>
+          <text>长度{{ mergedRules.minLength }}-{{ mergedRules.maxLength }}位</text>
         </view>
-        <view v-if="requireLetter" :class="['rule-item', { valid: hasLetter }]">
+        <view v-if="mergedRules.requireLetter" :class="['rule-item', { valid: hasLetter }]">
           <uni-icons :type="hasLetter ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
           <text>包含字母</text>
         </view>
-        <view v-if="requireNumber" :class="['rule-item', { valid: hasNumber }]">
+        <view v-if="mergedRules.requireNumber" :class="['rule-item', { valid: hasNumber }]">
           <uni-icons :type="hasNumber ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
           <text>包含数字</text>
         </view>
-        <view v-if="requireSpecialChar" :class="['rule-item', { valid: hasSpecialChar }]">
+        <view v-if="mergedRules.requireSpecialChar" :class="['rule-item', { valid: hasSpecialChar }]">
           <uni-icons :type="hasSpecialChar ? 'checkmarkempty' : 'closeempty'" color="inherit" size="inherit" />
           <text>包含特殊字符</text>
         </view>
@@ -47,38 +47,18 @@ definePage({
   },
 });
 
-import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants/form';
+import { usePasswordStrength, type PasswordRules } from '@/composables/usePasswordStrength';
 
 defineOptions({
   name: 'UPasswordStrength',
 });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    /** 密码强度等级 (0-3) */
-    strength: number;
-    /** 强度文本 */
-    strengthText: string;
-    /** 强度 CSS 类名 */
-    strengthClass: string;
-    /** 长度是否有效 */
-    isLengthValid: boolean;
-    /** 是否包含字母 */
-    hasLetter: boolean;
-    /** 是否包含数字 */
-    hasNumber: boolean;
-    /** 是否包含特殊字符 */
-    hasSpecialChar?: boolean;
-    /** 最小长度 */
-    minLength?: number;
-    /** 最大长度 */
-    maxLength?: number;
-    /** 是否需要字母 */
-    requireLetter?: boolean;
-    /** 是否需要数字 */
-    requireNumber?: boolean;
-    /** 是否需要特殊字符 */
-    requireSpecialChar?: boolean;
+    /** 待检测的密码 */
+    password?: string;
+    /** 密码规则，未传的字段使用 PASSWORD_RULES 默认值 */
+    rules?: Partial<PasswordRules>;
     /** 是否显示强度条 */
     showStrengthBar?: boolean;
     /** 是否显示规则 */
@@ -89,17 +69,27 @@ withDefaults(
     horizontal?: boolean;
   }>(),
   {
-    hasSpecialChar: false,
-    minLength: PASSWORD_MIN_LENGTH,
-    maxLength: PASSWORD_MAX_LENGTH,
-    requireLetter: true,
-    requireNumber: true,
-    requireSpecialChar: false,
+    password: '',
+    rules: () => ({}),
     showStrengthBar: true,
     showRules: true,
     showRulesTitle: false,
     horizontal: true,
   },
+);
+
+const {
+  strength,
+  strengthText,
+  strengthClass,
+  isLengthValid,
+  hasLetter,
+  hasNumber,
+  hasSpecialChar,
+  rules: mergedRules,
+} = usePasswordStrength(
+  () => props.password,
+  () => props.rules,
 );
 </script>
 

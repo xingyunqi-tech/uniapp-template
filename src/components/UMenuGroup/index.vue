@@ -20,6 +20,9 @@ definePage({
 
 defineOptions({
   name: 'UMenuGroup',
+  options: {
+    virtualHost: true,
+  },
 });
 
 interface Props {
