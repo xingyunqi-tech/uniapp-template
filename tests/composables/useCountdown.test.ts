@@ -64,4 +64,77 @@ describe('useCountdown', () => {
     expect(isCounting.value).toBe(false);
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
+
+  it('startUntil 倒计时到指定时间戳并按 interval 刷新剩余毫秒', () => {
+    const onFinish = vi.fn();
+    const { remaining, isCounting, startUntil } = useCountdown({ interval: 100, onFinish });
+
+    startUntil(Date.now() + 250);
+    expect(remaining.value).toBe(250);
+
+    vi.advanceTimersByTime(50);
+    expect(remaining.value).toBe(200);
+
+    vi.advanceTimersByTime(200);
+    expect(remaining.value).toBe(0);
+    expect(isCounting.value).toBe(false);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it('start(0) 先进入计时状态，异步结束并回调一次', () => {
+    const onFinish = vi.fn();
+    const { isCounting, start } = useCountdown({ onFinish });
+
+    start(0);
+    expect(isCounting.value).toBe(true);
+    expect(onFinish).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(0);
+    expect(isCounting.value).toBe(false);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(5000);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it('startUntil 传入已过去的时间戳时异步结束并回调一次', () => {
+    const onFinish = vi.fn();
+    const { isCounting, remaining, startUntil } = useCountdown({ onFinish });
+
+    startUntil(Date.now() - 1000);
+    expect(isCounting.value).toBe(true);
+    expect(remaining.value).toBe(0);
+    expect(onFinish).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(0);
+    expect(isCounting.value).toBe(false);
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it('countdown 随 remaining 换算为秒', () => {
+    const { countdown, remaining, start, reset } = useCountdown({ seconds: 5 });
+
+    start();
+    expect(countdown.value).toBe(Math.round(remaining.value / 1000));
+
+    vi.advanceTimersByTime(2000);
+    expect(remaining.value).toBe(3000);
+    expect(countdown.value).toBe(3);
+
+    reset();
+    expect(countdown.value).toBe(0);
+  });
+
+  it('stop 后保留剩余时间，reset 清零', () => {
+    const { remaining, start, stop, reset } = useCountdown({ seconds: 10 });
+
+    start();
+    vi.advanceTimersByTime(3000);
+    stop();
+    vi.advanceTimersByTime(3000);
+    expect(remaining.value).toBe(7000);
+
+    reset();
+    expect(remaining.value).toBe(0);
+  });
 });

@@ -88,6 +88,51 @@
       <UButton size="small" text="重置" @click="demoFormRef?.resetFields()" />
     </view>
 
+    <view class="demo-title">UCheckboxGroup / URadioGroup / UDatePicker / URegionPicker / UStepper</view>
+    <UForm :model="pickerForm" :rules="pickerRules">
+      <UMenuGroup class="demo-section">
+        <UFormItem label="爱好" prop="hobbies">
+          <UCheckboxGroup v-model="pickerForm.hobbies" :options="hobbyOptions" :max="2" />
+        </UFormItem>
+        <UFormItem label="性别" prop="gender">
+          <URadioGroup v-model="pickerForm.gender" :options="genderOptions" />
+        </UFormItem>
+        <UFormItem label="日期" prop="date">
+          <UDatePicker v-model="pickerForm.date" />
+        </UFormItem>
+        <UFormItem label="时间">
+          <UDatePicker v-model="pickerForm.time" type="time" />
+        </UFormItem>
+        <UFormItem label="日期时间">
+          <UDatePicker v-model="pickerForm.datetime" type="datetime" format="MM月DD日 HH:mm" />
+        </UFormItem>
+        <UFormItem label="日期范围">
+          <UDatePicker v-model="pickerForm.range" type="daterange" />
+        </UFormItem>
+        <UFormItem label="地区">
+          <URegionPicker v-model="region" />
+        </UFormItem>
+        <UFormItem label="数量">
+          <UStepper v-model="pickerForm.count" :min="1" :max="10" @overlimit="handleOverlimit" />
+        </UFormItem>
+      </UMenuGroup>
+    </UForm>
+
+    <UCard class="demo-section" title="UCountdown 倒计时">
+      <view class="demo-stack">
+        <UCountdown :time="2 * 3600 * 1000" />
+        <UCountdown :time="3 * 86400 * 1000" format="DD天HH时mm分ss秒" hide-zero-day />
+        <UCountdown :time="30000" millisecond format="mm:ss:SS" />
+      </view>
+    </UCard>
+
+    <view class="demo-title">USwipeAction 左滑操作</view>
+    <UMenuGroup class="demo-section">
+      <USwipeAction :options="swipeOptions" @click="handleSwipeClick">
+        <UMenuItem title="左滑试试" />
+      </USwipeAction>
+    </UMenuGroup>
+
     <UCard class="demo-section" title="UPageState 页面状态">
       <view class="demo-row">
         <UButton size="small" text="加载中" @click="pageState = 'loading'" />
@@ -224,7 +269,20 @@ import { computed, reactive, ref } from 'vue';
 import { onPageScroll } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { THEME_TYPE, type ThemeType } from '@/constants';
-import type { ActionItem, FormRules, PageStateType, TabItem, UFormExpose } from '@/components';
+import type {
+  ActionItem,
+  CheckboxOption,
+  CheckboxValue,
+  FormRules,
+  PageStateType,
+  RadioOption,
+  RadioValue,
+  RegionValue,
+  StepperAction,
+  SwipeActionOption,
+  TabItem,
+  UFormExpose,
+} from '@/components';
 import { useDialog } from '@/composables';
 import { phoneRules } from '@/utils/form-rules';
 
@@ -259,6 +317,44 @@ const demoRules: FormRules<typeof demoForm> = {
     { min: 2, message: '昵称至少 2 个字' },
   ],
 };
+
+const hobbyOptions: CheckboxOption[] = [
+  { label: '阅读', value: 'read' },
+  { label: '运动', value: 'sport' },
+  { label: '音乐', value: 'music' },
+  { label: '旅行', value: 'travel', disabled: true },
+];
+const genderOptions: RadioOption[] = [
+  { label: '男', value: 1 },
+  { label: '女', value: 2 },
+];
+const pickerForm = reactive({
+  hobbies: ['read'] as CheckboxValue[],
+  gender: 1 as RadioValue,
+  date: '',
+  time: '',
+  datetime: '',
+  range: [] as string[],
+  count: 1,
+});
+const pickerRules: FormRules<typeof pickerForm> = {
+  hobbies: { required: true, message: '请至少选择一项', trigger: 'change' },
+  date: { required: true, message: '请选择日期', trigger: 'change' },
+};
+const region = ref<RegionValue>({ province: '', city: '', district: '' });
+
+function handleOverlimit(action: StepperAction) {
+  uni.showToast({ title: action === 'plus' ? '已达上限' : '已达下限', icon: 'none' });
+}
+
+const swipeOptions: SwipeActionOption[] = [
+  { text: '收藏', type: 'primary' },
+  { text: '删除', type: 'danger' },
+];
+
+function handleSwipeClick({ option }: { index: number; option: SwipeActionOption }) {
+  uni.showToast({ title: option.text, icon: 'none' });
+}
 
 const pageState = ref<PageStateType>('content');
 

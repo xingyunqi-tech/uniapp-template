@@ -28,6 +28,14 @@ export { default as UEmpty } from './UEmpty/index.vue';
 export { default as UCard } from './UCard/index.vue';
 export type { UCardProps } from './UCard/index.vue';
 
+// 倒计时
+export { default as UCountdown } from './UCountdown/index.vue';
+export type { UCountdownProps, CountdownTimeData } from './UCountdown/index.vue';
+
+// 左滑操作
+export { default as USwipeAction } from './USwipeAction/index.vue';
+export type { USwipeActionProps, SwipeActionOption, SwipeActionType } from './USwipeAction/index.vue';
+
 // 页面状态容器 (加载中、出错重试、空状态)
 export { default as UPageState } from './UPageState/index.vue';
 export type { UPageStateProps, PageStateType } from './UPageState/index.vue';
@@ -125,6 +133,22 @@ export { default as USmsInput } from './USmsInput/index.vue';
 // 省市区选择 (基于 uni-data-picker 封装，v-model 绑定编码)
 export { default as URegionPicker } from './URegionPicker/index.vue';
 export type { URegionPickerProps, RegionValue, RegionChangeDetail } from './URegionPicker/index.vue';
+
+// 多选框组 (v-model 数组，支持 max)
+export { default as UCheckboxGroup } from './UCheckboxGroup/index.vue';
+export type { UCheckboxGroupProps, CheckboxOption, CheckboxValue } from './UCheckboxGroup/index.vue';
+
+// 单选框组
+export { default as URadioGroup } from './URadioGroup/index.vue';
+export type { URadioGroupProps, RadioOption, RadioValue } from './URadioGroup/index.vue';
+
+// 日期 / 时间 / 日期时间 / 日期范围选择
+export { default as UDatePicker } from './UDatePicker/index.vue';
+export type { UDatePickerProps, DatePickerType, DatePickerValue } from './UDatePicker/index.vue';
+
+// 步进器
+export { default as UStepper } from './UStepper/index.vue';
+export type { UStepperProps, StepperAction } from './UStepper/index.vue';
 
 // 图片上传组件 (基于 uni-file-picker 封装)
 export { default as UImageUpload } from './UImageUpload/index.vue';

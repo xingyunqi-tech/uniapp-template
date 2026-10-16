@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import URegionPicker, { type RegionValue } from '@/components/URegionPicker/index.vue';
+import { U_FORM_ITEM_KEY } from '@/components/UForm/context';
 
 const names: Record<string, string> = {
   '110000': '北京市',
@@ -55,6 +56,17 @@ describe('URegionPicker', () => {
     expect(picker.props('localdata')).toEqual(regionStore.regionTree);
     expect(picker.props('popupTitle')).toBe('选择地区');
     expect(picker.props('value')).toEqual([]);
+  });
+
+  it('根节点 u-region-picker 包裹 uni-data-picker，自定义插槽时同样保留', () => {
+    const wrapper = mount(URegionPicker, {
+      props: { modelValue: empty },
+      slots: { default: '<i class="custom" />' },
+      global,
+    });
+
+    expect(wrapper.classes()).toContain('u-region-picker');
+    expect(wrapper.find('.u-region-picker .data-picker').exists()).toBe(true);
   });
 
   it('未选择时显示占位文字', () => {
@@ -115,14 +127,37 @@ describe('URegionPicker', () => {
     });
 
     expect(wrapper.find('.custom').text()).toBe('北京市/市辖区/东城区');
-    expect(wrapper.find('.u-region-picker').exists()).toBe(false);
+    expect(wrapper.find('.u-region-picker__field').exists()).toBe(false);
   });
 
-  it('禁用时 uni-data-picker 只读', () => {
+  it('禁用时 uni-data-picker 只读，禁用样式只加在内置展示区域', () => {
     const wrapper = mount(URegionPicker, { props: { modelValue: empty, disabled: true }, global });
 
     expect(wrapper.findComponent(DataPickerStub).props('readonly')).toBe(true);
-    expect(wrapper.find('.u-region-picker--disabled').exists()).toBe(true);
+    expect(wrapper.find('.u-region-picker__field').classes()).toContain('u-region-picker__field--disabled');
+    expect(wrapper.classes()).toEqual(['u-region-picker']);
+  });
+
+  it('自定义插槽禁用时外层容器不带禁用样式', () => {
+    const wrapper = mount(URegionPicker, {
+      props: { modelValue: empty, disabled: true },
+      slots: { default: '<i class="custom" />' },
+      global,
+    });
+
+    expect(wrapper.findComponent(DataPickerStub).props('readonly')).toBe(true);
+    expect(wrapper.classes()).toEqual(['u-region-picker']);
+  });
+
+  it('在 UFormItem 内时外层容器带 in-form-item 类，独立使用时不带', () => {
+    const standalone = mount(URegionPicker, { props: { modelValue: empty }, global });
+    expect(standalone.classes()).not.toContain('u-region-picker--in-form-item');
+
+    const inFormItem = mount(URegionPicker, {
+      props: { modelValue: empty },
+      global: { ...global, provide: { [U_FORM_ITEM_KEY]: { onBlur: vi.fn() } } },
+    });
+    expect(inFormItem.classes()).toContain('u-region-picker--in-form-item');
   });
 
   it('地区树加载失败时不抛出', async () => {

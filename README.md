@@ -15,7 +15,7 @@
 - **分包优化**: `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 - **easycom 自动注册**: 组件无需手动导入，开箱即用
 - **主题系统**: CSS 变量支持 Light/Dark 主题切换
-- **自定义组件库**: 38 个组件（37 个 `U` 前缀组件 + `AuthLayout`）
+- **自定义组件库**: `U` 前缀通用组件 + `AuthLayout`，easycom 自动注册
 - **状态管理**: Pinia + 持久化插件
 - **国际化**: vue-i18n 多语言支持
 - **代码质量**: ESLint + Stylelint + markdownlint + Prettier + Husky
@@ -111,6 +111,12 @@ uniapp-template/
 │   │   ├── UTextarea/         # 多行输入框
 │   │   ├── UPageState/        # 页面状态容器
 │   │   ├── UDialog/           # 页面内对话框（配合 useDialog）
+│   │   ├── UCheckboxGroup/    # 多选框组
+│   │   ├── URadioGroup/       # 单选框组
+│   │   ├── UDatePicker/       # 日期/时间选择
+│   │   ├── UStepper/          # 步进器
+│   │   ├── UCountdown/        # 倒计时
+│   │   ├── USwipeAction/      # 左滑操作
 │   │   └── AuthLayout/        # 认证布局
 │   ├── composables/           # Composition API
 │   │   ├── useRouter.ts       # 路由导航封装

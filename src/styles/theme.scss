@@ -212,4 +212,12 @@ page.dark-theme {
   }
 }
 
+// picker-view 选中框上下边线（.wx-picker__indicator 的 ::before / ::after）
+.dark-theme .wx-picker__indicator {
+  &::before,
+  &::after {
+    border-color: var(--color-border) !important;
+  }
+}
+
 /* #endif */

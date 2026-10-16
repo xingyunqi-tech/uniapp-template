@@ -56,7 +56,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 3. **分包优化** - `pages/` 主包 + `pages-sub/` 分包，优化小程序体积
 4. **easycom 自动注册** - 组件无需手动导入
 5. **主题系统** - CSS 变量支持 Light/Dark 主题切换
-6. **自定义组件库** - 38 个组件（37 个 `U` 前缀组件 + `AuthLayout`）
+6. **自定义组件库** - `U` 前缀通用组件 + `AuthLayout`，完整列表见下方「组件系统」
 
 ---
 
@@ -242,6 +242,9 @@ easycom: {
 | `UBackTop` | 回到顶部 | `UForm` | 表单容器（规则校验） |
 | `UInput` | 输入框 | `UTextarea` | 多行输入框 |
 | `UPageState` | 页面状态容器 | `UDialog` | 页面内对话框（配合 `useDialog`） |
+| `UCheckboxGroup` | 多选框组 | `URadioGroup` | 单选框组 |
+| `UDatePicker` | 日期/时间选择 | `UStepper` | 步进器 |
+| `UCountdown` | 倒计时 | `USwipeAction` | 左滑操作 |
 
 **详细文档**: [.claude/agents/component-development.md](.claude/agents/component-development.md)
 

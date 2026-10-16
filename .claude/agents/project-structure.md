@@ -204,6 +204,18 @@ src/components/
 │   └── index.vue
 ├── UDialog/                # 页面内对话框（配合 useDialog）
 │   └── index.vue
+├── UCheckboxGroup/         # 多选框组
+│   └── index.vue
+├── URadioGroup/            # 单选框组
+│   └── index.vue
+├── UDatePicker/            # 日期/时间选择
+│   └── index.vue
+├── UStepper/               # 步进器
+│   └── index.vue
+├── UCountdown/             # 倒计时
+│   └── index.vue
+├── USwipeAction/           # 左滑操作
+│   └── index.vue
 └── AuthLayout/             # 认证页面布局
     └── index.vue
 ```

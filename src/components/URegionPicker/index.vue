@@ -3,23 +3,26 @@
     URegionPicker - 省市区选择
     基于 uni-data-picker 封装，自动加载地区数据，v-model 绑定省市区编码
   -->
-  <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
-  <uni-data-picker
-    :localdata="regionStore.regionTree"
-    :popup-title="title"
-    :value="pickerValue"
-    :readonly="disabled"
-    @change="handleChange"
-  >
-    <slot :text="text" :value="modelValue">
-      <view class="u-region-picker" :class="{ 'u-region-picker--disabled': disabled }">
-        <text class="u-region-picker__text" :class="{ 'u-region-picker__text--placeholder': !text }">
-          {{ text || placeholder }}
-        </text>
-        <UIcon name="right" size="32rpx" color="var(--color-text-placeholder)" />
-      </view>
-    </slot>
-  </uni-data-picker>
+  <!-- 覆盖 uni-data-picker 的样式挂在外层 view 上（支付宝中组件标签不是真实节点） -->
+  <view class="u-region-picker" :class="{ 'u-region-picker--in-form-item': !!formItem }">
+    <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
+    <uni-data-picker
+      :localdata="regionStore.regionTree"
+      :popup-title="title"
+      :value="pickerValue"
+      :readonly="disabled"
+      @change="handleChange"
+    >
+      <slot :text="text" :value="modelValue">
+        <view class="u-region-picker__field" :class="{ 'u-region-picker__field--disabled': disabled }">
+          <text class="u-region-picker__text" :class="{ 'u-region-picker__text--placeholder': !text }">
+            {{ text || placeholder }}
+          </text>
+          <UIcon name="right" size="32rpx" color="var(--color-text-placeholder)" />
+        </view>
+      </slot>
+    </uni-data-picker>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -29,11 +32,16 @@ definePage({
   },
 });
 
-import { computed, onMounted, watch } from 'vue';
+import { computed, inject, onMounted, watch } from 'vue';
 import { useRegionStore } from '@/store/modules/region';
+import { U_FORM_ITEM_KEY, type UFormItemContext } from '../UForm/context';
 
 defineOptions({
   name: 'URegionPicker',
+  options: {
+    virtualHost: true,
+    styleIsolation: 'shared',
+  },
 });
 
 export interface RegionValue {
@@ -78,6 +86,7 @@ const emit = defineEmits<{
 }>();
 
 const regionStore = useRegionStore();
+const formItem = inject<UFormItemContext | null>(U_FORM_ITEM_KEY, null);
 
 const isComplete = computed(() => {
   const { province, city, district } = props.modelValue;
@@ -133,13 +142,20 @@ function handleChange(e: DataPickerChangeEvent) {
 
 <style scoped lang="scss">
 .u-region-picker {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-sm);
+  &--in-form-item {
+    flex: 1;
+    min-width: 0;
+  }
 
-  &--disabled {
-    opacity: 0.6;
+  &__field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+
+    &--disabled {
+      opacity: 0.6;
+    }
   }
 
   &__text {
@@ -152,5 +168,63 @@ function handleChange(e: DataPickerChangeEvent) {
       color: var(--color-text-placeholder);
     }
   }
+}
+
+// 覆盖 uni-data-picker 及 uni-data-pickerview 写死的颜色
+.u-region-picker :deep(.uni-data-tree-cover) {
+  background-color: var(--color-bg-mask-light);
+}
+
+.u-region-picker :deep(.uni-data-tree-dialog) {
+  border-color: var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.u-region-picker :deep(.uni-popper__arrow) {
+  border-bottom-color: var(--color-border);
+}
+
+.u-region-picker :deep(.uni-popper__arrow::after) {
+  border-bottom-color: var(--color-bg);
+}
+
+.u-region-picker :deep(.dialog-title) {
+  color: var(--color-text);
+}
+
+.u-region-picker :deep(.dialog-close-plus) {
+  background-color: var(--color-text-secondary);
+}
+
+.u-region-picker :deep(.selected-list) {
+  border-bottom-color: var(--color-border);
+}
+
+.u-region-picker :deep(.selected-item) {
+  color: var(--color-text);
+}
+
+.u-region-picker :deep(.selected-item-active) {
+  border-bottom-color: var(--color-primary);
+}
+
+.u-region-picker :deep(.item-text) {
+  color: var(--color-text);
+}
+
+.u-region-picker :deep(.check) {
+  border-color: var(--color-primary);
+}
+
+.u-region-picker :deep(.loading-cover) {
+  background-color: var(--color-overlay-heavy);
+}
+
+.u-region-picker :deep(.error-message) {
+  background-color: var(--color-bg);
+}
+
+.u-region-picker :deep(.error-text) {
+  color: var(--color-error);
 }
 </style>

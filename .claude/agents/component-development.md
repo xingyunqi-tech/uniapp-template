@@ -169,6 +169,12 @@ easycom: {
 | `UTextarea` | 多行输入框 |
 | `UPageState` | 页面状态容器 |
 | `UDialog` | 页面内对话框（配合 `useDialog`） |
+| `UCheckboxGroup` | 多选框组（v-model 数组，支持 max） |
+| `URadioGroup` | 单选框组 |
+| `UDatePicker` | 日期/时间/日期时间/日期范围选择 |
+| `UStepper` | 步进器 |
+| `UCountdown` | 倒计时 |
+| `USwipeAction` | 左滑操作 |
 
 另有布局组件 `AuthLayout`（认证页面布局），同样通过 easycom 自动导入。
 
