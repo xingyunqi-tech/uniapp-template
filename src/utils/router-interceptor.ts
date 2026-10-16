@@ -50,6 +50,16 @@ function checkRouteAccess(url: string): RouteAccess {
   return checkPageRole(url) ? 'allow' : 'forbidden';
 }
 
+/**
+ * 未登录且启动时的登录态恢复进行中：等待结束后执行 retry，返回 true；否则返回 false
+ */
+function retryAfterSession(retry: () => void): boolean {
+  const userStore = useUserStore();
+  if (userStore.isLoggedIn || !userStore.sessionPending) return false;
+  userStore.ensureSession().then(retry);
+  return true;
+}
+
 /** 登录页地址，登录后跳回 redirect */
 function getLoginUrl(redirect: string): string {
   return `${PAGES.LOGIN}?redirect=${encodeURIComponent(redirect)}`;
@@ -99,6 +109,7 @@ function handleRouteIntercept(method: InterceptMethod, args: { url: string }): b
   const access = checkRouteAccess(args.url);
 
   if (access === 'login') {
+    if (retryAfterSession(() => (uni[method] as (options: { url: string }) => void)({ url: args.url }))) return false;
     // 使用 setTimeout 确保在当前路由操作完成后再执行
     setTimeout(() => {
       openLogin(method, getLoginUrl(args.url));
@@ -138,6 +149,7 @@ export function guardCurrentPage(): void {
 
   const access = checkRouteAccess(fullPath);
   if (access === 'login') {
+    if (retryAfterSession(guardCurrentPage)) return;
     uni.redirectTo({ url: getLoginUrl(fullPath) });
   } else if (access === 'forbidden') {
     uni.redirectTo({ url: `${PAGES.FORBIDDEN}?type=403` });
@@ -173,6 +185,9 @@ export function setupRouterInterceptor(): void {
 
       // 未登录跳转登录页
       if (!userStore.isLoggedIn) {
+        if (retryAfterSession(() => uni.switchTab({ url: args.url }))) {
+          return rejectNavigation('switchTab', args);
+        }
         setTimeout(() => {
           uni.redirectTo({
             url: getLoginUrl(args.url),

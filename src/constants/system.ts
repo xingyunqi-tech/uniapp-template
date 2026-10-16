@@ -74,3 +74,8 @@ export const NATIVE_COLOR = {
   INDICATOR: 'rgba(255, 255, 255, 0.5)',
   INDICATOR_ACTIVE: '#ffffff',
 } as const;
+
+/**
+ * 无 Token 启动时是否用微信/支付宝小程序登录凭证静默登录（H5/App 不生效）
+ */
+export const AUTO_SILENT_LOGIN = false;

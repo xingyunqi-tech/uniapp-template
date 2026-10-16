@@ -77,16 +77,7 @@
       <view class="delete-form">
         <text class="delete-form__tip">注销后账号及相关数据将被删除且无法恢复，请先验证身份</text>
         <template v-if="verifyMode === 'password'">
-          <uni-easyinput
-            v-model="deleteForm.password"
-            :styles="EASYINPUT_STYLES"
-            :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-            :primary-color="globalStore.primaryColor"
-            type="password"
-            placeholder="请输入当前密码"
-            prefix-icon="locked"
-            :clearable="true"
-          />
+          <UInput v-model="deleteForm.password" type="password" placeholder="请输入当前密码" prefix-icon="locked" />
           <text v-if="boundPhone" class="delete-form__switch" @click="verifyMode = 'sms'">没有密码？用短信验证</text>
         </template>
         <template v-else>
@@ -123,7 +114,7 @@ import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
-import { EASYINPUT_PLACEHOLDER_STYLE, EASYINPUT_STYLES, PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
+import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import { confirm, formatFileSize, formatPhone, storage } from '@/utils';
 import { AuthSendCodeDtoType } from '@/api';
 

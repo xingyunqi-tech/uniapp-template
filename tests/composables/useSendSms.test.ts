@@ -21,6 +21,18 @@ describe('useSendSms', () => {
     expect(validateCode('123456')).toBe(true);
   });
 
+  it('手机号为空或格式错误时提示对应文案', () => {
+    const { validatePhone, validateCode } = useSendSms();
+
+    expect(validatePhone('')).toBe(false);
+    expect(uni.showToast).toHaveBeenLastCalledWith({ title: '请输入手机号', icon: 'none' });
+    expect(validatePhone('123')).toBe(false);
+    expect(uni.showToast).toHaveBeenLastCalledWith({ title: '请输入正确的手机号', icon: 'none' });
+    expect(validateCode('')).toBe(false);
+    expect(uni.showToast).toHaveBeenLastCalledWith({ title: '请输入验证码', icon: 'none' });
+    expect(validatePhone('13800000000')).toBe(true);
+  });
+
   it('设置 scene 后重新进入页面恢复该手机号的剩余倒计时', async () => {
     const sendApi = vi.fn().mockResolvedValue(undefined);
     const first = useSendSms({ sendApi, scene: 'login' });

@@ -7,50 +7,39 @@
     <template v-else>
       <!-- 表单区域 -->
       <view class="form-section">
-        <UMenuGroup>
-          <UFormItem label="收货人" required>
-            <input
-              v-model="formData.name"
-              class="u-form-input"
-              placeholder-class="u-form-placeholder"
-              placeholder="请输入收货人姓名"
-              :maxlength="20"
-            />
-          </UFormItem>
+        <UForm ref="formRef" :model="formData" :rules="rules">
+          <UMenuGroup>
+            <UFormItem label="收货人" prop="name">
+              <UInput v-model="formData.name" placeholder="请输入收货人姓名" :maxlength="20" />
+            </UFormItem>
 
-          <UFormItem label="手机号" required>
-            <input
-              v-model="formData.phone"
-              class="u-form-input"
-              placeholder-class="u-form-placeholder"
-              type="number"
-              placeholder="请输入手机号"
-              :maxlength="11"
-            />
-          </UFormItem>
+            <UFormItem label="手机号" prop="phone">
+              <UInput v-model="formData.phone" type="number" placeholder="请输入手机号" :maxlength="PHONE_LENGTH" />
+            </UFormItem>
 
-          <!-- 统一使用 uni-data-picker，各平台使用相同的 API 数据 -->
-          <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
-          <uni-data-picker
-            :localdata="regionStore.regionTree"
-            popup-title="请选择所在地区"
-            :value="regionPickerValue"
-            @change="handleRegionChange"
-          >
-            <UFormItem label="所在地区" required :value="regionText" placeholder="请选择省市区" show-arrow />
-          </uni-data-picker>
+            <!-- 统一使用 uni-data-picker，各平台使用相同的 API 数据 -->
+            <!-- @vue-ignore: uni-data-picker 类型定义不完整，实际支持数组值 -->
+            <uni-data-picker
+              :localdata="regionStore.regionTree"
+              popup-title="请选择所在地区"
+              :value="regionPickerValue"
+              @change="handleRegionChange"
+            >
+              <UFormItem label="所在地区" prop="province" :value="regionText" placeholder="请选择省市区" show-arrow />
+            </uni-data-picker>
 
-          <UFormItem label="详细地址" required align-top>
-            <textarea
-              v-model="formData.address"
-              class="u-form-textarea"
-              placeholder-class="u-form-placeholder"
-              placeholder="请输入详细地址，如街道、门牌号等"
-              :maxlength="100"
-              :auto-height="true"
-            />
-          </UFormItem>
-        </UMenuGroup>
+            <UFormItem label="详细地址" prop="address" align-top>
+              <UTextarea
+                v-model="formData.address"
+                placeholder="请输入详细地址，如街道、门牌号等"
+                :maxlength="100"
+                :height="120"
+                :show-count="false"
+                auto-height
+              />
+            </UFormItem>
+          </UMenuGroup>
+        </UForm>
       </view>
 
       <!-- 设为默认 -->
@@ -85,12 +74,14 @@ definePage({
 });
 
 import { ref, reactive, computed } from 'vue';
+import type { UFormExpose } from '@/components/UForm/context';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useAsyncAction, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAddressStore } from '@/store/modules/address';
 import { useRegionStore } from '@/store/modules/region';
-import { PAGES } from '@/constants';
+import { PAGES, PHONE_LENGTH } from '@/constants';
+import { phoneRules, type FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 const addressStore = useAddressStore();
@@ -195,6 +186,7 @@ async function loadAddressDetail(id: number) {
         .codesToNames(address.provinceCode, address.cityCode, address.districtCode)
         .catch(error => console.error('加载地区名称失败:', error));
     }
+    formRef.value?.setInitialValues();
   } catch (error) {
     console.error('加载地址详情失败:', error);
     detailError.value = true;
@@ -223,30 +215,18 @@ function handleDefaultChange(checked: boolean) {
   formData.isDefault = checked;
 }
 
-// 验证表单
-function validateForm(): boolean {
-  if (!formData.name.trim()) {
-    uni.showToast({ title: '请输入收货人姓名', icon: 'none' });
-    return false;
-  }
-  if (!formData.phone.trim()) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' });
-    return false;
-  }
-  if (!/^1[3-9]\d{9}$/.test(formData.phone)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-    return false;
-  }
-  if (!formData.province || !formData.city || !formData.district) {
-    uni.showToast({ title: '请选择所在地区', icon: 'none' });
-    return false;
-  }
-  if (!formData.address.trim()) {
-    uni.showToast({ title: '请输入详细地址', icon: 'none' });
-    return false;
-  }
-  return true;
-}
+const formRef = ref<UFormExpose | null>(null);
+
+const rules: FormRules<typeof formData> = {
+  name: { required: true, message: '请输入收货人姓名' },
+  phone: phoneRules(),
+  province: {
+    required: true,
+    validator: (_value, model) => !!(model.city && model.district),
+    message: '请选择所在地区',
+  },
+  address: { required: true, message: '请输入详细地址' },
+};
 
 // 保存地址，使用区划代码保存，后端会自动填充名称
 const saveAction = useAsyncAction({
@@ -273,8 +253,8 @@ const saveAction = useAsyncAction({
   },
 });
 
-function handleSave() {
-  if (!validateForm()) return;
+async function handleSave() {
+  if (!(await formRef.value?.validate())) return;
   saveAction.execute();
 }
 

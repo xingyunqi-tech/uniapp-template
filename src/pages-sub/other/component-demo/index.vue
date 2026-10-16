@@ -69,6 +69,42 @@
       </UFormItem>
     </UMenuGroup>
 
+    <view class="demo-title">UForm / UInput / UTextarea 表单校验</view>
+    <UForm ref="demoFormRef" :model="demoForm" :rules="demoRules">
+      <UMenuGroup class="demo-section">
+        <UFormItem label="手机号" prop="phone">
+          <UInput v-model="demoForm.phone" type="number" :maxlength="11" placeholder="失焦校验" />
+        </UFormItem>
+        <UFormItem label="昵称" prop="nickname">
+          <UInput v-model="demoForm.nickname" :maxlength="20" show-count placeholder="请输入昵称" />
+        </UFormItem>
+        <UFormItem label="简介" prop="intro" align-top>
+          <UTextarea v-model="demoForm.intro" :maxlength="100" auto-height :height="120" placeholder="选填" />
+        </UFormItem>
+      </UMenuGroup>
+    </UForm>
+    <view class="demo-row">
+      <UButton size="small" type="primary" text="提交校验" @click="demoFormRef?.validate()" />
+      <UButton size="small" text="重置" @click="demoFormRef?.resetFields()" />
+    </view>
+
+    <UCard class="demo-section" title="UPageState 页面状态">
+      <view class="demo-row">
+        <UButton size="small" text="加载中" @click="pageState = 'loading'" />
+        <UButton size="small" text="出错" @click="pageState = 'error'" />
+        <UButton size="small" text="空" @click="pageState = 'empty'" />
+        <UButton size="small" text="内容" @click="pageState = 'content'" />
+      </view>
+      <UPageState
+        :loading="pageState === 'loading'"
+        :error="pageState === 'error'"
+        :empty="pageState === 'empty'"
+        @retry="pageState = 'content'"
+      >
+        <text class="demo-text">正常内容</text>
+      </UPageState>
+    </UCard>
+
     <UCard class="demo-section" title="USmsInput / UAgreementCheck">
       <view class="demo-stack">
         <USmsInput v-model="smsCode" />
@@ -161,6 +197,8 @@
         <UButton size="small" text="UPopup 对话框" @click="dialogRef?.open()" />
         <UButton size="small" text="UActionSheet" @click="actionSheetRef?.open()" />
         <UButton size="small" text="ULoading" @click="showLoading" />
+        <UButton size="small" text="useDialog 确认" @click="handleDialogConfirm" />
+        <UButton size="small" text="useDialog 输入" @click="handleDialogPrompt" />
       </view>
     </UCard>
 
@@ -170,6 +208,7 @@
     <UPopup ref="dialogRef" type="dialog" dialog-mode="input" title="输入对话框" dialog-value="默认值" />
     <UActionSheet ref="actionSheetRef" title="操作菜单" :actions="actions" />
     <ULoading v-if="loadingVisible" visible text="加载中" />
+    <UDialog />
     <UBackTop :scroll-top="scrollTop" :threshold="BACK_TOP_THRESHOLD" />
   </view>
 </template>
@@ -181,11 +220,13 @@ definePage({
   },
 });
 
-import { computed, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { onPageScroll } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { THEME_TYPE, type ThemeType } from '@/constants';
-import type { ActionItem, TabItem } from '@/components';
+import type { ActionItem, FormRules, PageStateType, TabItem, UFormExpose } from '@/components';
+import { useDialog } from '@/composables';
+import { phoneRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 const isDark = computed(() => globalStore.currentTheme === THEME_TYPE.DARK);
@@ -208,6 +249,30 @@ const dialogRef = ref<{ open: () => void } | null>(null);
 const actionSheetRef = ref<{ open: () => void } | null>(null);
 
 const loadingVisible = ref(false);
+
+const demoFormRef = ref<UFormExpose | null>(null);
+const demoForm = reactive({ phone: '', nickname: '', intro: '' });
+const demoRules: FormRules<typeof demoForm> = {
+  phone: phoneRules(),
+  nickname: [
+    { required: true, message: '请输入昵称' },
+    { min: 2, message: '昵称至少 2 个字' },
+  ],
+};
+
+const pageState = ref<PageStateType>('content');
+
+const dialog = useDialog();
+
+async function handleDialogConfirm() {
+  const ok = await dialog.confirm({ title: '提示', content: '确定执行该操作吗？' });
+  uni.showToast({ title: ok ? '已确认' : '已取消', icon: 'none' });
+}
+
+async function handleDialogPrompt() {
+  const value = await dialog.prompt({ title: '修改昵称', defaultValue: '张三' });
+  if (value !== null) uni.showToast({ title: value || '空', icon: 'none' });
+}
 
 const BACK_TOP_THRESHOLD = 400;
 const scrollTop = ref(0);

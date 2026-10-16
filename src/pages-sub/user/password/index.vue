@@ -2,49 +2,39 @@
   <view class="password-page" :class="globalStore.themeClass">
     <!-- 表单区域 -->
     <view class="form-section">
-      <UMenuGroup>
-        <UFormItem label="原密码">
-          <input
-            v-model="formData.oldPassword"
-            class="u-form-input"
-            placeholder-class="u-form-placeholder"
-            :password="!showOldPassword"
-            placeholder="请输入原密码"
-            :maxlength="PASSWORD_MAX_LENGTH"
-          />
-          <view class="toggle-eye" @click="showOldPassword = !showOldPassword">
-            <uni-icons :type="showOldPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
-          </view>
-        </UFormItem>
+      <UForm ref="formRef" :model="formData" :rules="rules">
+        <UMenuGroup>
+          <UFormItem label="原密码" prop="oldPassword">
+            <UInput
+              v-model="formData.oldPassword"
+              type="password"
+              placeholder="请输入原密码"
+              :maxlength="PASSWORD_MAX_LENGTH"
+              :clearable="false"
+            />
+          </UFormItem>
 
-        <UFormItem label="新密码">
-          <input
-            v-model="formData.newPassword"
-            class="u-form-input"
-            placeholder-class="u-form-placeholder"
-            :password="!showNewPassword"
-            :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
-            :maxlength="PASSWORD_MAX_LENGTH"
-          />
-          <view class="toggle-eye" @click="showNewPassword = !showNewPassword">
-            <uni-icons :type="showNewPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
-          </view>
-        </UFormItem>
+          <UFormItem label="新密码" prop="newPassword">
+            <UInput
+              v-model="formData.newPassword"
+              type="password"
+              :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
+              :maxlength="PASSWORD_MAX_LENGTH"
+              :clearable="false"
+            />
+          </UFormItem>
 
-        <UFormItem label="确认密码">
-          <input
-            v-model="formData.confirmPassword"
-            class="u-form-input"
-            placeholder-class="u-form-placeholder"
-            :password="!showConfirmPassword"
-            placeholder="请再次输入新密码"
-            :maxlength="PASSWORD_MAX_LENGTH"
-          />
-          <view class="toggle-eye" @click="showConfirmPassword = !showConfirmPassword">
-            <uni-icons :type="showConfirmPassword ? 'eye' : 'eye-slash'" color="inherit" size="inherit" />
-          </view>
-        </UFormItem>
-      </UMenuGroup>
+          <UFormItem label="确认密码" prop="confirmPassword">
+            <UInput
+              v-model="formData.confirmPassword"
+              type="password"
+              placeholder="请再次输入新密码"
+              :maxlength="PASSWORD_MAX_LENGTH"
+              :clearable="false"
+            />
+          </UFormItem>
+        </UMenuGroup>
+      </UForm>
     </view>
 
     <!-- 密码强度提示 -->
@@ -65,10 +55,12 @@ definePage({
 });
 
 import { ref, reactive, toRef } from 'vue';
+import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, PAGES } from '@/constants';
+import type { FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 
@@ -80,11 +72,6 @@ const formData = reactive({
   newPassword: '',
   confirmPassword: '',
 });
-
-// 密码可见性
-const showOldPassword = ref(false);
-const showNewPassword = ref(false);
-const showConfirmPassword = ref(false);
 
 // 修改成功后清除登录状态，让用户重新登录
 const saveAction = useAsyncAction({
@@ -101,34 +88,29 @@ const saveAction = useAsyncAction({
 // 密码强度
 const pwdStrength = usePasswordStrength(toRef(formData, 'newPassword'));
 
-// 保存密码
-function handleSave() {
-  // 验证
-  if (!formData.oldPassword) {
-    uni.showToast({ title: '请输入原密码', icon: 'none' });
-    return;
-  }
-  if (!formData.newPassword) {
-    uni.showToast({ title: '请输入新密码', icon: 'none' });
-    return;
-  }
-  if (formData.newPassword.length < PASSWORD_MIN_LENGTH) {
-    uni.showToast({ title: `新密码长度不能少于${PASSWORD_MIN_LENGTH}位`, icon: 'none' });
-    return;
-  }
-  if (!pwdStrength.hasLetter.value || !pwdStrength.hasNumber.value) {
-    uni.showToast({ title: '密码需包含字母和数字', icon: 'none' });
-    return;
-  }
-  if (formData.newPassword !== formData.confirmPassword) {
-    uni.showToast({ title: '两次密码输入不一致', icon: 'none' });
-    return;
-  }
-  if (formData.oldPassword === formData.newPassword) {
-    uni.showToast({ title: '新密码不能与原密码相同', icon: 'none' });
-    return;
-  }
+const formRef = ref<UFormExpose | null>(null);
 
+const rules: FormRules<typeof formData> = {
+  oldPassword: { required: true, message: '请输入原密码' },
+  newPassword: [
+    { required: true, message: '请输入新密码' },
+    { min: PASSWORD_MIN_LENGTH, message: `新密码长度不能少于${PASSWORD_MIN_LENGTH}位` },
+    { validator: () => pwdStrength.hasLetter.value && pwdStrength.hasNumber.value, message: '密码需包含字母和数字' },
+    {
+      validator: (value, model) => value !== model.oldPassword,
+      message: '新密码不能与原密码相同',
+      deps: ['oldPassword'],
+    },
+  ],
+  confirmPassword: [
+    { required: true, message: '两次密码输入不一致' },
+    { validator: (value, model) => value === model.newPassword, message: '两次密码输入不一致', deps: ['newPassword'] },
+  ],
+};
+
+// 保存密码
+async function handleSave() {
+  if (!(await formRef.value?.validate())) return;
   saveAction.execute();
 }
 </script>
@@ -143,13 +125,6 @@ function handleSave() {
 // 表单区域
 .form-section {
   padding: 24rpx;
-
-  .toggle-eye {
-    flex-shrink: 0;
-    padding: 8rpx;
-    color: var(--color-text-secondary);
-    font-size: 36rpx;
-  }
 }
 
 // 密码强度区域

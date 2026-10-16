@@ -1,70 +1,67 @@
 <template>
   <view class="feedback-page" :class="globalStore.themeClass">
-    <!-- 反馈类型 -->
-    <UCard class="form-section" title="反馈类型">
-      <view class="type-list">
-        <view
-          v-for="item in FEEDBACK_TYPES"
-          :key="item.value"
-          class="type-item"
-          :class="{ active: formData.type === item.value }"
-          @click="formData.type = item.value"
-        >
-          {{ item.label }}
+    <UForm ref="formRef" :model="formData" :rules="rules">
+      <!-- 反馈类型 -->
+      <UCard class="form-section" title="反馈类型">
+        <view class="type-list">
+          <view
+            v-for="item in FEEDBACK_TYPES"
+            :key="item.value"
+            class="type-item"
+            :class="{ active: formData.type === item.value }"
+            @click="formData.type = item.value"
+          >
+            {{ item.label }}
+          </view>
         </view>
-      </view>
-    </UCard>
+      </UCard>
 
-    <!-- 反馈内容 -->
-    <UCard class="form-section" title="问题描述">
-      <view class="textarea-wrapper">
-        <textarea
+      <!-- 反馈内容 -->
+      <UCard class="form-section" title="问题描述">
+        <UTextarea
           v-model="formData.content"
-          class="feedback-textarea"
           placeholder="请详细描述您遇到的问题或建议，我们会认真处理..."
           :maxlength="FEEDBACK_CONTENT_MAX_LENGTH"
-          @input="handleInput"
+          :height="200"
         />
-        <view class="word-count">{{ formData.content.length }}/{{ FEEDBACK_CONTENT_MAX_LENGTH }}</view>
-      </view>
-    </UCard>
+      </UCard>
 
-    <!-- 图片上传 -->
-    <UCard class="form-section" :title="`上传图片（可选，最多${FEEDBACK_IMAGE_MAX_COUNT}张）`">
-      <view class="image-upload">
-        <view v-for="(img, index) in formData.images" :key="img.path" class="image-item">
-          <image :src="img.path" mode="aspectFill" @click="previewImage(img.path)" />
-          <view class="remove-btn" @click="removeImage(index)">
-            <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
+      <!-- 图片上传 -->
+      <UCard class="form-section" :title="`上传图片（可选，最多${FEEDBACK_IMAGE_MAX_COUNT}张）`">
+        <view class="image-upload">
+          <view v-for="(img, index) in formData.images" :key="img.path" class="image-item">
+            <image :src="img.path" mode="aspectFill" @click="previewImage(img.path)" />
+            <view class="remove-btn" @click="removeImage(index)">
+              <uni-icons type="closeempty" color="var(--color-text-inverse)" size="24rpx" />
+            </view>
+            <!-- 上传中状态 -->
+            <view v-if="!img.url" class="uploading-mask">
+              <text class="uploading-text">上传中...</text>
+            </view>
           </view>
-          <!-- 上传中状态 -->
-          <view v-if="!img.url" class="uploading-mask">
-            <text class="uploading-text">上传中...</text>
+          <view v-if="formData.images.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
+            <uni-icons type="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
+            <text class="upload-text">添加图片</text>
           </view>
         </view>
-        <view v-if="formData.images.length < FEEDBACK_IMAGE_MAX_COUNT" class="upload-btn" @click="chooseImage">
-          <uni-icons type="plusempty" color="var(--color-text-placeholder)" size="48rpx" />
-          <text class="upload-text">添加图片</text>
-        </view>
-      </view>
-    </UCard>
+      </UCard>
 
-    <!-- 联系方式 -->
-    <UCard class="form-section" title="联系方式（可选）">
-      <input
-        v-model="formData.contact"
-        class="contact-input"
-        type="number"
-        :maxlength="11"
-        placeholder="请输入手机号，方便我们联系您"
-      />
-    </UCard>
+      <!-- 联系方式 -->
+      <UCard class="form-section" title="联系方式（可选）">
+        <UInput
+          v-model="formData.contact"
+          type="number"
+          :maxlength="PHONE_LENGTH"
+          placeholder="请输入手机号，方便我们联系您"
+        />
+      </UCard>
+    </UForm>
 
     <!-- 提交按钮 -->
     <UFixedButton
       text="提交反馈"
       loading-text="提交中..."
-      :disabled="!canSubmit"
+      :disabled="uploading"
       :loading="submitAction.loading.value"
       @click="handleSubmit"
     />
@@ -80,11 +77,13 @@ definePage({
   },
 });
 
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
+import type { UFormExpose } from '@/components/UForm/context';
 import { useAsyncAction, useSafeBack } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { useFeedbackStore } from '@/store/modules/feedback';
-import { PAGES } from '@/constants';
+import { PAGES, PHONE_LENGTH } from '@/constants';
+import type { FormRules } from '@/utils/form-rules';
 import { uploadFileByPath } from '@/api';
 import {
   FEEDBACK_TYPES,
@@ -117,13 +116,21 @@ const formData = reactive<{
   contact: '',
 });
 
+const formRef = ref<UFormExpose | null>(null);
+
+const contentMinMessage = `请至少输入${FEEDBACK_CONTENT_MIN_LENGTH}个字`;
+const rules: FormRules<typeof formData> = {
+  content: [
+    { required: true, message: contentMinMessage },
+    {
+      validator: value => String(value).trim().length >= FEEDBACK_CONTENT_MIN_LENGTH,
+      message: contentMinMessage,
+    },
+  ],
+};
+
 // 是否有图片正在上传
 const uploading = computed(() => formData.images.some(img => !img.url));
-
-// 是否可提交（内容长度足够且没有正在上传的图片）
-const canSubmit = computed(() => {
-  return formData.content.trim().length >= FEEDBACK_CONTENT_MIN_LENGTH && !uploading.value;
-});
 
 // 提交操作
 const submitAction = useAsyncAction({
@@ -140,11 +147,6 @@ const submitAction = useAsyncAction({
     goBack();
   },
 });
-
-// 输入事件
-function handleInput(e: { detail: { value: string } }) {
-  formData.content = e.detail.value;
-}
 
 // 选择并上传图片
 function chooseImage() {
@@ -186,18 +188,12 @@ function removeImage(index: number) {
 }
 
 // 提交反馈
-function handleSubmit() {
+async function handleSubmit() {
   if (uploading.value) {
     uni.showToast({ title: '图片上传中，请稍候', icon: 'none' });
     return;
   }
-  if (!canSubmit.value) {
-    uni.showToast({
-      title: `请至少输入${FEEDBACK_CONTENT_MIN_LENGTH}个字`,
-      icon: 'none',
-    });
-    return;
-  }
+  if (!(await formRef.value?.validate())) return;
 
   submitAction.execute();
 }
@@ -235,36 +231,6 @@ function handleSubmit() {
       background: var(--color-primary);
       color: var(--color-text-inverse);
     }
-  }
-}
-
-// 文本域
-.textarea-wrapper {
-  position: relative;
-
-  .feedback-textarea {
-    box-sizing: border-box;
-    width: 100%;
-    height: 240rpx;
-    padding: 24rpx;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-base);
-    background: var(--color-bg-grey);
-    color: var(--color-text);
-    font-size: 28rpx;
-    line-height: 1.6;
-
-    &::placeholder {
-      color: var(--color-text-placeholder);
-    }
-  }
-
-  .word-count {
-    position: absolute;
-    right: 24rpx;
-    bottom: 24rpx;
-    color: var(--color-text-placeholder);
-    font-size: 24rpx;
   }
 }
 
@@ -331,23 +297,6 @@ function handleSubmit() {
       color: var(--color-text-placeholder);
       font-size: 24rpx;
     }
-  }
-}
-
-// 联系方式
-.contact-input {
-  box-sizing: border-box;
-  width: 100%;
-  height: 88rpx;
-  padding: 0 24rpx;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background: var(--color-bg-grey);
-  color: var(--color-text);
-  font-size: 28rpx;
-
-  &::placeholder {
-    color: var(--color-text-placeholder);
   }
 }
 </style>

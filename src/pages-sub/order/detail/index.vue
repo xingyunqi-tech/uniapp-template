@@ -1,87 +1,85 @@
 <template>
   <view class="order-detail-page" :class="globalStore.themeClass">
-    <ULoading v-if="loading" visible />
-
-    <UEmpty
-      v-else-if="loadError"
-      class="detail-error"
-      :type="loadError === 'notFound' ? 'default' : 'network'"
-      :text="loadError === 'notFound' ? '订单不存在' : '订单加载失败'"
+    <UPageState
+      :loading="loading"
+      :error="loadError === 'failed' ? '订单加载失败' : false"
+      :empty="loadError === 'notFound'"
+      empty-text="订单不存在"
+      full-height
+      @retry="loadOrderDetail"
     >
-      <UButton v-if="loadError === 'failed'" type="primary" size="small" text="重新加载" @click="loadOrderDetail" />
-    </UEmpty>
-
-    <scroll-view v-else-if="order" scroll-y class="detail-content">
-      <!-- 订单状态 -->
-      <UCard class="detail-card status-card" :class="getOrderStatusClass(order.status)">
-        <view class="status-info">
-          <text class="status-text">{{ getOrderStatusText(order.status) }}</text>
-          <text class="status-time">{{ formatDateTime(order.createdAt) }}</text>
-        </view>
-      </UCard>
-
-      <!-- 订单信息 -->
-      <UCard class="detail-card">
-        <view class="info-row">
-          <text class="label">订单号</text>
-          <view class="value-row">
-            <text class="value">{{ order.orderNo }}</text>
-            <text class="copy-btn" @click="handleCopy(order.orderNo)">复制</text>
+      <scroll-view v-if="order" scroll-y class="detail-content">
+        <!-- 订单状态 -->
+        <UCard class="detail-card status-card" :class="getOrderStatusClass(order.status)">
+          <view class="status-info">
+            <text class="status-text">{{ getOrderStatusText(order.status) }}</text>
+            <text class="status-time">{{ formatDateTime(order.createdAt) }}</text>
           </view>
-        </view>
-        <view class="info-row">
-          <text class="label">创建时间</text>
-          <text class="value">{{ formatDateTime(order.createdAt) }}</text>
-        </view>
-        <view v-if="order.paidAt" class="info-row">
-          <text class="label">支付时间</text>
-          <text class="value">{{ formatDateTime(order.paidAt) }}</text>
-        </view>
-        <view v-if="order.paymentChannel" class="info-row">
-          <text class="label">支付渠道</text>
-          <text class="value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
-        </view>
-        <view v-if="order.transactionId" class="info-row">
-          <text class="label">交易号</text>
-          <view class="value-row">
-            <text class="value">{{ order.transactionId }}</text>
-            <text class="copy-btn" @click="handleCopy(order.transactionId)">复制</text>
+        </UCard>
+
+        <!-- 订单信息 -->
+        <UCard class="detail-card">
+          <view class="info-row">
+            <text class="label">订单号</text>
+            <view class="value-row">
+              <text class="value">{{ order.orderNo }}</text>
+              <text class="copy-btn" @click="handleCopy(order.orderNo)">复制</text>
+            </view>
           </view>
-        </view>
-        <view v-if="order.refundedAt" class="info-row">
-          <text class="label">退款时间</text>
-          <text class="value">{{ formatDateTime(order.refundedAt) }}</text>
-        </view>
-        <view v-if="order.closedAt" class="info-row">
-          <text class="label">关闭时间</text>
-          <text class="value">{{ formatDateTime(order.closedAt) }}</text>
-        </view>
-      </UCard>
+          <view class="info-row">
+            <text class="label">创建时间</text>
+            <text class="value">{{ formatDateTime(order.createdAt) }}</text>
+          </view>
+          <view v-if="order.paidAt" class="info-row">
+            <text class="label">支付时间</text>
+            <text class="value">{{ formatDateTime(order.paidAt) }}</text>
+          </view>
+          <view v-if="order.paymentChannel" class="info-row">
+            <text class="label">支付渠道</text>
+            <text class="value">{{ getPaymentChannelText(order.paymentChannel) }}</text>
+          </view>
+          <view v-if="order.transactionId" class="info-row">
+            <text class="label">交易号</text>
+            <view class="value-row">
+              <text class="value">{{ order.transactionId }}</text>
+              <text class="copy-btn" @click="handleCopy(order.transactionId)">复制</text>
+            </view>
+          </view>
+          <view v-if="order.refundedAt" class="info-row">
+            <text class="label">退款时间</text>
+            <text class="value">{{ formatDateTime(order.refundedAt) }}</text>
+          </view>
+          <view v-if="order.closedAt" class="info-row">
+            <text class="label">关闭时间</text>
+            <text class="value">{{ formatDateTime(order.closedAt) }}</text>
+          </view>
+        </UCard>
 
-      <!-- 金额明细 -->
-      <UCard class="detail-card" title="金额明细">
-        <view class="amount-row">
-          <text class="label">订单总额</text>
-          <text class="value">¥{{ formatMoney(order.totalAmount) }}</text>
-        </view>
-        <view v-if="order.paidAmount" class="amount-row total">
-          <text class="label">实付金额</text>
-          <text class="value">¥{{ formatMoney(order.paidAmount) }}</text>
-        </view>
-        <view v-if="order.refundedAmount > 0" class="amount-row">
-          <text class="label">已退款</text>
-          <text class="value">-¥{{ formatMoney(order.refundedAmount) }}</text>
-        </view>
-      </UCard>
+        <!-- 金额明细 -->
+        <UCard class="detail-card" title="金额明细">
+          <view class="amount-row">
+            <text class="label">订单总额</text>
+            <text class="value">¥{{ formatMoney(order.totalAmount) }}</text>
+          </view>
+          <view v-if="order.paidAmount" class="amount-row total">
+            <text class="label">实付金额</text>
+            <text class="value">¥{{ formatMoney(order.paidAmount) }}</text>
+          </view>
+          <view v-if="order.refundedAmount > 0" class="amount-row">
+            <text class="label">已退款</text>
+            <text class="value">-¥{{ formatMoney(order.refundedAmount) }}</text>
+          </view>
+        </UCard>
 
-      <!-- 元数据 -->
-      <UCard v-if="order.metadata && Object.keys(order.metadata).length > 0" class="detail-card" title="附加信息">
-        <view v-for="(value, key) in order.metadata" :key="key" class="info-row">
-          <text class="label">{{ key }}</text>
-          <text class="value">{{ value }}</text>
-        </view>
-      </UCard>
-    </scroll-view>
+        <!-- 元数据 -->
+        <UCard v-if="order.metadata && Object.keys(order.metadata).length > 0" class="detail-card" title="附加信息">
+          <view v-for="(value, key) in order.metadata" :key="key" class="info-row">
+            <text class="label">{{ key }}</text>
+            <text class="value">{{ value }}</text>
+          </view>
+        </UCard>
+      </scroll-view>
+    </UPageState>
 
     <!-- 底部操作栏 -->
     <view v-if="order && (canCancel || canPay)" class="footer-actions">
@@ -97,6 +95,7 @@
       />
     </view>
 
+    <UDialog />
     <UPrivacyPopup />
   </view>
 </template>
@@ -110,10 +109,11 @@ definePage({
 
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
+import { useDialog } from '@/composables';
 import { usePayment } from '@/composables/usePayment';
 import { useGlobalStore, useOrderStore } from '@/store';
 import { OrderStatus, getOrderStatusText, getOrderStatusClass, getPaymentChannelText } from '@/constants';
-import { confirm, formatMoney } from '@/utils';
+import { formatMoney } from '@/utils';
 import { formatDateTime } from '@/utils/datetime';
 import { ApiError } from '@/api';
 
@@ -127,6 +127,7 @@ const loadError = ref<'notFound' | 'failed' | null>(null);
 const order = computed(() => orderStore.currentOrder);
 
 const { paying, pay, handlePayResult } = usePayment();
+const dialog = useDialog();
 
 // 是否可以取消
 const canCancel = computed(() => order.value?.status === OrderStatus.UNPAID);
@@ -179,7 +180,7 @@ function handleCopy(text: string) {
 
 // 取消订单
 async function handleCancel() {
-  const confirmed = await confirm({
+  const confirmed = await dialog.confirm({
     title: '提示',
     content: '确定要取消该订单吗？',
   });
@@ -215,10 +216,6 @@ async function handlePay() {
   box-sizing: border-box;
   flex: 1;
   padding: 24rpx;
-}
-
-.detail-error {
-  flex: 1;
 }
 
 .detail-card {

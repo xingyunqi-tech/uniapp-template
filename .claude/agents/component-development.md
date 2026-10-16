@@ -162,6 +162,11 @@ easycom: {
 | `UDivider` | 分割线 |
 | `USticky` | 吸顶容器 |
 | `UBackTop` | 回到顶部 |
+| `UForm` | 表单容器（规则校验） |
+| `UInput` | 输入框 |
+| `UTextarea` | 多行输入框 |
+| `UPageState` | 页面状态容器 |
+| `UDialog` | 页面内对话框（配合 `useDialog`） |
 
 另有布局组件 `AuthLayout`（认证页面布局），同样通过 easycom 自动导入。
 

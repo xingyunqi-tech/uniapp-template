@@ -24,6 +24,14 @@ export { default as UEmpty } from './UEmpty/index.vue';
 export { default as UCard } from './UCard/index.vue';
 export type { UCardProps } from './UCard/index.vue';
 
+// 页面状态容器 (加载中、出错重试、空状态)
+export { default as UPageState } from './UPageState/index.vue';
+export type { UPageStateProps, PageStateType } from './UPageState/index.vue';
+
+// 页面内对话框 (配合 useDialog 调用)
+export { default as UDialog } from './UDialog/index.vue';
+export type { UDialogProps } from './UDialog/index.vue';
+
 // 分页列表状态容器 (首次加载、空状态、失败重试、加载更多)
 export { default as UList } from './UList/index.vue';
 export type { UListProps } from './UList/index.vue';
@@ -87,6 +95,19 @@ export { default as UBackTop } from './UBackTop/index.vue';
 export type { UBackTopProps } from './UBackTop/index.vue';
 
 // ==================== 表单组件 ====================
+// 表单容器 (规则校验)
+export { default as UForm } from './UForm/index.vue';
+export type { UFormProps, FormRule, FormRules, FormRuleTrigger } from './UForm/index.vue';
+export type { UFormExpose } from './UForm/context';
+
+// 输入框 (跟随主题、字数统计)
+export { default as UInput } from './UInput/index.vue';
+export type { UInputProps, InputType } from './UInput/index.vue';
+
+// 多行输入框
+export { default as UTextarea } from './UTextarea/index.vue';
+export type { UTextareaProps } from './UTextarea/index.vue';
+
 // 表单项包装组件
 export { default as UFormItem } from './UFormItem/index.vue';
 export type { FormItemRule } from './UFormItem/index.vue';

@@ -116,6 +116,8 @@ interface Props {
   placeholder?: string;
   /** 输入框默认值 */
   dialogValue?: string;
+  /** 对话框是否显示取消按钮 */
+  showCancel?: boolean;
   /** 取消按钮文字 */
   cancelText?: string;
   /** 确认按钮文字 */
@@ -142,6 +144,7 @@ const props = withDefaults(defineProps<Props>(), {
   content: '',
   placeholder: '请输入',
   dialogValue: '',
+  showCancel: true,
   cancelText: '取消',
   confirmText: '确定',
   beforeConfirm: undefined,
@@ -192,6 +195,7 @@ const dialogProps = computed(() => ({
   placeholder: props.placeholder,
   modelValue: props.dialogValue,
   beforeClose: true,
+  showClose: props.showCancel,
   cancelText: props.cancelText,
   confirmText: props.confirmText,
   borderRadius: 'var(--radius-lg)',

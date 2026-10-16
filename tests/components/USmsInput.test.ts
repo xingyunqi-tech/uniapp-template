@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { mount } from '@vue/test-utils';
 import USmsInput from '@/components/USmsInput/index.vue';
+import UInput from '@/components/UInput/index.vue';
 
 vi.mock('@/store/modules/global', () => ({
   useGlobalStore: () => ({ primaryColor: '#1989fa' }),
@@ -19,7 +20,7 @@ const EasyinputStub = defineComponent({
   template: '<div />',
 });
 
-const global = { stubs: { 'uni-easyinput': EasyinputStub } };
+const global = { stubs: { 'uni-easyinput': EasyinputStub }, components: { UInput } };
 
 beforeEach(() => {
   vi.useFakeTimers();

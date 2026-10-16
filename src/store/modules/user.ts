@@ -11,6 +11,9 @@ import type {
 import { ADMIN_ROLE_ID, ROLE, ROLE_LEVEL } from '@/constants/permission';
 import { clearAuthTokens, getAuthTokens, saveAuthTokens } from '@/utils/auth-token';
 import { encryptPassword } from '@/utils/crypto';
+import { isAlipay, isWeixin } from '@/utils/platform';
+import { getAlipayAuthCode } from '@/utils/alipay-pay';
+import { AUTO_SILENT_LOGIN } from '@/constants/system';
 import { useAddressStore } from './address';
 import { useFavoriteStore } from './favorite';
 import { useFeedbackStore } from './feedback';
@@ -33,7 +36,9 @@ import {
   deleteCurrentUser,
   refreshToken as apiRefreshToken,
   isTransientError,
+  ApiError,
   type User,
+  type RequestOptions,
   type AuthUpdateDto,
   type AuthDeleteAccountDto,
   AuthSendCodeDtoType,
@@ -62,6 +67,23 @@ function mapUserToUserInfo(user: User): UserInfo {
   };
 }
 
+/** 启动阶段的请求：不提示错误，401 不触发全局跳转登录页 */
+const SILENT_REQUEST: RequestOptions = { showError: false, skipAuthHandling: true };
+
+function isUnauthorized(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
+function getWechatLoginCode(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    uni.login({
+      provider: 'weixin',
+      success: res => (res.code ? resolve(res.code) : reject(new Error('未获取到微信登录 code'))),
+      fail: reject,
+    });
+  });
+}
+
 /**
  * 用户状态管理 Store
  * 管理用户登录状态、token、用户信息等
@@ -80,6 +102,9 @@ export const useUserStore = defineStore(
     const tokenExpires = ref<number>(storedTokens.tokenExpires);
     /** 用户信息 - 由 Pinia persist 管理 */
     const userInfo = ref<UserInfo | null>(null);
+    /** 启动时的登录态恢复是否进行中 */
+    const sessionPending = ref(false);
+    let sessionPromise: Promise<void> | null = null;
 
     // ==================== Getters ====================
     /** 是否已登录 */
@@ -357,6 +382,79 @@ export const useUserStore = defineStore(
       resetUserState();
     }
 
+    /**
+     * 已有 Token 时刷新用户信息：401 先刷新 Token 重试一次，凭证失效只清理本地登录态，其他错误保留本地缓存
+     */
+    async function refreshSessionUser(): Promise<void> {
+      const startToken = token.value;
+      let requestToken = startToken;
+      let user: User;
+      try {
+        user = await getCurrentUser(SILENT_REQUEST);
+      } catch (error) {
+        if (!isUnauthorized(error)) return;
+        let freshToken: string | null;
+        try {
+          freshToken = await refreshToken();
+        } catch {
+          return;
+        }
+        if (!freshToken) {
+          if (token.value === startToken) resetUserState();
+          return;
+        }
+        requestToken = freshToken;
+        try {
+          user = await getCurrentUser(SILENT_REQUEST);
+        } catch (retryError) {
+          if (isUnauthorized(retryError) && token.value === freshToken) resetUserState();
+          return;
+        }
+      }
+      if (token.value && token.value === requestToken) setUserInfo(mapUserToUserInfo(user));
+    }
+
+    /**
+     * 无 Token 时用小程序登录凭证静默登录，失败不提示
+     */
+    async function silentLogin(): Promise<void> {
+      let response: Awaited<ReturnType<typeof loginWithWechat>>;
+      if (isWeixin()) {
+        const code = await getWechatLoginCode();
+        response = await loginWithWechat({ code, type: AuthWechatLoginDtoType.mini_app }, SILENT_REQUEST);
+      } else if (isAlipay()) {
+        const authCode = await getAlipayAuthCode();
+        response = await loginWithAlipay({ authCode }, SILENT_REQUEST);
+      } else {
+        return;
+      }
+      // 期间用户已手动登录时以手动登录为准
+      if (!token.value) handleLoginResponse(response);
+    }
+
+    async function restoreSession(): Promise<void> {
+      sessionPending.value = true;
+      try {
+        if (token.value) {
+          await refreshSessionUser();
+        } else if (AUTO_SILENT_LOGIN) {
+          await silentLogin();
+        }
+      } catch {
+        // 静默失败，保持未登录
+      } finally {
+        sessionPending.value = false;
+      }
+    }
+
+    /**
+     * 启动时恢复登录态（同一次启动只执行一次），返回的 Promise 在登录态确定后 resolve，不会 reject
+     */
+    function ensureSession(): Promise<void> {
+      if (!sessionPromise) sessionPromise = restoreSession();
+      return sessionPromise;
+    }
+
     // ==================== 权限检查方法 ====================
     /**
      * 检查是否拥有指定角色
@@ -409,6 +507,7 @@ export const useUserStore = defineStore(
       refreshTokenValue,
       tokenExpires,
       userInfo,
+      sessionPending,
       // Getters
       isLoggedIn,
       role,
@@ -433,6 +532,7 @@ export const useUserStore = defineStore(
       resetUserState,
       logout,
       deleteAccount,
+      ensureSession,
       // 权限检查
       hasRole,
       hasRoleOrAbove,

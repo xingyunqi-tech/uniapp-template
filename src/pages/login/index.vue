@@ -10,29 +10,21 @@
 
     <!-- 登录表单 -->
     <view class="auth-form">
-      <uni-easyinput
+      <UInput
         v-model="formData.phone"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
         placeholder="请输入手机号"
         prefix-icon="phone"
         type="number"
         :maxlength="PHONE_LENGTH"
-        :clearable="true"
       />
 
       <!-- 密码登录 -->
-      <uni-easyinput
+      <UInput
         v-if="loginType === 'password'"
         v-model="formData.password"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
         type="password"
         placeholder="请输入密码"
         prefix-icon="locked"
-        :clearable="true"
       />
 
       <!-- 验证码登录 -->
@@ -114,7 +106,7 @@ import { useUserStore } from '@/store/modules/user';
 import { AuthSendCodeDtoType } from '@/api';
 import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { EASYINPUT_PLACEHOLDER_STYLE, EASYINPUT_STYLES, PAGES, PHONE_LENGTH } from '@/constants';
+import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue } from '@/utils';
 import { getPathFromUrl, isTabBarPage } from '@/utils/router';
 import { getAlipayAuthCode } from '@/utils/alipay-pay';

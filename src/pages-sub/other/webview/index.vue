@@ -10,15 +10,24 @@
     <web-view v-if="url && !error" :src="url" @message="handleMessage" @load="handleLoad" @error="handleError" />
 
     <!-- 加载失败状态 -->
-    <view v-if="error" class="error-state">
-      <UEmpty type="error" text="页面加载失败">
-        <view class="error-actions">
-          <UButton v-if="url" type="primary" size="medium" text="重新加载" @click="handleRetry" />
-          <UButton size="medium" text="返回上一页" @click="handleBack" />
+    <UPageState
+      v-if="error"
+      class="error-state"
+      :error="true"
+      error-text="页面加载失败"
+      error-type="error"
+      :show-retry="false"
+    >
+      <template #error-action>
+        <view class="error-extra">
+          <view class="error-actions">
+            <UButton v-if="url" type="primary" size="medium" text="重新加载" @click="handleRetry" />
+            <UButton size="medium" text="返回上一页" @click="handleBack" />
+          </view>
+          <text class="error-desc">{{ errorMessage }}</text>
         </view>
-      </UEmpty>
-      <text class="error-desc">{{ errorMessage }}</text>
-    </view>
+      </template>
+    </UPageState>
   </view>
 </template>
 
@@ -302,6 +311,12 @@ function handleBack() {
   justify-content: center;
   padding: 48rpx;
   background: var(--color-bg);
+
+  .error-extra {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
   .error-desc {
     margin-top: 16rpx;

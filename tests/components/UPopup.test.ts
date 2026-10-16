@@ -14,7 +14,11 @@ const UniPopupStub = defineComponent({
 });
 
 const UniPopupDialogStub = defineComponent({
-  props: { modelValue: { type: String, default: '' }, mode: { type: String, default: 'base' } },
+  props: {
+    modelValue: { type: String, default: '' },
+    mode: { type: String, default: 'base' },
+    showClose: { type: Boolean, default: true },
+  },
   emits: ['confirm', 'close'],
   setup(props, { slots }) {
     return () =>
@@ -111,6 +115,14 @@ describe('UPopup', () => {
     popup.vm.$emit('change', { show: false });
 
     expect(wrapper.emitted('update:modelValue')).toEqual([[true], [false]]);
+  });
+
+  it('showCancel 透传为对话框的 showClose，默认显示', () => {
+    const plain = mount(UPopup, { props: { type: 'dialog' }, global });
+    const single = mount(UPopup, { props: { type: 'dialog', showCancel: false }, global });
+
+    expect(plain.findComponent<typeof UniPopupDialogStub>('.uni-popup-dialog').props('showClose')).toBe(true);
+    expect(single.findComponent<typeof UniPopupDialogStub>('.uni-popup-dialog').props('showClose')).toBe(false);
   });
 
   it('未传默认插槽时不向对话框转发插槽', () => {

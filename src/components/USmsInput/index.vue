@@ -4,16 +4,12 @@
     内置倒计时功能，支持手动/自动开始倒计时
   -->
   <view class="u-sms-input">
-    <uni-easyinput
+    <UInput
       :model-value="modelValue"
       :placeholder="placeholder"
-      :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
       :prefix-icon="prefixIcon"
-      :styles="EASYINPUT_STYLES"
-      :primary-color="globalStore.primaryColor"
       type="number"
       :maxlength="maxlength"
-      :clearable="true"
       @update:model-value="$emit('update:modelValue', $event)"
     />
     <button
@@ -35,9 +31,8 @@ definePage({
 });
 
 import { computed } from 'vue';
-import { EASYINPUT_PLACEHOLDER_STYLE, EASYINPUT_STYLES, SMS_CODE_LENGTH } from '@/constants/form';
+import { SMS_CODE_LENGTH } from '@/constants/form';
 import { useCountdown } from '@/composables';
-import { useGlobalStore } from '@/store/modules/global';
 
 defineOptions({
   name: 'USmsInput',
@@ -89,8 +84,6 @@ const emit = defineEmits<{
   'update:modelValue': [value: string];
   send: [];
 }>();
-
-const globalStore = useGlobalStore();
 
 // 使用 useCountdown composable 管理倒计时
 const {
@@ -162,10 +155,6 @@ defineExpose({
   display: flex;
   gap: var(--spacing-base);
   align-items: center;
-
-  :deep(.uni-easyinput) {
-    flex: 1;
-  }
 
   .u-sms-btn {
     flex-shrink: 0;

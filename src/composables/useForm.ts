@@ -1,12 +1,18 @@
 import { ref, reactive, shallowReactive, computed, type Ref, type ComputedRef } from 'vue';
-import { validateValue, type ValidationRule, type ValidationResult } from '@/utils/validator';
+import {
+  cloneFormValue,
+  hasRequiredRule,
+  toRuleArray,
+  validateRules,
+  type FormModel,
+  type FormRule,
+} from '@/utils/form-rules';
 
 /**
- * 表单验证规则 (扩展 ValidationRule，支持 formData 上下文)
+ * useForm 校验规则，与 UForm 的 FormRule 相同，validator 仅支持同步返回
  */
-export interface FormRule<T = unknown> extends Omit<ValidationRule, 'validator'> {
-  /** 自定义验证函数 (支持访问 formData) */
-  validator?: (value: T, formData: Record<string, unknown>) => boolean | string;
+export interface UseFormRule<M = FormModel> extends Omit<FormRule<M>, 'validator' | 'trigger'> {
+  validator?(value: unknown, model: M): boolean | string;
 }
 
 /**
@@ -35,7 +41,7 @@ export interface UseFormOptions<T extends Record<string, unknown>> {
   /** 初始值 */
   initialValues: T;
   /** 验证规则 */
-  rules?: Partial<Record<keyof T, FormRule>>;
+  rules?: Partial<Record<keyof T, UseFormRule<T> | UseFormRule<T>[]>>;
   /** 验证触发时机: 'change' | 'blur' | 'submit' */
   validateTrigger?: 'change' | 'blur' | 'submit';
 }
@@ -71,77 +77,16 @@ export interface UseFormReturn<T extends Record<string, unknown>> {
   handleSubmit: (onSubmit: (values: T) => Promise<void> | void) => Promise<void>;
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (value === null || typeof value !== 'object') return false;
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
-}
-
-/**
- * 深拷贝数组与普通对象，其他值原样返回
- */
-function cloneValue<V>(value: V): V {
-  if (Array.isArray(value)) {
-    return value.map(item => cloneValue(item)) as V;
-  }
-  if (isPlainObject(value)) {
-    const result: Record<string, unknown> = {};
-    for (const key of Object.keys(value)) {
-      result[key] = cloneValue(value[key]);
-    }
-    return result as V;
-  }
-  return value;
-}
-
-/**
- * 将 FormRule 转换为 ValidationRule 数组
- */
-function formRuleToValidationRules<T>(
-  rule: FormRule<T>,
-  value: T,
-  formData: Record<string, unknown>,
-): ValidationRule[] {
-  const rules: ValidationRule[] = [];
-
-  // 基础规则
-  if (rule.required) {
-    rules.push({ required: true, message: rule.message });
-  }
-
-  if (rule.minLength !== undefined) {
-    rules.push({ minLength: rule.minLength, message: rule.message });
-  }
-
-  if (rule.maxLength !== undefined) {
-    rules.push({ maxLength: rule.maxLength, message: rule.message });
-  }
-
-  if (rule.pattern) {
-    rules.push({ pattern: rule.pattern, message: rule.message });
-  }
-
-  // 自定义验证器 (封装为 ValidationRule 格式)
-  if (rule.validator) {
-    rules.push({
-      validator: () => rule.validator!(value, formData),
-      message: rule.message,
-    });
-  }
-
-  return rules;
-}
-
 /**
  * 表单管理 Composable
- * @description 统一表单状态管理、验证、提交，复用 utils/validator 验证逻辑
+ * @description 统一表单状态管理、验证、提交，校验逻辑与 UForm 共用 utils/form-rules
  * @example
  * ```ts
  * const { formData, errors, isValid, validate, handleSubmit } = useForm({
  *   initialValues: { phone: '', password: '' },
  *   rules: {
  *     phone: { required: true, pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' },
- *     password: { required: true, minLength: 6, message: '密码至少6位' }
+ *     password: [{ required: true, message: '请输入密码' }, { min: 6, message: '密码至少6位' }],
  *   }
  * });
  *
@@ -155,10 +100,14 @@ function formRuleToValidationRules<T>(
  * ```
  */
 export function useForm<T extends Record<string, unknown>>(options: UseFormOptions<T>): UseFormReturn<T> {
-  const { initialValues, rules = {} as Partial<Record<keyof T, FormRule>>, validateTrigger = 'submit' } = options;
+  const {
+    initialValues,
+    rules = {} as Partial<Record<keyof T, UseFormRule<T> | UseFormRule<T>[]>>,
+    validateTrigger = 'submit',
+  } = options;
 
   // 表单数据
-  const formData = reactive<T>(cloneValue(initialValues)) as T;
+  const formData = reactive<T>(cloneFormValue(initialValues)) as T;
 
   // 初始值快照 (用于判断是否有改动)
   const initialSnapshot = JSON.stringify(initialValues);
@@ -189,19 +138,9 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
    */
   function validateField(field: keyof T): FieldValidation {
     const fieldKey = field as string;
-    const value = formData[field];
-    const rule = rules[field] as FormRule | undefined;
+    const message = validateRules(formData[field], toRuleArray(rules[field]), formData) as string;
 
-    if (!rule) {
-      return { valid: true, message: '' };
-    }
-
-    // 转换为 ValidationRule 数组并验证
-    const validationRules = formRuleToValidationRules(rule, value, formData as Record<string, unknown>);
-    const result: ValidationResult = validateValue(value, validationRules);
-
-    if (!result.valid) {
-      const message = result.message || '验证失败';
+    if (message) {
       ensureError(fieldKey).value = message;
       return { valid: false, message };
     }
@@ -242,8 +181,7 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
     }
     // 同时检查是否所有必填字段都有值
     for (const key of Object.keys(rules) as Array<keyof T>) {
-      const rule = rules[key] as FormRule | undefined;
-      if (rule?.required) {
+      if (hasRequiredRule(rules[key])) {
         const value = formData[key];
         const isEmpty =
           value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
@@ -259,7 +197,7 @@ export function useForm<T extends Record<string, unknown>>(options: UseFormOptio
    * 重置表单
    */
   function reset() {
-    Object.assign(formData, cloneValue(initialValues));
+    Object.assign(formData, cloneFormValue(initialValues));
     clearErrors();
   }
 

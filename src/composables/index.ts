@@ -20,3 +20,4 @@ export * from './useLoading';
 export * from './usePermission';
 export * from './useSearchHistory';
 export * from './useStatusBar';
+export * from './useDialog';

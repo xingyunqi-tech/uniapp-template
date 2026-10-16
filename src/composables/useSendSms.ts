@@ -1,8 +1,8 @@
 import { ref, watch, onUnmounted } from 'vue';
-import { isPhone } from '@/utils/validator';
+import { phoneRules, smsCodeRules, validateRulesSync, type FormRule } from '@/utils/form-rules';
 import { storage } from '@/utils/storage';
 import { useCountdown } from './useCountdown';
-import { SMS_CODE_LENGTH, SMS_COUNTDOWN_SECONDS } from '@/constants/form';
+import { SMS_COUNTDOWN_SECONDS } from '@/constants/form';
 
 export interface UseSendSmsOptions {
   /** 倒计时秒数，默认 60 */
@@ -38,6 +38,12 @@ const SMS_DEADLINE_KEY = 'sms_countdown_deadline';
 function readDeadlines(): Record<string, number> {
   const data = storage.get<Record<string, number>>(SMS_DEADLINE_KEY);
   return data && typeof data === 'object' ? data : {};
+}
+
+function checkWithToast(value: string, rules: FormRule[]): boolean {
+  const message = validateRulesSync(value, rules, {});
+  if (message) uni.showToast({ title: message, icon: 'none' });
+  return !message;
 }
 
 function writeDeadline(key: string, deadline: number): void {
@@ -76,38 +82,14 @@ export function useSendSms(options: UseSendSmsOptions = {}): UseSendSmsReturn {
   // 标记组件是否已卸载，防止异步操作完成后更新状态
   let isUnmounted = false;
 
-  /**
-   * 验证手机号格式
-   */
+  /** 验证手机号格式，失败时 Toast 提示 */
   function validatePhone(phone: string): boolean {
-    if (!phone) {
-      uni.showToast({ title: '请输入手机号', icon: 'none' });
-      return false;
-    }
-
-    if (!isPhone(phone)) {
-      uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-      return false;
-    }
-
-    return true;
+    return checkWithToast(phone, phoneRules());
   }
 
-  /**
-   * 验证验证码格式
-   */
+  /** 验证验证码格式，失败时 Toast 提示 */
   function validateCode(code: string): boolean {
-    if (!code) {
-      uni.showToast({ title: '请输入验证码', icon: 'none' });
-      return false;
-    }
-
-    if (code.length !== SMS_CODE_LENGTH || !/^\d+$/.test(code)) {
-      uni.showToast({ title: `验证码为${SMS_CODE_LENGTH}位数字`, icon: 'none' });
-      return false;
-    }
-
-    return true;
+    return checkWithToast(code, smsCodeRules());
   }
 
   function restore(phone: string): boolean {

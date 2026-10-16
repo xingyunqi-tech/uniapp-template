@@ -19,6 +19,25 @@ function onPage(fullPath: string) {
   getCurrentPagesMock.mockReturnValue([{ route: path.slice(1), options, $page: { fullPath } }]);
 }
 
+/** 模拟启动时登录态恢复进行中，返回结束恢复的函数 */
+function pendingSession() {
+  const store = useUserStore();
+  let finish: (loggedIn: boolean) => Promise<void> = async () => {};
+  store.sessionPending = true;
+  store.ensureSession = vi.fn(
+    () =>
+      new Promise<void>(resolve => {
+        finish = async loggedIn => {
+          if (loggedIn) store.setToken('token');
+          store.sessionPending = false;
+          resolve();
+          await Promise.resolve();
+        };
+      }),
+  );
+  return (loggedIn: boolean) => finish(loggedIn);
+}
+
 describe('guardCurrentPage', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -60,6 +79,27 @@ describe('guardCurrentPage', () => {
     guardCurrentPage();
 
     expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
+  it('登录态恢复中进入受保护页时等待恢复，登录成功则不跳转', async () => {
+    const finish = pendingSession();
+    onPage('/pages-sub/order/detail/index?id=1');
+
+    guardCurrentPage();
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+    await finish(true);
+
+    expect(uni.redirectTo).not.toHaveBeenCalled();
+  });
+
+  it('登录态恢复中进入受保护页，恢复后仍未登录时跳转登录页', async () => {
+    const finish = pendingSession();
+    onPage('/pages-sub/order/detail/index?id=1');
+
+    guardCurrentPage();
+    await finish(false);
+
+    expect(uni.redirectTo).toHaveBeenCalledWith({ url: loginWithRedirect('/pages-sub/order/detail/index?id=1') });
   });
 });
 
@@ -157,6 +197,18 @@ describe('路由拦截器', () => {
 
     expect(result).toBe(false);
     expect(fail).toHaveBeenCalledWith({ errMsg: 'switchTab:fail intercepted' });
+  });
+
+  it('登录态恢复中跳转受保护页时拦截，恢复登录后重新发起跳转', async () => {
+    const finish = pendingSession();
+
+    const result = invokers.get('navigateTo')?.({ url: '/pages-sub/order/list/index' });
+    vi.runAllTimers();
+    expect(result).toBe(false);
+    expect(uni.navigateTo).not.toHaveBeenCalled();
+    await finish(true);
+
+    expect(uni.navigateTo).toHaveBeenCalledWith({ url: '/pages-sub/order/list/index' });
   });
 
   it('switchTab 未登录时打开登录页并携带 redirect', () => {

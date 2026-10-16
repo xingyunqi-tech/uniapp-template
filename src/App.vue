@@ -34,6 +34,9 @@ onLaunch(options => {
   globalStore.initTheme();
   globalStore.initLocale();
 
+  // 后台恢复登录态，不阻塞启动
+  useUserStore().ensureSession();
+
   // 初始化全局网络状态监听
   setupNetworkListener({
     offlineMessage: '网络已断开，请检查网络设置',

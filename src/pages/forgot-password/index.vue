@@ -13,61 +13,51 @@
       </view>
     </view>
 
-    <!-- 第一步：验证手机号 -->
-    <view v-if="step === 1" class="auth-form">
-      <uni-easyinput
-        v-model="formData.phone"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        placeholder="请输入手机号"
-        prefix-icon="phone"
-        type="number"
-        :maxlength="PHONE_LENGTH"
-        :clearable="true"
-      />
+    <UForm ref="formRef" :model="formData" :rules="rules">
+      <!-- 第一步：验证手机号 -->
+      <view v-if="step === 1" class="auth-form">
+        <UInput
+          v-model="formData.phone"
+          placeholder="请输入手机号"
+          prefix-icon="phone"
+          type="number"
+          :maxlength="PHONE_LENGTH"
+        />
 
-      <USmsInput
-        v-model="formData.code"
-        :countdown="sms.countdown.value"
-        :is-counting="sms.isCounting.value"
-        @send="handleSendCode"
-      />
+        <USmsInput
+          v-model="formData.code"
+          :countdown="sms.countdown.value"
+          :is-counting="sms.isCounting.value"
+          @send="handleSendCode"
+        />
 
-      <UButton class="submit-btn" type="primary" block text="下一步" @click="handleNext" />
-    </view>
+        <UButton class="submit-btn" type="primary" block text="下一步" @click="handleNext" />
+      </view>
 
-    <!-- 第二步：设置新密码 -->
-    <view v-else class="auth-form">
-      <uni-easyinput
-        v-model="formData.newPassword"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        type="password"
-        :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
-        prefix-icon="locked"
-        :clearable="true"
-      />
+      <!-- 第二步：设置新密码 -->
+      <view v-else class="auth-form">
+        <UInput
+          v-model="formData.newPassword"
+          type="password"
+          :placeholder="`请输入新密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
+          prefix-icon="locked"
+        />
 
-      <uni-easyinput
-        v-model="formData.confirmPassword"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        type="password"
-        placeholder="请再次输入新密码"
-        prefix-icon="locked"
-        :clearable="true"
-      />
+        <UInput
+          v-model="formData.confirmPassword"
+          type="password"
+          placeholder="请再次输入新密码"
+          prefix-icon="locked"
+        />
 
-      <!-- 密码强度提示 -->
-      <UPasswordStrength v-if="formData.newPassword" :password="formData.newPassword" />
+        <!-- 密码强度提示 -->
+        <UPasswordStrength v-if="formData.newPassword" :password="formData.newPassword" />
 
-      <UButton class="submit-btn" type="primary" block :loading="submitting" @click="handleReset">
-        {{ submitting ? '提交中...' : '重置密码' }}
-      </UButton>
-    </view>
+        <UButton class="submit-btn" type="primary" block :loading="submitting" @click="handleReset">
+          {{ submitting ? '提交中...' : '重置密码' }}
+        </UButton>
+      </view>
+    </UForm>
 
     <!-- 返回登录 -->
     <view class="link-row">
@@ -86,18 +76,13 @@ definePage({
 });
 
 import { reactive, ref, toRef } from 'vue';
+import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, useSafeBack, useSendSms, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import {
-  EASYINPUT_PLACEHOLDER_STYLE,
-  EASYINPUT_STYLES,
-  PAGES,
-  PHONE_LENGTH,
-  PASSWORD_MIN_LENGTH,
-  PASSWORD_MAX_LENGTH,
-} from '@/constants';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
 import { ApiError, AuthSendCodeDtoType } from '@/api';
+import { phoneRules, smsCodeRules, type FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 
@@ -138,6 +123,30 @@ const sms = useSendSms({
 // 密码强度
 const pwdStrength = usePasswordStrength(toRef(formData, 'newPassword'));
 
+const formRef = ref<UFormExpose | null>(null);
+
+const rules: FormRules<typeof formData> = {
+  phone: phoneRules(),
+  code: smsCodeRules(),
+  newPassword: [
+    { required: true, message: '请输入新密码' },
+    {
+      min: PASSWORD_MIN_LENGTH,
+      max: PASSWORD_MAX_LENGTH,
+      message: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`,
+    },
+    { validator: () => pwdStrength.hasLetter.value && pwdStrength.hasNumber.value, message: '密码需包含字母和数字' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码' },
+    {
+      validator: (value, model) => value === model.newPassword,
+      message: '两次输入的密码不一致',
+      deps: ['newPassword'],
+    },
+  ],
+};
+
 // 发送验证码
 async function handleSendCode() {
   const success = await sms.send(formData.phone);
@@ -147,39 +156,14 @@ async function handleSendCode() {
 }
 
 // 校验手机号和验证码格式，验证码在重置密码时由后端校验
-function handleNext() {
-  if (!sms.validatePhone(formData.phone)) return;
-  if (!sms.validateCode(formData.code)) return;
+async function handleNext() {
+  if (!(await formRef.value?.validate(['phone', 'code']))) return;
   step.value = 2;
 }
 
 // 重置密码
-function handleReset() {
-  if (!formData.newPassword) {
-    uni.showToast({ title: '请输入新密码', icon: 'none' });
-    return;
-  }
-
-  if (formData.newPassword.length < PASSWORD_MIN_LENGTH || formData.newPassword.length > PASSWORD_MAX_LENGTH) {
-    uni.showToast({ title: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`, icon: 'none' });
-    return;
-  }
-
-  if (!pwdStrength.hasLetter.value || !pwdStrength.hasNumber.value) {
-    uni.showToast({ title: '密码需包含字母和数字', icon: 'none' });
-    return;
-  }
-
-  if (!formData.confirmPassword) {
-    uni.showToast({ title: '请再次输入密码', icon: 'none' });
-    return;
-  }
-
-  if (formData.newPassword !== formData.confirmPassword) {
-    uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
-    return;
-  }
-
+async function handleReset() {
+  if (!(await formRef.value?.validate(['newPassword', 'confirmPassword']))) return;
   resetAction.execute();
 }
 

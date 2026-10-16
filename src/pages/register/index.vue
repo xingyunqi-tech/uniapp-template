@@ -1,52 +1,37 @@
 <template>
   <AuthLayout title="创建账号" card-title="手机号注册" :class="globalStore.themeClass">
     <!-- 注册表单 -->
-    <view class="auth-form">
-      <uni-easyinput
-        v-model="formData.phone"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        placeholder="请输入手机号"
-        prefix-icon="phone"
-        type="number"
-        :maxlength="PHONE_LENGTH"
-        :clearable="true"
-      />
+    <UForm ref="formRef" :model="formData" :rules="rules">
+      <view class="auth-form">
+        <UInput
+          v-model="formData.phone"
+          placeholder="请输入手机号"
+          prefix-icon="phone"
+          type="number"
+          :maxlength="PHONE_LENGTH"
+        />
 
-      <USmsInput
-        v-model="formData.code"
-        :countdown="sms.countdown.value"
-        :is-counting="sms.isCounting.value"
-        @send="handleSendCode"
-      />
+        <USmsInput
+          v-model="formData.code"
+          :countdown="sms.countdown.value"
+          :is-counting="sms.isCounting.value"
+          @send="handleSendCode"
+        />
 
-      <uni-easyinput
-        v-model="formData.password"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        type="password"
-        :placeholder="`请输入密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
-        prefix-icon="locked"
-        :clearable="true"
-      />
+        <UInput
+          v-model="formData.password"
+          type="password"
+          :placeholder="`请输入密码（${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位）`"
+          prefix-icon="locked"
+        />
 
-      <uni-easyinput
-        v-model="formData.confirmPassword"
-        :styles="EASYINPUT_STYLES"
-        :placeholder-style="EASYINPUT_PLACEHOLDER_STYLE"
-        :primary-color="globalStore.primaryColor"
-        type="password"
-        placeholder="请再次输入密码"
-        prefix-icon="locked"
-        :clearable="true"
-      />
+        <UInput v-model="formData.confirmPassword" type="password" placeholder="请再次输入密码" prefix-icon="locked" />
 
-      <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleRegister">
-        {{ loading ? '注册中...' : '注册' }}
-      </UButton>
-    </view>
+        <UButton class="submit-btn" type="primary" block :loading="loading" @click="handleRegister">
+          {{ loading ? '注册中...' : '注册' }}
+        </UButton>
+      </view>
+    </UForm>
 
     <!-- 登录链接 -->
     <view class="link-row">
@@ -70,18 +55,13 @@ definePage({
 });
 
 import { reactive, ref } from 'vue';
+import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, useRouter, useSafeBack, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import {
-  EASYINPUT_PLACEHOLDER_STYLE,
-  EASYINPUT_STYLES,
-  PAGES,
-  PHONE_LENGTH,
-  PASSWORD_MIN_LENGTH,
-  PASSWORD_MAX_LENGTH,
-} from '@/constants';
+import { PAGES, PHONE_LENGTH, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/constants';
 import { AuthSendCodeDtoType } from '@/api';
+import { phoneRules, smsCodeRules, type FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
 
@@ -122,39 +102,24 @@ const sms = useSendSms({
   phone: () => formData.phone,
 });
 
-// 表单验证
-function validateForm(): boolean {
-  if (!sms.validatePhone(formData.phone)) return false;
+const formRef = ref<UFormExpose | null>(null);
 
-  if (!sms.validateCode(formData.code)) return false;
-
-  if (!formData.password) {
-    uni.showToast({ title: '请输入密码', icon: 'none' });
-    return false;
-  }
-
-  if (formData.password.length < PASSWORD_MIN_LENGTH || formData.password.length > PASSWORD_MAX_LENGTH) {
-    uni.showToast({ title: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`, icon: 'none' });
-    return false;
-  }
-
-  if (!formData.confirmPassword) {
-    uni.showToast({ title: '请再次输入密码', icon: 'none' });
-    return false;
-  }
-
-  if (formData.password !== formData.confirmPassword) {
-    uni.showToast({ title: '两次输入的密码不一致', icon: 'none' });
-    return false;
-  }
-
-  if (!agreed.value) {
-    uni.showToast({ title: '请阅读并同意用户协议', icon: 'none' });
-    return false;
-  }
-
-  return true;
-}
+const rules: FormRules<typeof formData> = {
+  phone: phoneRules(),
+  code: smsCodeRules(),
+  password: [
+    { required: true, message: '请输入密码' },
+    {
+      min: PASSWORD_MIN_LENGTH,
+      max: PASSWORD_MAX_LENGTH,
+      message: `密码长度应为${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH}位`,
+    },
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码' },
+    { validator: (value, model) => value === model.password, message: '两次输入的密码不一致', deps: ['password'] },
+  ],
+};
 
 // 发送验证码
 async function handleSendCode() {
@@ -165,8 +130,12 @@ async function handleSendCode() {
 }
 
 // 处理注册
-function handleRegister() {
-  if (!validateForm()) return;
+async function handleRegister() {
+  if (!(await formRef.value?.validate())) return;
+  if (!agreed.value) {
+    uni.showToast({ title: '请阅读并同意用户协议', icon: 'none' });
+    return;
+  }
   registerAction.execute();
 }
 

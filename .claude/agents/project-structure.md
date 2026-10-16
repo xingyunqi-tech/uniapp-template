@@ -193,6 +193,17 @@ src/components/
 │   └── index.vue
 ├── UBackTop/               # 回到顶部
 │   └── index.vue
+├── UForm/                  # 表单容器（规则校验）
+│   ├── index.vue
+│   └── context.ts
+├── UInput/                 # 输入框
+│   └── index.vue
+├── UTextarea/              # 多行输入框
+│   └── index.vue
+├── UPageState/             # 页面状态容器
+│   └── index.vue
+├── UDialog/                # 页面内对话框（配合 useDialog）
+│   └── index.vue
 └── AuthLayout/             # 认证页面布局
     └── index.vue
 ```
