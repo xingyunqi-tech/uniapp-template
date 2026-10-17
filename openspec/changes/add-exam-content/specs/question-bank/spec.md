@@ -104,3 +104,13 @@
 #### Scenario: Batch publish
 - **WHEN** 管理员勾选多道待审题目批量发布
 - **THEN** 全部变为 `PUBLISHED`，材料题按整组处理
+
+#### Scenario: Delete never-published draft
+- **GIVEN** 材料题为草稿且从未发布
+- **WHEN** 管理员删除该材料题
+- **THEN** 材料连同全部小题一并删除
+
+#### Scenario: Delete previously published question
+- **GIVEN** 题目曾经发布过
+- **WHEN** 管理员删除该题目
+- **THEN** 返回 `onlyDraftDeletable`，只能下架

@@ -9,7 +9,7 @@
 
 ## Decisions
 
-- **版本存储**：`question` 表保存当前版本的冗余字段用于检索与列表；`question_version` 保存不可变快照。发布时写 v1；`DRAFT` 修改不产生版本；`EDIT` 由 service 校验不可修改 `answer`、`type`、选项 key 集合与填空空数。
+- **版本存储**：`question` 表保存当前版本的冗余字段用于检索与列表；`question_version` 保存不可变快照。发布时写 v1；`DRAFT` 修改不产生版本；`EDIT` 由 service 校验不可修改 `answer`、`type`、选项 key 集合与填空空数。小题快照记录材料版本 `materialVersion`，引用方只需记录小题版本。
 - **材料题**：材料与小题同表（`parentId` 关联），状态操作以材料为单位在一个事务内更新全部小题；小题接口拒绝单独变更状态。
 - **知识点**：物化路径 `path` + `isLeaf`；题目关联表 `question_knowledge_point` 仅允许叶子；已关联题目的节点禁止新增子节点；`questionCount` 在发布/下架/改标签时同事务增减，另提供重算脚本。
 - **去重**：`contentHash` = sha256(归一化题干 + 选项)；小题再拼接材料哈希；唯一索引 `(subjectId, contentHash)`。

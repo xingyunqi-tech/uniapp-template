@@ -1,18 +1,18 @@
 ## 1. 后端：考试与知识点（exams）
 
-- [ ] 1.1 Exam、Subject、KnowledgePoint、UserExamProfile 的 domain、实体、mapper、仓储与 migration（含部分唯一索引）
-- [ ] 1.2 公开接口：`GET /exams`、`GET /exams/:id/subjects`、`GET /subjects/:id/knowledge-points`（可选鉴权，个人进度留空，由 `add-study-tracking` 补充）
-- [ ] 1.3 目标考试接口：`/me/exam-profiles` 系列，当前考试切换与取消关注规则
-- [ ] 1.4 管理端：考试、科目上下架与 CRUD；知识点树、移动、迁移题目；`questionCount` 维护与重算脚本
-- [ ] 1.5 单元测试与 e2e
+- [x] 1.1 Exam、Subject、KnowledgePoint、UserExamProfile 的 domain、实体、mapper、仓储与 migration（含部分唯一索引）
+- [x] 1.2 公开接口：`GET /exams`、`GET /exams/:id/subjects`、`GET /subjects/:id/knowledge-points`（可选鉴权，个人进度留空，由 `add-study-tracking` 补充）
+- [x] 1.3 目标考试接口：`/me/exam-profiles` 系列，当前考试切换与取消关注规则
+- [x] 1.4 管理端：考试、科目上下架与 CRUD；知识点树、移动、迁移题目；`questionCount` 维护与重算脚本
+- [x] 1.5 单元测试与 e2e
 
 ## 2. 后端：题目（questions）
 
-- [ ] 2.1 Question、QuestionVersion、`question_knowledge_point` 实体与 migration
-- [ ] 2.2 状态流转（材料整组）、发布写 v1、`EDIT` 生成版本与字段限制、`contentHash` 去重
-- [ ] 2.3 管理端题目接口：列表筛选、详情、新建、编辑、版本历史、提交、驳回、发布、下架、批量发布
-- [ ] 2.4 用户与公开 DTO 排除 `answer`、`analysis`
-- [ ] 2.5 单元测试（版本、去重、材料整组流转）与 e2e
+- [x] 2.1 Question、QuestionVersion、`question_knowledge_point` 实体与 migration
+- [x] 2.2 状态流转（材料整组）、发布写 v1、`EDIT` 生成版本与字段限制、`contentHash` 去重
+- [x] 2.3 管理端题目接口：列表筛选、详情、新建、编辑、版本历史、提交、驳回、发布、下架、批量发布
+- [x] 2.4 用户与公开 DTO 排除 `answer`、`analysis`
+- [x] 2.5 单元测试（版本、去重、材料整组流转）与 e2e
 
 ## 3. 后端：试卷（papers）
 

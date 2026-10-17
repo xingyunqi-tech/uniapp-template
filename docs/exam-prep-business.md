@@ -215,7 +215,7 @@ erDiagram
 | statAnswered      | number   | 全站首次作答人次                                             |
 | statCorrect       | number   | 全站首次作答正确人次                                         |
 
-**QuestionVersion**：`questionId`、`version`、`type`、`stem`、`options`、`answer`、`analysis`、`material`、`audioFileId`、`knowledgePointIds`、`changeType`（`PUBLISH` / `EDIT` / `ERRATA`）、`createdAt`；唯一键 `(questionId, version)`。
+**QuestionVersion**：`questionId`、`version`、`type`、`stem`、`options`、`answer`、`analysis`、`material`、`audioFileId`、`knowledgePointIds`、`materialVersion`（小题快照对应的材料版本，材料与独立题为空）、`changeType`（`PUBLISH` / `EDIT` / `ERRATA`）、`createdAt`；唯一键 `(questionId, version)`。
 
 - 首次发布写入 v1（`PUBLISH`）；发布前的 `DRAFT` 修改不产生版本。
 - 发布后每次修改生成新版本；渲染按引用方记录的版本读取 `QuestionVersion`。
@@ -845,7 +845,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 | 考试         | `GET/POST /admin/exams`、`GET/PATCH/DELETE /admin/exams/:id`、`POST /admin/exams/:id/publish`、`POST /admin/exams/:id/offline` | `content:manage` |
 | 科目         | `GET/POST /admin/subjects`、`GET/PATCH/DELETE /admin/subjects/:id`、`POST /admin/subjects/:id/publish`、`POST /admin/subjects/:id/offline` | `content:manage` |
 | 知识点       | `GET /admin/subjects/:id/knowledge-points`（树）、`POST /admin/knowledge-points`、`PATCH/DELETE /admin/knowledge-points/:id`、`POST /admin/knowledge-points/:id/move`、`POST /admin/knowledge-points/:id/migrate-questions` | `content:manage` |
-| 题目         | `GET/POST /admin/questions`、`GET/PATCH /admin/questions/:id`、`GET /admin/questions/:id/versions`、`POST /admin/questions/:id/submit` | `content:manage` |
+| 题目         | `GET/POST /admin/questions`、`GET/PATCH /admin/questions/:id`、`GET /admin/questions/:id/versions`、`POST /admin/questions/:id/submit`、`DELETE /admin/questions/:id`（仅从未发布的草稿） | `content:manage`（列表与详情 `content:manage` 或 `content:review`） |
 | 审核         | `POST /admin/questions/:id/publish`、`POST /admin/questions/:id/reject`、`POST /admin/questions/:id/offline`、`POST /admin/questions/batch-publish` | `content:review` |
 | 勘误         | `POST /admin/questions/:id/errata`、`GET /admin/errata`、`GET /admin/errata/:id`（进度）        | `content:review` |
 | 纠错与举报   | `GET /admin/question-reports`（含题目纠错与 AI 内容举报，按类型筛选）、`GET /admin/question-reports/:id`、`PATCH /admin/question-reports/:id`（状态、回复、关联勘误） | `content:review` |

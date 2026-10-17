@@ -86,3 +86,13 @@
 #### Scenario: Migrate questions
 - **WHEN** 管理员把知识点 K 的题目迁移到叶子节点 L
 - **THEN** 题目关联改为 L，两节点的题目数同步更新
+
+#### Scenario: Delete non-draft exam or subject
+- **GIVEN** 考试或科目已发布或已下架
+- **WHEN** 管理员删除该考试或科目
+- **THEN** 拒绝删除，只能通过下架隐藏
+
+#### Scenario: Delete exam or subject with children
+- **GIVEN** 草稿考试下仍有科目，或草稿科目下仍有知识点
+- **WHEN** 管理员删除该考试或科目
+- **THEN** 拒绝删除并提示先删除下级
