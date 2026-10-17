@@ -16,12 +16,12 @@
 
 ## 3. 后端：试卷（papers）
 
-- [ ] 3.1 Paper、PaperQuestion、PaperRule、DailyQuestionSet 实体与 migration
-- [ ] 3.2 管理端试卷接口：CRUD、`PUT /admin/papers/:id/questions`、发布、下架、复制；冻结校验
-- [ ] 3.3 管理端组卷规则 CRUD 与试生成预览
-- [ ] 3.4 每日一练题组定时生成（`runExclusive`）、兜底生成、管理端查看与重新生成
-- [ ] 3.5 公开接口：试卷列表与概要（过滤他人 `GENERATED`）、每日一练概要、游客试做与判分（IP 限流）
-- [ ] 3.6 单元测试与 e2e
+- [x] 3.1 Paper、PaperQuestion、PaperRule、DailyQuestionSet 实体与 migration
+- [x] 3.2 管理端试卷接口：CRUD、`PUT /admin/papers/:id/questions`、发布、下架、复制；冻结校验
+- [x] 3.3 管理端组卷规则 CRUD 与试生成预览
+- [x] 3.4 每日一练题组定时生成（`runExclusive`）、兜底生成、管理端查看与重新生成
+- [x] 3.5 公开接口：试卷列表与概要（过滤他人 `GENERATED`）、每日一练概要、游客试做与判分（IP 限流）
+- [x] 3.6 单元测试与 e2e
 
 ## 4. 后端：导入
 

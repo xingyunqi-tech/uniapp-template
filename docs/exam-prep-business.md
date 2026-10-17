@@ -318,6 +318,7 @@ erDiagram
    - 分位查询索引：`(paperId, scoringScheme, isFirstAttempt, status, score)`。
 5. 列表展示用户最近一次成绩与最高分。
 6. `DailyQuestionSet` 当日已有用户会话时不允许重新生成。
+7. 抽题以材料为单位不拆分，单个材料可使实际题量超出目标题量。
 
 #### 接口
 
@@ -849,7 +850,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 | 审核         | `POST /admin/questions/:id/publish`、`POST /admin/questions/:id/reject`、`POST /admin/questions/:id/offline`、`POST /admin/questions/batch-publish` | `content:review` |
 | 勘误         | `POST /admin/questions/:id/errata`、`GET /admin/errata`、`GET /admin/errata/:id`（进度）        | `content:review` |
 | 纠错与举报   | `GET /admin/question-reports`（含题目纠错与 AI 内容举报，按类型筛选）、`GET /admin/question-reports/:id`、`PATCH /admin/question-reports/:id`（状态、回复、关联勘误） | `content:review` |
-| 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage` |
+| 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`DELETE /admin/papers/:id`（仅草稿）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage` |
 | 组卷规则     | `GET/POST /admin/paper-rules`、`GET/PATCH/DELETE /admin/paper-rules/:id`、`POST /admin/paper-rules/:id/preview`（试生成，不落库） | `content:manage` |
 | 每日一练     | `GET /admin/subjects/:id/daily-sets?from=&to=`、`POST /admin/subjects/:id/daily-sets/:date/regenerate` | `content:manage` |
 | 导入         | `POST /admin/imports`（上传导入包，返回任务 ID）、`GET /admin/imports`、`GET /admin/imports/:id`（进度、统计）、`GET /admin/imports/:id/errors`（错误行报告下载） | `content:manage` |
