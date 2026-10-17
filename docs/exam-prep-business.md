@@ -198,7 +198,7 @@ erDiagram
 | subjectId         | uuid     |                                                              |
 | type              | enum     | 见题型表                                                     |
 | currentVersion    | number   | 当前生效版本号，首次发布时为 1                               |
-| stem              | text     | 当前版本题干，Markdown + LaTeX（`$...$`）；图片以 `file:{fileId}` 占位，接口输出时解析为可访问地址 |
+| stem              | text     | 当前版本题干，Markdown + LaTeX（`$...$`）；图片以 `file:{fileId}` 占位，用户端接口输出时解析为可访问地址，管理端保留原文（见 4.11） |
 | options           | json?    | `[{ key: 'A', content: string }]`                            |
 | answer            | json     | 结构随题型变化                                               |
 | analysis          | text?    | 解析，Markdown                                               |
@@ -841,6 +841,8 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 
 列表接口均支持分页、关键字与状态筛选，返回含 `DRAFT`、`OFFLINE` 的全部数据。
 
+管理端返回的题目内容（题目列表、详情、版本历史，试卷详情、组卷预览与每日一练题组中的题干）保留 `file:{fileId}` 原文，供编辑后原样回写；另附 `fileUrls`（小写文件 ID → 访问地址，覆盖所返回文本中的引用与音频）用于预览，题目与版本另有 `audioUrl`。
+
 | 资源         | 接口                                                                                           | 权限             |
 | ------------ | ---------------------------------------------------------------------------------------------- | ---------------- |
 | 考试         | `GET/POST /admin/exams`、`GET/PATCH/DELETE /admin/exams/:id`、`POST /admin/exams/:id/publish`、`POST /admin/exams/:id/offline` | `content:manage` |
@@ -852,8 +854,8 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 | 纠错与举报   | `GET /admin/question-reports`（含题目纠错与 AI 内容举报，按类型筛选）、`GET /admin/question-reports/:id`、`PATCH /admin/question-reports/:id`（状态、回复、关联勘误） | `content:review` |
 | 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`DELETE /admin/papers/:id`（仅草稿）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage` |
 | 组卷规则     | `GET/POST /admin/paper-rules`、`GET/PATCH/DELETE /admin/paper-rules/:id`、`POST /admin/paper-rules/:id/preview`（试生成，不落库） | `content:manage` |
-| 每日一练     | `GET /admin/subjects/:id/daily-sets?from=&to=`、`POST /admin/subjects/:id/daily-sets/:date/regenerate` | `content:manage` |
-| 导入         | `POST /admin/imports`（上传导入包，返回任务 ID）、`GET /admin/imports`、`GET /admin/imports/:id`（进度、统计）、`GET /admin/imports/:id/errors`（错误行报告下载） | `content:manage` |
+| 每日一练     | `GET /admin/subjects/:id/daily-sets?from=&to=`（含按顺序的题目摘要：`id`、`parentId`、`type`、`stem`、`fileUrls`）、`POST /admin/subjects/:id/daily-sets/:date/regenerate` | `content:manage` |
+| 导入         | `POST /admin/imports`（上传导入包，返回任务 ID）、`GET /admin/imports`、`GET /admin/imports/:id`（进度、统计）、`GET /admin/imports/:id/errors`（错误行报告 xlsx 文件流） | `content:manage` |
 | AI 用量      | `GET /admin/ai/usage?from=&to=`                                                                | `ai:admin`       |
 | 监控         | `GET /admin/monitor/queues`、`GET /admin/monitor/alerts`                                       | `system:metrics` |
 | 远程配置     | 复用现有 `GET /config/admin/:key`、`PUT /config/:key`（AI 额度、熔断、错题阈值、补交窗口等）     | `system:config`  |
@@ -863,7 +865,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 后台导入与后端脚本 `pnpm import:content <file>` 共用同一套异步导入服务：
 
 - 导入为 BullMQ 任务，记录 `ImportJob`：`id`、`fileId`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`publishOnImport`、`total`、`succeeded`、`failed`、`skipped`（内容已存在、未写入的单元数）、`errorReportFileId`、`failureReason`（任务整体失败的错误键）、`createdBy`、`startedAt`、`finishedAt`。
-- `POST /admin/imports` 可直接上传导入包，也可传已上传（`purpose=import`）文件的 `fileId`；导入后直接发布还需 `content:review` 权限。
+- `POST /admin/imports` 可直接上传导入包（`multipart/form-data` 的 `file`），也可传已上传（`purpose=import`）文件的 `fileId`（JSON）；导入后直接发布还需 `content:review` 权限。
 - 复用 service 层校验与 `contentHash` 去重；行内带 ID 且已存在时更新，更新行留空的单元格表示保持原值（新建行留空用默认值）；已发布题目内容有变化时生成 `EDIT` 新版本；修改已发布题目答案、题型、选项 key 或空数的行判为错误，答案须走勘误。
 - 新建行内容与已有题目重复时视为已存在：`questionKey` / `materialKey` 绑定到已有题目供试卷引用，计入 `skipped`，不记错误行；已存在的知识点路径、未填 `id` 且同科目已有同名试卷的试卷行同样计入 `skipped`。
 - 材料与其全部小题为一个导入单元，任一行出错则整组失败；试卷所引用的题目任一失败则该试卷失败。
