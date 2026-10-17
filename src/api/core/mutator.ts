@@ -53,6 +53,7 @@ export const customMutator = async <T>(
     loadingText,
     showError,
     skipAuthHandling,
+    withDeviceId,
   } = {
     ...config,
     ...options,
@@ -64,7 +65,7 @@ export const customMutator = async <T>(
     ...config.headers,
     ...options?.headers,
   };
-  const meta: RequestMeta = { showLoading, loadingText, showError, skipAuthHandling };
+  const meta: RequestMeta = { showLoading, loadingText, showError, skipAuthHandling, withDeviceId };
   const methodConfig = { headers, params, meta };
 
   let response: ApiResponse;

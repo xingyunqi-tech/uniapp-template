@@ -32,6 +32,8 @@ export const STORAGE_KEYS = {
   VIEW_HISTORY: 'view_history',
   /** 草稿数据 */
   DRAFT: 'draft',
+  /** 设备标识 */
+  DEVICE_ID: 'deviceId',
 } as const;
 
 /**

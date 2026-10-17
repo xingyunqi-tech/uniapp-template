@@ -14,6 +14,11 @@ export interface Config {
   value: ConfigValue;
   /** 公开配置可被所有登录用户读取 */
   isPublic: boolean;
-  createdAt: string;
-  updatedAt: string;
+  /**
+   * 未写入过的登记项返回默认值，时间为 null
+   * @nullable
+   */
+  createdAt: string | null;
+  /** @nullable */
+  updatedAt: string | null;
 }

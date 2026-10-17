@@ -36,6 +36,8 @@ export {
   setDefaultAddress,
 } from './generated/addresses/addresses';
 
+export { getMonitorQueues, getMonitorAlerts, acknowledgeMonitorAlert } from './generated/admin/admin';
+
 export {
   alipayControllerCreateMobilePaymentV1,
   alipayControllerCreateMiniPaymentV1,

@@ -58,3 +58,6 @@ yarn.lock
 *.tar.gz
 node_build_info.sh
 version.html
+
+# Orval 生成的聚合导出，统一入口为 src/api/index.ts
+src/api/generated/index.ts

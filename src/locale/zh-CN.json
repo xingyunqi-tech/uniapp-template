@@ -22,5 +22,22 @@
   "settings.followSystem": "跟随系统",
   "settings.light": "亮色",
   "settings.dark": "暗黑",
-  "settings.international": "国际化"
+  "settings.international": "国际化",
+
+  "businessError.sessionTakenOver": "本次考试已在其他设备继续作答",
+  "businessError.sessionClosed": "本次练习已结束，无法继续作答",
+  "businessError.questionInMockInProgress": "该题正在模考中，请交卷后再操作",
+  "businessError.answerHidden": "当前暂不可查看答案",
+  "businessError.selfAssessmentNotAllowed": "当前状态不可自评",
+  "businessError.questionNotAccessible": "无权访问该题目",
+  "businessError.noQuestionsAvailable": "暂无可练习的题目",
+  "businessError.generateLimitExceeded": "今日生成试卷次数已用完",
+  "businessError.aiUnavailable": "AI 服务暂不可用，请稍后再试",
+  "businessError.aiQuotaExceeded": "今日 AI 使用额度已用完",
+  "businessError.aiRateLimited": "AI 请求过于频繁，请稍后再试",
+  "businessError.aiConsentRequired": "请先同意 AI 服务声明",
+  "businessError.wechatBindingRequired": "请先绑定微信后使用 AI 功能",
+  "businessError.contentBlocked": "内容未通过安全检测，请修改后重试",
+  "businessError.errataInProgress": "该题已有处理中的勘误",
+  "businessError.answerChangeNotAllowed": "已发布题目的答案、题型或选项不可修改"
 }

@@ -10,6 +10,8 @@ import { PAGES, TAB_BAR_PAGES, WHITE_LIST } from '@/constants/pages';
 import { getCurrentFullPath, getPathFromUrl, isInWhiteList } from '@/utils/router';
 import { i18n } from '@/utils/locale';
 import { LOCALE_TYPE } from '@/constants/system';
+import { getDeviceId } from '@/utils/device';
+import { getBusinessErrorKey, getBusinessErrorMessage, type BusinessErrorKey } from '@/utils/business-error';
 
 // ==================== 类型定义 ====================
 
@@ -31,14 +33,17 @@ export interface RequestMeta {
   showError?: boolean;
   /** 401 时不刷新 Token、不清理登录态，直接抛错（刷新、登出等认证接口使用） */
   skipAuthHandling?: boolean;
+  /** 携带设备标识 deviceId：写入请求体，GET/HEAD 或请求体非普通对象时写入查询参数 */
+  withDeviceId?: boolean;
 }
 
-/** 请求层抛出的错误，携带 HTTP 状态码与业务码 */
+/** 请求层抛出的错误，携带 HTTP 状态码、业务码与已登记的业务错误键 */
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status?: number,
     public readonly code?: number,
+    public readonly errorKey?: BusinessErrorKey,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -169,6 +174,36 @@ function handleUnauthorized(message: string, showError: boolean, expired: boolea
 
 // ==================== 请求辅助 ====================
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+/** 将 deviceId 写入查询参数，已序列化的参数串中已包含时不重复追加 */
+function appendDeviceIdParam(config: { params?: unknown }, deviceId: string): void {
+  const { params } = config;
+  if (typeof params === 'string') {
+    if (/(^|&)deviceId=/.test(params)) return;
+    const pair = `deviceId=${encodeURIComponent(deviceId)}`;
+    config.params = params ? `${params}&${pair}` : pair;
+    return;
+  }
+  config.params = { ...(isPlainObject(params) ? params : {}), deviceId };
+}
+
+/** 将 deviceId 合并进请求体；GET/HEAD 或请求体非普通对象时写入查询参数 */
+function attachDeviceId(method: { type: string; data?: unknown; config: { params?: unknown } }): void {
+  const deviceId = getDeviceId();
+  if (method.type === 'GET' || method.type === 'HEAD') {
+    appendDeviceIdParam(method.config, deviceId);
+  } else if (method.data === undefined || method.data === null) {
+    method.data = { deviceId };
+  } else if (isPlainObject(method.data)) {
+    method.data = { ...method.data, deviceId };
+  } else {
+    appendDeviceIdParam(method.config, deviceId);
+  }
+}
+
 /** 序列化查询参数：键值做 URL 编码，忽略 undefined/null，数组展开为同名多项 */
 export function serializeParams(params: Record<string, unknown>): string {
   return Object.entries(params)
@@ -253,18 +288,23 @@ const alovaInstance = createAlova({
     // 2. 语言
     method.config.headers[LANGUAGE_HEADER] = getRequestLanguage();
 
-    // 3. 查询参数编码
+    // 3. 设备标识
+    if (meta?.withDeviceId) {
+      attachDeviceId(method);
+    }
+
+    // 4. 查询参数编码
     const { params } = method.config;
     if (params && typeof params === 'object') {
       (method.config as { params: unknown }).params = serializeParams(params);
     }
 
-    // 4. 只合并进行中的 GET/HEAD 请求
+    // 5. 只合并进行中的 GET/HEAD 请求
     if (method.type !== 'GET' && method.type !== 'HEAD') {
       method.config.shareRequest = false;
     }
 
-    // 5. 显示 Loading
+    // 6. 显示 Loading
     if (meta?.showLoading) {
       showRequestLoading(method, meta.loadingText || '加载中...');
     }
@@ -328,14 +368,19 @@ const alovaInstance = createAlova({
       // HTTP 错误
       if (statusCode >= 400) {
         const body = data as ApiResponse | undefined;
-        const msg = getFirstFieldError(body?.data) || body?.message || `请求失败(${statusCode})`;
+        const errorKey = getBusinessErrorKey(body?.data);
+        const msg =
+          (errorKey && getBusinessErrorMessage(errorKey)) ||
+          getFirstFieldError(body?.data) ||
+          body?.message ||
+          `请求失败(${statusCode})`;
         if (meta?.showError !== false) {
           showRequestToast(msg);
         }
-        if (!CLIENT_ERROR_STATUSES.includes(statusCode)) {
+        if (!errorKey && !CLIENT_ERROR_STATUSES.includes(statusCode)) {
           reportApiError(method.url, method.type, msg, statusCode);
         }
-        throw new ApiError(msg, statusCode);
+        throw new ApiError(msg, statusCode, undefined, errorKey);
       }
 
       if (data === '' || data === null || data === undefined) {

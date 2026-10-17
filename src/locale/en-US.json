@@ -22,5 +22,22 @@
   "settings.followSystem": "Follow system",
   "settings.light": "Light",
   "settings.dark": "Dark",
-  "settings.international": "Internationalization"
+  "settings.international": "Internationalization",
+
+  "businessError.sessionTakenOver": "This exam has been continued on another device",
+  "businessError.sessionClosed": "This session has ended and can no longer be answered",
+  "businessError.questionInMockInProgress": "This question is in an ongoing mock exam. Please submit it first",
+  "businessError.answerHidden": "The answer is not available yet",
+  "businessError.selfAssessmentNotAllowed": "Self-assessment is not allowed in the current state",
+  "businessError.questionNotAccessible": "You do not have access to this question",
+  "businessError.noQuestionsAvailable": "No questions available",
+  "businessError.generateLimitExceeded": "Daily paper generation limit reached",
+  "businessError.aiUnavailable": "AI service is unavailable. Please try again later",
+  "businessError.aiQuotaExceeded": "Daily AI quota used up",
+  "businessError.aiRateLimited": "Too many AI requests. Please try again later",
+  "businessError.aiConsentRequired": "Please accept the AI service terms first",
+  "businessError.wechatBindingRequired": "Please bind WeChat to use AI features",
+  "businessError.contentBlocked": "Content failed the safety check. Please revise and try again",
+  "businessError.errataInProgress": "An errata report for this question is already in progress",
+  "businessError.answerChangeNotAllowed": "The answer, type or options of a published question cannot be changed"
 }

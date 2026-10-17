@@ -7,8 +7,17 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
+import type { FileTypeVisibility } from './fileTypeVisibility';
 
 export interface FileType {
   id: string;
   path: string;
+  visibility?: FileTypeVisibility;
+  /** @nullable */
+  mimeType?: string | null;
+  /**
+   * 字节数
+   * @nullable
+   */
+  size?: number | null;
 }
