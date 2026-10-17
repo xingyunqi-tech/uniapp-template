@@ -25,12 +25,12 @@
 
 ## 4. 后端：导入
 
-- [ ] 4.1 `ImportJob` 实体与 migration、导入队列 module
-- [ ] 4.2 导入包解析（各工作表、答案写法、转义、assets 上传与 `file:{fileId}` 替换）
-- [ ] 4.3 导入单元事务写入、更新规则、错误行报告文件
-- [ ] 4.4 管理端：`POST /admin/imports`、列表、详情、错误报告下载
-- [ ] 4.5 `pnpm import:content` 脚本
-- [ ] 4.6 导入模板示例文件（行测样例：单选、材料题、试卷）与单元测试
+- [x] 4.1 `ImportJob` 实体与 migration、导入队列 module
+- [x] 4.2 导入包解析（各工作表、答案写法、转义、assets 上传与 `file:{fileId}` 替换）
+- [x] 4.3 导入单元事务写入、更新规则、错误行报告文件
+- [x] 4.4 管理端：`POST /admin/imports`、列表、详情、错误报告下载
+- [x] 4.5 `pnpm import:content` 脚本
+- [x] 4.6 导入模板示例文件（行测样例：单选、材料题、试卷）与单元测试
 
 ## 5. 运营后台
 

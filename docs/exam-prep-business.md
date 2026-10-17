@@ -862,12 +862,16 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 
 后台导入与后端脚本 `pnpm import:content <file>` 共用同一套异步导入服务：
 
-- 导入为 BullMQ 任务，记录 `ImportJob`：`id`、`fileId`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`publishOnImport`、`total`、`succeeded`、`failed`、`errorReportFileId`、`createdBy`、`startedAt`、`finishedAt`。
-- 复用 service 层校验与 `contentHash` 去重；行内带 ID 且已存在时更新，已发布题目生成 `EDIT` 新版本；修改已发布题目答案、题型、选项 key 或空数的行判为错误，答案须走勘误。
+- 导入为 BullMQ 任务，记录 `ImportJob`：`id`、`fileId`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`publishOnImport`、`total`、`succeeded`、`failed`、`skipped`（内容已存在、未写入的单元数）、`errorReportFileId`、`failureReason`（任务整体失败的错误键）、`createdBy`、`startedAt`、`finishedAt`。
+- `POST /admin/imports` 可直接上传导入包，也可传已上传（`purpose=import`）文件的 `fileId`；导入后直接发布还需 `content:review` 权限。
+- 复用 service 层校验与 `contentHash` 去重；行内带 ID 且已存在时更新，更新行留空的单元格表示保持原值（新建行留空用默认值）；已发布题目内容有变化时生成 `EDIT` 新版本；修改已发布题目答案、题型、选项 key 或空数的行判为错误，答案须走勘误。
+- 新建行内容与已有题目重复时视为已存在：`questionKey` / `materialKey` 绑定到已有题目供试卷引用，计入 `skipped`，不记错误行；已存在的知识点路径、未填 `id` 且同科目已有同名试卷的试卷行同样计入 `skipped`。
 - 材料与其全部小题为一个导入单元，任一行出错则整组失败；试卷所引用的题目任一失败则该试卷失败。
-- 可指定导入后直接发布。
+- 可指定导入后直接发布。试卷只能引用已发布的题目，含新题的包按两步导入：先导入题目并审核发布、再导入试卷；或导入时直接发布。
+- 执行超过 30 分钟或排队超过 10 分钟仍未结束的任务由定时任务置为 `FAILED`（`importInterrupted`）并告警，不自动重跑。
+- 错误行报告为 xlsx：工作表、行号、字段、错误键、说明、详情。
 
-**导入包格式**：zip 包，包含 `content.xlsx` 与 `assets/` 目录（图片、音频）。科目一律以「考试名称 + 科目名称」定位（列 `exam`、`subject`）。`content.xlsx` 含以下工作表：
+**导入包格式**：zip 包，包含 `content.xlsx`（或字段一一对应的 `content.json`）与 `assets/` 目录（图片、音频）；不含资源时也可直接导入单独的 xlsx 或 JSON 文件。科目一律以「考试名称 + 科目名称」定位（列 `exam`、`subject`）。`content.xlsx` 含以下工作表：
 
 - `knowledge_points`：`exam`、`subject`、`path`（以 `/` 分隔的层级路径）
 - `materials`：
@@ -877,6 +881,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
   | `materialKey`           | 包内唯一键，供小题引用                |
   | `id`                    | 可选，更新已有材料时填写              |
   | `exam` / `subject`      | 考试与科目                            |
+  | `stem`                  | 可选，材料题干，默认「根据以下材料回答问题。」 |
   | `material`              | 材料内容，Markdown                    |
   | `audio`                 | 可选，`assets/` 下的音频文件名        |
   | `analysis`              | 可选，材料整体解析                    |
@@ -930,7 +935,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 主观题  参考答案文本，要点写在 points 列
 ```
 
-图片在题干、选项、解析、材料中写作 `![](assets/文件名)`，导入时上传并替换为 `file:{fileId}` 占位。JSON 格式与上述字段一一对应。
+图片在题干、选项、解析、材料与材料题干中写作 `![](assets/文件名)`，导入时上传为公共文件（内容相同的公共文件直接复用）并替换为 `file:{fileId}` 占位。JSON 格式与上述字段一一对应。
 
 #### 监控告警
 
