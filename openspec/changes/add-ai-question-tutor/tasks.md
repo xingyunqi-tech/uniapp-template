@@ -23,18 +23,18 @@
 
 ## 3. 运营后台
 
-- [ ] 3.1 AI 用量与成本页
-- [ ] 3.2 纠错与举报列表支持 `ai_content` 类型展示消息内容
+- [x] 3.1 AI 用量与成本页
+- [x] 3.2 纠错与举报列表支持 `ai_content` 类型展示消息内容
 
 ## 4. 小程序
 
-- [ ] 4.1 `useChatStream`：`enableChunked`、UTF-8 流式解码、SSE 分帧、中断、按 `messageId` 恢复；单元测试
-- [ ] 4.2 AI 助教 Tab：讲题会话历史
-- [ ] 4.3 对话详情页：流式渲染（Markdown + LaTeX）、停止、追问建议、点赞点踩、举报、AI 生成标识、剩余额度
-- [ ] 4.4 答题解析页、成绩报告、错题本「问 AI」入口；`answerHidden` 提示
-- [ ] 4.5 AI 服务声明弹窗与同意上报；未绑定微信引导
+- [x] 4.1 `useChatStream`：`enableChunked`、UTF-8 流式解码、SSE 分帧、中断、按 `messageId` 恢复；单元测试
+- [x] 4.2 AI 助教 Tab：讲题会话历史
+- [x] 4.3 对话详情页：流式渲染（Markdown + LaTeX）、停止、追问建议、点赞点踩、举报、AI 生成标识、剩余额度
+- [x] 4.4 答题解析页、成绩报告、错题本「问 AI」入口；`answerHidden` 提示
+- [x] 4.5 AI 服务声明弹窗与同意上报；未绑定微信引导
 
 ## 5. 验证
 
-- [ ] 5.1 后端与小程序 lint、type-check、test、e2e 通过
+- [x] 5.1 后端与小程序 lint、type-check、test、e2e 通过
 - [ ] 5.2 真机验证：流式输出、切后台恢复、停止生成、额度用尽提示
