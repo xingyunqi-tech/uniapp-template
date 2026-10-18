@@ -24,11 +24,6 @@ name: Deploy MiniProgram
 on:
   workflow_call:
     inputs:
-      skip-check:
-        description: '调用方已完成代码检查时跳过 check'
-        required: false
-        default: false
-        type: boolean
       platform:
         description: '目标平台 (weixin / alipay / all)'
         required: false
@@ -95,17 +90,9 @@ env:
   PNPM_VERSION: '11'
 
 jobs:
-  # ==================== 代码质量检查 ====================
-  check:
-    name: Check
-    if: ${{ !inputs.skip-check }}
-    uses: ./.github/workflows/check.yml
-
   # ==================== 构建任务 ====================
   build:
     name: Build
-    needs: check
-    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}

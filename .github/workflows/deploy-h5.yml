@@ -19,11 +19,6 @@ name: Deploy H5
 on:
   workflow_call:
     inputs:
-      skip-check:
-        description: '调用方已完成代码检查时跳过 check'
-        required: false
-        default: false
-        type: boolean
       deploy:
         description: '是否部署到服务器'
         required: false
@@ -48,17 +43,9 @@ env:
   PNPM_VERSION: '11'
 
 jobs:
-  # ==================== 代码质量检查 ====================
-  check:
-    name: Check
-    if: ${{ !inputs.skip-check }}
-    uses: ./.github/workflows/check.yml
-
   # ==================== 构建任务 ====================
   build:
     name: Build H5
-    needs: check
-    if: ${{ !cancelled() && !failure() }}
     runs-on: ubuntu-latest
 
     steps:

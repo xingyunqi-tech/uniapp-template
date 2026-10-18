@@ -26,7 +26,6 @@ jobs:
     needs: check
     uses: ./.github/workflows/deploy-h5.yml
     with:
-      skip-check: true
       deploy: true
     secrets: inherit
 
@@ -35,7 +34,6 @@ jobs:
     needs: check
     uses: ./.github/workflows/deploy-mp.yml
     with:
-      skip-check: true
       platform: all
       action: upload
       optional-alipay: true
