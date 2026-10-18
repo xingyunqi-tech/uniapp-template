@@ -9,10 +9,10 @@
 
 ## Decisions
 
-- **可见性集中实现**：`AnswerVisibilityService.check(userId, questionId, context)` 统一判断前提与规则 1-4，所有返回题目内容或判分结果的接口与 AI 讲题都调用它。前提查询「用户进行中模考是否包含该题」走 `questionIds` GIN 索引，并按用户缓存进行中模考的题目集合（会话创建、交卷、放弃时失效）。
+- **可见性集中实现**：`AnswerVisibilityService.check(userId, questionId, context)` 统一判断前提与规则 1-4，所有返回题目内容或判分结果的接口与 AI 讲题都调用它。前提查询「用户进行中模考的题目集合」直接查库，走 `(userId, paperId) WHERE status = 'IN_PROGRESS' AND mode = 'MOCK'` 部分唯一索引。
 - **判分读最新答案**：判分器按 `questionId` 读取 `question` 表当前答案，不按记录版本；`questionVersion` 只决定渲染。
 - **作答写入**：
-  - 事务内 `SELECT ... FOR SHARE` 会话行，校验状态、写入窗口、设备。
+  - 事务内 `SELECT ... FOR NO KEY UPDATE` 锁定会话行，同一会话写入串行并与交卷、放弃互斥；校验状态、写入窗口、设备。
   - `MOCK` 覆盖规则：同 `deviceId` 比较 `clientSeq`；不同设备时以 `activeDeviceId` 为准。清空为软清空。
   - `answeredCount`、`correctCount` 以原子增减维护（依据写入前后的 `answer` 是否为空、`isCorrect` 变化）。
 - **首次作答**：首条非空答案写入时在同一事务内 `INSERT ... ON CONFLICT` 风格地设置 `isFirstAttempt`（部分唯一索引 `(userId, paperId) WHERE isFirstAttempt` 兜底），成功则 `attemptCount = attemptCount + 1`。
@@ -24,7 +24,7 @@
 
 ## Risks / Trade-offs
 
-- 进行中模考的前提查询在每次题目输出时执行 → 用户维度缓存
+- 进行中模考的前提查询在每次题目输出与作答时执行 → 每用户同时只有少量进行中模考，走部分唯一索引
 - 离线补交依赖客户端时间 → 已在业务文档声明只能缓解
 
 ## Migration Plan

@@ -441,7 +441,7 @@ erDiagram
 
 补充：
 
-- 创建非限时会话时，抽题排除用户 `IN_PROGRESS` 的 `MOCK` 会话中的题目。
+- 创建非限时会话时，抽题排除用户 `IN_PROGRESS` 的 `MOCK` 会话中的题目。`DAILY` 例外：题组全站固定，不排除这些题目，作答时按前提拒绝。
 - `MEMORIZE` 的 scope 不接受试卷，且遵守 `isFree`。
 - 「问 AI」使用同一判定（4.7）。
 - 不含答案的题目内容附带 `audioUrl`（材料音频的访问地址，不可访问时为空）与 `blankCount`（填空题的空数，其他题型为空），不暴露答案本身。
@@ -470,7 +470,8 @@ erDiagram
    - `deadlineAt` 之前：正常接受。
    - `deadlineAt` 至 `autoSubmitAt`：只接受当前设备 `offline = true` 且 `clientAnsweredAt ≤ deadlineAt` 的批量补交。客户端在 `deadlineAt` 本地锁定答题。该规则只能缓解、不能杜绝篡改本地时间的作弊。
    - `autoSubmitAt` 之后或会话非 `IN_PROGRESS`：拒绝，返回 `sessionClosed`。
-7. 写入在同一事务内先 `SELECT ... FOR SHARE` 会话行并校验状态，与交卷互斥。
+7. 写入在同一事务内先 `SELECT ... FOR NO KEY UPDATE` 锁定会话行并校验状态：同一会话的写入串行，并与交卷、放弃互斥。
+   - 非 `MOCK` 会话的批量写入中含有进行中模考的题目时整批拒绝（`questionInMockInProgress`），错误详情 `questionIds` 列出被拒题目，客户端剔除这些题目后重发其余作答。
 8. 客户端倒计时以接口返回的 `serverNow` 与 `deadlineAt` 校准。
 9. 未同步的作答按会话 ID 缓存在本地，重连后通过批量接口补交。
 10. **自评可用状态**：`MOCK` 会话为 `SUBMITTED`；其他模式为非 `ABANDONED`。自评后锁定；P1 中存在未结束批改任务的题不可自评。
