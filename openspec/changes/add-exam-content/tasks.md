@@ -54,7 +54,7 @@
 
 ## 7. 验证
 
-- [ ] 7.1 后端 `pnpm lint:check`、`pnpm type-check`、`pnpm test`、`pnpm test:e2e`、`migration:check` 通过
+- [x] 7.1 后端 `pnpm lint:check`、`pnpm type-check`、`pnpm test`、`pnpm test:e2e`、`migration:check` 通过
 - [ ] 7.2 小程序 `pnpm lint:check`、`pnpm type-check`、`pnpm test` 通过；微信开发者工具中验证题库与试做流程
 - [ ] 7.3 用行测样例导入包完成一次端到端导入、审核、发布、小程序浏览
 - [ ] 7.4 KaTeX 字体转存到自有 CDN 并修改 mp-html 字体地址
