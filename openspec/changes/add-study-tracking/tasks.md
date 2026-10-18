@@ -24,10 +24,10 @@
 
 ## 4. 后端：收藏与笔记
 
-- [ ] 4.1 favorites：枚举、`subjectId` 列与 migration、目标校验、关联前提、标题快照
-- [ ] 4.2 QuestionNote 实体、`PUT/DELETE /questions/:id/note`、`GET /me/question-notes`
-- [ ] 4.3 单题访问校验接入收藏与笔记关联
-- [ ] 4.4 e2e：进行中模考题目不可收藏、笔记长度
+- [x] 4.1 favorites：枚举、`subjectId` 列与 migration、目标校验、关联前提、标题快照
+- [x] 4.2 QuestionNote 实体、`PUT/DELETE /questions/:id/note`、`GET /me/question-notes`
+- [x] 4.3 单题访问校验接入收藏与笔记关联
+- [x] 4.4 e2e：进行中模考题目不可收藏、笔记长度
 
 ## 5. 小程序
 

@@ -2,7 +2,7 @@
 
 ### Requirement: Question Favorites
 
-用户 SHALL 能收藏题目与试卷；收藏题目要求该题在用户某个会话中已满足答案可见性规则 1-3 且满足免费限制；服务端 SHALL 校验目标存在并保存标题快照与科目。
+用户 SHALL 能收藏题目与试卷；收藏题目要求该题在用户某个会话中已满足答案可见性规则 1-3（免费限制在会员上线后启用，P0 不校验）；服务端 SHALL 校验目标存在并保存标题快照与科目。
 
 #### Scenario: Favorite after answering
 - **GIVEN** 用户在章节练习中已作答题目 Q
