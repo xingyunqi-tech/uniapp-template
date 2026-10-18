@@ -33,7 +33,7 @@
 
 ### Requirement: Account Data Cleanup
 
-账号注销成功后，系统 SHALL 异步清理该用户的学习数据：删除会话、作答、错题、统计、打卡、目标考试、笔记、收藏、分享记录、个人生成试卷与上传文件；纠错与举报记录 SHALL 解除用户关联并清空联系方式与图片；同意记录与聚合统计 SHALL 保留。
+账号注销成功后，系统 SHALL 异步清理该用户的学习数据：删除会话、作答、错题、统计、打卡、目标考试、笔记、收藏、分享记录、个人生成试卷、站内通知、收货地址与个人上传文件；纠错与举报记录 SHALL 解除用户关联并清空联系方式与图片；同意记录、订单、审计日志、聚合统计与内容素材 SHALL 保留。
 
 #### Scenario: Cleanup after deletion
 - **WHEN** 用户注销账号
@@ -47,6 +47,11 @@
 #### Scenario: Aggregates retained
 - **WHEN** 清理完成
 - **THEN** 题目全站作答人次与试卷参考人数不变
+
+#### Scenario: Content assets retained
+- **GIVEN** 内容管理员上传了题目图片与听力音频
+- **WHEN** 该管理员注销且清理完成
+- **THEN** 题目引用的图片与音频仍存在
 
 #### Scenario: Pending auto-submit removed
 - **GIVEN** 用户注销时有进行中的模考

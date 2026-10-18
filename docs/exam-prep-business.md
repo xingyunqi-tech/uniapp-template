@@ -972,14 +972,19 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
    | 数据                                            | 处理                                   |
    | ----------------------------------------------- | -------------------------------------- |
    | AI 对话与消息、批改任务                         | 删除                                   |
-   | 用户上传的文件（手写照片等）                    | 删除文件与记录                         |
+   | 用户上传的个人文件（头像、手写照片、反馈截图等） | 删除文件与记录；仍被外键引用的文件保留 |
    | 笔记、收藏、分享记录、目标考试、打卡            | 删除                                   |
    | 练习会话、作答记录、错题本、知识点与每日统计    | 删除                                   |
    | 本人的 `GENERATED` 试卷                         | 删除                                   |
+   | 站内通知、通知设置、收货地址、勘误受影响用户记录 | 删除                                   |
    | 待执行的自动交卷延时任务、Redis 额度 key        | 删除                                   |
    | 纠错与举报记录                                  | 保留内容，`userId` 置空并清空 `contact`、`images`（`userId` 改为可空，外键由 `CASCADE` 改为 `SET NULL`） |
    | 同意记录                                        | 保留（合规留存）                       |
+   | 订单与审计日志                                  | 保留（财务与审计留存）                 |
    | 题目全站统计、试卷参考人数                      | 保留（聚合数据，不含个人信息）         |
+   | 内容素材（题目图片、听力音频、导入素材）        | 保留：内容素材为无主文件，不属于上传者 |
+
+   清理由各模块的清理器组成（按顺序执行、各自幂等），全部成功后记录清理完成时间；最终失败时告警，管理员可通过 `POST /admin/users/:id/cleanup` 重新触发；定时任务把注销超过 30 分钟仍未完成清理的用户重新入队。已注销用户不再接收勘误通知。
 
 3. 删除作答会话后，对应用户不再计入分位样本。
 4. 个人数据导出（P2）：注销前可导出错题与笔记。
@@ -1051,7 +1056,7 @@ sequenceDiagram
 
 | 现有能力                | 用法                                     | 改造                                                                           |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| auth（微信/手机登录）   | 直接使用                                 | 注销成功后入队 `account-cleanup` 任务；新增可选鉴权 guard                      |
+| auth（微信/手机登录）   | 直接使用                                 | 注销（用户自助与管理员删除用户共用 `UsersService.remove`）后入队 `account-cleanup` 任务；新增可选鉴权 guard |
 | users                   | 用户基础信息                             | 无；AI 功能依赖 `wechatOpenId`                                                 |
 | permissions             | 新增权限                                 | 需 migration/seed 授权并同步静态映射（第 2 节）                                |
 | favorites               | 题目、试卷收藏                           | `FavoriteTargetType` 增加 `question`、`paper`；服务端校验目标存在与关联前提（4.2），并补 title 快照；新增 `subjectId` 字段用于按科目筛选 |
@@ -1060,7 +1065,7 @@ sequenceDiagram
 | notifications           | 勘误通知、批改完成、告警                 | `NotificationCategory` 增加 `STUDY`（P0）                                      |
 | wechat 订阅消息（P1）   | 批改完成、学习提醒                       | 新增 `WechatSubscribeScene` 值、模板字段映射，以及一次性授权余量记录           |
 | wechat 内容安全         | AI 输入输出与图片检测                    | `WechatService` 新增 `msgSecCheck`、`mediaCheckAsync`；新增带验签的检测回调接口，并在小程序后台配置消息推送 |
-| files                   | 题目图片、听力音频、手写照片、导入包、导出文件 | 放开音频、zip、xlsx、pdf 类型与大小限制（现仅 jpg/png/gif、5MB）；文件记录增加 `ownerUserId` 与可见性，手写照片私有读取（现 local 驱动 `GET /files/:path` 公开）；题目资源为公共读（S3 驱动现返回 1 小时预签名 URL，题目内容只存 `file:{fileId}`，输出时解析） |
+| files                   | 题目图片、听力音频、手写照片、导入包、导出文件 | 放开音频、zip、xlsx、pdf 类型与大小限制（现仅 jpg/png/gif、5MB）；文件记录增加 `ownerUserId` 与可见性，手写照片私有读取（现 local 驱动 `GET /files/:path` 公开）；题目资源为公共读（S3 驱动现返回 1 小时预签名 URL，题目内容只存 `file:{fileId}`，输出时解析）；内容素材（`content-image`、`audio` 用途上传与导入素材）为无主文件（`ownerUserId` 为空），不随上传者注销删除，导入去重只复用无主文件 |
 | config（远程配置）      | AI 额度、成本熔断、错题阈值、补交窗口、协议版本、功能开关 | 新增配置项；高频读取的配置加 Redis 缓存（现无缓存）                    |
 | queue（BullMQ）         | 自动交卷、统计、补偿、AI 批改、AI 出题、勘误、导入、注销清理 | 参照 `notification-queue` 为每个队列单独建 module，以 `ConditionalModule.registerWhen(..., isRedisEnabled)` 注册；生产环境必须开启 Redis |
 | scheduler               | 兜底自动交卷、统计补偿、放弃过期会话、清理卡住的流式消息、生成每日一练、告警检查 | 新增任务，使用 `LockService` 互斥；Redis 不可用时 `LockService` 退化为单实例锁，正确性依赖条件更新 |
@@ -1113,7 +1118,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 
 | 问题                                          | 影响                         |
 | --------------------------------------------- | ---------------------------- |
-| AI 模型选型与备案确认（候选为境内已备案模型） | `LlmProvider` 默认实现、成本 |
+| AI 模型备案信息与单价确认（已定：OpenAI 兼容协议，默认 DeepSeek） | 上线资质、成本估算 |
 | 运营后台前端技术形态与部署（开工前确定）      | 后台前端开发                 |
 | AI 免费额度与全站日预算                       | 额度配置                     |
 | 听力音频的内容来源与版权                      | 是否上线听力                 |
@@ -1135,7 +1140,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `ai.quota.grading`                 | number  | 3      | 是   | 用户每日批改次数（P1）               |
 | `ai.ratePerMinute`                 | number  | 10     | 否   | 每用户每分钟 AI 请求上限             |
 | `ai.paperGradingLimit`             | number  | 5      | 否   | 每份试卷自动批改主观题上限（P1）     |
-| `ai.model`                         | string  | —      | 否   | 当前使用的模型标识                   |
+| `ai.model`                         | string  | `deepseek-chat` | 否   | 当前使用的模型标识（OpenAI 兼容协议，默认 DeepSeek） |
 | `wrongBook.masterThreshold`        | number  | 3      | 是   | 错题连续答对阈值                     |
 | `practice.offlineSyncWindowMin`    | number  | 5      | 否   | 模考离线补交窗口（分钟）             |
 | `practice.dailySetSize`            | number  | 10     | 否   | 每日一练题量                         |

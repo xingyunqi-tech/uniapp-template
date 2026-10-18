@@ -9,7 +9,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话、错因�
 
 ## Decisions
 
-- **LLM 端口**：`LlmProvider.streamChat({ system, messages, maxTokens, signal }) → AsyncIterable<{ type: 'reasoning' | 'answer', text } | { type: 'usage', ... }>`；默认实现使用 OpenAI 兼容协议（国内主流备案模型均提供），base URL、key、模型标识走配置，便于选型后切换。
+- **LLM 端口**：`LlmProvider.streamChat({ system, messages, maxTokens, signal }) → AsyncIterable<{ type: 'reasoning' | 'answer', text } | { type: 'usage', ... }>`；默认实现使用 OpenAI 兼容协议（国内主流备案模型均提供），base URL、key、模型标识走配置，默认接入 DeepSeek（`deepseek-chat`），可切换其他兼容模型。
 - **生成与连接解耦**：发送消息时创建 `AiMessage(STREAMING)` 并启动生成任务（进程内异步执行，不依赖 HTTP 连接存活）；生成器把已送检的片段写入 Redis Stream `ai:msg:{messageId}`，SSE 连接从该 stream 读取并转发；连接断开不影响生成；客户端通过 `GET /ai/messages/:id` 获取完整结果。
 - **先送检后下发**：生成器按段落或 200 字缓冲，`msgSecCheck` 通过后才写入 stream；命中则停止上游、追加提示语、消息记为 `BLOCKED`。
 - **停止生成**：`POST /ai/messages/:id/stop` 发布到 Redis channel `ai:stop`，持有该消息生成任务的实例取消上游请求（`AbortController`）。
@@ -30,4 +30,4 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话、错因�
 
 ## Open Questions
 
-- 模型选型与单价（第 8 节）
+- 备案信息与单价（第 8 节）
