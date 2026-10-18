@@ -15,11 +15,11 @@
 - [x] 2.4 生成任务：上下文与摘要构建、按段送检、写入 Redis Stream、usage 与成本累计、`AiUsageDaily` upsert
 - [x] 2.5 SSE 接口（`@SkipResponseTransform()`，异常转 `error` 事件）与 `GET /ai/messages/:id`
 - [x] 2.6 停止生成（Redis pub/sub）、计费口径与额度退还
-- [ ] 2.7 每分钟频控、卡住消息清理任务、熔断告警
-- [ ] 2.8 反馈与举报：`/ai/messages/:id/feedback`、`/ai/messages/:id/report`（`ai_content`）
-- [ ] 2.9 注册 AI 数据清理器
-- [ ] 2.10 `GET /admin/ai/usage`、`GET /ai/quota`
-- [ ] 2.11 e2e：可见性每消息校验、额度与退还、熔断、停止、断线恢复
+- [x] 2.7 每分钟频控、卡住消息清理任务、熔断告警
+- [x] 2.8 反馈与举报：`/ai/messages/:id/feedback`、`/ai/messages/:id/report`（`ai_content`）
+- [x] 2.9 注册 AI 数据清理器
+- [x] 2.10 `GET /admin/ai/usage`、`GET /ai/quota`
+- [x] 2.11 e2e：可见性每消息校验、额度与退还、熔断、停止、断线恢复
 
 ## 3. 运营后台
 
