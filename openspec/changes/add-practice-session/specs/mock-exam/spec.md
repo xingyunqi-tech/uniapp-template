@@ -12,6 +12,12 @@
 - **WHEN** 用户选择「重新开始」
 - **THEN** 原会话置为 `ABANDONED` 后创建新会话
 
+#### Scenario: Re-enter after the auto submit time
+- **GIVEN** 用户的进行中模考已过自动交卷时间但尚未被自动交卷
+- **WHEN** 用户再次进入该试卷
+- **THEN** 系统先交卷并返回该已交卷的会话，不自动新开
+- **AND** 用户再次开考时创建新的会话
+
 ---
 
 ### Requirement: Server-Authoritative Timing
@@ -54,12 +60,16 @@
 
 ### Requirement: Offline Sync Window
 
-截止时间到补交窗口结束之间，系统 SHALL 只接受当前设备标记为离线补交且作答时间不晚于截止时间的记录；窗口结束或会话已结束后拒绝写入。
+截止时间到补交窗口结束之间，系统 SHALL 只接受当前设备标记为离线补交的批次，并逐条过滤：作答时间晚于截止时间的记录不写入，批次其余照常写入，响应返回被跳过的题目；窗口结束或会话已结束后拒绝写入。
 
 #### Scenario: Offline answers synced
 - **GIVEN** 用户在截止前 2 分钟断网并继续作答，截止后 3 分钟恢复网络
 - **WHEN** 客户端批量补交，且记录的作答时间早于截止时间
 - **THEN** 补交成功并计入成绩
+
+#### Scenario: Records after the deadline in an offline batch
+- **WHEN** 补交批次中部分记录的作答时间晚于截止时间
+- **THEN** 这些记录不写入并在响应中列为被跳过的题目，其余记录照常写入
 
 #### Scenario: Write after window
 - **WHEN** 补交窗口结束后写入

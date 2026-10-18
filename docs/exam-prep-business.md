@@ -326,7 +326,7 @@ erDiagram
 | ---- | --------------------------------- | -------- | -------------------------------------- |
 | GET  | `/subjects/:id/papers`            | 可选登录 | 试卷列表（按 type 筛选；按 year 筛选为 P1），登录时附带个人成绩 |
 | GET  | `/papers/:id`                     | 可选登录 | 试卷概要（时长、题量、分区）           |
-| GET  | `/subjects/:id/paper-rules`       | 登录     | 可用组卷模板                           |
+| GET  | `/subjects/:id/paper-rules`       | 登录     | 可用组卷模板（已发布）：`id`、`name`、`durationMin`、题量、总分 |
 | POST | `/paper-rules/:id/generate`       | 登录     | 按模板生成个人试卷，返回 `paperId`     |
 | GET  | `/subjects/:id/daily`             | 可选登录 | 当日每日一练概要，登录时附带完成情况   |
 | GET  | `/subjects/:id/daily/trial`       | 公开     | 游客试做：前 3 题（不含答案），遇材料题以完整材料为单位 |
@@ -450,7 +450,7 @@ erDiagram
 
 **创建**
 
-1. `MOCK` 按 `(userId, paperId)` 唯一：以 `INSERT ... ON CONFLICT DO NOTHING` 创建，未插入时再查询返回已有会话（断点续考）；「重新开始」需先放弃原会话。
+1. `MOCK` 按 `(userId, paperId)` 唯一：以 `INSERT ... ON CONFLICT DO NOTHING` 创建，未插入时再查询返回已有会话（断点续考）；「重新开始」需先放弃原会话。已有会话已过 `autoSubmitAt` 时先交卷，并返回该已交卷的会话（不自动新开），客户端据 `status = SUBMITTED` 展示成绩报告；再次调用创建接口时已无进行中会话，新建一场。
 2. `DAILY` 每用户每科目每天一个会话，重复进入返回同一会话；`DAILY` 没有「结束练习」、不可放弃、不参与过期清理，始终为 `IN_PROGRESS`，跨天后仍可继续作答，但不再计入当天打卡。
 3. 其他非限时会话允许并存，首页「继续练习」展示最近一个未完成会话；`lastActiveAt` 超过 7 天的非限时会话（不含 `DAILY`）由定时任务置为 `ABANDONED`。
 4. 出题排除 `OFFLINE` 题目（`MOCK` 除外）；非会员排除 `isFree = false` 的题目（P2）。
@@ -468,7 +468,7 @@ erDiagram
 5. **首次作答标记**：`MOCK` 会话写入第一条非空答案时，在同一事务内检查该用户在该试卷上是否已有 `isFirstAttempt` 会话，没有则置 `isFirstAttempt = true` 并原子自增 `Paper.attemptCount`；并发由部分唯一索引兜底。之后清空答案不回退。
 6. **限时写入窗口**（作答写入接口）：
    - `deadlineAt` 之前：正常接受。
-   - `deadlineAt` 至 `autoSubmitAt`：只接受当前设备 `offline = true` 且 `clientAnsweredAt ≤ deadlineAt` 的批量补交。客户端在 `deadlineAt` 本地锁定答题。该规则只能缓解、不能杜绝篡改本地时间的作弊。
+   - `deadlineAt` 至 `autoSubmitAt`：只接受当前设备 `offline = true` 的批量补交，并逐条过滤：`clientAnsweredAt > deadlineAt` 的记录不写入，批次其余照常写入，响应 `skippedQuestionIds` 返回被跳过的题目。客户端在 `deadlineAt` 本地锁定答题。该规则只能缓解、不能杜绝篡改本地时间的作弊。
    - `autoSubmitAt` 之后或会话非 `IN_PROGRESS`：拒绝，返回 `sessionClosed`。
 7. 写入在同一事务内先 `SELECT ... FOR NO KEY UPDATE` 锁定会话行并校验状态：同一会话的写入串行，并与交卷、放弃互斥。
    - 非 `MOCK` 会话的批量写入中含有进行中模考的题目时整批拒绝（`questionInMockInProgress`），错误详情 `questionIds` 列出被拒题目，客户端剔除这些题目后重发其余作答。
@@ -536,7 +536,7 @@ erDiagram
 
 | 方法 | 路径                                           | 说明                                                     |
 | ---- | ---------------------------------------------- | -------------------------------------------------------- |
-| POST | `/practice/sessions`                           | 创建或续考：`mode`、`subjectId`、`paperId?`、`scope`、`count?`、`deviceId` |
+| POST | `/practice/sessions`                           | 创建或续考：`mode`、`subjectId`、`paperId?`、`scope`、`count?`、`deviceId`；响应含 `isActiveDevice`（请求设备是否为当前作答设备） |
 | GET  | `/practice/sessions/:id`                       | 会话详情 + 答题卡 + `serverNow`                          |
 | GET  | `/practice/sessions/:id/questions?from=&size=` | 分段拉取题目，分段边界对齐材料；按可见性规则附带答案     |
 | PUT  | `/practice/sessions/:id/answers`               | 保存作答（单条或批量，含 `deviceId`、`clientSeq`、`clientAnsweredAt`、`offline`） |
@@ -1160,6 +1160,9 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `questionNotAccessible`    | 403  | 用户与题目无关联，或不满足收藏/笔记前提        |
 | `noQuestionsAvailable`     | 422  | 可出题数为 0                                   |
 | `generateLimitExceeded`    | 429  | 超过每日生成试卷次数                           |
+| `mockSessionBusy`          | 409  | 模考会话状态并发变化，创建/续考重试后仍未完成  |
+| `paperRequired`            | 422  | `MOCK` 未指定试卷（`errors.paperId`）          |
+| `reportNotAvailable`       | 409  | 会话未结束（或为背题模式）时查看成绩报告       |
 | `aiUnavailable`            | 503  | AI 总开关关闭或全站熔断                        |
 | `aiQuotaExceeded`          | 429  | 用户当日 AI 额度用尽                           |
 | `aiRateLimited`            | 429  | 超过每分钟请求上限                             |
