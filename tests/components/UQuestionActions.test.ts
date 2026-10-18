@@ -14,6 +14,10 @@ vi.mock('@/api', async importOriginal => ({
   ...api,
 }));
 
+const askAi = vi.hoisted(() => vi.fn());
+
+vi.mock('@/composables/useAiAccess', () => ({ useAskAi: () => ({ aiEnabled: { value: true }, askAi }) }));
+
 function note(questionId: string, content: string) {
   return {
     questionId,
@@ -25,8 +29,8 @@ function note(questionId: string, content: string) {
   };
 }
 
-async function mountActions(questionId = 'q1') {
-  const wrapper = mount(UQuestionActions, { props: { questionId } });
+async function mountActions(questionId = 'q1', sessionId?: string) {
+  const wrapper = mount(UQuestionActions, { props: { questionId, sessionId } });
   await flushPromises();
   return wrapper;
 }
@@ -34,6 +38,7 @@ async function mountActions(questionId = 'q1') {
 beforeEach(() => {
   setActivePinia(createPinia());
   Object.values(api).forEach(fn => fn.mockReset());
+  askAi.mockReset();
   api.checkFavorite.mockResolvedValue({ isFavorited: false });
   api.getMyQuestionNotes.mockResolvedValue({ list: [], total: 0, page: 1, limit: 1, totalPages: 0 });
 });
@@ -83,5 +88,13 @@ describe('UQuestionActions', () => {
     await wrapper.findAll('.u-question-actions__item')[1].trigger('click');
 
     expect(wrapper.emitted('edit-note')).toEqual([['q9']]);
+  });
+
+  it('点击问 AI 携带题目与练习会话', async () => {
+    const wrapper = await mountActions('q3', 's1');
+
+    await wrapper.findAll('.u-question-actions__item')[2].trigger('click');
+
+    expect(askAi).toHaveBeenCalledWith({ questionId: 'q3', sessionId: 's1' });
   });
 });

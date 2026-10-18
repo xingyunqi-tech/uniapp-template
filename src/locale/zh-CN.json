@@ -43,6 +43,7 @@
   "businessError.aiConsentRequired": "请先同意 AI 服务声明",
   "businessError.wechatBindingRequired": "请先绑定微信后使用 AI 功能",
   "businessError.contentBlocked": "内容未通过安全检测，请修改后重试",
+  "businessError.aiConversationOutdated": "题目已更新，请重新发起讲题",
   "businessError.errataInProgress": "该题已有处理中的勘误",
   "businessError.answerChangeNotAllowed": "已发布题目的答案、题型或选项不可修改"
 }

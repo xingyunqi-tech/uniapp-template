@@ -153,6 +153,7 @@
                     <UQuestionActions
                       v-if="feedbacks[question.id]!.solution"
                       :question-id="question.id"
+                      :session-id="sessionId"
                       @edit-note="openNote"
                     />
                   </view>

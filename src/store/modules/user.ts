@@ -15,6 +15,7 @@ import { isAlipay, isWeixin } from '@/utils/platform';
 import { getAlipayAuthCode } from '@/utils/alipay-pay';
 import { AUTO_SILENT_LOGIN } from '@/constants/system';
 import { useAddressStore } from './address';
+import { useAiStore } from './ai';
 import { useFavoriteStore } from './favorite';
 import { useFeedbackStore } from './feedback';
 import { useNotificationStore } from './notification';
@@ -355,6 +356,7 @@ export const useUserStore = defineStore(
       useShareStore().clearState();
       useFeedbackStore().reset();
       usePracticeStore().reset();
+      useAiStore().clear();
     }
 
     /**

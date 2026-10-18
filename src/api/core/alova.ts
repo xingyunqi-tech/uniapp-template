@@ -66,6 +66,9 @@ interface InternalRequestMeta extends RequestMeta {
 
 // ==================== 语言与错误信息 ====================
 
+/** 接口地址前缀 */
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '';
+
 /** 后端按此请求头选择返回语言，与后端 APP_HEADER_LANGUAGE 一致 */
 const LANGUAGE_HEADER = 'x-custom-lang';
 
@@ -133,6 +136,28 @@ export async function resolveRequestToken(skipAuthHandling = false): Promise<str
   const fresh = await refreshTokenOnce().catch(() => null);
   if (!fresh) proactiveRefreshFailedToken = token;
   return fresh || getAccessToken();
+}
+
+/** 不经过 alova 的请求（如 SSE）使用的鉴权与语言请求头，Token 即将过期时先刷新 */
+export async function resolveRequestHeaders(): Promise<Record<string, string>> {
+  const token = await resolveRequestToken();
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    [LANGUAGE_HEADER]: getRequestLanguage(),
+  };
+}
+
+/**
+ * 不经过 alova 的请求收到 401 时调用：Token 已被其他请求刷新或本次刷新成功时返回 true，可重发一次；
+ * 凭证失效时按登录过期处理并返回 false；刷新遇到网络错误时抛出
+ * @param sentAuthorization 请求发出时的 Authorization 头
+ */
+export async function recoverUnauthorized(sentAuthorization?: string): Promise<boolean> {
+  const currentToken = getAccessToken();
+  if (currentToken && sentAuthorization !== `Bearer ${currentToken}`) return true;
+  if (await refreshTokenOnce()) return true;
+  if (sentAuthorization && getAccessToken()) handleUnauthorized('认证失败，请重试', true, true);
+  return false;
 }
 
 let isRedirectingToLogin = false;
@@ -267,7 +292,7 @@ function isApiResponse(data: unknown): data is ApiResponse {
 // ==================== 创建 Alova 实例 ====================
 
 const alovaInstance = createAlova({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: API_BASE_URL,
   timeout: 30000,
 
   // UniApp 适配器（自动配置请求适配器、存储适配器、Vue Hooks）

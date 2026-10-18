@@ -9,3 +9,4 @@ export * from './payment';
 export * from './permission';
 export * from './config';
 export * from './exam';
+export * from './ai';

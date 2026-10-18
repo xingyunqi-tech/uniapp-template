@@ -62,6 +62,13 @@
           />
           <UTag v-if="item.isOffline" text="已下架" type="default" size="small" />
           <text class="wrong-card__subject">{{ subjectName(item.subjectId) }}</text>
+          <text
+            v-if="aiEnabled && !item.hiddenReason"
+            class="wrong-card__action"
+            @click.stop="askAi({ questionId: item.questionId })"
+          >
+            问 AI
+          </text>
           <text class="wrong-card__action" @click.stop="changeStatus(item)">{{ isActive ? '移出' : '恢复' }}</text>
         </view>
         <text v-if="item.hiddenReason" class="wrong-card__notice">{{ HIDDEN_REASON_TEXT[item.hiddenReason] }}</text>
@@ -144,6 +151,7 @@ import {
 } from '@/api';
 import type { TabItem, TabValue } from '@/components/UTabs/index.vue';
 import { useRouter } from '@/composables';
+import { useAskAi } from '@/composables/useAiAccess';
 import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
 import { useStudySubjects } from '@/composables/useStudySubjects';
 import { PAGES, QUESTION_TYPE_LABELS } from '@/constants';
@@ -175,6 +183,7 @@ const examStore = useExamStore();
 const wrongBookStore = useWrongBookStore();
 const router = useRouter();
 const { launching, launch } = usePracticeLauncher();
+const { aiEnabled, askAi } = useAskAi();
 
 const knowledgeVisible = ref(false);
 const knowledgeLoading = ref(false);

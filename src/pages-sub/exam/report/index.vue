@@ -95,10 +95,31 @@
             @click="redoWrong"
           />
           <UButton v-if="canRestart" text="重新开始" block plain :loading="launching" @click="restart" />
+          <UButton
+            v-if="aiEnabled && aiCandidates.length > 0"
+            text="错题问 AI"
+            block
+            plain
+            @click="aiPickerVisible = true"
+          />
           <UButton text="查看全部解析" block plain @click="goQuestion(0)" />
         </view>
       </template>
     </UPageState>
+
+    <UPopup v-model="aiPickerVisible" type="bottom" title="选择要问 AI 的题目">
+      <view class="report-card__grid">
+        <view
+          v-for="entry in aiCandidates"
+          :key="entry.questionId"
+          class="report-card__cell"
+          :class="`report-card__cell--${reportCardStatus(entry)}`"
+          @click="askWrongQuestion(entry.questionId)"
+        >
+          {{ entry.index + 1 }}
+        </view>
+      </view>
+    </UPopup>
   </view>
 </template>
 
@@ -113,6 +134,7 @@ import { computed, ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { PracticeMode, SubmitType, getPracticeSessionReport, type PracticeReportDto } from '@/api';
 import { useRouter } from '@/composables';
+import { useAskAi } from '@/composables/useAiAccess';
 import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
 import { PAGES, PRACTICE_MODE_LABELS, QUESTION_TYPE_LABELS } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
@@ -125,6 +147,7 @@ const LEGEND: CardStatus[] = ['correct', 'wrong', 'partial', 'pendingSelf', 'una
 const globalStore = useGlobalStore();
 const router = useRouter();
 const { launching, launch } = usePracticeLauncher();
+const { aiEnabled, askAi } = useAskAi();
 
 const sessionId = ref('');
 const report = ref<PracticeReportDto | null>(null);
@@ -143,6 +166,14 @@ const hiddenNotice = computed(() => {
   const hidden = report.value?.card.find(entry => entry.hiddenReason);
   return hidden?.hiddenReason ? `部分题目答案暂不可见：${HIDDEN_REASON_TEXT[hidden.hiddenReason]}` : '';
 });
+
+const aiPickerVisible = ref(false);
+const aiCandidates = computed(() =>
+  (report.value?.card ?? []).filter(entry => {
+    const status = reportCardStatus(entry);
+    return !entry.hiddenReason && (status === 'wrong' || status === 'partial');
+  }),
+);
 
 const canRestart = computed(() => report.value?.session.mode === PracticeMode.MOCK && !!report.value.session.paperId);
 
@@ -170,6 +201,11 @@ async function load() {
 
 function goQuestion(index: number) {
   router.push(PAGES.EXAM_ANSWER, { sessionId: sessionId.value, index });
+}
+
+function askWrongQuestion(questionId: string) {
+  aiPickerVisible.value = false;
+  askAi({ questionId, sessionId: sessionId.value });
 }
 
 function goSelfAssess() {

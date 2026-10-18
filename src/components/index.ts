@@ -89,6 +89,14 @@ export type { UNoteEditorProps } from './UNoteEditor/index.vue';
 export { default as UReportEditor } from './UReportEditor/index.vue';
 export type { UReportEditorProps } from './UReportEditor/index.vue';
 
+// AI 服务声明弹窗
+export { default as UAiConsentPopup } from './UAiConsentPopup/index.vue';
+export type { UAiConsentPopupProps } from './UAiConsentPopup/index.vue';
+
+// AI 回答 (思考折叠、Markdown + LaTeX、AI 生成标识、反馈与追问建议)
+export { default as UAiMessage } from './UAiMessage/index.vue';
+export type { UAiMessageProps, AiMessageView } from './UAiMessage/index.vue';
+
 // 骨架屏组件
 export { default as USkeleton } from './USkeleton/index.vue';
 export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';

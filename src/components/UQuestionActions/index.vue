@@ -1,5 +1,5 @@
 <template>
-  <!-- UQuestionActions - 题目收藏与笔记入口，只在答案可见时使用 -->
+  <!-- UQuestionActions - 题目收藏、笔记与问 AI 入口，只在答案可见时使用 -->
   <view class="u-question-actions">
     <view class="u-question-actions__bar">
       <view class="u-question-actions__item" @click="handleToggle">
@@ -13,6 +13,10 @@
       <view class="u-question-actions__item" @click="emit('edit-note', questionId)">
         <UIcon name="compose" size="34rpx" color="var(--color-text-secondary)" />
         <text class="u-question-actions__label">{{ note ? '编辑笔记' : '写笔记' }}</text>
+      </view>
+      <view v-if="aiEnabled" class="u-question-actions__item" @click="askAi({ questionId, sessionId })">
+        <UIcon name="chatbubble" size="34rpx" color="var(--color-primary)" />
+        <text class="u-question-actions__label u-question-actions__label--primary">问 AI</text>
       </view>
     </view>
     <view v-if="note" class="u-question-actions__note" @click="emit('edit-note', questionId)">
@@ -30,6 +34,7 @@ definePage({
 });
 
 import { computed, ref, watch } from 'vue';
+import { useAskAi } from '@/composables/useAiAccess';
 import { useQuestionCollectionStore } from '@/store/modules/question-collection';
 import { showToast } from '@/utils/toast';
 
@@ -40,6 +45,8 @@ defineOptions({
 export interface UQuestionActionsProps {
   /** 可作答题目 id（材料题为小题 id） */
   questionId: string;
+  /** 所在练习会话，问 AI 时按该会话判定答案可见性 */
+  sessionId?: string;
 }
 
 const props = defineProps<UQuestionActionsProps>();
@@ -49,6 +56,7 @@ const emit = defineEmits<{
 }>();
 
 const store = useQuestionCollectionStore();
+const { aiEnabled, askAi } = useAskAi();
 const toggling = ref(false);
 
 const favorited = computed(() => store.favoriteOf(props.questionId) === true);
@@ -98,6 +106,10 @@ watch(
   &__label {
     color: var(--color-text-secondary);
     font-size: 26rpx;
+
+    &--primary {
+      color: var(--color-primary);
+    }
   }
 
   &__note {

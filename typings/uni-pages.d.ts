@@ -40,7 +40,8 @@ type _LocationUrl =
   "/pages-sub/study/notes/index" |
   "/pages-sub/study/question/index" |
   "/pages-sub/study/reports/index" |
-  "/pages-sub/study/wrong-book/index";
+  "/pages-sub/study/wrong-book/index" |
+  "/pages-sub/ai/chat/index";
 
 interface NavigateToOptions {
   url: _LocationUrl;

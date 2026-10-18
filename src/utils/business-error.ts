@@ -23,6 +23,7 @@ export const BUSINESS_ERROR_KEYS = [
   'aiConsentRequired',
   'wechatBindingRequired',
   'contentBlocked',
+  'aiConversationOutdated',
   'errataInProgress',
   'answerChangeNotAllowed',
 ] as const;

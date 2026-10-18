@@ -93,6 +93,10 @@ export const PAGES = {
   /** 我的纠错 */
   STUDY_REPORTS: '/pages-sub/study/reports/index',
 
+  // ========== ai 分包 ==========
+  /** AI 讲题对话 */
+  AI_CHAT: '/pages-sub/ai/chat/index',
+
   /** 组件演示页，仅 development 模式下存在 */
   COMPONENT_DEMO: '/pages-sub/other/component-demo/index',
 } as const;
