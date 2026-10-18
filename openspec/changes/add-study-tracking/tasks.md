@@ -15,12 +15,12 @@
 
 ## 3. 后端：学习统计
 
-- [ ] 3.1 UserKnowledgeStat、UserDailyStat、StudyCheckin 实体与 migration
-- [ ] 3.2 原子写入、`recentResults` 截取、掌握度计算
-- [ ] 3.3 父节点聚合查询与缓存失效
-- [ ] 3.4 打卡判定与连续天数
-- [ ] 3.5 接口：`/me/study/overview`、`/me/study/daily`、`/me/study/knowledge`、`/me/study/weak-points`、`/me/checkins`；知识点树附带个人进度；`SMART` 模式接入薄弱点
-- [ ] 3.6 单元测试（时区、跨天、去重聚合）与 e2e
+- [x] 3.1 UserKnowledgeStat、UserDailyStat、StudyCheckin 实体与 migration
+- [x] 3.2 原子写入、`recentResults` 截取、掌握度计算
+- [x] 3.3 父节点聚合查询与缓存失效
+- [x] 3.4 打卡判定与连续天数
+- [x] 3.5 接口：`/me/study/overview`、`/me/study/daily`、`/me/study/knowledge`、`/me/study/weak-points`、`/me/checkins`；知识点树附带个人进度；`SMART` 模式接入薄弱点
+- [x] 3.6 单元测试（时区、跨天、去重聚合）与 e2e
 
 ## 4. 后端：收藏与笔记
 
