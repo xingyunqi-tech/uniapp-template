@@ -4,8 +4,8 @@
 
 ## 1. 后端：集成
 
-- [ ] 1.1 `src/integrations/llm`：`LlmProvider` 端口、OpenAI 兼容实现、配置类型、单元测试（mock 上游流）
-- [ ] 1.2 `WechatService.msgSecCheck` 与单元测试
+- [x] 1.1 `src/integrations/llm`：`LlmProvider` 端口、OpenAI 兼容实现、配置类型、单元测试（mock 上游流）
+- [x] 1.2 `WechatService.msgSecCheck` 与单元测试
 
 ## 2. 后端：AI 模块
 
