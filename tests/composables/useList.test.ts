@@ -216,3 +216,87 @@ describe('useList', () => {
     expect(list.value).toEqual([1, 2, 3, 4]);
   });
 });
+
+describe('useList 查询参数', () => {
+  interface Query {
+    subjectId: string;
+    type: string;
+  }
+
+  function setupWithParams() {
+    const calls: { params: Query & { page: number }; result: ReturnType<typeof deferred<PageResult<string>>> }[] = [];
+    const list = useList<string, Query>({
+      limit: 2,
+      fetchPage: ({ subjectId, type, page }) => {
+        const result = deferred<PageResult<string>>();
+        calls.push({ params: { subjectId, type, page }, result });
+        return result.promise;
+      },
+    });
+    return { ...list, calls };
+  }
+
+  it('加载中切换类型时重新请求，丢弃旧类型的结果', async () => {
+    const { list, refreshing, refresh, calls } = setupWithParams();
+
+    const all = refresh({ subjectId: 's1', type: 'ALL' });
+    const real = refresh({ subjectId: 's1', type: 'REAL' });
+    expect(calls.map(call => call.params.type)).toEqual(['ALL', 'REAL']);
+
+    calls[1].result.resolve({ list: ['real'], totalPages: 1 });
+    await real;
+    calls[0].result.resolve({ list: ['all'], totalPages: 1 });
+    await all;
+
+    expect(list.value).toEqual(['real']);
+    expect(refreshing.value).toBe(false);
+  });
+
+  it('加载中切换科目时重置后加载新科目，旧科目的结果不写入', async () => {
+    const { list, isEmpty, loading, refresh, reset, calls } = setupWithParams();
+
+    const first = refresh({ subjectId: 's1', type: 'ALL' });
+    reset();
+    expect(isEmpty.value).toBe(true);
+    const second = refresh({ subjectId: 's2', type: 'ALL' });
+
+    calls[0].result.resolve({ list: ['s1'], totalPages: 1 });
+    await first;
+    expect(list.value).toEqual([]);
+    expect(loading.value).toBe(true);
+
+    calls[1].result.resolve({ list: ['s2'], totalPages: 1 });
+    await second;
+    expect(list.value).toEqual(['s2']);
+  });
+
+  it('重置后以相同参数刷新时重新请求', async () => {
+    const { list, refresh, reset, calls } = setupWithParams();
+
+    const first = refresh({ subjectId: 's1', type: 'ALL' });
+    reset();
+    const second = refresh({ subjectId: 's1', type: 'ALL' });
+
+    expect(calls).toHaveLength(2);
+    calls[1].result.resolve({ list: ['a'], totalPages: 1 });
+    await second;
+    calls[0].result.resolve({ list: ['stale'], totalPages: 1 });
+    await first;
+    expect(list.value).toEqual(['a']);
+  });
+
+  it('相同参数的刷新复用进行中的请求，加载更多沿用上次的参数', async () => {
+    const { list, refresh, loadMore, calls } = setupWithParams();
+
+    const first = refresh({ subjectId: 's1', type: 'MOCK' });
+    expect(refresh({ subjectId: 's1', type: 'MOCK' })).toBe(first);
+    calls[0].result.resolve({ list: ['a', 'b'], totalPages: 2 });
+    await first;
+
+    const more = loadMore();
+    expect(calls[1].params).toEqual({ subjectId: 's1', type: 'MOCK', page: 2 });
+    calls[1].result.resolve({ list: ['c'], totalPages: 2 });
+    await more;
+    expect(list.value).toEqual(['a', 'b', 'c']);
+  });
+});

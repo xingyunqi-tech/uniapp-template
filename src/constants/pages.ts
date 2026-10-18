@@ -7,6 +7,10 @@ export const PAGES = {
   // ========== 主包页面 ==========
   /** 首页 (TabBar) */
   HOME: '/pages/index/index',
+  /** 题库 (TabBar) */
+  BANK: '/pages/bank/index',
+  /** AI 助教 (TabBar) */
+  AI: '/pages/ai/index',
   /** 我的 (TabBar) */
   MINE: '/pages/mine/index',
   /** 登录 */
@@ -57,6 +61,12 @@ export const PAGES = {
   CONTACT: '/pages-sub/other/contact/index',
   /** Webview 容器 */
   WEBVIEW: '/pages-sub/other/webview/index',
+  // ========== exam 分包 ==========
+  /** 选择考试 */
+  EXAM_SELECT: '/pages-sub/exam/select/index',
+  /** 每日一练试做 */
+  EXAM_TRIAL: '/pages-sub/exam/trial/index',
+
   /** 组件演示页，仅 development 模式下存在 */
   COMPONENT_DEMO: '/pages-sub/other/component-demo/index',
 } as const;
@@ -74,7 +84,7 @@ export enum NavTextColor {
 /**
  * TabBar 页面列表
  */
-export const TAB_BAR_PAGES = [PAGES.HOME, PAGES.MINE] as const;
+export const TAB_BAR_PAGES = [PAGES.HOME, PAGES.BANK, PAGES.AI, PAGES.MINE] as const;
 
 /**
  * TabBar 配置项
@@ -89,6 +99,18 @@ export const TAB_BAR_CONFIG = [
   },
   {
     index: 1,
+    text: '题库',
+    iconKey: 'iconBank',
+    iconActiveKey: 'iconBankActive',
+  },
+  {
+    index: 2,
+    text: 'AI 助教',
+    iconKey: 'iconAi',
+    iconActiveKey: 'iconAiActive',
+  },
+  {
+    index: 3,
     text: '我的',
     iconKey: 'iconMine',
     iconActiveKey: 'iconMineActive',
@@ -107,7 +129,7 @@ export const TAB_BAR_BADGE: {
   type: 'count' | 'dot';
 } = {
   enabled: true,
-  index: 1,
+  index: 3,
   type: 'count',
 };
 
@@ -119,7 +141,11 @@ export const WHITE_LIST = [
   PAGES.REGISTER,
   PAGES.FORGOT_PASSWORD,
   PAGES.HOME,
+  PAGES.BANK,
+  PAGES.AI,
   PAGES.MINE,
+  PAGES.EXAM_SELECT,
+  PAGES.EXAM_TRIAL,
   PAGES.ERROR,
   PAGES.AGREEMENT,
   PAGES.ABOUT,

@@ -52,7 +52,14 @@ function generatePlugins(command: ConfigEnv['command']): PluginOption[] {
     // @uni-helper 插件必须在 uni() 之前
     UniPages({
       dts: 'typings/uni-pages.d.ts',
-      subPackages: ['src/pages-sub/order', 'src/pages-sub/user', 'src/pages-sub/other'],
+      subPackages: [
+        'src/pages-sub/order',
+        'src/pages-sub/user',
+        'src/pages-sub/other',
+        'src/pages-sub/exam',
+        'src/pages-sub/study',
+        'src/pages-sub/ai',
+      ],
       exclude: ['node_modules', '.git', '**/__*__/**'],
     }),
     UniManifest(),

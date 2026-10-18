@@ -334,6 +334,17 @@ export function getPathFromUrl(url: string): string {
   return url.split(/[?#]/)[0];
 }
 
+/** 上一页的路径与查询参数是否与 url 相同 */
+export function isPreviousPage(url: string): boolean {
+  const pages = getCurrentPages();
+  const previous = pages[pages.length - 2] as (Page.PageInstance & { options?: QueryParams }) | undefined;
+  if (!previous?.route || `/${previous.route}` !== getPathFromUrl(url)) return false;
+  const expected = parseQuery(url);
+  const actual = previous.options ?? {};
+  const keys = new Set([...Object.keys(expected), ...Object.keys(actual)]);
+  return [...keys].every(key => String(expected[key] ?? '') === String(actual[key] ?? ''));
+}
+
 /**
  * 检查路由是否在白名单中
  * @param url 页面 URL

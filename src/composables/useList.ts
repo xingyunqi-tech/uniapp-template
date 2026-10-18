@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { createPagedList, type PagedListOptions } from '@/store/helpers/paged-list';
 
-export type UseListOptions<T> = PagedListOptions<T, object>;
+export type UseListOptions<T, P extends object = object> = PagedListOptions<T, P>;
 
 /** 每页条数默认值 */
 const DEFAULT_LIMIT = 10;
@@ -17,8 +17,8 @@ const DEFAULT_LIMIT = 10;
  * });
  * ```
  */
-export function useList<T>(options: UseListOptions<T>) {
-  const pager = createPagedList<T>({ limit: DEFAULT_LIMIT, ...options });
+export function useList<T, P extends object = object>(options: UseListOptions<T, P>) {
+  const pager = createPagedList<T, P>({ limit: DEFAULT_LIMIT, ...options });
 
   /** 是否正在刷新，刷新时列表底部不显示加载更多 */
   const refreshing = ref(false);
@@ -26,14 +26,19 @@ export function useList<T>(options: UseListOptions<T>) {
   const isEmpty = computed(() => pager.list.value.length === 0);
 
   let refreshTask: Promise<void> | null = null;
+  let refreshKey = '';
   let lastFailed: 'refresh' | 'loadMore' | null = null;
+  let params: P | undefined;
 
-  /** 从第 1 页重新加载；刷新进行中时复用同一次刷新 */
-  function refresh(): Promise<void> {
-    if (refreshTask) return refreshTask;
+  /** 从第 1 页重新加载并记住查询参数；参数相同的刷新进行中时复用，参数不同时作废进行中的请求 */
+  function refresh(nextParams?: P): Promise<void> {
+    if (nextParams !== undefined) params = nextParams;
+    const key = JSON.stringify(params ?? {});
+    if (refreshTask && refreshKey === key) return refreshTask;
     refreshing.value = true;
-    refreshTask = pager
-      .loadPage(undefined, true)
+    refreshKey = key;
+    const task: Promise<void> = pager
+      .loadPage(params, true)
       .then(({ stale }) => {
         if (!stale) lastFailed = null;
       })
@@ -42,21 +47,31 @@ export function useList<T>(options: UseListOptions<T>) {
         throw error;
       })
       .finally(() => {
+        if (refreshTask !== task) return;
         refreshing.value = false;
         refreshTask = null;
       });
-    return refreshTask;
+    refreshTask = task;
+    return task;
   }
 
   /** 加载下一页，加载中或没有更多时直接返回 */
   async function loadMore(): Promise<void> {
     try {
-      const { stale } = await pager.loadPage();
+      const { stale } = await pager.loadPage(params);
       if (!stale) lastFailed = null;
     } catch (error) {
       lastFailed = 'loadMore';
       throw error;
     }
+  }
+
+  /** 清空列表并作废进行中的请求 */
+  function reset() {
+    pager.reset();
+    refreshTask = null;
+    refreshing.value = false;
+    lastFailed = null;
   }
 
   /** 重新执行上一次失败的刷新或加载更多 */
@@ -76,6 +91,6 @@ export function useList<T>(options: UseListOptions<T>) {
     refresh,
     loadMore,
     retry,
-    reset: pager.reset,
+    reset,
   };
 }

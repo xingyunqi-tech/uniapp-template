@@ -39,5 +39,5 @@
     "plugins": ["@uni-helper/uni-app-types/volar-plugin"]
   },
   "include": ["src", "typings"],
-  "exclude": ["node_modules", "dist", "unpackage"]
+  "exclude": ["node_modules", "dist", "unpackage", "src/uni_modules/mp-html"]
 }

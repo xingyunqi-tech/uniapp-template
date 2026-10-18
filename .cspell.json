@@ -94,5 +94,5 @@
     }
   ],
   "ignoreRegExpList": ["jwt-token", "css-var", "import-path", "url-encoded"],
-  "ignorePaths": ["src/api/generated/**", "coverage/**", "dist/**"]
+  "ignorePaths": ["src/api/generated/**", "src/uni_modules/mp-html/**", "coverage/**", "dist/**"]
 }

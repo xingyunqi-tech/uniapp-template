@@ -74,6 +74,9 @@ export type { PopupType, DialogType, DialogMode } from './UPopup/index.vue';
 // 富文本渲染组件
 export { default as URichText } from './URichText/index.vue';
 
+export { default as UQuestionContent } from './UQuestionContent/index.vue';
+export type { UQuestionContentProps } from './UQuestionContent/index.vue';
+
 // 骨架屏组件
 export { default as USkeleton } from './USkeleton/index.vue';
 export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';

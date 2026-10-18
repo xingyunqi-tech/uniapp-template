@@ -8,3 +8,4 @@ export * from './order';
 export * from './payment';
 export * from './permission';
 export * from './config';
+export * from './exam';

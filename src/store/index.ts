@@ -10,6 +10,7 @@ export * from './modules/share';
 export * from './modules/region';
 export * from './modules/notification';
 export * from './modules/config';
+export * from './modules/exam';
 export * from './plugins/persist';
 
 export default createPersistedPinia();

@@ -44,16 +44,17 @@
 
 ## 6. 小程序
 
-- [ ] 6.1 `pages.config.ts`：TabBar 四项、`pages-sub/exam`、`pages-sub/study`、`pages-sub/ai` 分包声明；`pages/ai` 占位页
-- [ ] 6.2 公式渲染技术验证（mp-html + latex 插件 / 服务端 SVG），结论更新到业务文档第 8 节
-- [ ] 6.3 `UQuestionContent` 组件：Markdown、LaTeX、图片预览、音频播放
-- [ ] 6.4 选择考试页（考试日期、每日目标）、游客本地暂存与登录后同步
-- [ ] 6.5 题库页：科目切换、知识点树、试卷列表
-- [ ] 6.6 首页：考试倒计时、每日一练入口、游客试做
-- [ ] 6.7 `exam` Store 与接口封装，单元测试
+- [x] 6.1 `pages.config.ts`：TabBar 四项、`pages-sub/exam`、`pages-sub/study`、`pages-sub/ai` 分包声明；`pages/ai` 占位页
+- [x] 6.2 公式渲染技术验证（mp-html + latex 插件 / 服务端 SVG），结论更新到业务文档第 8 节
+- [x] 6.3 `UQuestionContent` 组件：Markdown、LaTeX、图片预览、音频播放
+- [x] 6.4 选择考试页（考试日期、每日目标）、游客本地暂存与登录后同步
+- [x] 6.5 题库页：科目切换、知识点树、试卷列表
+- [x] 6.6 首页：考试倒计时、每日一练入口、游客试做
+- [x] 6.7 `exam` Store 与接口封装，单元测试
 
 ## 7. 验证
 
 - [ ] 7.1 后端 `pnpm lint:check`、`pnpm type-check`、`pnpm test`、`pnpm test:e2e`、`migration:check` 通过
 - [ ] 7.2 小程序 `pnpm lint:check`、`pnpm type-check`、`pnpm test` 通过；微信开发者工具中验证题库与试做流程
 - [ ] 7.3 用行测样例导入包完成一次端到端导入、审核、发布、小程序浏览
+- [ ] 7.4 KaTeX 字体转存到自有 CDN 并修改 mp-html 字体地址

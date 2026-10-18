@@ -43,11 +43,27 @@ export default defineUniPages({
       root: 'pages-sub/other',
       pages: [],
     },
+    {
+      root: 'pages-sub/exam',
+      pages: [],
+    },
+    {
+      root: 'pages-sub/study',
+      pages: [],
+    },
+    {
+      root: 'pages-sub/ai',
+      pages: [],
+    },
   ],
   /**
    * 分包预下载：进入指定页面后在后台下载分包，network 可选 all / wifi
    */
   preloadRule: {
+    'pages/index/index': {
+      network: 'all',
+      packages: ['pages-sub/exam'],
+    },
     'pages/mine/index': {
       network: 'all',
       packages: ['pages-sub/user', 'pages-sub/order'],
@@ -77,6 +93,18 @@ export default defineUniPages({
         text: '首页',
         iconPath: '@iconHome',
         selectedIconPath: '@iconHomeActive',
+      },
+      {
+        pagePath: 'pages/bank/index',
+        text: '题库',
+        iconPath: '@iconBank',
+        selectedIconPath: '@iconBankActive',
+      },
+      {
+        pagePath: 'pages/ai/index',
+        text: 'AI 助教',
+        iconPath: '@iconAi',
+        selectedIconPath: '@iconAiActive',
       },
       {
         pagePath: 'pages/mine/index',

@@ -159,6 +159,6 @@ export default [
 
   // ==================== 忽略文件配置 ====================
   {
-    ignores: ['dist/**/*', 'node_modules/**/*', 'public/**/*', 'coverage/**/*'],
+    ignores: ['dist/**/*', 'node_modules/**/*', 'public/**/*', 'coverage/**/*', 'src/uni_modules/mp-html/**/*'],
   },
 ];

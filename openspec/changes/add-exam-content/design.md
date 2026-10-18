@@ -19,12 +19,12 @@
   - 后端脚本 `pnpm import:content <file> [--publish]` 直接调用同一导入服务，不经过 HTTP。
   - `assets/` 内文件上传为公共文件，内容中替换为 `file:{fileId}`。
 - **每日一练题组**：定时任务每天 00:05（Asia/Shanghai）为每个已发布科目生成；首次访问兜底生成以唯一键防并发重复。
-- **小程序内容渲染**：封装 `UQuestionContent` 组件，内部用 mp-html；LaTeX 方案在本 change 内做技术验证后确定（行测公式少，可先支持基础公式）。
+- **小程序内容渲染**：封装 `UQuestionContent` 组件，内部用 mp-html 并启用 markdown、latex 插件，公式在端上解析渲染，不采用服务端预渲染 SVG；渲染前把公式内的 Markdown 标点转为 HTML 实体，避免被 Markdown 解析改写。选型依据见 `docs/exam-prep-business.md` 第 7 节。
 
 ## Risks / Trade-offs
 
-- 公式渲染方案未定 → 本 change 先完成验证并在 `docs/exam-prep-business.md` 第 8 节更新结论
 - 导入单元失败粒度较粗 → 错误报告精确到行与原因
+- mp-html 与 latex 插件约 360KB 计入主包 → 主包构建后约 1.1MB，低于 2MB 上限；KaTeX 字体依赖 CDN，未加载时退化为系统字体
 
 ## Migration Plan
 
@@ -32,4 +32,4 @@
 
 ## Open Questions
 
-- 公式渲染最终方案（见第 8 节）
+- 无

@@ -26,7 +26,9 @@ type _LocationUrl =
   "/pages-sub/other/component-demo/index" |
   "/pages-sub/other/contact/index" |
   "/pages-sub/other/feedback/index" |
-  "/pages-sub/other/webview/index";
+  "/pages-sub/other/webview/index" |
+  "/pages-sub/exam/select/index" |
+  "/pages-sub/exam/trial/index";
 
 interface NavigateToOptions {
   url: _LocationUrl;
@@ -34,7 +36,7 @@ interface NavigateToOptions {
 interface RedirectToOptions extends NavigateToOptions {}
 
 interface SwitchTabOptions {
-  url: "/pages/index/index" | "/pages/mine/index"
+  url: "/pages/index/index" | "/pages/bank/index" | "/pages/ai/index" | "/pages/mine/index"
 }
 
 type ReLaunchOptions = NavigateToOptions | SwitchTabOptions;

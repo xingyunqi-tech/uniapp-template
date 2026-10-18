@@ -3,6 +3,7 @@ dist
 deploy
 coverage
 unpackage
+src/uni_modules/mp-html
 pnpm-lock.yaml
 
 # Auto-generated files (by @uni-helper plugins)

@@ -116,7 +116,7 @@ const config = {
     ],
   },
 
-  ignoreFiles: ['node_modules/**/*', 'dist/**/*', 'coverage/**/*', '*.css'],
+  ignoreFiles: ['node_modules/**/*', 'dist/**/*', 'coverage/**/*', '*.css', 'src/uni_modules/mp-html/**/*'],
 
   overrides: [
     {

@@ -1,51 +1,56 @@
 <template>
   <view class="home-page" :class="globalStore.themeClass">
-    <!-- 自定义导航栏 -->
-    <UNavBar title="首页" :show-back="false">
-      <template #left>
-        <view class="nav-left-icon">
-          <UIcon name="home" size="44rpx" color="var(--color-text)" />
-        </view>
-      </template>
-    </UNavBar>
+    <UNavBar title="首页" :show-back="false" />
 
-    <!-- Banner 轮播 -->
-    <UBanner :list="bannerList" :height="300" @click="handleBannerClick" />
-
-    <!-- 分类网格 -->
-    <view class="category-section">
-      <view class="category-grid">
-        <view v-for="item in categoryList" :key="item.id" class="category-item" @click="handleCategoryClick(item)">
-          <view class="category-icon">
-            <UIcon :name="item.icon" size="56rpx" color="var(--color-primary)" />
-          </view>
-          <text class="category-name">{{ item.name }}</text>
+    <view class="home-body">
+      <UCard v-if="!profile" class="exam-card">
+        <text class="exam-card__title">选择你的目标考试</text>
+        <text class="exam-card__desc">设置考试日期与每日目标，开始备考</text>
+        <view class="exam-card__action">
+          <UButton text="选择考试" type="primary" size="small" @click="goSelectExam" />
         </view>
-      </view>
-    </view>
-
-    <!-- 示例文章列表 -->
-    <UList
-      class="news-list"
-      :empty="isEmpty"
-      :loading="loading && !refreshing"
-      :finished="!hasMore"
-      :error="loadError"
-      @retry="handleRetry"
-    >
-      <UCard v-for="item in newsList" :key="item.id" class="news-item" clickable @click="handleNewsClick(item)">
-        <view class="news-content">
-          <text class="news-title">{{ item.title }}</text>
-          <text class="news-summary">{{ item.summary }}</text>
-          <view class="news-meta">
-            <text class="news-source">{{ item.source }}</text>
-            <text class="news-time">{{ item.time }}</text>
-            <text v-if="item.tag" class="news-tag">{{ item.tag }}</text>
-          </view>
-        </view>
-        <image v-if="item.image" class="news-image" :src="item.image" mode="aspectFill" />
       </UCard>
-    </UList>
+
+      <template v-else>
+        <UCard class="exam-card">
+          <view class="exam-card__header">
+            <text class="exam-card__title">{{ examStore.currentExam?.name || '当前考试' }}</text>
+            <text class="exam-card__link" @click="goSelectExam">切换</text>
+          </view>
+          <view v-if="daysLeft === null" class="exam-card__countdown" @click="goSelectExam">
+            <text class="exam-card__desc">未设置考试日期，</text>
+            <text class="exam-card__link">去设置</text>
+          </view>
+          <view v-else-if="daysLeft > 0" class="exam-card__countdown">
+            <text class="exam-card__desc">距考试还有</text>
+            <text class="exam-card__days">{{ daysLeft }}</text>
+            <text class="exam-card__desc">天</text>
+          </view>
+          <view v-else class="exam-card__countdown">
+            <text class="exam-card__desc">{{ daysLeft === 0 ? '今天考试，加油！' : '考试日期已过，可重新设置' }}</text>
+          </view>
+          <text class="exam-card__goal">每日目标 {{ profile.dailyGoal }} 题</text>
+        </UCard>
+
+        <UCard class="daily-card" title="每日一练" :extra="examStore.currentSubject?.name">
+          <text v-if="subjectsLoaded && !examStore.currentSubject" class="daily-card__desc">当前考试暂无科目</text>
+          <text v-else-if="dailyError" class="daily-card__desc">每日一练加载失败，下拉刷新重试</text>
+          <text v-else-if="!daily" class="daily-card__desc">加载中…</text>
+          <text v-else-if="daily.questionCount === 0" class="daily-card__desc">今日暂无题目</text>
+          <template v-else>
+            <text class="daily-card__desc">{{ daily.date }} · 共 {{ daily.questionCount }} 题</text>
+            <view class="daily-card__action">
+              <UButton
+                :text="userStore.isLoggedIn ? '去试做' : '免费试做'"
+                type="primary"
+                size="small"
+                @click="goTrial"
+              />
+            </view>
+          </template>
+        </UCard>
+      </template>
+    </view>
   </view>
 </template>
 
@@ -57,167 +62,103 @@ definePage({
   },
 });
 
-import { ref } from 'vue';
-import { onLoad, onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
-import { useList } from '@/composables';
+import { computed, ref, watch } from 'vue';
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
+import { getSubjectDaily, type DailySummaryDto } from '@/api';
+import { useRouter } from '@/composables';
+import { PAGES } from '@/constants';
+import { useExamStore } from '@/store/modules/exam';
 import { useGlobalStore } from '@/store/modules/global';
-import type { IconName } from '@/components';
+import { useUserStore } from '@/store/modules/user';
+import { daysUntilExam } from '@/utils/exam-date';
+import { confirm } from '@/utils/modal';
 
 const globalStore = useGlobalStore();
+const userStore = useUserStore();
+const examStore = useExamStore();
+const router = useRouter();
 
-// Banner 数据类型
-interface BannerItem {
-  id: number;
-  image: string;
-  link?: string;
+const now = ref(Date.now());
+const daily = ref<DailySummaryDto | null>(null);
+const dailyError = ref(false);
+let guided = false;
+
+const profile = computed(() => examStore.currentProfile);
+const daysLeft = computed(() => daysUntilExam(profile.value?.examDate, now.value));
+const subjectsLoaded = computed(() => {
+  const examId = profile.value?.examId;
+  return !!examId && examStore.subjectsByExam[examId] !== undefined;
+});
+
+function goSelectExam() {
+  router.push(PAGES.EXAM_SELECT);
 }
 
-// 分类数据类型
-interface CategoryItem {
-  id: number;
-  name: string;
-  icon: IconName;
+function goTrial() {
+  const subjectId = examStore.currentSubject?.id;
+  if (subjectId) router.push(PAGES.EXAM_TRIAL, { subjectId });
 }
 
-// 示例文章数据类型
-interface NewsItem {
-  id: number;
-  title: string;
-  summary: string;
-  source: string;
-  time: string;
-  image?: string;
-  tag?: string;
+async function loadDaily() {
+  const subjectId = examStore.currentSubject?.id;
+  if (!subjectId) return;
+  dailyError.value = false;
+  try {
+    const summary = await getSubjectDaily(subjectId, { showError: false });
+    if (summary.subjectId === examStore.currentSubject?.id) daily.value = summary;
+  } catch (error) {
+    dailyError.value = true;
+    console.error('加载每日一练失败:', error);
+  }
 }
 
-// Banner 数据 - 使用 mock 网络图片
-const bannerList = ref<BannerItem[]>([
-  { id: 1, image: 'https://picsum.photos/750/500?random=1' },
-  { id: 2, image: 'https://picsum.photos/750/500?random=2' },
-  { id: 3, image: 'https://picsum.photos/750/500?random=3' },
-]);
+async function loadHome() {
+  now.value = Date.now();
+  await examStore.ensureProfiles();
+  const examId = profile.value?.examId;
+  if (!examId) return;
+  const before = examStore.currentSubject?.id;
+  try {
+    await examStore.fetchSubjects(examId);
+  } catch (error) {
+    dailyError.value = true;
+    throw error;
+  }
+  if (before && before === examStore.currentSubject?.id) await loadDaily();
+}
 
-// 示例分类，接入业务时替换为实际入口
-const categoryList = ref<CategoryItem[]>([
-  { id: 1, name: '推荐', icon: 'star' },
-  { id: 2, name: '热门', icon: 'fire' },
-  { id: 3, name: '新品', icon: 'gift' },
-  { id: 4, name: '活动', icon: 'calendar' },
-  { id: 5, name: '会员', icon: 'vip' },
-  { id: 6, name: '钱包', icon: 'wallet' },
-  { id: 7, name: '消息', icon: 'chatbubble' },
-  { id: 8, name: '帮助', icon: 'help' },
-  { id: 9, name: '设置', icon: 'gear' },
-  { id: 10, name: '更多', icon: 'more-filled' },
-]);
+async function guideToSelectExam() {
+  if (guided || !userStore.isLoggedIn || profile.value) return;
+  guided = true;
+  if (await confirm({ content: '还未设置目标考试，现在去选择吗？', confirmText: '去选择' })) goSelectExam();
+}
 
-// 示例文章数据，接入业务时替换为接口请求
-const mockTitles = [
-  '快速上手：从模板创建第一个页面',
-  '多端适配：H5、微信与支付宝小程序的差异处理',
-  '接口层实践：Orval 生成的 API 如何扩展',
-  '主题系统：用 CSS 变量实现深浅色切换',
-  '分包策略：控制小程序主包体积',
-  '组件约定：easycom 自动注册与命名规范',
-  '状态管理：Pinia Store 的组织方式',
-  '路由守卫：登录拦截与页面权限',
-  '测试实践：为组合式函数编写单元测试',
-  '发布流程：小程序上传与 H5 部署',
-];
-const mockSources = ['示例作者 A', '示例作者 B', '示例作者 C'];
-const mockTags = ['推荐', '教程', undefined];
-
-// 使用 useList 管理示例文章列表
-const {
-  list: newsList,
-  loading,
-  refreshing,
-  error: loadError,
-  hasMore,
-  isEmpty,
-  refresh,
-  loadMore,
-  retry,
-} = useList<NewsItem>({
-  limit: 10,
-  fetchPage: async ({ page, limit }) => {
-    // 模拟接口请求延迟
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const baseId = (page - 1) * limit;
-    const list = Array.from({ length: limit }, (_, index) => ({
-      id: baseId + index + 1,
-      title: mockTitles[index % mockTitles.length],
-      summary: '这是一段示例摘要，用于展示列表卡片的标题、摘要、作者与标签布局。',
-      source: mockSources[index % mockSources.length],
-      time: `${Math.floor(Math.random() * 23) + 1}小时前`,
-      image: index % 3 === 0 ? `https://picsum.photos/200/150?random=${baseId + index + 1}` : undefined,
-      tag: mockTags[index % mockTags.length],
-    }));
-    // 模拟共 3 页数据
-    return { list, totalPages: 3 };
+watch(
+  () => examStore.currentSubject?.id,
+  (value, previous) => {
+    if (value === previous) return;
+    daily.value = null;
+    loadDaily();
   },
-});
+);
 
-// 加载文章列表，失败由列表显示重试
-async function loadNews() {
+onShow(async () => {
   try {
-    await loadMore();
+    await loadHome();
+    await guideToSelectExam();
   } catch (error) {
-    console.error('加载文章失败:', error);
+    console.error('加载首页失败:', error);
   }
-}
-
-// 重试上一次失败的刷新或加载更多
-async function handleRetry() {
-  try {
-    await retry();
-  } catch (error) {
-    console.error('重试失败:', error);
-  }
-}
-
-// Banner 点击
-function handleBannerClick(item: Record<string, any>, index: number) {
-  console.log('点击 Banner:', item, index);
-  uni.showToast({ title: `点击 Banner ${item.id}`, icon: 'none' });
-}
-
-// 分类点击
-function handleCategoryClick(item: CategoryItem) {
-  uni.showToast({ title: item.name, icon: 'none' });
-}
-
-// 文章点击
-function handleNewsClick(item: NewsItem) {
-  uni.showToast({ title: item.title, icon: 'none' });
-}
-
-// 页面加载
-onLoad(() => {
-  loadNews();
 });
 
-// 页面显示
-onShow(() => {
-  console.log('首页显示');
-});
-
-// 下拉刷新
 onPullDownRefresh(async () => {
   try {
-    await refresh();
+    await examStore.ensureProfiles(true);
+    await loadHome();
   } catch (error) {
-    console.error('刷新失败:', error);
+    console.error('刷新首页失败:', error);
   } finally {
     uni.stopPullDownRefresh();
-  }
-});
-
-// 上拉加载更多
-onReachBottom(() => {
-  if (hasMore.value) {
-    loadNews();
   }
 });
 </script>
@@ -228,126 +169,73 @@ onReachBottom(() => {
   background: var(--color-bg-grey);
 }
 
-// 导航栏左侧图标
-.nav-left-icon {
+.home-body {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8rpx;
-
-  &:active {
-    opacity: 0.7;
-  }
-}
-
-// 分类网格
-.category-section {
+  flex-direction: column;
   padding: 24rpx;
-  background: var(--color-bg);
+  gap: 24rpx;
+}
 
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 24rpx 0;
+.exam-card {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-    .category-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12rpx;
+  &__title {
+    display: block;
+    color: var(--color-text);
+    font-size: 34rpx;
+    font-weight: 600;
+  }
 
-      &:active {
-        opacity: 0.7;
-      }
+  &__link {
+    color: var(--color-primary);
+    font-size: 26rpx;
+  }
 
-      .category-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 96rpx;
-        height: 96rpx;
-        border-radius: 50%;
-        background: var(--color-primary-bg);
-      }
+  &__countdown {
+    display: flex;
+    align-items: baseline;
+    margin-top: 16rpx;
+    gap: 8rpx;
+  }
 
-      .category-name {
-        color: var(--color-text);
-        font-size: 24rpx;
-      }
-    }
+  &__desc {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
+
+  &__days {
+    color: var(--color-primary);
+    font-size: 64rpx;
+    font-weight: 700;
+  }
+
+  &__goal {
+    display: block;
+    margin-top: 12rpx;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+
+  &__action {
+    margin-top: 24rpx;
   }
 }
 
-// 示例文章列表
-.news-list {
-  padding: 20rpx;
+.daily-card {
+  &__desc {
+    display: block;
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
 
-  .news-item {
+  &__action {
     display: flex;
-    margin-bottom: 20rpx;
-    gap: 20rpx;
-
-    .news-content {
-      flex: 1;
-      min-width: 0;
-
-      .news-title {
-        display: -webkit-box;
-        margin-bottom: 12rpx;
-        overflow: hidden;
-        color: var(--color-text);
-        font-size: 30rpx;
-        font-weight: 500;
-        line-height: 1.4;
-        text-overflow: ellipsis;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-      }
-
-      .news-summary {
-        display: -webkit-box;
-        margin-bottom: 16rpx;
-        overflow: hidden;
-        color: var(--color-text-secondary);
-        font-size: 26rpx;
-        line-height: 1.5;
-        text-overflow: ellipsis;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-      }
-
-      .news-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16rpx;
-        align-items: center;
-
-        .news-source {
-          color: var(--color-primary);
-          font-size: 24rpx;
-        }
-
-        .news-time {
-          color: var(--color-text-placeholder);
-          font-size: 24rpx;
-        }
-
-        .news-tag {
-          padding: 4rpx 12rpx;
-          border-radius: 4rpx;
-          background: var(--color-primary-bg);
-          color: var(--color-primary);
-          font-size: 22rpx;
-        }
-      }
-    }
-
-    .news-image {
-      flex-shrink: 0;
-      width: 200rpx;
-      height: 150rpx;
-      border-radius: var(--radius-base);
-    }
+    justify-content: flex-end;
+    margin-top: 16rpx;
   }
 }
 </style>

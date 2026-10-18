@@ -13,6 +13,8 @@ export interface CustomRequestConfig extends RequestMeta {
   data?: any;
   params?: Record<string, any>;
   headers?: Record<string, string>;
+  /** Orval 为文件下载接口生成，请求时不使用 */
+  responseType?: string;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface CustomRequestConfig extends RequestMeta {
  *
  * @example getOrders(params, { showError: false })
  */
-export type RequestOptions = Omit<CustomRequestConfig, 'url' | 'method' | 'params' | 'data'>;
+export type RequestOptions = Omit<CustomRequestConfig, 'url' | 'method' | 'params' | 'data' | 'responseType'>;
 
 /**
  * 提取响应对象中的 data 字段类型

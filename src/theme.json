@@ -11,6 +11,10 @@
     "tabBorderStyle": "black",
     "iconHome": "/static/tabbar/home.png",
     "iconHomeActive": "/static/tabbar/home-active.png",
+    "iconBank": "/static/tabbar/bank.png",
+    "iconBankActive": "/static/tabbar/bank-active.png",
+    "iconAi": "/static/tabbar/ai.png",
+    "iconAiActive": "/static/tabbar/ai-active.png",
     "iconMine": "/static/tabbar/mine.png",
     "iconMineActive": "/static/tabbar/mine-active.png"
   },
@@ -26,6 +30,10 @@
     "tabBorderStyle": "white",
     "iconHome": "/static/tabbar/home-dark.png",
     "iconHomeActive": "/static/tabbar/home-dark-active.png",
+    "iconBank": "/static/tabbar/bank-dark.png",
+    "iconBankActive": "/static/tabbar/bank-dark-active.png",
+    "iconAi": "/static/tabbar/ai-dark.png",
+    "iconAiActive": "/static/tabbar/ai-dark-active.png",
     "iconMine": "/static/tabbar/mine-dark.png",
     "iconMineActive": "/static/tabbar/mine-dark-active.png"
   }

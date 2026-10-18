@@ -111,7 +111,7 @@ import { useAsyncAction, useRouter, useSendSms } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue } from '@/utils';
-import { getPathFromUrl, isTabBarPage } from '@/utils/router';
+import { getPathFromUrl, isPreviousPage, isTabBarPage } from '@/utils/router';
 import { getAlipayAuthCode } from '@/utils/alipay-pay';
 import { phoneRules, smsCodeRules, type FormRules } from '@/utils/form-rules';
 
@@ -151,10 +151,14 @@ onLoad(options => {
   }
 });
 
-// 登录后跳转，回跳目标为 TabBar 页时用 switchTab，跳转失败时恢复按钮
+// 登录后跳转，回跳目标为上一页时返回，为 TabBar 页时用 switchTab，跳转失败时恢复按钮
 function navigateAfterLogin() {
   const target = redirectUrl || PAGES.HOME;
-  const navigation = isTabBarPage(target) ? router.switchTab(getPathFromUrl(target)) : router.replace(target);
+  const navigation = isPreviousPage(target)
+    ? router.back()
+    : isTabBarPage(target)
+      ? router.switchTab(getPathFromUrl(target))
+      : router.replace(target);
   navigation.catch(() => {
     loading.value = false;
   });
