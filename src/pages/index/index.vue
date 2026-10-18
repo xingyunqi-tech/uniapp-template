@@ -32,6 +32,35 @@
           <text class="exam-card__goal">每日目标 {{ profile.dailyGoal }} 题</text>
         </UCard>
 
+        <UCard v-if="overview" class="study-card" clickable @click="goCheckin">
+          <view class="study-card__row">
+            <view class="study-card__progress">
+              <text class="study-card__label">今日进度</text>
+              <view class="study-card__count">
+                <text class="study-card__value">{{ overview.todayAnswered }}</text>
+                <text v-if="overview.dailyGoal" class="study-card__goal">/ {{ overview.dailyGoal }} 题</text>
+                <text v-else class="study-card__goal">题</text>
+              </view>
+            </view>
+            <view class="study-card__streak">
+              <text class="study-card__label">连续打卡</text>
+              <view class="study-card__count">
+                <text class="study-card__value">{{ overview.streakDays }}</text>
+                <text class="study-card__goal">天</text>
+              </view>
+            </view>
+          </view>
+          <view v-if="progressPercent !== null" class="study-card__bar">
+            <view class="study-card__bar-inner" :style="{ width: `${progressPercent}%` }" />
+          </view>
+          <view class="study-card__footer">
+            <text class="study-card__tip">
+              {{ overview.checkedInToday ? '今日已打卡' : '完成每日一练或达到每日目标即可打卡' }}
+            </text>
+            <text class="study-card__total">累计做题 {{ overview.totalAnswered }}</text>
+          </view>
+        </UCard>
+
         <UCard class="daily-card" title="每日一练" :extra="examStore.currentSubject?.name">
           <text v-if="subjectsLoaded && !examStore.currentSubject" class="daily-card__desc">当前考试暂无科目</text>
           <text v-else-if="dailyError" class="daily-card__desc">每日一练加载失败，下拉刷新重试</text>
@@ -92,14 +121,17 @@ import { PAGES, PRACTICE_MODE_LABELS } from '@/constants';
 import { useExamStore } from '@/store/modules/exam';
 import { useGlobalStore } from '@/store/modules/global';
 import { usePracticeStore } from '@/store/modules/practice';
+import { useStudyStore } from '@/store/modules/study';
 import { useUserStore } from '@/store/modules/user';
 import { daysUntilExam } from '@/utils/exam-date';
+import { dailyProgressPercent } from '@/utils/study-stats';
 import { confirm } from '@/utils/modal';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
 const examStore = useExamStore();
 const practiceStore = usePracticeStore();
+const studyStore = useStudyStore();
 const router = useRouter();
 const { launching, launch, resume } = usePracticeLauncher();
 
@@ -117,6 +149,24 @@ const subjectsLoaded = computed(() => {
 
 function goSelectExam() {
   router.push(PAGES.EXAM_SELECT);
+}
+
+const overview = computed(() => (userStore.isLoggedIn ? studyStore.overview : null));
+const progressPercent = computed(() =>
+  overview.value ? dailyProgressPercent(overview.value.todayAnswered, overview.value.dailyGoal) : null,
+);
+
+function goCheckin() {
+  router.push(PAGES.STUDY_CHECKIN);
+}
+
+async function loadOverview() {
+  if (!userStore.isLoggedIn) return;
+  try {
+    await studyStore.fetchOverview({ showError: false });
+  } catch (error) {
+    console.error('加载学习概览失败:', error);
+  }
 }
 
 const continueSession = computed(() => (userStore.isLoggedIn ? (practiceStore.ongoing[0] ?? null) : null));
@@ -197,6 +247,7 @@ watch(
 
 onShow(async () => {
   loadOngoing();
+  loadOverview();
   try {
     await loadHome();
     await guideToSelectExam();
@@ -208,7 +259,7 @@ onShow(async () => {
 onPullDownRefresh(async () => {
   try {
     await examStore.ensureProfiles(true);
-    await Promise.all([loadHome(), loadOngoing()]);
+    await Promise.all([loadHome(), loadOngoing(), loadOverview()]);
   } catch (error) {
     console.error('刷新首页失败:', error);
   } finally {
@@ -276,6 +327,78 @@ onPullDownRefresh(async () => {
 
   &__action {
     margin-top: 24rpx;
+  }
+}
+
+.study-card {
+  &__row {
+    display: flex;
+    gap: 24rpx;
+  }
+
+  &__progress,
+  &__streak {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8rpx;
+  }
+
+  &__label {
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+
+  &__count {
+    display: flex;
+    align-items: baseline;
+    gap: 8rpx;
+  }
+
+  &__value {
+    color: var(--color-text);
+    font-size: 48rpx;
+    font-weight: 700;
+  }
+
+  &__goal {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
+  }
+
+  &__bar {
+    height: 12rpx;
+    margin-top: 20rpx;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-grey);
+  }
+
+  &__bar-inner {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16rpx;
+    gap: 16rpx;
+  }
+
+  &__tip {
+    flex: 1;
+    min-width: 0;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+
+  &__total {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
   }
 }
 

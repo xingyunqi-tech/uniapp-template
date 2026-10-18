@@ -23,18 +23,6 @@ import { customMutator } from '../../core/mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * @summary 科目知识点树（可选登录）
- */
-export const getSubjectKnowledgePoints = (
-  id: string,
-  options?: SecondParameter<typeof customMutator<PublicKnowledgePointTreeNodeDto[]>>,
-) => {
-  return customMutator<PublicKnowledgePointTreeNodeDto[]>(
-    { url: `/api/v1/subjects/${id}/knowledge-points`, method: 'GET' },
-    options,
-  );
-};
-/**
  * @summary 科目试卷列表（可选登录）
  */
 export const getSubjectPapers = (
@@ -86,9 +74,21 @@ export const checkSubjectDailyTrial = (
     options,
   );
 };
-export type GetSubjectKnowledgePointsResult = NonNullable<Awaited<ReturnType<typeof getSubjectKnowledgePoints>>>;
+/**
+ * @summary 科目知识点树（可选登录，登录时附带个人做题进度与掌握度）
+ */
+export const getSubjectKnowledgePoints = (
+  id: string,
+  options?: SecondParameter<typeof customMutator<PublicKnowledgePointTreeNodeDto[]>>,
+) => {
+  return customMutator<PublicKnowledgePointTreeNodeDto[]>(
+    { url: `/api/v1/subjects/${id}/knowledge-points`, method: 'GET' },
+    options,
+  );
+};
 export type GetSubjectPapersResult = NonNullable<Awaited<ReturnType<typeof getSubjectPapers>>>;
 export type GetSubjectPaperRulesResult = NonNullable<Awaited<ReturnType<typeof getSubjectPaperRules>>>;
 export type GetSubjectDailyResult = NonNullable<Awaited<ReturnType<typeof getSubjectDaily>>>;
 export type GetSubjectDailyTrialResult = NonNullable<Awaited<ReturnType<typeof getSubjectDailyTrial>>>;
 export type CheckSubjectDailyTrialResult = NonNullable<Awaited<ReturnType<typeof checkSubjectDailyTrial>>>;
+export type GetSubjectKnowledgePointsResult = NonNullable<Awaited<ReturnType<typeof getSubjectKnowledgePoints>>>;

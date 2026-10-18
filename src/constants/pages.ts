@@ -77,6 +77,18 @@ export const PAGES = {
   /** 练习历史 */
   EXAM_HISTORY: '/pages-sub/exam/history/index',
 
+  // ========== study 分包 ==========
+  /** 错题本 */
+  STUDY_WRONG_BOOK: '/pages-sub/study/wrong-book/index',
+  /** 题目详情（错题本、收藏、笔记共用） */
+  STUDY_QUESTION: '/pages-sub/study/question/index',
+  /** 收藏题 */
+  STUDY_FAVORITES: '/pages-sub/study/favorites/index',
+  /** 我的笔记 */
+  STUDY_NOTES: '/pages-sub/study/notes/index',
+  /** 打卡日历 */
+  STUDY_CHECKIN: '/pages-sub/study/checkin/index',
+
   /** 组件演示页，仅 development 模式下存在 */
   COMPONENT_DEMO: '/pages-sub/other/component-demo/index',
 } as const;

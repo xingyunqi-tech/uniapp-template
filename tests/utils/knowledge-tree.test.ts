@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PublicKnowledgePointTreeNodeDto } from '@/api';
-import { flattenKnowledgeTree, knowledgeProgressText } from '@/utils/knowledge-tree';
+import { flattenKnowledgeTree, knowledgeMasteryText, knowledgeProgressText } from '@/utils/knowledge-tree';
 
 function node(
   id: string,
@@ -54,12 +54,30 @@ describe('flattenKnowledgeTree', () => {
   });
 });
 
+function progress(overrides: Partial<NonNullable<PublicKnowledgePointTreeNodeDto['progress']>> = {}) {
+  return { answeredQuestionCount: 3, questionCount: 8, answered: 6, correct: 4, mastery: 62.5, ...overrides };
+}
+
 describe('knowledgeProgressText', () => {
   it('进度为 null 时不显示', () => {
     expect(knowledgeProgressText(node('a'))).toBe('');
   });
 
-  it('有做题数时显示已做题数', () => {
-    expect(knowledgeProgressText(node('a', [], { answered: 3 }))).toBe('已做 3/10');
+  it('显示子树内已做题数与题目数', () => {
+    expect(knowledgeProgressText(node('a', [], progress()))).toBe('已做 3/8');
+  });
+});
+
+describe('knowledgeMasteryText', () => {
+  it('进度为 null 时不显示', () => {
+    expect(knowledgeMasteryText(node('a'))).toBe('');
+  });
+
+  it('掌握度取整显示百分比', () => {
+    expect(knowledgeMasteryText(node('a', [], progress({ mastery: 62.5 })))).toBe('掌握度 63%');
+  });
+
+  it('掌握度为 null 时显示数据不足', () => {
+    expect(knowledgeMasteryText(node('a', [], progress({ mastery: null })))).toBe('数据不足');
   });
 });

@@ -8,8 +8,9 @@
  *  *\/
  */
 import type { HiddenReason } from './hiddenReason';
-import type { PublicQuestionDto } from './publicQuestionDto';
 import type { QuestionContentDtoOptionsItem } from './questionContentDtoOptionsItem';
+import type { QuestionContentItemDto } from './questionContentItemDto';
+import type { QuestionSolutionDto } from './questionSolutionDto';
 import type { QuestionType } from './questionType';
 
 export interface QuestionContentDto {
@@ -44,7 +45,12 @@ export interface QuestionContentDto {
   knowledgePointIds: string[];
   isFree: boolean;
   sort: number;
+  /**
+   * 题目在错题本、收藏或笔记中且不在进行中的模考时返回；材料为 null
+   * @nullable
+   */
+  solution: QuestionSolutionDto | null;
   /** 材料题的小题，按顺序 */
-  children?: PublicQuestionDto[];
+  children?: QuestionContentItemDto[];
   hiddenReason: HiddenReason | null;
 }

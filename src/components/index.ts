@@ -77,6 +77,14 @@ export { default as URichText } from './URichText/index.vue';
 export { default as UQuestionContent } from './UQuestionContent/index.vue';
 export type { UQuestionContentProps } from './UQuestionContent/index.vue';
 
+// 题目收藏与笔记入口 (答案可见时使用)
+export { default as UQuestionActions } from './UQuestionActions/index.vue';
+export type { UQuestionActionsProps } from './UQuestionActions/index.vue';
+
+// 题目笔记编辑弹层
+export { default as UNoteEditor } from './UNoteEditor/index.vue';
+export type { UNoteEditorProps } from './UNoteEditor/index.vue';
+
 // 骨架屏组件
 export { default as USkeleton } from './USkeleton/index.vue';
 export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';

@@ -43,6 +43,18 @@
           <UTabs v-model="section" :tabs="SECTION_TABS" type="card" />
         </view>
 
+        <view v-if="section === 'knowledge' && weakPoints.length > 0" class="weak-points">
+          <view class="weak-points__header">
+            <text class="weak-points__title">薄弱知识点</text>
+            <text class="weak-points__desc">掌握度低于 {{ WEAK_MASTERY_THRESHOLD }}%</text>
+          </view>
+          <view v-for="point in weakPoints" :key="point.knowledgePointId" class="weak-point">
+            <text class="weak-point__name">{{ point.name }}</text>
+            <text class="weak-point__mastery">{{ formatMastery(point.mastery) }}</text>
+            <text class="weak-point__practice" @click="practiceWeakPoint(point)">练习</text>
+          </view>
+        </view>
+
         <view v-if="section === 'knowledge'" class="knowledge">
           <UPageState
             :loading="treeLoading"
@@ -69,10 +81,16 @@
               <text class="knowledge-row__name" :class="{ 'knowledge-row__name--root': row.depth === 0 }">
                 {{ row.node.name }}
               </text>
-              <text v-if="knowledgeProgressText(row.node)" class="knowledge-row__progress">
-                {{ knowledgeProgressText(row.node) }}
-              </text>
-              <text class="knowledge-row__count">{{ row.node.questionCount }} 题</text>
+              <view v-if="row.node.progress" class="knowledge-row__stats">
+                <text class="knowledge-row__progress">{{ knowledgeProgressText(row.node) }}</text>
+                <text
+                  class="knowledge-row__mastery"
+                  :class="`knowledge-row__mastery--${masteryLevel(row.node.progress.mastery)}`"
+                >
+                  {{ knowledgeMasteryText(row.node) }}
+                </text>
+              </view>
+              <text v-else class="knowledge-row__count">{{ row.node.questionCount }} 题</text>
               <text
                 v-if="row.node.questionCount > 0"
                 class="knowledge-row__practice"
@@ -136,6 +154,7 @@ import {
   type PublicKnowledgePointTreeNodeDto,
   type PublicPaperDto,
   type QuestionType,
+  type WeakPointDto,
 } from '@/api';
 import type { IconName } from '@/components/UIcon/index.vue';
 import type { TabItem, TabValue } from '@/components/UTabs/index.vue';
@@ -144,8 +163,15 @@ import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
 import { PAGES, PAPER_TYPE_LABELS, PRACTICE_QUESTION_TYPES, QUESTION_TYPE_LABELS } from '@/constants';
 import { useExamStore } from '@/store/modules/exam';
 import { useGlobalStore } from '@/store/modules/global';
+import { useStudyStore } from '@/store/modules/study';
 import { useUserStore } from '@/store/modules/user';
-import { flattenKnowledgeTree, knowledgeProgressText, type KnowledgeTreeRow } from '@/utils/knowledge-tree';
+import {
+  flattenKnowledgeTree,
+  knowledgeMasteryText,
+  knowledgeProgressText,
+  type KnowledgeTreeRow,
+} from '@/utils/knowledge-tree';
+import { formatMastery, masteryLevel, WEAK_MASTERY_THRESHOLD } from '@/utils/study-stats';
 
 interface PaperQuery {
   subjectId: string;
@@ -164,6 +190,8 @@ const PRACTICE_ENTRIES: { key: PracticeEntryKey; label: string; icon: IconName }
   { key: 'history', label: '练习历史', icon: 'list' },
 ];
 
+const WEAK_POINT_LIMIT = 5;
+
 const SECTION_TABS: TabItem[] = [
   { label: '知识点', value: 'knowledge' },
   { label: '试卷', value: 'papers' },
@@ -178,6 +206,7 @@ const PAPER_TABS: TabItem[] = [
 const globalStore = useGlobalStore();
 const examStore = useExamStore();
 const userStore = useUserStore();
+const studyStore = useStudyStore();
 const router = useRouter();
 const { launch, requireLogin } = usePracticeLauncher();
 
@@ -203,7 +232,11 @@ const treeLoading = ref(false);
 const treeError = ref(false);
 const expandedIds = ref(new Set<string>());
 const rows = computed(() => flattenKnowledgeTree(tree.value, expandedIds.value));
+const weakPoints = computed<WeakPointDto[]>(() =>
+  userStore.isLoggedIn ? (studyStore.weakPoints[subjectId.value] ?? []).slice(0, WEAK_POINT_LIMIT) : [],
+);
 let treeRequest = 0;
+let shown = false;
 
 const {
   list: papers,
@@ -253,6 +286,21 @@ async function openKnowledgeActions(node: PublicKnowledgePointTreeNodeDto) {
     subjectId: id,
     scope: { knowledgePointId: node.id },
   });
+}
+
+function practiceWeakPoint(point: WeakPointDto) {
+  const id = subjectId.value;
+  if (id) launch({ mode: PracticeMode.CHAPTER, subjectId: id, scope: { knowledgePointId: point.knowledgePointId } });
+}
+
+async function loadWeakPoints() {
+  const id = subjectId.value;
+  if (!id || !userStore.isLoggedIn) return;
+  try {
+    await studyStore.fetchWeakPoints(id, { showError: false });
+  } catch (error) {
+    console.error('加载薄弱知识点失败:', error);
+  }
 }
 
 async function handlePracticeEntry(key: PracticeEntryKey) {
@@ -344,7 +392,7 @@ async function retryPapers() {
 }
 
 async function loadSection() {
-  if (section.value === 'knowledge') await loadTree();
+  if (section.value === 'knowledge') await Promise.all([loadTree(), loadWeakPoints()]);
   else await reloadPapers();
 }
 
@@ -368,6 +416,15 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => userStore.isLoggedIn,
+  () => {
+    tree.value = [];
+    treeError.value = false;
+    if (subjectId.value && section.value === 'knowledge') loadSection();
+  },
+);
+
 watch(paperType, () => {
   resetPapers();
   reloadPapers();
@@ -379,6 +436,11 @@ watch(section, value => {
 });
 
 onShow(() => {
+  if (shown && section.value === 'knowledge' && subjectId.value && userStore.isLoggedIn) {
+    loadTree();
+    loadWeakPoints();
+  }
+  shown = true;
   examStore
     .ensureProfiles()
     .catch(() => undefined)
@@ -513,6 +575,88 @@ onReachBottom(() => {
   &__count {
     flex-shrink: 0;
     color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+
+  &__practice {
+    flex-shrink: 0;
+    padding: 4rpx 16rpx;
+    border: 1rpx solid var(--color-primary);
+    border-radius: var(--radius-full);
+    color: var(--color-primary);
+    font-size: 22rpx;
+  }
+
+  &__stats {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-items: flex-end;
+    gap: 4rpx;
+  }
+
+  &__mastery {
+    font-size: 22rpx;
+
+    &--none {
+      color: var(--color-text-placeholder);
+    }
+
+    &--weak {
+      color: var(--color-error);
+    }
+
+    &--fair {
+      color: var(--color-warning);
+    }
+
+    &--good {
+      color: var(--color-success);
+    }
+  }
+}
+
+.weak-points {
+  margin-top: 20rpx;
+  padding: 8rpx 24rpx;
+  background: var(--color-bg);
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    padding: 16rpx 0;
+    gap: 12rpx;
+  }
+
+  &__title {
+    color: var(--color-text);
+    font-size: 30rpx;
+    font-weight: 600;
+  }
+
+  &__desc {
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+}
+
+.weak-point {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-top: 1rpx solid var(--color-border);
+  gap: 16rpx;
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    color: var(--color-text);
+    font-size: 28rpx;
+  }
+
+  &__mastery {
+    flex-shrink: 0;
+    color: var(--color-error);
     font-size: 24rpx;
   }
 

@@ -64,30 +64,6 @@ import { customMutator } from '../../core/mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * @summary 队列状态（管理员）
- */
-export const getMonitorQueues = (options?: SecondParameter<typeof customMutator<QueuesOverviewDto>>) => {
-  return customMutator<QueuesOverviewDto>({ url: `/api/v1/admin/monitor/queues`, method: 'GET' }, options);
-};
-/**
- * @summary 告警列表（管理员）
- */
-export const getMonitorAlerts = (
-  params?: GetMonitorAlertsParams,
-  options?: SecondParameter<typeof customMutator<PaginationAdminAlertResponseDto>>,
-) => {
-  return customMutator<PaginationAdminAlertResponseDto>(
-    { url: `/api/v1/admin/monitor/alerts`, method: 'GET', params },
-    options,
-  );
-};
-/**
- * @summary 确认告警（管理员）
- */
-export const acknowledgeMonitorAlert = (id: number, options?: SecondParameter<typeof customMutator<AdminAlert>>) => {
-  return customMutator<AdminAlert>({ url: `/api/v1/admin/monitor/alerts/${id}/ack`, method: 'POST' }, options);
-};
-/**
  * @summary 考试列表（管理员）
  */
 export const adminGetExams = (
@@ -608,6 +584,30 @@ export const adminRegenerateDailyQuestionSet = (
   );
 };
 /**
+ * @summary 队列状态（管理员）
+ */
+export const getMonitorQueues = (options?: SecondParameter<typeof customMutator<QueuesOverviewDto>>) => {
+  return customMutator<QueuesOverviewDto>({ url: `/api/v1/admin/monitor/queues`, method: 'GET' }, options);
+};
+/**
+ * @summary 告警列表（管理员）
+ */
+export const getMonitorAlerts = (
+  params?: GetMonitorAlertsParams,
+  options?: SecondParameter<typeof customMutator<PaginationAdminAlertResponseDto>>,
+) => {
+  return customMutator<PaginationAdminAlertResponseDto>(
+    { url: `/api/v1/admin/monitor/alerts`, method: 'GET', params },
+    options,
+  );
+};
+/**
+ * @summary 确认告警（管理员）
+ */
+export const acknowledgeMonitorAlert = (id: number, options?: SecondParameter<typeof customMutator<AdminAlert>>) => {
+  return customMutator<AdminAlert>({ url: `/api/v1/admin/monitor/alerts/${id}/ack`, method: 'POST' }, options);
+};
+/**
  * @summary 创建导入任务：传已上传导入包的 fileId，或直接上传 file（zip / xlsx / json）
  */
 export const adminCreateImport = (
@@ -646,9 +646,6 @@ export const adminDownloadImportErrors = (id: string, options?: SecondParameter<
     options,
   );
 };
-export type GetMonitorQueuesResult = NonNullable<Awaited<ReturnType<typeof getMonitorQueues>>>;
-export type GetMonitorAlertsResult = NonNullable<Awaited<ReturnType<typeof getMonitorAlerts>>>;
-export type AcknowledgeMonitorAlertResult = NonNullable<Awaited<ReturnType<typeof acknowledgeMonitorAlert>>>;
 export type AdminGetExamsResult = NonNullable<Awaited<ReturnType<typeof adminGetExams>>>;
 export type AdminCreateExamResult = NonNullable<Awaited<ReturnType<typeof adminCreateExam>>>;
 export type AdminGetExamResult = NonNullable<Awaited<ReturnType<typeof adminGetExam>>>;
@@ -703,6 +700,9 @@ export type AdminGetDailyQuestionSetsResult = NonNullable<Awaited<ReturnType<typ
 export type AdminRegenerateDailyQuestionSetResult = NonNullable<
   Awaited<ReturnType<typeof adminRegenerateDailyQuestionSet>>
 >;
+export type GetMonitorQueuesResult = NonNullable<Awaited<ReturnType<typeof getMonitorQueues>>>;
+export type GetMonitorAlertsResult = NonNullable<Awaited<ReturnType<typeof getMonitorAlerts>>>;
+export type AcknowledgeMonitorAlertResult = NonNullable<Awaited<ReturnType<typeof acknowledgeMonitorAlert>>>;
 export type AdminCreateImportResult = NonNullable<Awaited<ReturnType<typeof adminCreateImport>>>;
 export type AdminGetImportsResult = NonNullable<Awaited<ReturnType<typeof adminGetImports>>>;
 export type AdminGetImportResult = NonNullable<Awaited<ReturnType<typeof adminGetImport>>>;

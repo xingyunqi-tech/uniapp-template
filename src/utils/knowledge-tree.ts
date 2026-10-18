@@ -1,4 +1,5 @@
 import type { PublicKnowledgePointTreeNodeDto } from '@/api';
+import { formatMastery, MASTERY_INSUFFICIENT_TEXT } from './study-stats';
 
 export interface KnowledgeTreeRow {
   node: PublicKnowledgePointTreeNodeDto;
@@ -21,8 +22,15 @@ export function flattenKnowledgeTree(
   });
 }
 
-/** 个人进度为 null 或缺少做题数时返回空字符串 */
+/** 已做题数 / 题目数，个人进度为 null 时返回空字符串 */
 export function knowledgeProgressText(node: PublicKnowledgePointTreeNodeDto): string {
-  const answered = node.progress?.answered;
-  return typeof answered === 'number' ? `已做 ${answered}/${node.questionCount}` : '';
+  const progress = node.progress;
+  return progress ? `已做 ${progress.answeredQuestionCount}/${progress.questionCount}` : '';
+}
+
+/** 掌握度文字，作答不足时为「数据不足」，个人进度为 null 时返回空字符串 */
+export function knowledgeMasteryText(node: PublicKnowledgePointTreeNodeDto): string {
+  const progress = node.progress;
+  if (!progress) return '';
+  return progress.mastery === null ? MASTERY_INSUFFICIENT_TEXT : `掌握度 ${formatMastery(progress.mastery)}`;
 }

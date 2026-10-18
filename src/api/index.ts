@@ -37,9 +37,6 @@ export {
 } from './generated/addresses/addresses';
 
 export {
-  getMonitorQueues,
-  getMonitorAlerts,
-  acknowledgeMonitorAlert,
   adminGetExams,
   adminCreateExam,
   adminGetExam,
@@ -88,6 +85,9 @@ export {
   adminPreviewPaperRule,
   adminGetDailyQuestionSets,
   adminRegenerateDailyQuestionSet,
+  getMonitorQueues,
+  getMonitorAlerts,
+  acknowledgeMonitorAlert,
   adminCreateImport,
   adminGetImports,
   adminGetImport,
@@ -148,7 +148,18 @@ export { uploadFile } from './generated/files/files';
 
 export { healthCheck, livenessProbe, readinessProbe } from './generated/health/health';
 
-export { getMyExamProfiles, upsertMyExamProfile, deleteMyExamProfile, setMyCurrentExam } from './generated/me/me';
+export {
+  getMyExamProfiles,
+  upsertMyExamProfile,
+  deleteMyExamProfile,
+  setMyCurrentExam,
+  getStudyOverview,
+  getStudyDaily,
+  getStudyKnowledge,
+  getStudyWeakPoints,
+  getCheckins,
+  getMyQuestionNotes,
+} from './generated/me/me';
 
 export { prometheusControllerIndex } from './generated/metrics/metrics';
 
@@ -183,7 +194,7 @@ export {
   abandonPracticeSession,
 } from './generated/practice/practice';
 
-export { getQuestion } from './generated/questions/questions';
+export { getQuestion, saveQuestionNote, deleteQuestionNote } from './generated/questions/questions';
 
 export {
   getProvinces,
@@ -207,12 +218,12 @@ export {
 } from './generated/shares/shares';
 
 export {
-  getSubjectKnowledgePoints,
   getSubjectPapers,
   getSubjectPaperRules,
   getSubjectDaily,
   getSubjectDailyTrial,
   checkSubjectDailyTrial,
+  getSubjectKnowledgePoints,
 } from './generated/subjects/subjects';
 
 export { createUser, getUsers, getUser, updateUser, deleteUser } from './generated/users/users';
@@ -224,6 +235,13 @@ export {
   wechatPayControllerRefundV1,
   wechatPayControllerNotifyV1,
 } from './generated/wechat/wechat';
+
+export {
+  getWrongBook,
+  getWrongBookSummary,
+  masterWrongQuestion,
+  restoreWrongQuestion,
+} from './generated/wrong-book/wrong-book';
 
 // 3. 自定义工具函数 (自动扫描 custom 目录)
 export * from './custom/external';

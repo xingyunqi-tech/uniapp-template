@@ -146,6 +146,11 @@
                     <text v-else-if="feedbacks[question.id]!.selfResult" class="answer-feedback__notice">
                       自评：{{ feedbacks[question.id]!.selfResult }}
                     </text>
+                    <UQuestionActions
+                      v-if="feedbacks[question.id]!.solution"
+                      :question-id="question.id"
+                      @edit-note="openNote"
+                    />
                   </view>
                 </template>
               </UQuestionContent>
@@ -210,6 +215,8 @@
         </view>
       </UPopup>
     </UPageState>
+
+    <UNoteEditor v-model="noteVisible" :question-id="noteQuestionId" />
   </view>
 </template>
 
@@ -276,6 +283,8 @@ const savingId = ref('');
 const assessingId = ref('');
 const timeUpHandled = ref(false);
 const timeUpAlerting = ref(false);
+const noteVisible = ref(false);
+const noteQuestionId = ref('');
 const elapsed: Record<string, number> = {};
 const contentRefs = new Map<number, { pause: () => void }>();
 const draftTimers = new Map<string, { timer: ReturnType<typeof setTimeout>; answeredAt: number }>();
@@ -339,6 +348,11 @@ function setContentRef(slot: number, instance: unknown) {
   } else {
     contentRefs.delete(slot);
   }
+}
+
+function openNote(questionId: string) {
+  noteQuestionId.value = questionId;
+  noteVisible.value = true;
 }
 
 function pauseAudio() {

@@ -17,8 +17,14 @@
     <!-- 功能菜单 -->
     <view class="menu-section">
       <UMenuGroup>
+        <UMenuItem icon="flag" title="错题本" @click="handleMenuClick('wrongBook')" />
+        <UMenuItem icon="star" title="我的收藏" @click="handleMenuClick('favorites')" />
+        <UMenuItem icon="compose" title="我的笔记" @click="handleMenuClick('notes')" />
+        <UMenuItem icon="calendar" title="打卡日历" :border="false" @click="handleMenuClick('checkin')" />
+      </UMenuGroup>
+
+      <UMenuGroup>
         <UMenuItem icon="list" title="我的订单" @click="handleMenuClick('order')" />
-        <UMenuItem icon="star" title="我的收藏" @click="handleMenuClick('favorite')" />
         <UMenuItem
           icon="notification"
           title="消息通知"
@@ -97,8 +103,11 @@ function handleUserClick() {
 
 // 点击菜单项
 const MENU_PAGES: Record<string, string> = {
+  wrongBook: PAGES.STUDY_WRONG_BOOK,
+  favorites: PAGES.STUDY_FAVORITES,
+  notes: PAGES.STUDY_NOTES,
+  checkin: PAGES.STUDY_CHECKIN,
   order: PAGES.ORDER,
-  favorite: PAGES.FAVORITE,
   notifications: PAGES.NOTIFICATIONS,
   address: PAGES.ADDRESS,
   contact: PAGES.CONTACT,

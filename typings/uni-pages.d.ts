@@ -33,7 +33,12 @@ type _LocationUrl =
   "/pages-sub/exam/paper-rules/index" |
   "/pages-sub/exam/report/index" |
   "/pages-sub/exam/select/index" |
-  "/pages-sub/exam/trial/index";
+  "/pages-sub/exam/trial/index" |
+  "/pages-sub/study/checkin/index" |
+  "/pages-sub/study/favorites/index" |
+  "/pages-sub/study/notes/index" |
+  "/pages-sub/study/question/index" |
+  "/pages-sub/study/wrong-book/index";
 
 interface NavigateToOptions {
   url: _LocationUrl;
