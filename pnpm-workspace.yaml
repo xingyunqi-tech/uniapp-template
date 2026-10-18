@@ -19,3 +19,6 @@ peerDependencyRules:
     pinia-plugin-persistedstate>pinia: '2'
     # vue 锁定为 uni 运行时内置的 3.4.21，各端运行时实际使用的都是这个版本
     pinia>vue: '3.4'
+overrides:
+  # miniprogram-ci 自带 @babel/runtime 7.21，regenerator 插件须与之同代，否则编译产物引用不存在的 helpers/regeneratorValues
+  '@babel/preset-env@7.21.4>@babel/plugin-transform-regenerator': 7.22.10

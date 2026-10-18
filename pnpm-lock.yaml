@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@babel/preset-env@7.21.4>@babel/plugin-transform-regenerator': 7.22.10
+
 importers:
 
   .:
@@ -10710,11 +10713,6 @@ snapshots:
       '@babel/helper-plugin-utils': 7.28.6
       regenerator-transform: 0.15.2
 
-  '@babel/plugin-transform-regenerator@7.29.0(@babel/core@7.21.4(supports-color@10.2.2))':
-    dependencies:
-      '@babel/core': 7.21.4(supports-color@10.2.2)
-      '@babel/helper-plugin-utils': 7.28.6
-
   '@babel/plugin-transform-regenerator@7.29.0(@babel/core@7.29.0(supports-color@10.2.2))':
     dependencies:
       '@babel/core': 7.29.0(supports-color@10.2.2)
@@ -10976,7 +10974,7 @@ snapshots:
       '@babel/plugin-transform-object-super': 7.27.1(@babel/core@7.21.4(supports-color@10.2.2))(supports-color@10.2.2)
       '@babel/plugin-transform-parameters': 7.27.7(@babel/core@7.21.4(supports-color@10.2.2))
       '@babel/plugin-transform-property-literals': 7.27.1(@babel/core@7.21.4(supports-color@10.2.2))
-      '@babel/plugin-transform-regenerator': 7.29.0(@babel/core@7.21.4(supports-color@10.2.2))
+      '@babel/plugin-transform-regenerator': 7.22.10(@babel/core@7.21.4(supports-color@10.2.2))
       '@babel/plugin-transform-reserved-words': 7.27.1(@babel/core@7.21.4(supports-color@10.2.2))
       '@babel/plugin-transform-shorthand-properties': 7.27.1(@babel/core@7.21.4(supports-color@10.2.2))
       '@babel/plugin-transform-spread': 7.28.6(@babel/core@7.21.4(supports-color@10.2.2))(supports-color@10.2.2)

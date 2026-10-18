@@ -359,8 +359,8 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
           robot,
           threads: 4, // 多线程编译，提升上传速度
           setting: {
-            es6: false,
-            es7: false,
+            es6: true,
+            es7: true,
             minify: true,
             autoPrefixWXSS: true,
             minifyWXML: true,
@@ -394,8 +394,8 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
       qrcodeFormat: 'image',
       qrcodeOutputDest: qrcodePath,
       setting: {
-        es6: false,
-        es7: false,
+        es6: true,
+        es7: true,
         minify: true,
       },
       onProgressUpdate: (progress: any) => {
