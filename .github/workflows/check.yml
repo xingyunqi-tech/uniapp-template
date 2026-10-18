@@ -2,8 +2,8 @@
 # 职责: lint、type-check、test
 #
 # 触发条件:
-#   1. push 到 master/main 分支
-#   2. Pull Request
+#   1. push 到 master/main/release/** 分支
+#   2. 目标为 master/main/release/** 的 Pull Request
 #   3. 手动触发 (workflow_dispatch)
 #   4. 被其他工作流调用 (workflow_call)
 #
@@ -13,9 +13,9 @@ name: Check
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, 'release/**']
   pull_request:
-    branches: [master, main]
+    branches: [master, main, 'release/**']
   # 手动触发
   workflow_dispatch:
   # 允许被其他工作流调用
