@@ -20,6 +20,10 @@
           />
           <text>{{ currentCard.markedForReview ? '已标记' : '标记' }}</text>
         </view>
+        <view v-if="currentCard" class="answer-bar__mark" @click="openReport(currentCard.questionId)">
+          <UIcon name="info" size="36rpx" color="var(--color-text-secondary)" />
+          <text>纠错</text>
+        </view>
       </view>
 
       <view v-if="banner" class="answer-banner">{{ banner }}</view>
@@ -217,6 +221,7 @@
     </UPageState>
 
     <UNoteEditor v-model="noteVisible" :question-id="noteQuestionId" />
+    <UReportEditor v-model="reportVisible" :question-id="reportQuestionId" />
   </view>
 </template>
 
@@ -285,6 +290,8 @@ const timeUpHandled = ref(false);
 const timeUpAlerting = ref(false);
 const noteVisible = ref(false);
 const noteQuestionId = ref('');
+const reportVisible = ref(false);
+const reportQuestionId = ref('');
 const elapsed: Record<string, number> = {};
 const contentRefs = new Map<number, { pause: () => void }>();
 const draftTimers = new Map<string, { timer: ReturnType<typeof setTimeout>; answeredAt: number }>();
@@ -353,6 +360,11 @@ function setContentRef(slot: number, instance: unknown) {
 function openNote(questionId: string) {
   noteQuestionId.value = questionId;
   noteVisible.value = true;
+}
+
+function openReport(questionId: string) {
+  reportQuestionId.value = questionId;
+  reportVisible.value = true;
 }
 
 function pauseAudio() {

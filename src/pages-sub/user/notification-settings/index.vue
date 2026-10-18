@@ -107,6 +107,7 @@ const CATEGORY_NAMES: Record<NotificationSettingCategory, string> = {
   PAYMENT: '支付通知',
   ACTIVITY: '活动通知',
   PROMOTION: '推广通知',
+  STUDY: '学习通知',
 };
 
 const CATEGORY_DESCS: Record<NotificationSettingCategory, string> = {
@@ -115,6 +116,7 @@ const CATEGORY_DESCS: Record<NotificationSettingCategory, string> = {
   PAYMENT: '支付成功、退款等资金变动',
   ACTIVITY: '优惠活动、促销信息等',
   PROMOTION: '优惠券发放、商品推荐等',
+  STUDY: '题目勘误、学习相关提醒等',
 };
 
 function getCategoryName(category: NotificationSettingCategory): string {

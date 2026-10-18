@@ -15,6 +15,7 @@ export * from './modules/practice';
 export * from './modules/wrong-book';
 export * from './modules/study';
 export * from './modules/question-collection';
+export * from './modules/question-report';
 export * from './plugins/persist';
 
 export default createPersistedPinia();

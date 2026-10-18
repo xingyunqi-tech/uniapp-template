@@ -80,6 +80,22 @@ describe('question-collection store 收藏', () => {
     expect(store.favoriteOf('q1')).toBe(true);
   });
 
+  it('切换筛选后请求返回前清空旧列表', async () => {
+    const store = useQuestionCollectionStore();
+    api.getFavorites.mockResolvedValueOnce(page([favorite('q1')]));
+    await store.fetchFavorites(true);
+    let resolve: (value: unknown) => void = () => undefined;
+    api.getFavorites.mockReturnValueOnce(new Promise(r => (resolve = r)));
+
+    const pending = store.setFavoriteFilter({ type: 'paper' });
+
+    expect(store.favorites).toEqual([]);
+    expect(store.favoritesLoading).toBe(true);
+    resolve(page([{ ...favorite('p1'), targetType: 'paper' }]));
+    await pending;
+    expect(store.favorites.map(item => item.targetId)).toEqual(['p1']);
+  });
+
   it('切换到试卷收藏时按试卷类型请求，不写入题目收藏状态', async () => {
     const store = useQuestionCollectionStore();
     api.getFavorites.mockResolvedValueOnce(page([{ ...favorite('p1'), targetType: 'paper' }]));

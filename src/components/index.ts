@@ -85,6 +85,10 @@ export type { UQuestionActionsProps } from './UQuestionActions/index.vue';
 export { default as UNoteEditor } from './UNoteEditor/index.vue';
 export type { UNoteEditorProps } from './UNoteEditor/index.vue';
 
+// 题目纠错表单弹层
+export { default as UReportEditor } from './UReportEditor/index.vue';
+export type { UReportEditorProps } from './UReportEditor/index.vue';
+
 // 骨架屏组件
 export { default as USkeleton } from './USkeleton/index.vue';
 export type { SkeletonType, AvatarShape } from './USkeleton/index.vue';

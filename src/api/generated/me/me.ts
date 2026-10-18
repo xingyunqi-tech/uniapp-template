@@ -12,10 +12,12 @@ import type {
   DailyStatDto,
   GetCheckinsParams,
   GetMyQuestionNotesParams,
+  GetMyQuestionReportsParams,
   GetStudyDailyParams,
   GetStudyKnowledgeParams,
   GetStudyWeakPointsParams,
   PaginationQuestionNoteItemDtoResponseDto,
+  PaginationQuestionReportItemDtoResponseDto,
   PublicKnowledgePointTreeNodeDto,
   StudyOverviewDto,
   UpsertExamProfileDto,
@@ -120,6 +122,18 @@ export const getMyQuestionNotes = (
     options,
   );
 };
+/**
+ * @summary 我的纠错记录与处理结果，按提交时间倒序，附题目摘要
+ */
+export const getMyQuestionReports = (
+  params?: GetMyQuestionReportsParams,
+  options?: SecondParameter<typeof customMutator<PaginationQuestionReportItemDtoResponseDto>>,
+) => {
+  return customMutator<PaginationQuestionReportItemDtoResponseDto>(
+    { url: `/api/v1/me/question-reports`, method: 'GET', params },
+    options,
+  );
+};
 export type GetMyExamProfilesResult = NonNullable<Awaited<ReturnType<typeof getMyExamProfiles>>>;
 export type UpsertMyExamProfileResult = NonNullable<Awaited<ReturnType<typeof upsertMyExamProfile>>>;
 export type DeleteMyExamProfileResult = NonNullable<Awaited<ReturnType<typeof deleteMyExamProfile>>>;
@@ -130,3 +144,4 @@ export type GetStudyKnowledgeResult = NonNullable<Awaited<ReturnType<typeof getS
 export type GetStudyWeakPointsResult = NonNullable<Awaited<ReturnType<typeof getStudyWeakPoints>>>;
 export type GetCheckinsResult = NonNullable<Awaited<ReturnType<typeof getCheckins>>>;
 export type GetMyQuestionNotesResult = NonNullable<Awaited<ReturnType<typeof getMyQuestionNotes>>>;
+export type GetMyQuestionReportsResult = NonNullable<Awaited<ReturnType<typeof getMyQuestionReports>>>;

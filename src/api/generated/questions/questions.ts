@@ -7,7 +7,13 @@
  *  * 如需自定义接口，请在 src/api/custom/ 目录下创建覆盖文件
  *  *\/
  */
-import type { QuestionContentDto, QuestionNoteDto, SaveQuestionNoteDto } from '../model';
+import type {
+  CreateQuestionReportDto,
+  Feedback,
+  QuestionContentDto,
+  QuestionNoteDto,
+  SaveQuestionNoteDto,
+} from '../model';
 
 import { customMutator } from '../../core/mutator';
 
@@ -43,6 +49,25 @@ export const saveQuestionNote = (
 export const deleteQuestionNote = (id: string, options?: SecondParameter<typeof customMutator<void>>) => {
   return customMutator<void>({ url: `/api/v1/questions/${id}/note`, method: 'DELETE' }, options);
 };
+/**
+ * @summary 题目纠错：题目须与用户存在会话、错题本、收藏或笔记关联，记录题目当前版本
+ */
+export const createQuestionReport = (
+  id: string,
+  createQuestionReportDto: CreateQuestionReportDto,
+  options?: SecondParameter<typeof customMutator<Feedback>>,
+) => {
+  return customMutator<Feedback>(
+    {
+      url: `/api/v1/questions/${id}/reports`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: createQuestionReportDto,
+    },
+    options,
+  );
+};
 export type GetQuestionResult = NonNullable<Awaited<ReturnType<typeof getQuestion>>>;
 export type SaveQuestionNoteResult = NonNullable<Awaited<ReturnType<typeof saveQuestionNote>>>;
 export type DeleteQuestionNoteResult = NonNullable<Awaited<ReturnType<typeof deleteQuestionNote>>>;
+export type CreateQuestionReportResult = NonNullable<Awaited<ReturnType<typeof createQuestionReport>>>;

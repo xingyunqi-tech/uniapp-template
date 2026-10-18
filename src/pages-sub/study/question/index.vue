@@ -5,10 +5,19 @@
         <view class="question-body__tags">
           <UTag :text="QUESTION_TYPE_LABELS[typeOf(view)]" type="primary" size="small" plain />
           <UTag v-if="offline" text="已下架" type="default" size="small" />
+          <view class="question-body__spacer" />
+          <view v-if="!perChildReport" class="question-body__report" @click="openReport(questionId)">
+            <UIcon name="info" size="32rpx" color="var(--color-text-secondary)" />
+            <text>纠错</text>
+          </view>
         </view>
         <text v-if="hiddenNotice" class="question-body__notice">{{ hiddenNotice }}</text>
         <UQuestionContent :question="view" :option-states="optionStates">
           <template #extra="{ question }">
+            <view v-if="perChildReport" class="question-body__child-report" @click="openReport(question.id)">
+              <UIcon name="info" size="32rpx" color="var(--color-text-secondary)" />
+              <text>纠错本题</text>
+            </view>
             <view v-if="solutionViews[question.id]" class="question-solution">
               <view v-if="solutionViews[question.id]!.view.answer" class="question-solution__block">
                 <text class="question-solution__label">
@@ -42,6 +51,7 @@
     </UPageState>
 
     <UNoteEditor v-model="noteVisible" :question-id="noteQuestionId" />
+    <UReportEditor v-model="reportVisible" :question-id="reportQuestionId" />
   </view>
 </template>
 
@@ -69,6 +79,7 @@ import {
   type SolutionView,
 } from '@/utils/question-answer';
 import { answerableQuestions, toQuestionView, type QuestionView } from '@/utils/question-content';
+import { reportsPerChild } from '@/utils/question-report';
 
 interface SolutionEntry {
   view: SolutionView;
@@ -84,6 +95,8 @@ const loading = ref(true);
 const loadError = ref<string | boolean>(false);
 const noteVisible = ref(false);
 const noteQuestionId = ref('');
+const reportVisible = ref(false);
+const reportQuestionId = ref('');
 
 const view = computed<QuestionView | null>(() => {
   const dto = detail.value;
@@ -142,6 +155,13 @@ function typeOf(question: QuestionView): QuestionType {
     : question.type;
 }
 
+const perChildReport = computed(() => (view.value ? reportsPerChild(view.value, questionId.value) : false));
+
+function openReport(id: string) {
+  reportQuestionId.value = id;
+  reportVisible.value = true;
+}
+
 function openNote(id: string) {
   noteQuestionId.value = id;
   noteVisible.value = true;
@@ -187,8 +207,31 @@ onLoad(options => {
 
   &__tags {
     display: flex;
+    align-items: center;
     margin-bottom: 16rpx;
     gap: 12rpx;
+  }
+
+  &__spacer {
+    flex: 1;
+  }
+
+  &__child-report {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 16rpx;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+    gap: 6rpx;
+  }
+
+  &__report {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+    gap: 6rpx;
   }
 
   &__notice {

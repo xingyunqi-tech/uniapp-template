@@ -96,6 +96,7 @@ import { useNotificationStore } from '@/store/modules/notification';
 import { useGlobalStore } from '@/store/modules/global';
 import { NotificationCategory, type Notification } from '@/api';
 import { formatRelativeTime } from '@/utils/datetime';
+import { notificationLinkOf } from '@/utils/notification-link';
 import { getPathFromUrl, isRouteIntercepted, isTabBarPage, navigateTo, switchTab } from '@/utils/router';
 import { PAGES } from '@/constants';
 import { useDialog } from '@/composables';
@@ -117,6 +118,7 @@ const tabs = [
   { label: '支付', value: NotificationCategory.PAYMENT },
   { label: '优惠', value: NotificationCategory.PROMOTION },
   { label: '活动', value: NotificationCategory.ACTIVITY },
+  { label: '学习', value: NotificationCategory.STUDY },
 ];
 
 // ==================== 计算属性 ====================
@@ -187,9 +189,8 @@ async function handleItemClick(item: Notification) {
       });
     }
 
-    if (typeof item.metadata?.url === 'string' && item.metadata.url) {
-      await openLink(item.metadata.url);
-    }
+    const link = notificationLinkOf(item);
+    if (link) await openLink(link);
   } finally {
     itemClicking = false;
   }
@@ -265,6 +266,7 @@ function getIconType(category: string): IconName {
     [NotificationCategory.PAYMENT]: 'wallet',
     [NotificationCategory.PROMOTION]: 'medal',
     [NotificationCategory.ACTIVITY]: 'gift',
+    [NotificationCategory.STUDY]: 'compose',
   };
   return iconMap[category] || 'notification';
 }
@@ -409,6 +411,10 @@ function formatTime(time: string): string {
 
     &.category-PROMOTION {
       background: var(--color-error);
+    }
+
+    &.category-STUDY {
+      background: var(--color-success);
     }
   }
 

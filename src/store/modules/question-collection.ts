@@ -104,6 +104,7 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
   function setFavoriteFilter(filter: { type?: FavoriteTab; subjectId?: string }): Promise<FavoriteItemDto[]> {
     if (filter.type !== undefined) favoriteType.value = filter.type;
     if (filter.subjectId !== undefined) favoriteSubjectId.value = filter.subjectId;
+    favoritePager.reset();
     return fetchFavorites(true);
   }
 

@@ -16,7 +16,7 @@ dist
 
 # pnpm screenshot 输出
 screenshots
-reports
+/reports
 coverage
 unpackage
 

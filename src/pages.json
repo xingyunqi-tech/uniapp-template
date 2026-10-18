@@ -359,6 +359,14 @@
             "navigationBarTitleText": "错题本",
             "enablePullDownRefresh": true
           }
+        },
+        {
+          "path": "reports/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "我的纠错",
+            "enablePullDownRefresh": true
+          }
         }
       ]
     }

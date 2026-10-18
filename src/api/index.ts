@@ -92,6 +92,13 @@ export {
   adminGetImports,
   adminGetImport,
   adminDownloadImportErrors,
+  adminCreateErrata,
+  adminGetErrataList,
+  adminGetErrata,
+  adminRetryErrata,
+  adminGetQuestionReports,
+  adminGetQuestionReport,
+  adminUpdateQuestionReport,
 } from './generated/admin/admin';
 
 export {
@@ -159,6 +166,7 @@ export {
   getStudyWeakPoints,
   getCheckins,
   getMyQuestionNotes,
+  getMyQuestionReports,
 } from './generated/me/me';
 
 export { prometheusControllerIndex } from './generated/metrics/metrics';
@@ -194,7 +202,12 @@ export {
   abandonPracticeSession,
 } from './generated/practice/practice';
 
-export { getQuestion, saveQuestionNote, deleteQuestionNote } from './generated/questions/questions';
+export {
+  getQuestion,
+  saveQuestionNote,
+  deleteQuestionNote,
+  createQuestionReport,
+} from './generated/questions/questions';
 
 export {
   getProvinces,

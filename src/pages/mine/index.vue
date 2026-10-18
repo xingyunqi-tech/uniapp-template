@@ -20,7 +20,8 @@
         <UMenuItem icon="flag" title="错题本" @click="handleMenuClick('wrongBook')" />
         <UMenuItem icon="star" title="我的收藏" @click="handleMenuClick('favorites')" />
         <UMenuItem icon="compose" title="我的笔记" @click="handleMenuClick('notes')" />
-        <UMenuItem icon="calendar" title="打卡日历" :border="false" @click="handleMenuClick('checkin')" />
+        <UMenuItem icon="calendar" title="打卡日历" @click="handleMenuClick('checkin')" />
+        <UMenuItem icon="info" title="我的纠错" :border="false" @click="handleMenuClick('reports')" />
       </UMenuGroup>
 
       <UMenuGroup>
@@ -107,6 +108,7 @@ const MENU_PAGES: Record<string, string> = {
   favorites: PAGES.STUDY_FAVORITES,
   notes: PAGES.STUDY_NOTES,
   checkin: PAGES.STUDY_CHECKIN,
+  reports: PAGES.STUDY_REPORTS,
   order: PAGES.ORDER,
   notifications: PAGES.NOTIFICATIONS,
   address: PAGES.ADDRESS,

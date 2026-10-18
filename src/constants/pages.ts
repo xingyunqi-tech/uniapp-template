@@ -88,6 +88,8 @@ export const PAGES = {
   STUDY_NOTES: '/pages-sub/study/notes/index',
   /** 打卡日历 */
   STUDY_CHECKIN: '/pages-sub/study/checkin/index',
+  /** 我的纠错 */
+  STUDY_REPORTS: '/pages-sub/study/reports/index',
 
   /** 组件演示页，仅 development 模式下存在 */
   COMPONENT_DEMO: '/pages-sub/other/component-demo/index',

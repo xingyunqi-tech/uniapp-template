@@ -245,7 +245,7 @@ easycom: {
 | `UCheckboxGroup` | 多选框组 | `URadioGroup` | 单选框组 |
 | `UDatePicker` | 日期/时间选择 | `UStepper` | 步进器 |
 | `UCountdown` | 倒计时 | `USwipeAction` | 左滑操作 |
-| `UQuestionContent` | 题目内容（Markdown + LaTeX、图片预览、材料题、音频） | | |
+| `UQuestionContent` | 题目内容（Markdown + LaTeX、图片预览、材料题、音频） | `UReportEditor` | 题目纠错表单弹层 |
 | `UQuestionActions` | 题目收藏与笔记入口 | `UNoteEditor` | 题目笔记编辑弹层 |
 
 **详细文档**: [.claude/agents/component-development.md](.claude/agents/component-development.md)
