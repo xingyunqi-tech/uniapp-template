@@ -16,7 +16,7 @@ export default defineManifestConfig({
     themeLocation: 'theme.json',
     setting: {
       urlCheck: false,
-      es6: true,
+      es6: false,
       postcss: true,
       minified: true,
     },
