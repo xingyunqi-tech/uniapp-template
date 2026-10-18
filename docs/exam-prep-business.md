@@ -218,7 +218,7 @@ erDiagram
 **QuestionVersion**：`questionId`、`version`、`type`、`stem`、`options`、`answer`、`analysis`、`material`、`audioFileId`、`knowledgePointIds`、`materialVersion`（小题快照对应的材料版本，材料与独立题为空）、`changeType`（`PUBLISH` / `EDIT` / `ERRATA`）、`createdAt`；唯一键 `(questionId, version)`。
 
 - 首次发布写入 v1（`PUBLISH`）；发布前的 `DRAFT` 修改不产生版本。
-- 发布后每次修改生成新版本；渲染按引用方记录的版本读取 `QuestionVersion`。
+- 发布后每次修改生成新版本；题面（题干、选项、材料）按引用方记录的版本读取 `QuestionVersion`，答案与解析统一取题目最新版本。
 - `EDIT` 不允许修改 `answer`、`type`、选项 key 集合与填空空数；修改答案只能走勘误（`ERRATA`）。
 - 判分统一读取题目最新版本的 `answer`（答案只会经勘误变化），作答记录的 `questionVersion` 仅记录作答时看到的题面版本。
 
@@ -240,7 +240,7 @@ erDiagram
 
 **题目纠错**（复用 feedbacks 模块）：`FeedbackType` 新增 `question_error`；Feedback 新增 `questionId?`、`questionVersion?`、`reason?`（`answer_wrong` / `analysis_wrong` / `stem_typo` / `other`）、`errataId?`；处理回复使用现有 `reply` 字段，状态沿用 `FeedbackStatus`。
 
-**Errata**（勘误任务）：`id`、`questionId`、`toVersion`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`affectedUsers`、`processedUsers`、`createdBy`。部分唯一索引 `(questionId) WHERE status IN ('PENDING','RUNNING')`，同一题同一时间只能有一个未完成的勘误。
+**Errata**（勘误任务）：`id`、`questionId`、`toVersion`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`affectedUsers`、`processedUsers`、`createdBy`。部分唯一索引 `(questionId) WHERE status IN ('PENDING','RUNNING')`，同一题同一时间只能有一个未完成的勘误。`errata_user`（`errataId`、`userId`、`notified`）记录任务已处理的用户，用于断点续跑计数与完成后通知。
 
 #### 业务规则
 
@@ -253,7 +253,7 @@ erDiagram
 7. 材料题以材料为单位出题，小题顺序固定，小题挂知识点。
 8. **下架题**：已在进行中会话或已发布试卷中的下架题仍可作答与判分；错题本、收藏中展示「已下架」，不再被抽入新会话。
 9. **勘误**：管理员确认答案错误后执行勘误（可关联纠错单），基于当前版本只修改答案与解析，生成 `ERRATA` 新版本并创建 Errata 任务。由于判分始终读取最新答案，勘误生效后的新判分自动正确，任务只需修正已判分的历史数据：
-   1. 同步更新引用：已发布试卷的 `PaperQuestion.questionVersion` 与 `IN_PROGRESS` 会话的 `questionVersions` 更新为 `toVersion`（试卷版本冻结的唯一例外）。因 `EDIT` 不能改题型、选项 key 与空数，跳版只会带入文字类修改。
+   1. 同步更新引用：引用该题的全部试卷的 `PaperQuestion.questionVersion` 与 `IN_PROGRESS` 会话的 `questionVersions` 更新为 `toVersion`（试卷版本冻结的唯一例外）；已交卷会话的 `questionVersions` 不改写。因 `EDIT` 不能改题型、选项 key 与空数，跳版只会带入文字类修改。
    2. 异步重判：该题所有版本小于 `toVersion` 且已判分的**客观题**作答记录按新答案重判，更新 `isCorrect`、`isPartial`、`score`、`questionVersion`，并重算所属会话的 `score`、`correctCount`；主观题记录只更新 `questionVersion`。
    3. 统计修正：对 `isCorrect` 发生变化且已计入统计（`statsAppliedAt` 非空）的记录，按用户在 `stats:user:{userId}` 锁与同一事务内执行：
       - 知识点统计：该用户在该题叶子知识点上的 `UserKnowledgeStat` 由已计入的作答记录全量重建（含 `recentResults`）。
@@ -852,7 +852,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 | 知识点       | `GET /admin/subjects/:id/knowledge-points`（树）、`POST /admin/knowledge-points`、`PATCH/DELETE /admin/knowledge-points/:id`、`POST /admin/knowledge-points/:id/move`、`POST /admin/knowledge-points/:id/migrate-questions` | `content:manage` |
 | 题目         | `GET/POST /admin/questions`、`GET/PATCH /admin/questions/:id`、`GET /admin/questions/:id/versions`、`POST /admin/questions/:id/submit`、`DELETE /admin/questions/:id`（仅从未发布的草稿） | `content:manage`（列表与详情 `content:manage` 或 `content:review`） |
 | 审核         | `POST /admin/questions/:id/publish`、`POST /admin/questions/:id/reject`、`POST /admin/questions/:id/offline`、`POST /admin/questions/batch-publish` | `content:review` |
-| 勘误         | `POST /admin/questions/:id/errata`、`GET /admin/errata`、`GET /admin/errata/:id`（进度）        | `content:review` |
+| 勘误         | `POST /admin/questions/:id/errata`、`GET /admin/errata`、`GET /admin/errata/:id`（进度）、`POST /admin/errata/:id/retry`（失败或超过 10 分钟未进展的任务从中断处继续） | `content:review` |
 | 纠错与举报   | `GET /admin/question-reports`（含题目纠错与 AI 内容举报，按类型筛选）、`GET /admin/question-reports/:id`、`PATCH /admin/question-reports/:id`（状态、回复、关联勘误） | `content:review` |
 | 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`DELETE /admin/papers/:id`（仅草稿）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage` |
 | 组卷规则     | `GET/POST /admin/paper-rules`、`GET/PATCH/DELETE /admin/paper-rules/:id`、`POST /admin/paper-rules/:id/preview`（试生成，不落库） | `content:manage` |
@@ -1022,7 +1022,7 @@ ACTIVE ─手动移出─► MASTERED
 MASTERED ─再次判错─► ACTIVE
 MASTERED ─手动恢复─► ACTIVE（consecutiveCorrect=0）
 勘误改判对 ─该题再无判错记录─► 删除错题记录
-勘误改判错 ─► 按「判错」处理
+勘误改判错 ─► 按判错记录重算次数与时间；无错题记录时新建 ACTIVE，已有记录的 status 与 consecutiveCorrect 不变
 ```
 
 ### 5.3 AI 讲题
