@@ -30,9 +30,9 @@
           icon="notification"
           title="消息通知"
           :badge="unreadCount"
+          :border="false"
           @click="handleMenuClick('notifications')"
         />
-        <UMenuItem icon="location" title="收货地址" :border="false" @click="handleMenuClick('address')" />
       </UMenuGroup>
 
       <UMenuGroup>
@@ -45,11 +45,6 @@
         <!-- #endif -->
 
         <UMenuItem icon="settings" title="设置" :border="false" @click="handleMenuClick('settings')" />
-      </UMenuGroup>
-
-      <UMenuGroup>
-        <UMenuItem icon="paperclip" title="用户协议" @click="openAgreement('user')" />
-        <UMenuItem icon="locked" title="隐私政策" :border="false" @click="openAgreement('privacy')" />
       </UMenuGroup>
     </view>
   </view>
@@ -116,17 +111,12 @@ const MENU_PAGES: Record<string, string> = {
   reports: PAGES.STUDY_REPORTS,
   order: PAGES.ORDER,
   notifications: PAGES.NOTIFICATIONS,
-  address: PAGES.ADDRESS,
   contact: PAGES.CONTACT,
   settings: PAGES.SETTINGS,
 };
 function handleMenuClick(type: string) {
   const page = MENU_PAGES[type];
   if (page) router.push(page);
-}
-
-function openAgreement(type: 'user' | 'privacy') {
-  router.push(PAGES.AGREEMENT, { type });
 }
 </script>
 

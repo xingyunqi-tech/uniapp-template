@@ -4,7 +4,8 @@
     <view class="settings-section">
       <UMenuGroup title="账号设置">
         <UMenuItem icon="person" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
-        <UMenuItem icon="locked" title="账号安全" show-arrow :border="false" @click="handleMenuClick('security')" />
+        <UMenuItem icon="locked" title="账号安全" show-arrow @click="handleMenuClick('security')" />
+        <UMenuItem icon="location" title="收货地址" show-arrow :border="false" @click="handleMenuClick('address')" />
       </UMenuGroup>
     </view>
 
@@ -182,6 +183,9 @@ function handleMenuClick(type: string) {
       break;
     case 'security':
       router.push(PAGES.PASSWORD);
+      break;
+    case 'address':
+      router.push(PAGES.ADDRESS);
       break;
     case 'feedback':
       router.push(PAGES.FEEDBACK);
