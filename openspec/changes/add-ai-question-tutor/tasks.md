@@ -9,12 +9,12 @@
 
 ## 2. 后端：AI 模块
 
-- [ ] 2.1 AiConversation、AiMessage、AiUsageDaily 实体与 migration
-- [ ] 2.2 会话接口：创建（可见性、会话归属校验）、列表、消息列表、删除
-- [ ] 2.3 发送消息：前置条件（`ai.enabled`、微信绑定、AI 声明同意）→ 输入送检 → 熔断 → 额度扣减 → 启动生成
-- [ ] 2.4 生成任务：上下文与摘要构建、按段送检、写入 Redis Stream、usage 与成本累计、`AiUsageDaily` upsert
-- [ ] 2.5 SSE 接口（`@SkipResponseTransform()`，异常转 `error` 事件）与 `GET /ai/messages/:id`
-- [ ] 2.6 停止生成（Redis pub/sub）、计费口径与额度退还
+- [x] 2.1 AiConversation、AiMessage、AiUsageDaily 实体与 migration
+- [x] 2.2 会话接口：创建（可见性、会话归属校验）、列表、消息列表、删除
+- [x] 2.3 发送消息：前置条件（`ai.enabled`、微信绑定、AI 声明同意）→ 输入送检 → 熔断 → 额度扣减 → 启动生成
+- [x] 2.4 生成任务：上下文与摘要构建、按段送检、写入 Redis Stream、usage 与成本累计、`AiUsageDaily` upsert
+- [x] 2.5 SSE 接口（`@SkipResponseTransform()`，异常转 `error` 事件）与 `GET /ai/messages/:id`
+- [x] 2.6 停止生成（Redis pub/sub）、计费口径与额度退还
 - [ ] 2.7 每分钟频控、卡住消息清理任务、熔断告警
 - [ ] 2.8 反馈与举报：`/ai/messages/:id/feedback`、`/ai/messages/:id/report`（`ai_content`）
 - [ ] 2.9 注册 AI 数据清理器
