@@ -23,6 +23,23 @@
       >
         <view class="bank-tabs">
           <UTabs v-model="subjectTab" :tabs="subjectTabs" scrollable />
+        </view>
+
+        <view class="practice-modes">
+          <view
+            v-for="entry in PRACTICE_ENTRIES"
+            :key="entry.key"
+            class="practice-mode"
+            @click="handlePracticeEntry(entry.key)"
+          >
+            <view class="practice-mode__icon">
+              <UIcon :name="entry.icon" size="40rpx" color="var(--color-primary)" />
+            </view>
+            <text class="practice-mode__label">{{ entry.label }}</text>
+          </view>
+        </view>
+
+        <view class="bank-tabs bank-tabs--section">
           <UTabs v-model="section" :tabs="SECTION_TABS" type="card" />
         </view>
 
@@ -56,6 +73,13 @@
                 {{ knowledgeProgressText(row.node) }}
               </text>
               <text class="knowledge-row__count">{{ row.node.questionCount }} 题</text>
+              <text
+                v-if="row.node.questionCount > 0"
+                class="knowledge-row__practice"
+                @click.stop="openKnowledgeActions(row.node)"
+              >
+                练习
+              </text>
             </view>
           </UPageState>
         </view>
@@ -71,7 +95,7 @@
             empty-text="暂无试卷"
             @retry="retryPapers"
           >
-            <UCard v-for="paper in papers" :key="paper.id" class="paper-card">
+            <UCard v-for="paper in papers" :key="paper.id" class="paper-card" clickable @click="goPaper(paper)">
               <view class="paper-card__header">
                 <UTag :text="PAPER_TYPE_LABELS[paper.type]" type="primary" size="small" plain />
                 <text class="paper-card__title">{{ paper.title }}</text>
@@ -105,23 +129,40 @@ definePage({
 import { computed, ref, watch } from 'vue';
 import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app';
 import {
+  PracticeMode,
   getSubjectKnowledgePoints,
   getSubjectPapers,
   type PaperType,
   type PublicKnowledgePointTreeNodeDto,
   type PublicPaperDto,
+  type QuestionType,
 } from '@/api';
+import type { IconName } from '@/components/UIcon/index.vue';
 import type { TabItem, TabValue } from '@/components/UTabs/index.vue';
 import { useList, useRouter } from '@/composables';
-import { PAGES, PAPER_TYPE_LABELS } from '@/constants';
+import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
+import { PAGES, PAPER_TYPE_LABELS, PRACTICE_QUESTION_TYPES, QUESTION_TYPE_LABELS } from '@/constants';
 import { useExamStore } from '@/store/modules/exam';
 import { useGlobalStore } from '@/store/modules/global';
+import { useUserStore } from '@/store/modules/user';
 import { flattenKnowledgeTree, knowledgeProgressText, type KnowledgeTreeRow } from '@/utils/knowledge-tree';
 
 interface PaperQuery {
   subjectId: string;
   type: string;
 }
+
+type PracticeEntryKey = 'daily' | 'random' | 'type' | 'smart' | 'memorize' | 'generate' | 'history';
+
+const PRACTICE_ENTRIES: { key: PracticeEntryKey; label: string; icon: IconName }[] = [
+  { key: 'daily', label: '每日一练', icon: 'calendar' },
+  { key: 'random', label: '随机练习', icon: 'refreshempty' },
+  { key: 'type', label: '题型专项', icon: 'bars' },
+  { key: 'smart', label: '智能练习', icon: 'fire' },
+  { key: 'memorize', label: '背题模式', icon: 'eye' },
+  { key: 'generate', label: '按规则组卷', icon: 'paperplane' },
+  { key: 'history', label: '练习历史', icon: 'list' },
+];
 
 const SECTION_TABS: TabItem[] = [
   { label: '知识点', value: 'knowledge' },
@@ -136,7 +177,9 @@ const PAPER_TABS: TabItem[] = [
 
 const globalStore = useGlobalStore();
 const examStore = useExamStore();
+const userStore = useUserStore();
 const router = useRouter();
+const { launch, requireLogin } = usePracticeLauncher();
 
 const section = ref<TabValue>('knowledge');
 const paperType = ref<TabValue>('');
@@ -179,6 +222,72 @@ const {
 
 function goSelectExam() {
   router.push(PAGES.EXAM_SELECT);
+}
+
+function goPaper(paper: PublicPaperDto) {
+  router.push(PAGES.EXAM_PAPER, { paperId: paper.id });
+}
+
+function chooseAction(itemList: string[]): Promise<number | null> {
+  return new Promise(resolve => {
+    uni.showActionSheet({
+      itemList,
+      success: result => resolve(result.tapIndex),
+      fail: () => resolve(null),
+    });
+  });
+}
+
+async function chooseQuestionType(): Promise<QuestionType | null> {
+  const index = await chooseAction(PRACTICE_QUESTION_TYPES.map(type => QUESTION_TYPE_LABELS[type]));
+  return index === null ? null : (PRACTICE_QUESTION_TYPES[index] ?? null);
+}
+
+async function openKnowledgeActions(node: PublicKnowledgePointTreeNodeDto) {
+  const id = subjectId.value;
+  if (!id) return;
+  const index = await chooseAction(['章节练习', '背题模式']);
+  if (index === null) return;
+  launch({
+    mode: index === 0 ? PracticeMode.CHAPTER : PracticeMode.MEMORIZE,
+    subjectId: id,
+    scope: { knowledgePointId: node.id },
+  });
+}
+
+async function handlePracticeEntry(key: PracticeEntryKey) {
+  const id = subjectId.value;
+  if (!id) return;
+  switch (key) {
+    case 'daily':
+      if (userStore.isLoggedIn) launch({ mode: PracticeMode.DAILY, subjectId: id });
+      else router.push(PAGES.EXAM_TRIAL, { subjectId: id });
+      return;
+    case 'random':
+      launch({ mode: PracticeMode.RANDOM, subjectId: id });
+      return;
+    case 'smart':
+      launch({ mode: PracticeMode.SMART, subjectId: id });
+      return;
+    case 'type':
+    case 'memorize': {
+      if (!requireLogin()) return;
+      const questionType = await chooseQuestionType();
+      if (!questionType) return;
+      launch({
+        mode: key === 'type' ? PracticeMode.TYPE : PracticeMode.MEMORIZE,
+        subjectId: id,
+        scope: { questionType },
+      });
+      return;
+    }
+    case 'generate':
+      if (requireLogin()) router.push(PAGES.EXAM_PAPER_RULES, { subjectId: id });
+      return;
+    case 'history':
+      if (requireLogin()) router.push(PAGES.EXAM_HISTORY);
+      return;
+  }
 }
 
 async function loadSubjects(force = false) {
@@ -332,6 +441,42 @@ onReachBottom(() => {
   padding-bottom: 16rpx;
   background: var(--color-bg);
   gap: 16rpx;
+
+  &--section {
+    padding-top: 16rpx;
+  }
+}
+
+.practice-modes {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20rpx;
+  padding: 24rpx 0 8rpx;
+  background: var(--color-bg);
+}
+
+.practice-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 25%;
+  margin-bottom: 20rpx;
+  gap: 8rpx;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    background: var(--color-primary-bg);
+  }
+
+  &__label {
+    color: var(--color-text);
+    font-size: 24rpx;
+  }
 }
 
 .knowledge {
@@ -369,6 +514,15 @@ onReachBottom(() => {
     flex-shrink: 0;
     color: var(--color-text-secondary);
     font-size: 24rpx;
+  }
+
+  &__practice {
+    flex-shrink: 0;
+    padding: 4rpx 16rpx;
+    border: 1rpx solid var(--color-primary);
+    border-radius: var(--radius-full);
+    color: var(--color-primary);
+    font-size: 22rpx;
   }
 }
 

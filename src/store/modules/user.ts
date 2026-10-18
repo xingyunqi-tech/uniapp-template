@@ -19,6 +19,7 @@ import { useFavoriteStore } from './favorite';
 import { useFeedbackStore } from './feedback';
 import { useNotificationStore } from './notification';
 import { useOrderStore } from './order';
+import { usePracticeStore } from './practice';
 import { useShareStore } from './share';
 import {
   loginWithPhone,
@@ -353,6 +354,7 @@ export const useUserStore = defineStore(
       useNotificationStore().reset();
       useShareStore().clearState();
       useFeedbackStore().reset();
+      usePracticeStore().reset();
     }
 
     /**

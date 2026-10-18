@@ -122,6 +122,26 @@ describe('UQuestionContent', () => {
     expect(options[1].classes()).toContain('u-question-content__option--selected');
   });
 
+  it('optionStates 按判分结果标记选项，优先于已选样式', () => {
+    const wrapper = mountContent({
+      question: question({
+        options: [
+          { key: 'A', content: '甲' },
+          { key: 'B', content: '乙' },
+          { key: 'C', content: '丙' },
+        ],
+      }),
+      selectedKeys: { q1: ['B'] },
+      optionStates: { q1: { A: 'missed', B: 'wrong' } },
+    });
+
+    const options = wrapper.findAll('.u-question-content__option');
+    expect(options[0].classes()).toContain('u-question-content__option--missed');
+    expect(options[1].classes()).toContain('u-question-content__option--wrong');
+    expect(options[1].classes()).not.toContain('u-question-content__option--selected');
+    expect(options[2].classes()).toEqual(['u-question-content__option']);
+  });
+
   it('不可选择时点击选项不触发事件', async () => {
     const wrapper = mountContent({ question: question() });
 

@@ -26,6 +26,17 @@ describe('业务错误键', () => {
     }
   });
 
+  it.each([
+    'mockSessionBusy',
+    'paperRequired',
+    'reportNotAvailable',
+    'dailySessionCannotFinish',
+    'dailySessionCannotAbandon',
+  ])('登记练习会话错误键 %s', key => {
+    expect(isBusinessErrorKey(key)).toBe(true);
+    expect(getBusinessErrorKey({ errorKey: key })).toBe(key);
+  });
+
   it('只识别已登记的错误键', () => {
     expect(isBusinessErrorKey('sessionTakenOver')).toBe(true);
     expect(isBusinessErrorKey('unknownKey')).toBe(false);

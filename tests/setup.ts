@@ -26,6 +26,7 @@ vi.stubGlobal('uni', {
   removeStorageSync: vi.fn((key: string) => {
     uniStorage.delete(key);
   }),
+  getStorageInfoSync: vi.fn(() => ({ keys: [...uniStorage.keys()], currentSize: 0, limitSize: 10240 })),
   request: vi.fn(),
   showToast: vi.fn(),
   showLoading: vi.fn(),

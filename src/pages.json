@@ -279,6 +279,42 @@
           "style": {
             "navigationBarTitleText": "每日一练试做"
           }
+        },
+        {
+          "path": "answer/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "答题"
+          }
+        },
+        {
+          "path": "history/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "练习历史",
+            "enablePullDownRefresh": true
+          }
+        },
+        {
+          "path": "paper/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "试卷详情"
+          }
+        },
+        {
+          "path": "paper-rules/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "按规则组卷"
+          }
+        },
+        {
+          "path": "report/index",
+          "type": "page",
+          "style": {
+            "navigationBarTitleText": "成绩报告"
+          }
         }
       ]
     }

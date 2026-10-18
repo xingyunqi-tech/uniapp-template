@@ -34,6 +34,8 @@ export const STORAGE_KEYS = {
   DRAFT: 'draft',
   /** 设备标识 */
   DEVICE_ID: 'deviceId',
+  /** 练习作答缓存前缀，按会话 ID 拼接 */
+  PRACTICE_ANSWERS: 'practiceAnswers',
 } as const;
 
 /**

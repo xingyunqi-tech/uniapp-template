@@ -546,7 +546,7 @@ erDiagram
 | POST | `/practice/sessions/:id/abandon`               | 放弃                                                     |
 | GET  | `/practice/sessions/:id/report`                | 成绩报告                                                 |
 | GET  | `/practice/sessions`                           | 练习历史（分页，可按模式筛选）                           |
-| GET  | `/practice/sessions/ongoing`                   | 未完成会话                                               |
+| GET  | `/practice/sessions/ongoing?excludeModes=`     | 未完成会话，按最近活跃倒序；`excludeModes` 可选，排除指定模式（可重复传参或逗号分隔，如 `excludeModes=DAILY`），不传时返回全部模式 |
 
 写操作需 `practice:write`，查询类登录即可。
 
@@ -1161,8 +1161,10 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `noQuestionsAvailable`     | 422  | 可出题数为 0                                   |
 | `generateLimitExceeded`    | 429  | 超过每日生成试卷次数                           |
 | `mockSessionBusy`          | 409  | 模考会话状态并发变化，创建/续考重试后仍未完成  |
-| `paperRequired`            | 422  | `MOCK` 未指定试卷（`errors.paperId`）          |
+| `paperRequired`            | 422  | `MOCK` 未指定试卷                              |
 | `reportNotAvailable`       | 409  | 会话未结束（或为背题模式）时查看成绩报告       |
+| `dailySessionCannotFinish` | 409  | 对 `DAILY` 会话调用交卷 / 结束练习             |
+| `dailySessionCannotAbandon` | 409 | 对 `DAILY` 会话调用放弃                        |
 | `aiUnavailable`            | 503  | AI 总开关关闭或全站熔断                        |
 | `aiQuotaExceeded`          | 429  | 用户当日 AI 额度用尽                           |
 | `aiRateLimited`            | 429  | 超过每分钟请求上限                             |

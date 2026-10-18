@@ -39,7 +39,7 @@
           v-for="option in displayOptions(item)"
           :key="option.key"
           class="u-question-content__option"
-          :class="{ 'u-question-content__option--selected': isSelected(item, option) }"
+          :class="optionClass(item, option)"
           @click="handleOptionClick(item, option)"
         >
           <text v-if="item.type !== QuestionType.JUDGE" class="u-question-content__option-key">{{ option.key }}</text>
@@ -78,6 +78,7 @@ definePage({
 
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { QuestionType } from '@/api';
+import type { OptionState } from '@/utils/question-answer';
 import {
   answerableQuestions,
   displayOptions,
@@ -105,6 +106,8 @@ export interface UQuestionContentProps {
   /** 已选选项，键为题目 id */
   selectedKeys?: Record<string, string[]>;
   selectable?: boolean;
+  /** 选项判分样式，键为题目 id 与选项 key */
+  optionStates?: Record<string, Record<string, OptionState>>;
 }
 
 const props = withDefaults(defineProps<UQuestionContentProps>(), {
@@ -114,6 +117,7 @@ const props = withDefaults(defineProps<UQuestionContentProps>(), {
   startIndex: 0,
   selectedKeys: () => ({}),
   selectable: false,
+  optionStates: () => ({}),
 });
 
 const emit = defineEmits<{
@@ -140,6 +144,12 @@ function rich(text: string | null | undefined): string {
 
 function isSelected(question: QuestionView, option: QuestionOption): boolean {
   return props.selectedKeys[question.id]?.includes(option.key) ?? false;
+}
+
+function optionClass(question: QuestionView, option: QuestionOption): string[] {
+  const state = props.optionStates[question.id]?.[option.key];
+  if (state) return [`u-question-content__option--${state}`];
+  return isSelected(question, option) ? ['u-question-content__option--selected'] : [];
 }
 
 function handleOptionClick(question: QuestionView, option: QuestionOption) {
@@ -310,6 +320,38 @@ onBeforeUnmount(destroyAudio);
     border-color: var(--color-primary);
     background: var(--color-primary);
     color: var(--color-text-inverse);
+  }
+
+  &__option--correct {
+    border-color: var(--color-success);
+    background: var(--color-success-bg);
+  }
+
+  &__option--correct &__option-key {
+    border-color: var(--color-success);
+    background: var(--color-success);
+    color: var(--color-text-inverse);
+  }
+
+  &__option--wrong {
+    border-color: var(--color-error);
+    background: var(--color-error-bg);
+  }
+
+  &__option--wrong &__option-key {
+    border-color: var(--color-error);
+    background: var(--color-error);
+    color: var(--color-text-inverse);
+  }
+
+  &__option--missed {
+    border-style: dashed;
+    border-color: var(--color-success);
+  }
+
+  &__option--missed &__option-key {
+    border-color: var(--color-success);
+    color: var(--color-success);
   }
 }
 </style>

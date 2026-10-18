@@ -39,16 +39,37 @@
           <text v-else-if="daily.questionCount === 0" class="daily-card__desc">今日暂无题目</text>
           <template v-else>
             <text class="daily-card__desc">{{ daily.date }} · 共 {{ daily.questionCount }} 题</text>
+            <text v-if="daily.completion" class="daily-card__desc">
+              {{
+                daily.completion.completed
+                  ? `今日已完成，答对 ${daily.completion.correctCount} 题`
+                  : `已答 ${daily.completion.answeredCount}/${daily.completion.questionCount}`
+              }}
+            </text>
             <view class="daily-card__action">
-              <UButton
-                :text="userStore.isLoggedIn ? '去试做' : '免费试做'"
-                type="primary"
-                size="small"
-                @click="goTrial"
-              />
+              <UButton :text="dailyActionText" type="primary" size="small" :loading="launching" @click="goDaily" />
             </view>
           </template>
         </UCard>
+
+        <UCard v-if="continueSession" class="continue-card" title="继续练习">
+          <template #extra>
+            <text class="continue-card__link" @click="goHistory">练习历史</text>
+          </template>
+          <view class="continue-card__body" @click="resumeSession">
+            <view class="continue-card__info">
+              <text class="continue-card__mode">{{ PRACTICE_MODE_LABELS[continueSession.mode] }}</text>
+              <text class="continue-card__desc">
+                已答 {{ continueSession.answeredCount }}/{{ continueSession.questionCount }}
+              </text>
+            </view>
+            <UButton text="继续" type="primary" size="small" :loading="launching" @click.stop="resumeSession" />
+          </view>
+        </UCard>
+        <view v-else-if="userStore.isLoggedIn" class="history-link" @click="goHistory">
+          <text>练习历史</text>
+          <UIcon name="right" size="24rpx" color="var(--color-text-secondary)" />
+        </view>
       </template>
     </view>
   </view>
@@ -64,11 +85,13 @@ definePage({
 
 import { computed, ref, watch } from 'vue';
 import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
-import { getSubjectDaily, type DailySummaryDto } from '@/api';
+import { PracticeMode, getSubjectDaily, type DailySummaryDto } from '@/api';
 import { useRouter } from '@/composables';
-import { PAGES } from '@/constants';
+import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
+import { PAGES, PRACTICE_MODE_LABELS } from '@/constants';
 import { useExamStore } from '@/store/modules/exam';
 import { useGlobalStore } from '@/store/modules/global';
+import { usePracticeStore } from '@/store/modules/practice';
 import { useUserStore } from '@/store/modules/user';
 import { daysUntilExam } from '@/utils/exam-date';
 import { confirm } from '@/utils/modal';
@@ -76,7 +99,9 @@ import { confirm } from '@/utils/modal';
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
 const examStore = useExamStore();
+const practiceStore = usePracticeStore();
 const router = useRouter();
+const { launching, launch, resume } = usePracticeLauncher();
 
 const now = ref(Date.now());
 const daily = ref<DailySummaryDto | null>(null);
@@ -94,9 +119,37 @@ function goSelectExam() {
   router.push(PAGES.EXAM_SELECT);
 }
 
-function goTrial() {
+const continueSession = computed(() => (userStore.isLoggedIn ? (practiceStore.ongoing[0] ?? null) : null));
+
+const dailyActionText = computed(() => {
+  if (!userStore.isLoggedIn) return '免费试做';
+  const completion = daily.value?.completion;
+  if (completion?.completed) return '查看';
+  return completion?.sessionId ? '继续练习' : '开始练习';
+});
+
+function goDaily() {
   const subjectId = examStore.currentSubject?.id;
-  if (subjectId) router.push(PAGES.EXAM_TRIAL, { subjectId });
+  if (!subjectId) return;
+  if (userStore.isLoggedIn) launch({ mode: PracticeMode.DAILY, subjectId });
+  else router.push(PAGES.EXAM_TRIAL, { subjectId });
+}
+
+function goHistory() {
+  router.push(PAGES.EXAM_HISTORY);
+}
+
+function resumeSession() {
+  if (continueSession.value) resume(continueSession.value);
+}
+
+async function loadOngoing() {
+  if (!userStore.isLoggedIn) return;
+  try {
+    await practiceStore.fetchOngoing({ excludeModes: [PracticeMode.DAILY] });
+  } catch (error) {
+    console.error('加载未完成练习失败:', error);
+  }
 }
 
 async function loadDaily() {
@@ -143,6 +196,7 @@ watch(
 );
 
 onShow(async () => {
+  loadOngoing();
   try {
     await loadHome();
     await guideToSelectExam();
@@ -154,7 +208,7 @@ onShow(async () => {
 onPullDownRefresh(async () => {
   try {
     await examStore.ensureProfiles(true);
-    await loadHome();
+    await Promise.all([loadHome(), loadOngoing()]);
   } catch (error) {
     console.error('刷新首页失败:', error);
   } finally {
@@ -223,6 +277,48 @@ onPullDownRefresh(async () => {
   &__action {
     margin-top: 24rpx;
   }
+}
+
+.continue-card {
+  &__body {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+  }
+
+  &__info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 8rpx;
+  }
+
+  &__mode {
+    color: var(--color-text);
+    font-size: 30rpx;
+    font-weight: 500;
+  }
+
+  &__desc {
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+  }
+
+  &__link {
+    color: var(--color-primary);
+    font-size: 26rpx;
+  }
+}
+
+.history-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 28rpx;
 }
 
 .daily-card {

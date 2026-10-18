@@ -11,6 +11,7 @@ export * from './modules/region';
 export * from './modules/notification';
 export * from './modules/config';
 export * from './modules/exam';
+export * from './modules/practice';
 export * from './plugins/persist';
 
 export default createPersistedPinia();

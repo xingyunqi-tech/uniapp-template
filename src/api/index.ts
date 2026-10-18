@@ -165,7 +165,25 @@ export {
 
 export { createOrder, getOrders, getOrder, cancelOrder } from './generated/orders/orders';
 
+export { generatePaper } from './generated/paper-rules/paper-rules';
+
 export { getPaper } from './generated/papers/papers';
+
+export {
+  createPracticeSession,
+  getPracticeSessions,
+  getOngoingPracticeSessions,
+  getPracticeSession,
+  getPracticeSessionQuestions,
+  savePracticeAnswers,
+  selfAssessPracticeAnswer,
+  updatePracticeProgress,
+  getPracticeSessionReport,
+  submitPracticeSession,
+  abandonPracticeSession,
+} from './generated/practice/practice';
+
+export { getQuestion } from './generated/questions/questions';
 
 export {
   getProvinces,
@@ -191,6 +209,7 @@ export {
 export {
   getSubjectKnowledgePoints,
   getSubjectPapers,
+  getSubjectPaperRules,
   getSubjectDaily,
   getSubjectDailyTrial,
   checkSubjectDailyTrial,

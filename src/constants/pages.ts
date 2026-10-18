@@ -66,6 +66,16 @@ export const PAGES = {
   EXAM_SELECT: '/pages-sub/exam/select/index',
   /** 每日一练试做 */
   EXAM_TRIAL: '/pages-sub/exam/trial/index',
+  /** 答题 */
+  EXAM_ANSWER: '/pages-sub/exam/answer/index',
+  /** 成绩报告 */
+  EXAM_REPORT: '/pages-sub/exam/report/index',
+  /** 试卷详情 */
+  EXAM_PAPER: '/pages-sub/exam/paper/index',
+  /** 按规则组卷 */
+  EXAM_PAPER_RULES: '/pages-sub/exam/paper-rules/index',
+  /** 练习历史 */
+  EXAM_HISTORY: '/pages-sub/exam/history/index',
 
   /** 组件演示页，仅 development 模式下存在 */
   COMPONENT_DEMO: '/pages-sub/other/component-demo/index',
@@ -146,6 +156,7 @@ export const WHITE_LIST = [
   PAGES.MINE,
   PAGES.EXAM_SELECT,
   PAGES.EXAM_TRIAL,
+  PAGES.EXAM_PAPER,
   PAGES.ERROR,
   PAGES.AGREEMENT,
   PAGES.ABOUT,

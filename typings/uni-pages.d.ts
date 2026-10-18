@@ -27,6 +27,11 @@ type _LocationUrl =
   "/pages-sub/other/contact/index" |
   "/pages-sub/other/feedback/index" |
   "/pages-sub/other/webview/index" |
+  "/pages-sub/exam/answer/index" |
+  "/pages-sub/exam/history/index" |
+  "/pages-sub/exam/paper/index" |
+  "/pages-sub/exam/paper-rules/index" |
+  "/pages-sub/exam/report/index" |
   "/pages-sub/exam/select/index" |
   "/pages-sub/exam/trial/index";
 

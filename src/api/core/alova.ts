@@ -37,13 +37,14 @@ export interface RequestMeta {
   withDeviceId?: boolean;
 }
 
-/** 请求层抛出的错误，携带 HTTP 状态码、业务码与已登记的业务错误键 */
+/** 请求层抛出的错误，携带 HTTP 状态码、业务码、已登记的业务错误键与错误详情（响应 data） */
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status?: number,
     public readonly code?: number,
     public readonly errorKey?: BusinessErrorKey,
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -380,7 +381,7 @@ const alovaInstance = createAlova({
         if (!errorKey && !CLIENT_ERROR_STATUSES.includes(statusCode)) {
           reportApiError(method.url, method.type, msg, statusCode);
         }
-        throw new ApiError(msg, statusCode, undefined, errorKey);
+        throw new ApiError(msg, statusCode, undefined, errorKey, body?.data);
       }
 
       if (data === '' || data === null || data === undefined) {

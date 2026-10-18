@@ -12,6 +12,7 @@ import type {
   DailyTrialDto,
   GetSubjectPapersParams,
   PaginationPublicPaperDtoResponseDto,
+  PaperRuleSummaryDto,
   PublicKnowledgePointTreeNodeDto,
   TrialCheckDto,
   TrialCheckResultDto,
@@ -47,6 +48,15 @@ export const getSubjectPapers = (
   );
 };
 /**
+ * @summary 科目可用的组卷规则
+ */
+export const getSubjectPaperRules = (
+  id: string,
+  options?: SecondParameter<typeof customMutator<PaperRuleSummaryDto[]>>,
+) => {
+  return customMutator<PaperRuleSummaryDto[]>({ url: `/api/v1/subjects/${id}/paper-rules`, method: 'GET' }, options);
+};
+/**
  * @summary 当日每日一练概要（可选登录）
  */
 export const getSubjectDaily = (id: string, options?: SecondParameter<typeof customMutator<DailySummaryDto>>) => {
@@ -59,7 +69,7 @@ export const getSubjectDailyTrial = (id: string, options?: SecondParameter<typeo
   return customMutator<DailyTrialDto>({ url: `/api/v1/subjects/${id}/daily/trial`, method: 'GET' }, options);
 };
 /**
- * @summary 游客试做判分，只返回对错，不落库
+ * @summary 游客试做判分（可选登录），只返回对错，不落库
  */
 export const checkSubjectDailyTrial = (
   id: string,
@@ -78,6 +88,7 @@ export const checkSubjectDailyTrial = (
 };
 export type GetSubjectKnowledgePointsResult = NonNullable<Awaited<ReturnType<typeof getSubjectKnowledgePoints>>>;
 export type GetSubjectPapersResult = NonNullable<Awaited<ReturnType<typeof getSubjectPapers>>>;
+export type GetSubjectPaperRulesResult = NonNullable<Awaited<ReturnType<typeof getSubjectPaperRules>>>;
 export type GetSubjectDailyResult = NonNullable<Awaited<ReturnType<typeof getSubjectDaily>>>;
 export type GetSubjectDailyTrialResult = NonNullable<Awaited<ReturnType<typeof getSubjectDailyTrial>>>;
 export type CheckSubjectDailyTrialResult = NonNullable<Awaited<ReturnType<typeof checkSubjectDailyTrial>>>;
