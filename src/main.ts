@@ -2,11 +2,12 @@ import { createSSRApp, watch } from 'vue';
 import type { App } from 'vue';
 import AppComponent from './App.vue';
 import { setAuthHandlers } from './api';
-import pinia, { useGlobalStore, useNotificationStore, useUserStore } from './store';
+import pinia, { useConsentStore, useGlobalStore, useNotificationStore, useUserStore } from './store';
 import { i18n } from './utils/locale';
 import { guardCurrentPage, setupRouterInterceptor } from './utils/router-interceptor';
 import { getCurrentRoute, getShareTarget, isPrivatePage, isTabBarPage } from './utils/router';
 import { syncTabBarBadge } from './utils/tabbar-badge';
+import { openConsentGate } from './utils/consent-gate';
 import { APP_NAME, TAB_BAR_BADGE } from './constants';
 
 /** 是否为当前栈顶页面的实例（排除组件） */
@@ -50,6 +51,14 @@ export function createApp() {
   // 未读数变化时同步 TabBar 角标
   watch(() => useNotificationStore(pinia).unreadCount, syncTabBarBadge);
 
+  // 有未同意的协议时打开协议同意页
+  watch(
+    () => useConsentStore(pinia).required.length > 0,
+    required => {
+      if (required) openConsentGate();
+    },
+  );
+
   app.mixin({
     // 页面加载时校验访问权限
     onLoad(this: unknown) {
@@ -61,6 +70,7 @@ export function createApp() {
     onShow(this: unknown) {
       if (!isCurrentPageVm(this)) return;
       useGlobalStore(pinia).initTheme();
+      if (useConsentStore(pinia).required.length > 0) openConsentGate();
 
       // 进入 TabBar 页时刷新未读数并同步角标
       if (TAB_BAR_BADGE.enabled && isTabBarPage(getCurrentRoute())) {

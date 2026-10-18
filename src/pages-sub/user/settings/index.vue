@@ -74,7 +74,12 @@
     <UPopup ref="deletePopupRef" type="bottom" title="注销账号">
       <UForm ref="deleteFormRef" :model="deleteForm" :rules="deleteRules">
         <view class="delete-form">
-          <text class="delete-form__tip">注销后账号及相关数据将被删除且无法恢复，请先验证身份</text>
+          <view class="delete-form__notice">
+            <text class="delete-form__notice-title">注销后以下数据将被删除且无法恢复：</text>
+            <text v-for="item in DELETE_CLEANUP_ITEMS" :key="item" class="delete-form__notice-item">· {{ item }}</text>
+            <text class="delete-form__notice-item">提交的题目纠错与举报内容将匿名保留，不再关联你的账号。</text>
+          </view>
+          <text class="delete-form__tip">请先验证身份</text>
           <template v-if="verifyMode === 'password'">
             <UInput v-model="deleteForm.password" type="password" placeholder="请输入当前密码" prefix-icon="locked" />
             <text v-if="boundPhone" class="delete-form__switch" @click="verifyMode = 'sms'">没有密码？用短信验证</text>
@@ -208,6 +213,12 @@ const deleteRules: FormRules<typeof deleteForm> = {
   code: smsCodeRules(),
 };
 const boundPhone = computed(() => userStore.userInfo?.phone || '');
+const DELETE_CLEANUP_ITEMS = [
+  '练习记录与作答、错题本、学习统计与打卡',
+  '笔记、收藏、分享记录、目标考试与个人生成的试卷',
+  '上传的头像、照片等文件',
+  '站内通知、通知设置与收货地址',
+];
 
 const sms = useSendSms({
   sendApi: phone => userStore.sendSmsCode(phone, AuthSendCodeDtoType.verify_identity),
@@ -341,6 +352,27 @@ function handleToggleLocale(checked: boolean) {
   flex-direction: column;
   gap: 32rpx;
   padding-bottom: 24rpx;
+
+  &__notice {
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+    padding: var(--spacing-base);
+    border-radius: var(--radius-base);
+    background: var(--color-bg-grey);
+  }
+
+  &__notice-title {
+    color: var(--color-text);
+    font-size: 26rpx;
+    font-weight: 600;
+  }
+
+  &__notice-item {
+    color: var(--color-text-secondary);
+    font-size: 24rpx;
+    line-height: 1.5;
+  }
 
   &__tip,
   &__phone {

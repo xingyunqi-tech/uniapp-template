@@ -7,6 +7,7 @@
 
 type _LocationUrl =
   "/pages/agreement/index" |
+  "/pages/consent/index" |
   "/pages/error/index" |
   "/pages/forgot-password/index" |
   "/pages/login/index" |

@@ -128,6 +128,14 @@
         "navigationBarTitleText": "注册",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/consent/index",
+      "type": "page",
+      "style": {
+        "navigationBarTitleText": "用户协议与隐私政策",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "subPackages": [

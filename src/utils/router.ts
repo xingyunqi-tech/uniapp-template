@@ -285,7 +285,7 @@ export function resolveLaunchParams(
 export const SHARE_CODE_KEYS: readonly string[] = ['sc', 'shareCode'];
 
 /** 不作为分享落地页的页面，分享时改为首页 */
-const UNSHAREABLE_PAGES: string[] = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.ERROR];
+const UNSHAREABLE_PAGES: string[] = [PAGES.LOGIN, PAGES.REGISTER, PAGES.FORGOT_PASSWORD, PAGES.ERROR, PAGES.CONSENT];
 
 /** 私有页面前缀：页面内容属于当前用户，不开放分享 */
 const PRIVATE_PAGE_PREFIXES: readonly string[] = ['/pages-sub/order/', '/pages-sub/user/'];

@@ -23,6 +23,8 @@ export const PAGES = {
   ERROR: '/pages/error/index',
   /** 协议详情 */
   AGREEMENT: '/pages/agreement/index',
+  /** 协议同意 */
+  CONSENT: '/pages/consent/index',
   /** 403 无权限页 */
   FORBIDDEN: '/pages/error/index',
 
@@ -173,6 +175,7 @@ export const WHITE_LIST = [
   PAGES.EXAM_PAPER,
   PAGES.ERROR,
   PAGES.AGREEMENT,
+  PAGES.CONSENT,
   PAGES.ABOUT,
   PAGES.CONTACT,
   PAGES.SETTINGS,

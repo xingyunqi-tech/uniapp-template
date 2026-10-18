@@ -99,6 +99,7 @@ export {
   adminGetQuestionReports,
   adminGetQuestionReport,
   adminUpdateQuestionReport,
+  adminRetriggerAccountCleanup,
 } from './generated/admin/admin';
 
 export {
@@ -167,6 +168,8 @@ export {
   getCheckins,
   getMyQuestionNotes,
   getMyQuestionReports,
+  getMyConsents,
+  agreeConsent,
 } from './generated/me/me';
 
 export { prometheusControllerIndex } from './generated/metrics/metrics';

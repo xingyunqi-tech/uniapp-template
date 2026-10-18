@@ -46,6 +46,11 @@
 
         <UMenuItem icon="settings" title="设置" :border="false" @click="handleMenuClick('settings')" />
       </UMenuGroup>
+
+      <UMenuGroup>
+        <UMenuItem icon="paperclip" title="用户协议" @click="openAgreement('user')" />
+        <UMenuItem icon="locked" title="隐私政策" :border="false" @click="openAgreement('privacy')" />
+      </UMenuGroup>
     </view>
   </view>
 </template>
@@ -118,6 +123,10 @@ const MENU_PAGES: Record<string, string> = {
 function handleMenuClick(type: string) {
   const page = MENU_PAGES[type];
   if (page) router.push(page);
+}
+
+function openAgreement(type: 'user' | 'privacy') {
+  router.push(PAGES.AGREEMENT, { type });
 }
 </script>
 
