@@ -5,7 +5,7 @@ import chalk from 'chalk';
 const SOURCE_PATTERN = 'src/**/*.{scss,vue}';
 
 /** 变量定义源与第三方/生成产物，不检查硬编码颜色 */
-const COLOR_IGNORE = ['src/styles/theme.scss', 'src/static/**', 'src/api/generated/**'];
+const COLOR_IGNORE = ['src/styles/theme.scss', 'src/static/**', 'src/api/generated/**', 'src/uni_modules/**'];
 
 /** uni-app 运行时注入的 CSS 变量 */
 const UNI_BUILTIN_VARS = new Set([
