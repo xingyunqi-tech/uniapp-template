@@ -64,6 +64,11 @@
 - **WHEN** 用户在错题本查看 Q
 - **THEN** 不返回答案与解析，附带 `hiddenReason = mockInProgress`
 
+#### Scenario: Wrong book question inside a session
+- **GIVEN** 错题本中有题目 Q，且 Q 不在用户进行中的模考
+- **WHEN** 用户在新的章节练习会话中拉取尚未作答的 Q
+- **THEN** 不返回答案与解析；错题本、收藏与笔记关联只用于会话外查看题目
+
 #### Scenario: Memorize mode
 - **WHEN** 用户以知识点范围开始背题模式
 - **THEN** 直接返回答案与解析，不产生作答记录
