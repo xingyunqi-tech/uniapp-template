@@ -4,8 +4,21 @@
     <view class="settings-section">
       <UMenuGroup title="账号设置">
         <UMenuItem icon="person" title="个人资料" show-arrow @click="handleMenuClick('profile')" />
-        <UMenuItem icon="locked" title="账号安全" show-arrow @click="handleMenuClick('security')" />
-        <UMenuItem icon="location" title="收货地址" show-arrow :border="false" @click="handleMenuClick('address')" />
+        <UMenuItem
+          icon="locked"
+          title="账号安全"
+          show-arrow
+          :border="FEATURE_FLAGS.ADDRESS"
+          @click="handleMenuClick('security')"
+        />
+        <UMenuItem
+          v-if="FEATURE_FLAGS.ADDRESS"
+          icon="location"
+          title="收货地址"
+          show-arrow
+          :border="false"
+          @click="handleMenuClick('address')"
+        />
       </UMenuGroup>
     </view>
 
@@ -122,7 +135,7 @@ import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
 import { useAsyncAction, useDialog, useRouter, useSendSms } from '@/composables';
-import { PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
+import { FEATURE_FLAGS, PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import { formatFileSize, formatPhone, storage } from '@/utils';
 import { smsCodeRules, type FormRules } from '@/utils/form-rules';
 import { AuthSendCodeDtoType } from '@/api';

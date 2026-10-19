@@ -25,7 +25,7 @@
       </UMenuGroup>
 
       <UMenuGroup>
-        <UMenuItem icon="list" title="我的订单" @click="handleMenuClick('order')" />
+        <UMenuItem v-if="FEATURE_FLAGS.ORDER" icon="list" title="我的订单" @click="handleMenuClick('order')" />
         <UMenuItem
           icon="notification"
           title="消息通知"
@@ -64,7 +64,7 @@ import { useUserStore } from '@/store/modules/user';
 import { useNotificationStore } from '@/store/modules/notification';
 import { useRouter, useStatusBar } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
-import { PAGES } from '@/constants';
+import { FEATURE_FLAGS, PAGES } from '@/constants';
 
 const globalStore = useGlobalStore();
 const notificationStore = useNotificationStore();

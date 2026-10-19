@@ -10,12 +10,17 @@
   >
     <view class="u-ai-consent">
       <scroll-view scroll-y class="u-ai-consent__body">
-        <text v-for="(paragraph, index) in AI_SERVICE_STATEMENT" :key="index" class="u-ai-consent__paragraph">
-          {{ paragraph }}
-        </text>
+        <UAgreementContent :content="content" :loading="loading" :error="error" :skeleton-rows="6" @retry="retry" />
       </scroll-view>
       <view class="u-ai-consent__actions">
-        <UButton text="同意并使用" type="primary" block :loading="agreeing" @click="handleAgree" />
+        <UButton
+          text="同意并使用"
+          type="primary"
+          block
+          :loading="agreeing"
+          :disabled="loading || error"
+          @click="handleAgree"
+        />
         <UButton text="暂不使用" type="text" block :disabled="agreeing" @click="handleDecline" />
       </view>
     </view>
@@ -29,8 +34,9 @@ definePage({
   },
 });
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { ConsentType } from '@/api';
+import { invalidateAgreementContent, useAgreementContent } from '@/composables/useAgreementContent';
 import { useConsentStore } from '@/store/modules/consent';
 import { showToast } from '@/utils/toast';
 
@@ -43,7 +49,7 @@ export interface UAiConsentPopupProps {
   modelValue: boolean;
 }
 
-defineProps<UAiConsentPopupProps>();
+const props = defineProps<UAiConsentPopupProps>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
@@ -51,25 +57,27 @@ const emit = defineEmits<{
   result: [agreed: boolean];
 }>();
 
-const AI_SERVICE_STATEMENT = [
-  'AI 助教基于大语言模型，为你讲解题目、解答追问。使用前请阅读以下说明：',
-  '1. 回答内容由 AI 生成，可能存在错误或不完整，请结合教材与题目解析判断，不作为考试答案的唯一依据。',
-  '2. 为提供讲题服务，我们会将你提问的题目内容、作答记录与对话内容发送给模型服务商处理，不会用于与学习无关的用途。',
-  '3. 你的提问与 AI 的回答会经过内容安全检测，请勿输入违法违规内容或个人敏感信息。',
-  '4. 每日使用次数有限，额度用尽后次日恢复。对回答有异议时，可通过回答下方的「举报」反馈。',
-  '5. 你可以在「AI 助教」中删除历史会话；注销账号后，AI 会话与消息将一并删除。',
-];
-
 const consentStore = useConsentStore();
 const agreeing = ref(false);
+const { content, loading, error, load, retry } = useAgreementContent();
+
+watch(
+  () => props.modelValue,
+  visible => {
+    if (visible) load(ConsentType.AI_SERVICE);
+  },
+  { immediate: true },
+);
 
 async function handleAgree() {
-  if (agreeing.value) return;
+  if (agreeing.value || loading.value || error.value) return;
   agreeing.value = true;
   try {
     const agreed = await consentStore.agree([ConsentType.AI_SERVICE]);
     if (!agreed) {
       showToast('AI 服务声明已更新，请重新阅读后同意');
+      invalidateAgreementContent(ConsentType.AI_SERVICE);
+      await load(ConsentType.AI_SERVICE);
       return;
     }
     emit('update:modelValue', false);
@@ -93,14 +101,6 @@ function handleDecline() {
 
   &__body {
     max-height: 50vh;
-  }
-
-  &__paragraph {
-    display: block;
-    margin-bottom: 16rpx;
-    color: var(--color-text);
-    font-size: 28rpx;
-    line-height: 1.7;
   }
 
   &__actions {

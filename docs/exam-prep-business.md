@@ -1103,6 +1103,8 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 前端关键实现点：
 
 - 首次启动展示用户协议与隐私政策并上报同意记录；协议版本升级时重新弹出。
+- 用户协议、隐私政策与 AI 服务声明正文读取远程配置 `agreement.userAgreement` / `agreement.privacyPolicy` / `agreement.aiService`（HTML，经 `UAgreementContent` 基于 mp-html 渲染，外链在小程序内复制、表格横向滚动），按协议版本在同一次启动内缓存；未配置（404）时使用内置正文，其他失败显示重试，AI 服务声明加载完成前不可同意。协议页以 `type=user|privacy|ai` 区分，「关于我们」提供三者入口。
+- 模板自带的「我的订单」「收货地址」入口由 `FEATURE_FLAGS`（`src/constants/feature.ts`）关闭，页面、路由与接口保留。
 - 题干与解析渲染：Markdown + LaTeX，由 `UQuestionContent` 组件基于 mp-html（启用 markdown、latex 插件）在端上渲染，题目存储格式保持 Markdown + `$...$` / `$$...$$`，与运营后台的 KaTeX 预览同源。
   - 选型：服务端预渲染 SVG 需要后端渲染服务与缓存，公式以图片输出后行内对齐、深色主题与修改后重渲染都要额外处理；mp-html 方案不改后端与存储格式。
   - 体积：mp-html 及插件约 360KB（其中 katex-mini 解析器约 270KB），因答题、错题等多个分包共用而放在主包。
@@ -1149,6 +1151,9 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `consent.privacyPolicyVersion`     | string  | —      | 是   | 隐私政策当前版本                     |
 | `consent.userAgreementVersion`     | string  | —      | 是   | 用户协议当前版本                     |
 | `consent.aiServiceVersion`         | string  | —      | 是   | AI 服务声明当前版本                  |
+| `agreement.userAgreement`          | string  | —      | 是   | 用户协议正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
+| `agreement.privacyPolicy`          | string  | —      | 是   | 隐私政策正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
+| `agreement.aiService`              | string  | —      | 是   | AI 服务声明正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
 | `alert.thresholds`                 | json    | —      | 否   | 各监控项告警阈值（4.11）             |
 
 ### 9.2 业务错误码

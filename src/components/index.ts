@@ -89,6 +89,10 @@ export type { UNoteEditorProps } from './UNoteEditor/index.vue';
 export { default as UReportEditor } from './UReportEditor/index.vue';
 export type { UReportEditorProps } from './UReportEditor/index.vue';
 
+// 协议正文 (加载骨架、失败重试、mp-html 渲染)
+export { default as UAgreementContent } from './UAgreementContent/index.vue';
+export type { UAgreementContentProps } from './UAgreementContent/index.vue';
+
 // AI 服务声明弹窗
 export { default as UAiConsentPopup } from './UAiConsentPopup/index.vue';
 export type { UAiConsentPopupProps } from './UAiConsentPopup/index.vue';

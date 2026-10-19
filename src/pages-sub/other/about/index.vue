@@ -12,6 +12,7 @@
       <UMenuGroup>
         <UMenuItem title="用户协议" show-arrow @click="handleMenuClick('agreement')" />
         <UMenuItem title="隐私政策" show-arrow @click="handleMenuClick('privacy')" />
+        <UMenuItem title="AI 服务声明" show-arrow @click="handleMenuClick('ai')" />
         <UMenuItem
           title="检查更新"
           :right-text="hasUpdate ? '有新版本' : ''"
@@ -75,6 +76,9 @@ function handleMenuClick(type: string) {
       break;
     case 'privacy':
       router.push(PAGES.AGREEMENT, { type: 'privacy' });
+      break;
+    case 'ai':
+      router.push(PAGES.AGREEMENT, { type: 'ai' });
       break;
   }
 }

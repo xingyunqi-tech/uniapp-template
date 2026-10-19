@@ -248,6 +248,7 @@ easycom: {
 | `UQuestionContent` | 题目内容（Markdown + LaTeX、图片预览、材料题、音频） | `UReportEditor` | 题目纠错表单弹层 |
 | `UQuestionActions` | 题目收藏、笔记与问 AI 入口 | `UNoteEditor` | 题目笔记编辑弹层 |
 | `UAiMessage` | AI 回答（思考折叠、AI 生成标识、反馈与追问建议） | `UAiConsentPopup` | AI 服务声明弹窗 |
+| `UAgreementContent` | 协议正文（加载、失败重试、链接与表格） | | |
 
 **详细文档**: [.claude/agents/component-development.md](.claude/agents/component-development.md)
 

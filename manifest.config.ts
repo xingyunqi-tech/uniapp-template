@@ -21,12 +21,6 @@ export default defineManifestConfig({
       minified: true,
     },
     usingComponents: true,
-    requiredPrivateInfos: ['getLocation', 'chooseLocation'],
-    permission: {
-      'scope.userLocation': {
-        desc: '用于获取当前位置，提供附近服务与地址选择',
-      },
-    },
     // virtualHost 组件把父级传入的 class / style 合并到根节点（UButton 依赖）
     mergeVirtualHostAttributes: true,
     // 按需注入组件，优化启动性能
