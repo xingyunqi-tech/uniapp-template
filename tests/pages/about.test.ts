@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { mount } from '@vue/test-utils';
-import { PAGES } from '@/constants';
+import { createPinia, setActivePinia } from 'pinia';
+import { DEFAULT_SITE_PROFILE, PAGES } from '@/constants';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 
@@ -38,7 +40,33 @@ function mountPage() {
   });
 }
 
+beforeEach(() => {
+  setActivePinia(createPinia());
+});
+
 describe('关于我们页', () => {
+  it('未配置时显示默认产品名称与版权，版权含公司名称时不重复显示公司名称', () => {
+    const wrapper = mountPage();
+
+    expect(wrapper.find('.app-name').text()).toBe(DEFAULT_SITE_PROFILE.appName);
+    expect(wrapper.findAll('.copyright-text').map(node => node.text())).toEqual([DEFAULT_SITE_PROFILE.copyright]);
+    expect(wrapper.find('.icp-link').text()).toBe(DEFAULT_SITE_PROFILE.icpLicense);
+  });
+
+  it('显示后台配置的产品名称、公司名称、版权与备案号', () => {
+    useAppProfileStore().remote = {
+      appName: '新名称',
+      companyName: '新公司',
+      copyright: 'Copyright © 2026',
+      icpLicense: '京ICP备00000000号',
+    };
+    const wrapper = mountPage();
+
+    expect(wrapper.find('.app-name').text()).toBe('新名称');
+    expect(wrapper.findAll('.copyright-text').map(node => node.text())).toEqual(['新公司', 'Copyright © 2026']);
+    expect(wrapper.find('.icp-link').text()).toBe('京ICP备00000000号');
+  });
+
   it.each([
     ['用户协议', 'user'],
     ['隐私政策', 'privacy'],

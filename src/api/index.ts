@@ -101,6 +101,7 @@ export {
   adminUpdateQuestionReport,
   adminRetriggerAccountCleanup,
   adminGetAiUsage,
+  adminUpdateAppProfile,
 } from './generated/admin/admin';
 
 export {
@@ -128,6 +129,8 @@ export {
 } from './generated/alipay/alipay';
 
 export { simpleHealthCheck } from './generated/api/api';
+
+export { getAppProfile } from './generated/app-profile/app-profile';
 
 // 以下函数由 custom/ 覆盖，故不从 generated 导出：refreshToken, logout
 export {

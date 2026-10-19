@@ -61,22 +61,6 @@
         手机号快捷登录
       </button>
       <button v-else class="quick-login-btn wechat" :disabled="loading" @click="checkAgreed">手机号快捷登录</button>
-
-      <view class="divider">
-        <text class="divider-text">其他登录方式</text>
-      </view>
-
-      <view class="social-login">
-        <button class="social-btn wechat" @click="handleWechatLogin">
-          <UIcon name="weixin" color="var(--color-brand-wechat)" size="48rpx" />
-        </button>
-      </view>
-    </view>
-    <!-- #endif -->
-
-    <!-- #ifdef MP-ALIPAY -->
-    <view class="other-login">
-      <button class="quick-login-btn alipay" :disabled="loading" @click="handleAlipayLogin">支付宝一键登录</button>
     </view>
     <!-- #endif -->
 
@@ -112,7 +96,6 @@ import { useGlobalStore } from '@/store/modules/global';
 import { PAGES, PHONE_LENGTH } from '@/constants';
 import { decodeQueryValue } from '@/utils';
 import { getPathFromUrl, isPreviousPage, isTabBarPage } from '@/utils/router';
-import { getAlipayAuthCode } from '@/utils/alipay-pay';
 import { phoneRules, smsCodeRules, type FormRules } from '@/utils/form-rules';
 
 const globalStore = useGlobalStore();
@@ -216,25 +199,6 @@ async function getWechatLoginCode(): Promise<string> {
   return loginRes.code;
 }
 
-// 微信登录（小程序）
-async function loginWithWechat() {
-  await userStore.wechatLogin({
-    code: await getWechatLoginCode(),
-  });
-}
-
-// 支付宝登录（小程序）
-async function loginWithAlipay() {
-  let authCode: string;
-  try {
-    authCode = await getAlipayAuthCode();
-  } catch (error) {
-    uni.showToast({ title: '支付宝授权失败，请重试', icon: 'none' });
-    throw error;
-  }
-  await userStore.alipayLogin(authCode);
-}
-
 // 手机号快捷登录（小程序）
 async function loginWithWechatPhone(phoneCode: string) {
   await userStore.wechatPhoneLogin({
@@ -281,24 +245,13 @@ async function handleLogin() {
   startLogin(loginWithForm);
 }
 
-// 处理微信登录（小程序）
-function handleWechatLogin() {
-  if (!checkAgreed()) return;
-  startLogin(loginWithWechat);
-}
-
-// 处理支付宝登录（小程序）
-function handleAlipayLogin() {
-  if (!checkAgreed()) return;
-  startLogin(loginWithAlipay);
-}
-
 // 手机号快捷登录授权回调（小程序）
 function handleGetPhoneNumber(e: UniHelper.ButtonOnGetphonenumberEvent) {
-  const { code, errMsg = '' } = e.detail;
+  const { code, errMsg = '', errno } = e.detail as typeof e.detail & { errno?: number };
   if (!code) {
-    // 用户拒绝手机号授权或拒绝隐私授权时不提示；其它失败（如小程序未开通该能力）提示改用其它方式
-    if (!/user deny|privacy/i.test(errMsg)) {
+    // 用户拒绝或取消授权时不提示
+    if (errno !== 104 && !/deny|cancel|privacy permission is not authorized/i.test(errMsg)) {
+      console.error('[getPhoneNumber]', errMsg);
       uni.showToast({ title: '手机号快捷登录暂不可用，请使用其他方式登录', icon: 'none' });
     }
     return;
@@ -384,65 +337,6 @@ function goToForgotPassword() {
 
     &.wechat {
       background: var(--color-brand-wechat);
-    }
-
-    &.alipay {
-      background: var(--color-brand-alipay);
-    }
-  }
-
-  .divider {
-    position: relative;
-    margin-bottom: 40rpx;
-    text-align: center;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background: var(--color-border);
-    }
-
-    .divider-text {
-      position: relative;
-      z-index: 1;
-      padding: 0 32rpx;
-      background: var(--color-bg);
-      color: var(--color-text-secondary);
-      font-size: 26rpx;
-    }
-  }
-
-  .social-login {
-    display: flex;
-    gap: 48rpx;
-    justify-content: center;
-
-    .social-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 96rpx;
-      height: 96rpx;
-      padding: 0;
-      transition: all var(--duration-fast) ease;
-      border: 1px solid var(--color-border);
-      border-radius: 50%;
-      background: var(--color-bg);
-      font-size: 0;
-      line-height: 1;
-
-      &::after {
-        display: none;
-      }
-
-      &:active {
-        transform: scale(0.95);
-        border-color: var(--color-primary);
-      }
     }
   }
 }

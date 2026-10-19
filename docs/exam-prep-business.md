@@ -861,6 +861,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 | AI 用量      | `GET /admin/ai/usage?from=&to=`                                                                | `ai:admin`       |
 | 监控         | `GET /admin/monitor/queues`、`GET /admin/monitor/alerts`                                       | `system:metrics` |
 | 远程配置     | 复用现有 `GET /config/admin/:key`、`PUT /config/:key`（AI 额度、熔断、错题阈值、补交窗口等）     | `system:config`  |
+| 小程序站点信息 | `PUT /admin/app-profile`（整体保存，字段见 9.1 `app.profile`，空白视为未配置；后台「设置 → 小程序配置」）；小程序公开读取 `GET /app-profile`（无需登录，未配置的字段为 `null`，从未保存时全部为 `null`） | `system:config`  |
 
 #### 题目导入
 
@@ -1154,6 +1155,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `agreement.userAgreement`          | string  | —      | 是   | 用户协议正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
 | `agreement.privacyPolicy`          | string  | —      | 是   | 隐私政策正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
 | `agreement.aiService`              | string  | —      | 是   | AI 服务声明正文（HTML，运营后台「协议管理」编辑）；未配置时小程序显示内置文本 |
+| `app.profile`                      | json    | —      | 否   | 小程序站点信息，只能经 `PUT /admin/app-profile` 写入、`GET /app-profile` 读取（通用配置接口不可读写）：`appName`（≤20）、`slogan`（≤40）、`shareTitle`（≤40，未配置时用产品名称）、`companyName`（≤60）、`copyright`（≤100）、`icpLicense`（≤50）、`servicePhone`（数字、`-`、`+`、空格，至少含一个数字，≤20）、`serviceHours`（≤40）、`serviceEmail`（邮箱，≤100）；未配置的字段小程序使用内置值 |
 | `alert.thresholds`                 | json    | —      | 否   | 各监控项告警阈值（4.11）             |
 
 ### 9.2 业务错误码

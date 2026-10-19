@@ -1,7 +1,7 @@
 import { defineManifestConfig } from '@uni-helper/vite-plugin-uni-manifest';
 
 export default defineManifestConfig({
-  name: 'UniApp Template',
+  name: '备考刷题',
   appid: '__UNI__XXXXXXX',
   description: 'Uni-app 多端应用模板，支持 H5、微信小程序、支付宝小程序、App',
   versionName: '1.0.0',
@@ -53,7 +53,7 @@ export default defineManifestConfig({
 
   /* H5 配置 */
   h5: {
-    title: 'UniApp Template',
+    title: '备考刷题',
     darkmode: true,
     themeLocation: 'theme.json',
     router: {

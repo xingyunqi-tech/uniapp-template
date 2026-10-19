@@ -6,14 +6,31 @@
         <UIcon name="headphones" size="96rpx" color="var(--color-primary)" />
       </view>
       <text class="header-title">我们随时为您服务</text>
-      <text class="header-desc">工作日 9:00-18:00</text>
+      <text v-if="profile.serviceHours" class="header-desc">{{ profile.serviceHours }}</text>
     </view>
 
     <!-- 联系方式卡片 -->
     <view class="contact-list">
       <UMenuGroup>
         <!-- 客服热线 -->
-        <UMenuItem icon="phone" title="客服热线" :right-text="phoneNumber" show-arrow @click="handleCall" />
+        <UMenuItem
+          v-if="profile.servicePhone"
+          icon="phone"
+          title="客服热线"
+          :right-text="profile.servicePhone"
+          show-arrow
+          @click="handleCall"
+        />
+
+        <!-- 客服邮箱 -->
+        <UMenuItem
+          v-if="profile.serviceEmail"
+          icon="email"
+          title="客服邮箱"
+          :right-text="profile.serviceEmail"
+          show-arrow
+          @click="handleCopyEmail"
+        />
 
         <!-- 在线咨询 -->
         <!-- #ifdef MP-WEIXIN -->
@@ -29,6 +46,8 @@
     <view class="footer-tips">
       <text class="tips-text">如遇紧急问题，请直接拨打客服热线</text>
     </view>
+
+    <UPrivacyPopup />
   </view>
 </template>
 
@@ -39,18 +58,21 @@ definePage({
   },
 });
 
+import { computed } from 'vue';
+import { useClipboard } from '@/composables/useClipboard';
 import { useGlobalStore } from '@/store/modules/global';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 import { isUserCancel } from '@/utils/platform';
 
 const globalStore = useGlobalStore();
-
-// 客服信息配置
-const phoneNumber = '400-123-4567';
+const appProfileStore = useAppProfileStore();
+const profile = computed(() => appProfileStore.profile);
+const { copy } = useClipboard({ successMessage: '邮箱已复制' });
 
 // 拨打电话
 function handleCall() {
   uni.makePhoneCall({
-    phoneNumber,
+    phoneNumber: profile.value.servicePhone.replace(/[\s-]/g, ''),
     fail: err => {
       if (isUserCancel(err)) return;
       uni.showToast({
@@ -59,6 +81,11 @@ function handleCall() {
       });
     },
   });
+}
+
+// 复制客服邮箱
+function handleCopyEmail() {
+  copy(profile.value.serviceEmail);
 }
 
 // 在线咨询（非微信环境）

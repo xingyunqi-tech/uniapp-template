@@ -6,7 +6,7 @@
       <text class="consent-title">{{ title }}</text>
       <view class="consent-content">
         <text v-if="upgraded">我们更新了</text>
-        <text v-else>欢迎使用{{ APP_NAME }}！在使用前，请仔细阅读</text>
+        <text v-else>欢迎使用{{ appProfileStore.profile.appName }}！在使用前，请仔细阅读</text>
         <text class="consent-link" @click="openAgreement('user')">《用户协议》</text>
         <text>和</text>
         <text class="consent-link" @click="openAgreement('privacy')">《隐私政策》</text>
@@ -38,12 +38,14 @@ import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { useGlobalStore } from '@/store/modules/global';
 import { useConsentStore } from '@/store/modules/consent';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 import { useRouter } from '@/composables';
-import { APP_NAME, PAGES } from '@/constants';
+import { PAGES } from '@/constants';
 import { decodeQueryValue, getPathFromUrl, isTabBarPage } from '@/utils/router';
 
 const globalStore = useGlobalStore();
 const consentStore = useConsentStore();
+const appProfileStore = useAppProfileStore();
 const router = useRouter();
 
 const agreeing = ref(false);

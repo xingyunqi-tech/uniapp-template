@@ -1,8 +1,11 @@
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import AuthLayout from '@/components/AuthLayout/index.vue';
 import { safeBack } from '@/utils/router';
 import { PAGES } from '@/constants/pages';
+import { DEFAULT_SITE_PROFILE } from '@/constants/system';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 
 vi.mock('@/utils/router', () => ({
   safeBack: vi.fn(),
@@ -18,13 +21,24 @@ beforeAll(() => {
   });
 });
 
+beforeEach(() => {
+  setActivePinia(createPinia());
+});
+
 describe('AuthLayout', () => {
-  it('未传入时显示默认标题与副标题', () => {
+  it('未传入时显示默认标题，副标题为默认宣传语', () => {
     const wrapper = mount(AuthLayout, { global });
 
     expect(wrapper.find('.logo-title').text()).toBe('欢迎');
-    expect(wrapper.find('.logo-subtitle').text()).toBe('UniApp 多端开发模板');
+    expect(wrapper.find('.logo-subtitle').text()).toBe(DEFAULT_SITE_PROFILE.slogan);
     expect(wrapper.find('.card-title').text()).toBe('');
+  });
+
+  it('未传入副标题时显示后台配置的宣传语', () => {
+    useAppProfileStore().remote = { slogan: '后台宣传语' };
+    const wrapper = mount(AuthLayout, { global });
+
+    expect(wrapper.find('.logo-subtitle').text()).toBe('后台宣传语');
   });
 
   it('渲染传入的标题与卡片标题', () => {

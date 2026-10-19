@@ -10,6 +10,7 @@ export * from './modules/share';
 export * from './modules/region';
 export * from './modules/notification';
 export * from './modules/config';
+export * from './modules/app-profile';
 export * from './modules/consent';
 export * from './modules/exam';
 export * from './modules/practice';

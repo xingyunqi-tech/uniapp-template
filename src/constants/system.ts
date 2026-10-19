@@ -35,19 +35,43 @@ export type LocaleType = `${LOCALE_TYPE}`;
 export type ThemeType = `${THEME_TYPE}`;
 
 /**
- * 应用名称
+ * 站点信息
  */
-export const APP_NAME = 'UniApp Template';
+export interface SiteProfile {
+  /** 产品名称 */
+  appName: string;
+  /** 宣传语 */
+  slogan: string;
+  /** 公司名称 */
+  companyName: string;
+  /** 版权信息 */
+  copyright: string;
+  /** ICP 备案号 */
+  icpLicense: string;
+  /** 客服电话 */
+  servicePhone: string;
+  /** 客服服务时间 */
+  serviceHours: string;
+  /** 客服邮箱，空串表示不展示 */
+  serviceEmail: string;
+  /** 分享标题，空串时使用产品名称 */
+  shareTitle: string;
+}
 
 /**
- * 版权信息
+ * 默认站点信息，后台未配置或拉取失败时使用
  */
-export const COPYRIGHT = 'Copyright © 2025 All Rights Reserved';
-
-/**
- * ICP 备案号
- */
-export const ICP_LICENSE = '沪ICP备2025155741号-1';
+export const DEFAULT_SITE_PROFILE: Readonly<SiteProfile> = Object.freeze({
+  appName: '备考刷题',
+  slogan: '刷题、模考、错题本，一站式高效备考',
+  companyName: '上海星芸启网络科技有限公司',
+  copyright: 'Copyright © 2026 上海星芸启网络科技有限公司',
+  icpLicense: '沪ICP备2025155741号-1',
+  servicePhone: '13818234979',
+  serviceHours: '工作日 9:00-18:00',
+  serviceEmail: '',
+  shareTitle: '',
+});
 
 /**
  * 工信部备案管理系统链接

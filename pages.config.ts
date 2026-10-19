@@ -75,7 +75,7 @@ export default defineUniPages({
   },
   globalStyle: {
     navigationBarTextStyle: '@navTxtStyle',
-    navigationBarTitleText: 'UniApp',
+    navigationBarTitleText: '备考刷题',
     navigationBarBackgroundColor: '@navBgColor',
     backgroundColor: '@bgColor',
     backgroundTextStyle: '@bgTxtStyle',

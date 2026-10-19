@@ -2,13 +2,19 @@ import { createSSRApp, watch } from 'vue';
 import type { App } from 'vue';
 import AppComponent from './App.vue';
 import { setAuthHandlers } from './api';
-import pinia, { useConsentStore, useGlobalStore, useNotificationStore, useUserStore } from './store';
+import pinia, {
+  useAppProfileStore,
+  useConsentStore,
+  useGlobalStore,
+  useNotificationStore,
+  useUserStore,
+} from './store';
 import { i18n } from './utils/locale';
 import { guardCurrentPage, setupRouterInterceptor } from './utils/router-interceptor';
 import { getCurrentRoute, getShareTarget, isPrivatePage, isTabBarPage } from './utils/router';
 import { syncTabBarBadge } from './utils/tabbar-badge';
 import { openConsentGate } from './utils/consent-gate';
-import { APP_NAME, TAB_BAR_BADGE } from './constants';
+import { TAB_BAR_BADGE } from './constants';
 
 /** 是否为当前栈顶页面的实例（排除组件） */
 function isCurrentPageVm(vm: unknown): boolean {
@@ -81,10 +87,10 @@ export function createApp() {
     },
     // 默认开启转发与分享到朋友圈（私有页除外），页面自行注册时以页面为准
     onShareAppMessage() {
-      return { title: APP_NAME, path: getShareTarget().path };
+      return { title: useAppProfileStore(pinia).shareTitle, path: getShareTarget().path };
     },
     onShareTimeline() {
-      return { title: APP_NAME, query: getShareTarget().query };
+      return { title: useAppProfileStore(pinia).shareTitle, query: getShareTarget().query };
     },
   });
 

@@ -3,7 +3,7 @@
     <!-- Logo 和应用信息 -->
     <view class="app-info">
       <image class="app-logo" src="/static/images/logo.png" mode="aspectFit" />
-      <text class="app-name">{{ APP_NAME }}</text>
+      <text class="app-name">{{ profile.appName }}</text>
       <text class="app-version">版本 {{ version }}</text>
     </view>
 
@@ -25,10 +25,11 @@
 
     <!-- 版权信息 -->
     <view class="copyright">
-      <text class="copyright-text">{{ COPYRIGHT }}</text>
+      <text v-if="showCompanyName" class="copyright-text company-name">{{ profile.companyName }}</text>
+      <text v-if="profile.copyright" class="copyright-text">{{ profile.copyright }}</text>
       <!-- #ifdef H5 -->
-      <view class="icp-info">
-        <text class="icp-link" @click="handleIcpClick">{{ ICP_LICENSE }}</text>
+      <view v-if="profile.icpLicense" class="icp-info">
+        <text class="icp-link" @click="handleIcpClick">{{ profile.icpLicense }}</text>
       </view>
       <!-- #endif -->
     </view>
@@ -44,14 +45,20 @@ definePage({
   },
 });
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import { useDialog, useRouter } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 import { PAGES } from '@/constants';
-import { APP_NAME, COPYRIGHT, ICP_LICENSE, ICP_LINK } from '@/constants/system';
+import { ICP_LINK } from '@/constants/system';
 
 const globalStore = useGlobalStore();
+const appProfileStore = useAppProfileStore();
+const profile = computed(() => appProfileStore.profile);
+const showCompanyName = computed(
+  () => !!profile.value.companyName && !profile.value.copyright.includes(profile.value.companyName),
+);
 const router = useRouter();
 const dialog = useDialog();
 

@@ -17,6 +17,7 @@ import {
 import { useGlobalStore } from '@/store/modules/global';
 import { useUserStore } from '@/store/modules/user';
 import { useConfigStore } from '@/store/modules/config';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 import { useConsentStore } from '@/store/modules/consent';
 import { checkUpdate } from '@/utils/update';
 import { setupNetworkListener, onNetworkChange } from '@/utils/network';
@@ -43,6 +44,9 @@ onLaunch(options => {
 
   // 后台加载公开远程配置，未加载前读取持久化缓存，加载完成后清理不在预加载列表里的缓存
   useConfigStore().load(PRELOAD_CONFIG_KEYS, { prune: true });
+
+  // 后台拉取站点信息，未加载前读取持久化缓存或默认值
+  useAppProfileStore().load();
 
   // 初始化全局网络状态监听
   setupNetworkListener({
@@ -101,6 +105,9 @@ onLaunch(options => {
 // 应用显示 (从后台进入前台)
 onShow((options?: unknown) => {
   console.log('App Show', options);
+
+  // 站点信息超过有效期时重新拉取
+  useAppProfileStore().refreshIfStale();
 });
 
 // 应用隐藏 (从前台进入后台)

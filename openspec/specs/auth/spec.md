@@ -71,8 +71,8 @@
 
 #### Scenario: User denies phone number access
 - **GIVEN** 用户在微信小程序登录页面
-- **WHEN** 用户点击微信登录按钮但拒绝授权
-- **THEN** 系统显示提示 "获取手机号失败"
+- **WHEN** 用户点击手机号快捷登录按钮后拒绝或取消授权（含拒绝隐私授权）
+- **THEN** 系统不显示提示，停留在登录页
 - **AND** 用户可以选择其他登录方式
 
 #### Scenario: Platform restriction

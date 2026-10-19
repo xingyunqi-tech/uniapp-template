@@ -16,7 +16,7 @@
       <image class="logo-icon" src="/static/images/logo.png" mode="aspectFit" />
       <view class="logo-text">
         <text class="logo-title">{{ title }}</text>
-        <text class="logo-subtitle">{{ subtitle }}</text>
+        <text class="logo-subtitle">{{ displaySubtitle }}</text>
       </view>
     </view>
 
@@ -37,8 +37,10 @@ definePage({
   },
 });
 
+import { computed } from 'vue';
 import { useSafeBack } from '@/composables/useSafeBack';
 import { useStatusBar } from '@/composables/useStatusBar';
+import { useAppProfileStore } from '@/store/modules/app-profile';
 
 defineOptions({
   name: 'AuthLayout',
@@ -56,11 +58,14 @@ interface Props {
   cardTitle?: string;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   title: '欢迎',
-  subtitle: 'UniApp 多端开发模板',
   cardTitle: '',
 });
+
+const appProfileStore = useAppProfileStore();
+
+const displaySubtitle = computed(() => props.subtitle ?? appProfileStore.profile.slogan);
 
 const { statusBarHeight, navBarHeight } = useStatusBar();
 
