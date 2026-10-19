@@ -244,6 +244,14 @@ export ALIPAY_PRIVATE_KEY=私钥内容
 export ALIPAY_TOOL_ID=工具ID
 ```
 
+### 安装微信上传工具
+
+`miniprogram-ci` 安装在独立目录 `scripts/mp-ci`（npm 管理，不随根目录 `pnpm install` 安装），微信上传 / 预览前执行一次：
+
+```bash
+npm ci --prefix scripts/mp-ci
+```
+
 ### 命令使用
 
 ```bash

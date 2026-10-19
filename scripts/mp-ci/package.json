@@ -1,0 +1,13 @@
+{
+  "name": "mp-ci",
+  "private": true,
+  "description": "微信小程序上传工具 miniprogram-ci 的独立安装目录，安装：npm ci --prefix scripts/mp-ci",
+  "dependencies": {
+    "miniprogram-ci": "2.1.31"
+  },
+  "overrides": {
+    "@babel/preset-env@7.21.4": {
+      "@babel/plugin-transform-regenerator": "7.22.10"
+    }
+  }
+}

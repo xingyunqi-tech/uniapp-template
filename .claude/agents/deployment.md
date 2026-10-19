@@ -25,6 +25,7 @@ model: inherit
 │   ├── deploy-h5.yml    # H5 构建并通过 SSH + rsync 部署到服务器
 │   └── deploy-mp.yml    # 微信 / 支付宝小程序构建并上传
 ├── scripts/
+│   ├── mp-ci/           # miniprogram-ci 独立安装目录 (npm ci --prefix scripts/mp-ci)
 │   └── mp-upload.ts     # 小程序上传 / 预览脚本 (miniprogram-ci / minidev)
 ├── .env.development     # 开发环境变量
 └── .env.production      # 生产环境变量
@@ -70,6 +71,7 @@ pnpm dev:app          # App
 ### 本地上传小程序
 
 ```bash
+npm ci --prefix scripts/mp-ci  # 首次：安装独立目录中的 miniprogram-ci（微信上传/预览需要）
 pnpm mp:upload:weixin     # 构建并上传微信小程序
 pnpm mp:preview:weixin    # 构建并生成微信预览二维码
 pnpm mp:upload:alipay     # 构建并上传支付宝小程序 (minidev)
