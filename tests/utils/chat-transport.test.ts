@@ -93,6 +93,16 @@ describe('uniStreamTransport', () => {
     expect(cb.chunks).toEqual([chunk]);
   });
 
+  it('支付宝端不传 responseType，按文本接收', () => {
+    platform.alipay = true;
+    platform.weixin = false;
+    const { options } = mockUniRequest();
+    uniStreamTransport({ url: '/stream', method: 'POST', headers: {} }, callbacks());
+
+    expect(options()).not.toHaveProperty('responseType');
+    expect(options()).toMatchObject({ dataType: 'text' });
+  });
+
   it('没有分块回调时在结束时返回完整响应体', async () => {
     const { options } = mockUniRequest();
     const handle = uniStreamTransport({ url: '/x', method: 'GET', headers: {} }, callbacks());

@@ -67,7 +67,7 @@ export const uniStreamTransport: StreamTransport = (request, callbacks) => {
       data: request.body as UniApp.RequestOptions['data'],
       timeout: request.timeout ?? STREAM_TIMEOUT,
       enableChunked: true,
-      responseType: 'arraybuffer',
+      ...(isAlipay() ? {} : { responseType: 'arraybuffer' as const }),
       dataType: 'text',
       success: result => {
         const data = !chunked && isStreamChunk(result.data) ? result.data : undefined;
