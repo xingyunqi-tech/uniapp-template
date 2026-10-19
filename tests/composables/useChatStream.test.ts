@@ -2,7 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises } from '@vue/test-utils';
 import { AiMessageStatus, ApiError, type AiMessageDto } from '@/api';
 import { useChatStream, type UseChatStreamOptions } from '@/composables/useChatStream';
-import type { StreamCallbacks, StreamRequest, StreamResult, StreamTransport } from '@/utils/chat-transport';
+import {
+  fetchStreamTransport,
+  type StreamCallbacks,
+  type StreamRequest,
+  type StreamResult,
+  type StreamTransport,
+} from '@/utils/chat-transport';
 
 const api = vi.hoisted(() => ({
   getAiMessage: vi.fn(),
@@ -535,5 +541,131 @@ describe('useChatStream 中断与恢复', () => {
     await expect(second).resolves.toMatchObject({ type: 'aborted' });
     expect(stream.draft.value).toBeNull();
     await flushPromises();
+  });
+});
+
+describe('useChatStream 平台传输', () => {
+  it('H5 经 fetch 携带鉴权头与语言头并逐块更新回答', async () => {
+    const encoderOf = new TextEncoder();
+    let push!: (text: string) => void;
+    let close!: () => void;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        push = text => controller.enqueue(encoderOf.encode(text));
+        close = () => controller.close();
+      },
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }));
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchMock;
+    try {
+      const stream = useChatStream({ transport: fetchStreamTransport, flushInterval: 0, idleTimeout: 0 });
+      const pending = stream.send('c1', { content: 'q' });
+      await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/ai/conversations/c1/messages',
+        expect.objectContaining({
+          method: 'POST',
+          body: '{"content":"q"}',
+          headers: {
+            Authorization: 'Bearer t1',
+            'x-custom-lang': 'zh',
+            Accept: 'text/event-stream',
+            'Content-Type': 'application/json',
+          },
+        }),
+      );
+      expect(stream.chunked.value).toBe(true);
+
+      push(sse('message.start', { messageId: 'm1' }, '1-0'));
+      push(sse('answer.delta', { text: '选 A' }, '2-0'));
+      await vi.waitFor(() => expect(stream.draft.value?.content).toBe('选 A'));
+      expect(stream.draft.value?.status).toBe(AiMessageStatus.STREAMING);
+
+      push(sse('message.done', { status: 'DONE' }, '3-0'));
+      close();
+      await expect(pending).resolves.toMatchObject({
+        type: 'finished',
+        draft: { messageId: 'm1', content: '选 A', status: AiMessageStatus.DONE },
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  function wholeBodySetup() {
+    const fake = createTransport();
+    const transport: StreamTransport = (request, callbacks) => ({
+      ...fake.transport(request, callbacks),
+      chunked: false,
+    });
+    const stream = useChatStream({ transport, flushInterval: 80, idleTimeout: 20, reconnectDelay: () => 0 });
+    return { ...fake, stream };
+  }
+
+  it('整段返回时一次解析出完整回答、思考、追问建议与结束状态', async () => {
+    const { stream, connection } = wholeBodySetup();
+    const pending = stream.send('c1', { content: 'q' });
+    const conn = await connection(0);
+    expect(stream.chunked.value).toBe(false);
+    expect(stream.draft.value).toBeNull();
+
+    conn.finish({
+      data:
+        sse('message.start', { messageId: 'm1' }, '1-0') +
+        sse('reasoning.delta', { text: '先看' }, '2-0') +
+        sse('reasoning.delta', { text: '题干' }, '3-0') +
+        sse('answer.delta', { text: '选 A，' }, '4-0') +
+        ': ping\n\n' +
+        sse('answer.delta', { text: '因为……' }, '5-0') +
+        sse('suggestions', { items: ['B 为什么错？'] }, '6-0') +
+        sse('message.done', { status: 'DONE' }, '7-0'),
+    });
+
+    await expect(pending).resolves.toMatchObject({ type: 'finished' });
+    expect(stream.draft.value).toEqual({
+      messageId: 'm1',
+      content: '选 A，因为……',
+      reasoning: '先看题干',
+      suggestions: ['B 为什么错？'],
+      status: AiMessageStatus.DONE,
+      lastEventId: '7-0',
+    });
+    expect(stream.streaming.value).toBe(false);
+  });
+
+  it('整段返回的 error 事件带出错误与已生成内容', async () => {
+    const { stream, connection } = wholeBodySetup();
+    const pending = stream.send('c1', { content: 'q' });
+    const conn = await connection(0);
+    conn.finish({
+      data:
+        sse('message.start', { messageId: 'm1' }, '1-0') +
+        sse('answer.delta', { text: '部分' }, '2-0') +
+        sse('error', { code: 'aiGenerationFailed' }, '3-0'),
+    });
+
+    const outcome = await pending;
+    expect(outcome).toMatchObject({ type: 'failed', draft: { content: '部分', status: AiMessageStatus.FAILED } });
+    expect(outcome.type === 'failed' && outcome.error.code).toBe('aiGenerationFailed');
+  });
+
+  it('整段返回的拒绝响应抛出 phoneBindingRequired', async () => {
+    const { stream, connection } = wholeBodySetup();
+    const pending = stream.send('c1', { content: 'q' });
+    const conn = await connection(0);
+    conn.finish({
+      status: 403,
+      data: JSON.stringify({ code: 403, message: 'forbidden', data: { errorKey: 'phoneBindingRequired' } }),
+    });
+
+    await expect(pending).rejects.toMatchObject({
+      status: 403,
+      errorKey: 'phoneBindingRequired',
+      message: '请使用手机号登录后使用 AI 助教',
+    });
   });
 });

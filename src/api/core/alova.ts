@@ -11,6 +11,7 @@ import { getCurrentFullPath, getPathFromUrl, isInWhiteList } from '@/utils/route
 import { i18n } from '@/utils/locale';
 import { LOCALE_TYPE } from '@/constants/system';
 import { getDeviceId } from '@/utils/device';
+import { withAlipayHttpErrors } from './alipay-adapter';
 import { getBusinessErrorKey, getBusinessErrorMessage, type BusinessErrorKey } from '@/utils/business-error';
 
 // ==================== 类型定义 ====================
@@ -291,12 +292,15 @@ function isApiResponse(data: unknown): data is ApiResponse {
 
 // ==================== 创建 Alova 实例 ====================
 
+const uniappAdapter = AdapterUniapp();
+
 const alovaInstance = createAlova({
   baseURL: API_BASE_URL,
   timeout: 30000,
 
   // UniApp 适配器（自动配置请求适配器、存储适配器、Vue Hooks）
-  ...AdapterUniapp(),
+  ...uniappAdapter,
+  requestAdapter: withAlipayHttpErrors(uniappAdapter.requestAdapter),
 
   // ==================== 请求拦截器 ====================
   async beforeRequest(method) {

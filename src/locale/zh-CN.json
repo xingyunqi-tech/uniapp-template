@@ -41,7 +41,7 @@
   "businessError.aiQuotaExceeded": "今日 AI 使用额度已用完",
   "businessError.aiRateLimited": "AI 请求过于频繁，请稍后再试",
   "businessError.aiConsentRequired": "请先同意 AI 服务声明",
-  "businessError.wechatBindingRequired": "请先绑定微信后使用 AI 功能",
+  "businessError.phoneBindingRequired": "请使用手机号登录后使用 AI 助教",
   "businessError.contentBlocked": "内容未通过安全检测，请修改后重试",
   "businessError.aiConversationOutdated": "题目已更新，请重新发起讲题",
   "businessError.errataInProgress": "该题已有处理中的勘误",

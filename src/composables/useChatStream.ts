@@ -153,6 +153,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
   const draft = shallowRef<ChatStreamDraft | null>(null);
   /** 是否有连接在接收 */
   const streaming = ref(false);
+  /** 最近一次连接是否逐块接收；为 false 时回答在生成结束后一次给出 */
+  const chunked = ref(true);
 
   let handle: StreamHandle | null = null;
   let aborted = false;
@@ -312,6 +314,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
     );
     state.current = current;
     handle = current;
+    chunked.value = current.chunked !== false;
     resetIdle();
 
     let result: StreamResult | null;
@@ -474,5 +477,5 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
     draft.value = null;
   }
 
-  return { draft, streaming, send, resume, abort, reset };
+  return { draft, streaming, chunked, send, resume, abort, reset };
 }

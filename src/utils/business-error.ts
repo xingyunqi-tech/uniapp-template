@@ -21,7 +21,7 @@ export const BUSINESS_ERROR_KEYS = [
   'aiQuotaExceeded',
   'aiRateLimited',
   'aiConsentRequired',
-  'wechatBindingRequired',
+  'phoneBindingRequired',
   'contentBlocked',
   'aiConversationOutdated',
   'errataInProgress',

@@ -48,6 +48,9 @@
               @notice-click="refreshMessage(message)"
             />
           </view>
+          <view v-if="waitingAnswer" class="chat-row chat-row--assistant">
+            <text class="chat-list__waiting">{{ stream.chunked.value ? 'AI 正在思考…' : WHOLE_ANSWER_TEXT }}</text>
+          </view>
           <view id="chat-bottom" class="chat-list__bottom" />
         </view>
       </scroll-view>
@@ -67,7 +70,12 @@
         placeholder-class="chat-input__placeholder"
         @confirm="sendText(input)"
       />
-      <view v-if="generating" class="chat-input__button chat-input__button--stop" @click="stopGenerating">
+      <view
+        v-if="generating"
+        class="chat-input__button chat-input__button--stop"
+        :class="{ 'chat-input__button--disabled': stopUnavailable }"
+        @click="stopGenerating"
+      >
         <text>{{ stopping ? '停止中' : '停止' }}</text>
       </view>
       <view
@@ -139,6 +147,8 @@ interface ChatMessage extends AiMessageView {
 
 const STARTER_QUESTIONS = ['这道题的解题思路是什么？', '我错在哪里？', '这道题考查了哪些知识点？'];
 
+const WHOLE_ANSWER_TEXT = 'AI 正在生成回答，完成后将完整显示…';
+
 const ANSWER_HIDDEN_TEXT = '该题答案当前不可见（如题目正在模考中），交卷或完成作答后再来问 AI 吧。';
 
 const globalStore = useGlobalStore();
@@ -176,6 +186,8 @@ const streamingMessage = computed(() =>
 const generating = computed(
   () => sending.value || stream.streaming.value || (!!streamingMessage.value && !streamingMessage.value.notice),
 );
+const waitingAnswer = computed(() => sending.value && !stream.draft.value);
+const stopUnavailable = computed(() => !stream.chunked.value && !streamingMessage.value);
 const canSend = computed(() => ready.value && !generating.value && input.value.trim().length > 0);
 const quotaText = computed(() => {
   const chat = aiStore.quota?.chat;
@@ -246,7 +258,7 @@ watch(
 function errorText(error: unknown): string {
   if (!(error instanceof ApiError)) return '加载失败，请稍后重试';
   if (error.errorKey === 'answerHidden') return ANSWER_HIDDEN_TEXT;
-  if (error.errorKey === 'wechatBindingRequired') return '绑定微信后即可使用 AI 助教';
+  if (error.errorKey === 'phoneBindingRequired') return getBusinessErrorMessage('phoneBindingRequired');
   return error.message || '加载失败，请稍后重试';
 }
 
@@ -461,7 +473,7 @@ async function sendText(raw: string, restarted = false): Promise<void> {
 async function stopGenerating(): Promise<void> {
   const target = streamingMessage.value;
   if (!target) {
-    showToast('正在发送，请稍候');
+    showToast(stopUnavailable.value ? '回答生成中，暂不支持中途停止' : '正在发送，请稍候');
     return;
   }
   if (stopping.value) return;
@@ -608,6 +620,11 @@ onUnload(() => {
     color: var(--color-text-secondary);
     font-size: 24rpx;
     text-align: center;
+  }
+
+  &__waiting {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
   }
 
   &__bottom {

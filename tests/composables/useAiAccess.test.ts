@@ -20,13 +20,6 @@ const modal = vi.hoisted(() => ({ confirm: vi.fn() }));
 
 vi.mock('@/utils/modal', () => modal);
 
-const platform = vi.hoisted(() => ({ weixin: true }));
-
-vi.mock('@/utils/platform', async importOriginal => ({
-  ...(await importOriginal<typeof import('@/utils/platform')>()),
-  isWeixin: () => platform.weixin,
-}));
-
 vi.mock('@/utils/router', async importOriginal => ({
   ...(await importOriginal<typeof import('@/utils/router')>()),
   getCurrentFullPath: () => '/pages-sub/ai/chat/index?questionId=q1',
@@ -50,7 +43,6 @@ beforeEach(() => {
   router.push.mockReset().mockResolvedValue(undefined);
   modal.confirm.mockReset().mockResolvedValue(true);
   api.getConfig.mockReset().mockResolvedValue({ key: 'ai.enabled', value: true });
-  platform.weixin = true;
   vi.mocked(uni.showToast).mockClear();
 });
 
@@ -105,22 +97,25 @@ describe('useAiAccess', () => {
     expect(uni.showToast).toHaveBeenCalled();
   });
 
-  it('wechatBindingRequired：微信小程序引导到登录页绑定', async () => {
+  it('phoneBindingRequired：提示手机号登录，确认后前往登录页并带回当前页', async () => {
     const access = useAiAccess();
 
-    await expect(access.handleAccessError(businessError('wechatBindingRequired'))).resolves.toBe('handled');
-    expect(modal.confirm).toHaveBeenCalledWith(expect.objectContaining({ confirmText: '去绑定' }));
+    await expect(access.handleAccessError(businessError('phoneBindingRequired'))).resolves.toBe('handled');
+    expect(modal.confirm).toHaveBeenCalledWith({
+      title: '需要手机号登录',
+      content: '请使用手机号登录后使用 AI 助教',
+      confirmText: '去登录',
+    });
     expect(router.push).toHaveBeenCalledWith('/pages/login/index', {
       redirect: '/pages-sub/ai/chat/index?questionId=q1',
     });
   });
 
-  it('wechatBindingRequired：其他平台只提示', async () => {
-    platform.weixin = false;
+  it('phoneBindingRequired：取消时不跳转', async () => {
+    modal.confirm.mockResolvedValue(false);
     const access = useAiAccess();
 
-    await access.guideWechatBinding();
-    expect(modal.confirm).toHaveBeenCalledWith(expect.objectContaining({ showCancel: false }));
+    await expect(access.handleAccessError(businessError('phoneBindingRequired'))).resolves.toBe('handled');
     expect(router.push).not.toHaveBeenCalled();
   });
 

@@ -1,7 +1,9 @@
 /**
- * 流式请求传输层：微信小程序使用 uni.request 分块接收，H5 使用 fetch + ReadableStream
+ * 流式请求传输层：微信小程序使用 uni.request 分块接收，H5 使用 fetch + ReadableStream，
+ * 其他平台（如支付宝小程序）在请求结束时一次给出响应体
  */
-import { isH5, isWeixin } from './platform';
+import { toHttpFailResponse } from './http-fail-response';
+import { isAlipay, isH5, isWeixin } from './platform';
 import type { StreamChunk } from './sse';
 
 export interface StreamRequest {
@@ -66,11 +68,16 @@ export const uniStreamTransport: StreamTransport = (request, callbacks) => {
       timeout: request.timeout ?? STREAM_TIMEOUT,
       enableChunked: true,
       responseType: 'arraybuffer',
+      dataType: 'text',
       success: result => {
         const data = !chunked && isStreamChunk(result.data) ? result.data : undefined;
         resolve({ status: result.statusCode, data });
       },
-      fail: error => reject(new Error(error.errMsg || 'request:fail')),
+      fail: error => {
+        const failed = isAlipay() ? toHttpFailResponse(error) : null;
+        if (failed) resolve({ status: failed.statusCode, data: isStreamChunk(failed.data) ? failed.data : undefined });
+        else reject(new Error(error.errMsg || 'request:fail'));
+      },
     }) as ChunkedRequestTask;
     task.onHeadersReceived?.((result: { statusCode?: number; header?: unknown }) => {
       callbacks.onHeaders(result.statusCode, normalizeHeaders(result.header));

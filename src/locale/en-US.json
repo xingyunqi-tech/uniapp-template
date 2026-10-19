@@ -41,7 +41,7 @@
   "businessError.aiQuotaExceeded": "Daily AI quota used up",
   "businessError.aiRateLimited": "Too many AI requests. Please try again later",
   "businessError.aiConsentRequired": "Please accept the AI service terms first",
-  "businessError.wechatBindingRequired": "Please bind WeChat to use AI features",
+  "businessError.phoneBindingRequired": "Please sign in with your phone number to use the AI tutor",
   "businessError.contentBlocked": "Content failed the safety check. Please revise and try again",
   "businessError.aiConversationOutdated": "The question has been updated. Please start a new explanation",
   "businessError.errataInProgress": "An errata report for this question is already in progress",

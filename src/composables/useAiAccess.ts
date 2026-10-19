@@ -1,5 +1,5 @@
 /**
- * AI 功能前置条件：总开关、AI 服务声明同意、微信绑定，以及「问 AI」入口
+ * AI 功能前置条件：总开关、AI 服务声明同意、手机号绑定，以及「问 AI」入口
  */
 import { computed, ref } from 'vue';
 import { ApiError, ConsentType } from '@/api';
@@ -8,7 +8,6 @@ import { useAiStore } from '@/store/modules/ai';
 import { useConsentStore } from '@/store/modules/consent';
 import { getBusinessErrorMessage } from '@/utils/business-error';
 import { confirm } from '@/utils/modal';
-import { isWeixin } from '@/utils/platform';
 import { getCurrentFullPath } from '@/utils/router';
 import { showToast } from '@/utils/toast';
 import { useRouter } from './useRouter';
@@ -54,25 +53,17 @@ export function useAiAccess() {
     resolve?.(agreed);
   }
 
-  /** 引导未绑定微信的用户在登录页用手机号快捷登录完成绑定 */
-  async function guideWechatBinding(): Promise<void> {
-    if (!isWeixin()) {
-      await confirm({
-        title: '需要绑定微信',
-        content: 'AI 助教需绑定微信后使用，请在微信小程序中登录使用。',
-        showCancel: false,
-      });
-      return;
-    }
+  /** 提示未绑定手机号的用户以手机号登录，确认后前往登录页并带回当前页 */
+  async function guidePhoneLogin(): Promise<void> {
     const confirmed = await confirm({
-      title: '需要绑定微信',
-      content: 'AI 助教需绑定微信后使用。前往登录页，使用「手机号快捷登录」并选择当前账号的手机号，即可完成绑定。',
-      confirmText: '去绑定',
+      title: '需要手机号登录',
+      content: getBusinessErrorMessage('phoneBindingRequired'),
+      confirmText: '去登录',
     });
     if (confirmed) await router.push(PAGES.LOGIN, { redirect: getCurrentFullPath() }).catch(() => {});
   }
 
-  /** 处理 AI 前置条件错误：aiConsentRequired、wechatBindingRequired、aiUnavailable */
+  /** 处理 AI 前置条件错误：aiConsentRequired、phoneBindingRequired、aiUnavailable */
   async function handleAccessError(error: unknown): Promise<AiAccessResolution> {
     const key = error instanceof ApiError ? error.errorKey : undefined;
     if (key === 'aiConsentRequired') {
@@ -82,8 +73,8 @@ export function useAiAccess() {
       }
       return (await openConsent()) ? 'retry' : 'handled';
     }
-    if (key === 'wechatBindingRequired') {
-      await guideWechatBinding();
+    if (key === 'phoneBindingRequired') {
+      await guidePhoneLogin();
       return 'handled';
     }
     if (key === 'aiUnavailable') {
@@ -94,7 +85,7 @@ export function useAiAccess() {
     return 'unhandled';
   }
 
-  return { consentVisible, ensureConsent, resolveConsent, guideWechatBinding, handleAccessError };
+  return { consentVisible, ensureConsent, resolveConsent, handleAccessError };
 }
 
 /** 讲题目标：带 sessionId 时按该练习会话判定答案可见性 */

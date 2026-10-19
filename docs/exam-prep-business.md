@@ -29,10 +29,10 @@
 | iOS 虚拟商品支付限制   | 会员售卖需走微信虚拟支付，现有 JSAPI 支付链路不一定可复用                  |
 | 生成式 AI 服务备案     | 只接入境内已完成备案的大模型；提审前确认平台对 AI 功能的资质要求，不满足时 AI 功能整体通过远程配置关闭 |
 | AI 生成内容标识与举报  | AI 输出处标注「内容由 AI 生成」，首次使用 AI 前须同意 AI 服务声明并留存记录；每条 AI 消息提供投诉举报入口 |
-| 内容安全               | 文本走 `msgSecCheck`（需用户 openid），图片走 `mediaCheckAsync`（异步回调）；无 openid 的用户须绑定微信后才能使用 AI 功能 |
+| 内容安全               | AI 文本走阿里云内容安全文本审核增强版（不依赖 openid，见 4.7），图片走 `mediaCheckAsync`（异步回调）；未绑定手机号的账号不能使用 AI 功能 |
 | 订阅消息               | 个人主体仅可用一次性订阅模板，每次授权只能下发一条                         |
 | 题目版权               | 题目来源限于自编、可公开使用、AI 生成后人工校对                            |
-| 个人信息               | 隐私政策须说明作答数据、手写照片、AI 对话的用途与第三方模型处理；同意记录留存；账号注销后清理学习数据（4.12） |
+| 个人信息               | 隐私政策须说明作答数据、手写照片、AI 对话的用途与第三方处理：大模型服务商生成回答，阿里云内容安全审核 AI 输入与输出（送检内容、用户 ID、回答消息 ID）；同意记录留存；账号注销后清理学习数据（4.12） |
 
 ### 1.4 分期
 
@@ -49,7 +49,7 @@
 | 角色   | 来源                  | 能力                                                         |
 | ------ | --------------------- | ------------------------------------------------------------ |
 | 游客   | 未登录                | 浏览考试分类、知识点目录、试卷列表；试做当日每日一练前 3 题（服务端判分，不落库） |
-| 用户   | `RoleEnum.user`       | 全部学习功能，AI 功能受额度限制且须绑定微信、同意 AI 服务声明 |
+| 用户   | `RoleEnum.user`       | 全部学习功能，AI 功能受额度限制且须绑定手机号、同意 AI 服务声明 |
 | 会员   | 用户 + 有效会员（P2） | 付费题库、更高 AI 额度                                       |
 | 管理员 | `RoleEnum.admin`      | 内容管理、审核、勘误、纠错处理、AI 出题、配置与数据查看      |
 
@@ -117,6 +117,8 @@ erDiagram
 | `membership`  | 会员套餐、会员资格                             | P2    |
 
 外部集成新增 `src/integrations/llm`：定义 `LlmProvider` 端口（流式对话、结构化输出、图片理解），默认实现接入境内已备案模型，具体模型与 ID 走配置（见第 8 节）。
+
+外部集成新增 `src/integrations/aliyun-green`：定义 `ContentModerationProvider` 端口（AI 输入输出文本审核），默认实现为阿里云内容安全文本审核增强版（4.7）。
 
 运营后台为独立前端，调用本文 `/admin/*` 接口（4.11）。
 
@@ -681,7 +683,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 
 - 用户额度：Redis 计数 `ai:quota:{userId}:{date}:{kind}`，`kind` 为 `chat` / `grading`，TTL 48 小时，额度值走远程配置。
 - 频控：每用户每分钟请求上限。
-- 全站熔断：按日累计估算成本（Redis `ai:cost:{date}`），超过远程配置 `ai.dailyBudget` 时暂停全部 AI 请求并返回 `aiUnavailable`。
+- 全站熔断：按日累计估算成本（Redis `ai:cost:{date}`），超过远程配置 `ai.dailyBudget` 时暂停全部 AI 请求并返回 `aiUnavailable`。成本只统计模型调用，内容审核费用不计入，由阿里云账单观察。
 - 成本同时按日落库（`AiUsageDaily`：`date`、`model`、`kind`、`requests`、`failures`、`inputTokens`、`outputTokens`、`cost`；唯一键 `(date, model, kind)`，按请求 upsert 累加），供后台查询。
 
 #### 业务规则
@@ -689,8 +691,8 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 1. **讲题**：创建 `QUESTION` 会话时可携带 `sessionId`。服务端按 4.4「答案可见性」判定：带 `sessionId` 时要求该题属于该会话的 `questionIds` 并按该会话判断，不带时只能命中第 4 条（错题本、收藏、笔记）。不可见时拒绝。
 2. **复用**：同一用户同一题同一版本复用会话，题目版本变化后新建。**每次发送消息**都重新执行完整的可见性判定（含前提），不可见时拒绝并返回 `answerHidden`；通过后按最新可见的作答记录重新构建系统提示词（题干、选项、正确答案、解析、用户答案）。
 3. **上下文**：携带最近 10 轮消息，更早内容压缩为 `summary`。
-4. **请求顺序**：校验前置条件 → `msgSecCheck`（用户输入）→ 检查全站熔断 → 原子扣减额度（`INCR` 后比较，超限回滚）→ 请求模型。输入被拦截返回 `BLOCKED`，不扣额度。
-5. **流式输出**：SSE，小程序端以 `uni.request` + `enableChunked` 接收。
+4. **请求顺序**：校验前置条件 → 输入内容审核 → 检查全站熔断 → 原子扣减额度（`INCR` 后比较，超限回滚）→ 请求模型。输入被拦截返回 `contentBlocked`，审核未配置或调用失败返回 `aiUnavailable`，均不扣额度。
+5. **流式输出**：SSE。各端接收方式：微信小程序以 `uni.request` + `enableChunked` 分块接收；H5 以 `fetch` + `ReadableStream` 接收；支付宝小程序不支持分块，回答生成完成后整段返回，不支持中途停止。
 
    | event             | data                  |
    | ----------------- | --------------------- |
@@ -702,7 +704,8 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
    | `error`           | `{ code, message }`   |
 
    SSE 开始输出后发生的异常不经过全局异常过滤器，统一转为 `error` 事件。
-6. **输出安全**：`answer` 与 `reasoning` 按段落（或每 200 字）缓冲，送检通过后才下发；命中时停止生成，已下发内容保留，追加提示语，消息记为 `BLOCKED`。
+6. **内容安全**：使用阿里云内容安全文本审核增强版（`TextModerationPlus`），输入走 `llm_query_moderation`（携带 `accountId` = 用户 ID，单次上限 2000 字），输出走 `llm_response_moderation`（单次上限 5000 字；`answer` 分段与推荐追问以回答消息 ID 作为 `sessionId`，`reasoning` 分段以 `{messageId}:reasoning` 作为 `sessionId`）。风险等级 `high`、`medium` 视为不通过，`low`、`none` 通过（`low` 记日志）。接入点按 `ALIYUN_GREEN_REGION`（默认 `cn-shanghai`）拼接，连接、读取超时各 3 秒，不重试；AccessKey 未配置时 AI 不可用。
+   - **输出安全**：`answer` 与 `reasoning` 按段缓冲（首段约 50 字、后续约 100 字、单段不超过 200 字），送检通过后才下发；命中时停止生成，已下发内容保留，追加提示语，消息记为 `BLOCKED`；送检调用失败时未送检内容不下发，消息记为 `FAILED` 并退还额度。
 7. **生成与连接解耦**：客户端断开（如切后台）不中止生成，服务端继续生成并落库，客户端回到页面后按 `messageId` 拉取完整结果。
 8. **停止生成**：调用停止接口，经 Redis pub/sub 广播 `messageId`，持有上游连接的实例取消请求，已生成内容以 `STOPPED` 保存。
 9. **计费口径**：
@@ -713,11 +716,11 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
    | `STOPPED`            | 扣                              |
    | 输入 `BLOCKED`       | 不扣                            |
    | 输出 `BLOCKED`       | 扣                              |
-   | `FAILED`（上游错误） | 退还至 `quotaDate` 对应的额度   |
+   | `FAILED`（上游错误或输出送检失败） | 退还至 `quotaDate` 对应的额度   |
 
 10. **异常清理**：`STREAMING` 超过 5 分钟的消息由定时任务置为 `FAILED` 并退还额度。
 11. **范围限制**：系统提示词限定为学习辅导，拒绝与备考无关的请求。
-12. **前置条件**：用户须绑定微信（有 openid）并已同意当前版本的 AI 服务声明（4.12）。
+12. **前置条件**：AI 总开关开启且内容审核已配置，用户须已绑定手机号（未绑定返回 `phoneBindingRequired`），并已同意当前版本的 AI 服务声明（4.12）。各端以手机号 + 密码、短信或微信手机号快捷登录的账号均可使用，不要求绑定微信。
 13. **投诉举报**：每条 AI 消息可举报，写入 feedbacks（`FeedbackType` 新增 `ai_content`，关联 `messageId`），在后台纠错单列表中一并处理。
 
 #### 接口
@@ -1037,16 +1040,16 @@ MASTERED ─手动恢复─► ACTIVE（consecutiveCorrect=0）
 sequenceDiagram
   participant C as 小程序
   participant S as 服务端
-  participant W as 微信内容安全
+  participant W as 阿里云内容安全
   participant L as LLM
   C->>S: POST /ai/conversations (QUESTION, sessionId?)
   S->>S: 校验前置条件与答案可见性
   C->>S: POST /ai/conversations/:id/messages
-  S->>W: msgSecCheck（用户输入）
+  S->>W: llm_query_moderation（用户输入）
   S->>S: 检查全站熔断，原子扣减额度
   S->>L: 流式请求（题目上下文 + 摘要 + 最近消息）
   L-->>S: delta
-  S->>W: 按段送检
+  S->>W: llm_response_moderation（按段送检）
   S-->>C: 送检通过后下发 answer.delta
   S-->>C: suggestions / message.done
 ```
@@ -1058,14 +1061,15 @@ sequenceDiagram
 | 现有能力                | 用法                                     | 改造                                                                           |
 | ----------------------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
 | auth（微信/手机登录）   | 直接使用                                 | 注销（用户自助与管理员删除用户共用 `UsersService.remove`）后入队 `account-cleanup` 任务；新增可选鉴权 guard |
-| users                   | 用户基础信息                             | 无；AI 功能依赖 `wechatOpenId`                                                 |
+| users                   | 用户基础信息                             | 无；AI 功能依赖 `phone`（已绑定手机号）                                        |
 | permissions             | 新增权限                                 | 需 migration/seed 授权并同步静态映射（第 2 节）                                |
 | favorites               | 题目、试卷收藏                           | `FavoriteTargetType` 增加 `question`、`paper`；服务端校验目标存在与关联前提（4.2），并补 title 快照；新增 `subjectId` 字段用于按科目筛选 |
 | feedbacks               | 题目纠错、AI 内容举报                    | `FeedbackType` 增加 `question_error`、`ai_content`；新增 `questionId`、`questionVersion`、`reason`、`errataId`、`messageId` 字段（回复复用现有 `reply`）；`userId` 改为可空、外键改为 `SET NULL`；新增管理端接口（现有仅用户端） |
 | shares（P1）            | 成绩海报、打卡分享                       | `ShareTargetType` 增加 `PAPER`、`REPORT`、`CHECKIN`                            |
 | notifications           | 勘误通知、批改完成、告警                 | `NotificationCategory` 增加 `STUDY`（P0）                                      |
 | wechat 订阅消息（P1）   | 批改完成、学习提醒                       | 新增 `WechatSubscribeScene` 值、模板字段映射，以及一次性授权余量记录           |
-| wechat 内容安全         | AI 输入输出与图片检测                    | `WechatService` 新增 `msgSecCheck`、`mediaCheckAsync`；新增带验签的检测回调接口，并在小程序后台配置消息推送 |
+| wechat 内容安全         | 图片检测（AI 批改）                      | `WechatService` 新增 `mediaCheckAsync`（`msgSecCheck` 保留，AI 不使用）；新增带验签的检测回调接口，并在小程序后台配置消息推送 |
+| aliyun-green 内容安全   | AI 输入输出文本审核                      | 新增 `ContentModerationProvider` 端口与阿里云实现，配置 `ALIYUN_GREEN_ACCESS_KEY_ID`、`ALIYUN_GREEN_ACCESS_KEY_SECRET`、`ALIYUN_GREEN_REGION` |
 | files                   | 题目图片、听力音频、手写照片、导入包、导出文件 | 放开音频、zip、xlsx、pdf 类型与大小限制（现仅 jpg/png/gif、5MB）；文件记录增加 `ownerUserId` 与可见性，手写照片私有读取（现 local 驱动 `GET /files/:path` 公开）；题目资源为公共读（S3 驱动现返回 1 小时预签名 URL，题目内容只存 `file:{fileId}`，输出时解析）；内容素材（`content-image`、`audio` 用途上传与导入素材）为无主文件（`ownerUserId` 为空），不随上传者注销删除，导入去重只复用无主文件 |
 | config（远程配置）      | AI 额度、成本熔断、错题阈值、补交窗口、协议版本、功能开关 | 新增配置项；高频读取的配置加 Redis 缓存（现无缓存）                    |
 | queue（BullMQ）         | 自动交卷、统计、补偿、AI 批改、AI 出题、勘误、导入、注销清理 | 参照 `notification-queue` 为每个队列单独建 module，以 `ConditionalModule.registerWhen(..., isRedisEnabled)` 注册；生产环境必须开启 Redis |
@@ -1096,7 +1100,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 |                   | 收藏题 / 我的笔记         | 收藏练习（P1）                                         |
 |                   | 学情报告（P1）            | 趋势、雷达、薄弱点、AI 建议                            |
 |                   | 打卡日历                  | 打卡分享（P1）                                         |
-| `pages-sub/ai`    | 对话详情                  | 流式渲染、停止、追问、反馈、断线恢复                   |
+| `pages-sub/ai`    | 对话详情                  | 流式渲染、停止、追问、反馈、断线恢复（支付宝整段返回，不支持中途停止） |
 |                   | 提交批改 / 批改结果（P1） | 文字或拍照、量表选择、分项得分                         |
 | `pages-sub/user`  | 答题设置（P1）            | 字号、自动下一题、震动                                 |
 |                   | 会员中心（P2）            |                                                        |
@@ -1112,7 +1116,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
   - 维护：mp-html 以构建产物放在 `src/uni_modules/mp-html`，升级时按相同插件配置重新构建；KaTeX 字体经 CDN 加载，上线前转存到自有 CDN，字体未加载时退化为系统字体。
 - 答题页：3 格循环 swiper，按材料对齐的分段拉取题目。
 - 作答缓存：按会话 ID 存 storage，记录 `deviceId`、`clientSeq`、`clientAnsweredAt`；限时模式基于 `serverNow` 校准倒计时并在 `deadlineAt` 本地锁定；收到 `sessionTakenOver` 时提示并退出答题。
-- SSE：封装 `useChatStream`，处理 UTF-8 分片截断、`data:` 行缓冲、中断与按 `messageId` 恢复。
+- SSE：封装 `useChatStream`，处理 UTF-8 分片截断、`data:` 行缓冲、中断与按 `messageId` 恢复；支付宝端不分块，回答整段返回，不支持中途停止。
 - 埋点（P1）：做题漏斗、模式使用分布、AI 使用率，接入微信「我们分析」自定义事件。
 
 ---
@@ -1177,11 +1181,11 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `reportNotAvailable`       | 409  | 会话未结束（或为背题模式）时查看成绩报告       |
 | `dailySessionCannotFinish` | 409  | 对 `DAILY` 会话调用交卷 / 结束练习             |
 | `dailySessionCannotAbandon` | 409 | 对 `DAILY` 会话调用放弃                        |
-| `aiUnavailable`            | 503  | AI 总开关关闭或全站熔断                        |
+| `aiUnavailable`            | 503  | AI 总开关关闭、全站熔断、内容审核未配置或输入审核调用失败 |
 | `aiQuotaExceeded`          | 429  | 用户当日 AI 额度用尽                           |
 | `aiRateLimited`            | 429  | 超过每分钟请求上限                             |
 | `aiConsentRequired`        | 403  | 未同意当前版本 AI 服务声明                     |
-| `wechatBindingRequired`    | 403  | 未绑定微信，无法使用 AI                        |
+| `phoneBindingRequired`     | 403  | 未绑定手机号，无法使用 AI                      |
 | `contentBlocked`           | 422  | 输入未通过内容安全检测                         |
 | `errataInProgress`         | 409  | 该题已有未完成的勘误                           |
 | `answerChangeNotAllowed`   | 422  | `EDIT` 或导入试图修改已发布题目的答案、题型、选项 key 或空数 |

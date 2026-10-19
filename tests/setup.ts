@@ -7,6 +7,12 @@ import { vi, afterEach } from 'vitest';
 import { config } from '@vue/test-utils';
 import UIcon from '@/components/UIcon/index.vue';
 
+// 测试环境不做条件编译，平台判断均为 true；支付宝判断默认关闭，需要时在用例中覆盖
+vi.mock('@/utils/platform', async () => ({
+  ...(await vi.importActual<typeof import('@/utils/platform')>('@/utils/platform')),
+  isAlipay: () => false,
+}));
+
 // 配置Vue Test Utils全局设置
 config.global.stubs = {
   // 全局组件存根
