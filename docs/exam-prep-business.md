@@ -1186,6 +1186,7 @@ TabBar：首页 / 题库 / AI 助教 / 我的。
 | `aiRateLimited`            | 429  | 超过每分钟请求上限                             |
 | `aiConsentRequired`        | 403  | 未同意当前版本 AI 服务声明                     |
 | `phoneBindingRequired`     | 403  | 未绑定手机号，无法使用 AI                      |
+| `aiConversationOutdated`   | 409  | 讲题会话的题目版本已变化，需重新发起讲题       |
 | `contentBlocked`           | 422  | 输入未通过内容安全检测                         |
 | `errataInProgress`         | 409  | 该题已有未完成的勘误                           |
 | `answerChangeNotAllowed`   | 422  | `EDIT` 或导入试图修改已发布题目的答案、题型、选项 key 或空数 |

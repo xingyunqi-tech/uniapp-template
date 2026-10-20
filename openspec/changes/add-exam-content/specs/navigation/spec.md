@@ -36,17 +36,17 @@
 #### Scenario: Other sub-package
 - **GIVEN** 其他功能页面
 - **THEN** 位于 `pages-sub/other/` 分包
-- **AND** 包含关于我们、联系客服、意见反馈、WebView 页
+- **AND** 包含关于我们、联系客服、意见反馈、WebView 页、组件演示页
 
 #### Scenario: Exam sub-package
 - **GIVEN** 考试与作答相关页面
 - **THEN** 位于 `pages-sub/exam/` 分包
-- **AND** 包含选择考试、答题、成绩报告、试卷详情、练习历史页
+- **AND** 包含选择考试、答题、成绩报告、试卷详情、按规则组卷、每日一练试做、练习历史页
 
 #### Scenario: Study sub-package
 - **GIVEN** 学习记录相关页面
 - **THEN** 位于 `pages-sub/study/` 分包
-- **AND** 包含错题本、收藏题、我的笔记、打卡日历、我的纠错页
+- **AND** 包含错题本、收藏题、我的笔记、打卡日历、我的纠错、题目详情页
 
 #### Scenario: AI sub-package
 - **GIVEN** AI 相关页面

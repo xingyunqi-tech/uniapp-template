@@ -11,13 +11,13 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话、错因�
 
 - **LLM 端口**：`LlmProvider.streamChat({ system, messages, maxTokens, signal }) → AsyncIterable<{ type: 'reasoning' | 'answer', text } | { type: 'usage', ... }>`；默认实现使用 OpenAI 兼容协议（国内主流备案模型均提供），base URL、key、模型标识走配置，默认接入 DeepSeek（`deepseek-chat`），可切换其他兼容模型。
 - **生成与连接解耦**：发送消息时创建 `AiMessage(STREAMING)` 并启动生成任务（进程内异步执行，不依赖 HTTP 连接存活）；生成器把已送检的片段写入 Redis Stream `ai:msg:{messageId}`，SSE 连接从该 stream 读取并转发；连接断开不影响生成；客户端通过 `GET /ai/messages/:id` 获取完整结果。
-- **先送检后下发**：生成器按段落或 200 字缓冲，`msgSecCheck` 通过后才写入 stream；命中则停止上游、追加提示语、消息记为 `BLOCKED`。
+- **先送检后下发**：生成器按段落或 200 字缓冲，`msgSecCheck` 通过后才写入 stream；命中则停止上游、追加提示语、消息记为 `BLOCKED`。（审核服务与前置条件已由 `switch-ai-moderation-to-aliyun` 替代：改用阿里云文本审核，前置条件为绑定手机号）
 - **停止生成**：`POST /ai/messages/:id/stop` 发布到 Redis channel `ai:stop`，持有该消息生成任务的实例取消上游请求（`AbortController`）。
 - **额度**：`INCR ai:quota:{userId}:{date}:chat` 后比较上限，超限 `DECR` 回滚；`quotaDate` 写入消息，退还时按该日期 `DECR`；key TTL 48 小时。
 - **熔断**：每次完成后累加 `ai:cost:{date}`（按模型单价估算）并 upsert `AiUsageDaily`；请求前比较 `ai.dailyBudget`；超出时触发告警。
 - **可见性**：每次发送消息都调用 `AnswerVisibilityService`，带 `sessionId` 时校验题目属于该会话。
 - **卡住清理**：定时任务把 `STREAMING` 超过 5 分钟的消息置为 `FAILED` 并退还额度。
-- **小程序流式**：`uni.request({ enableChunked: true })` + `onChunkReceived`，`TextDecoder` 流式解码处理多字节截断，按 `\n\n` 分帧解析 SSE；仅微信小程序支持，H5 走 fetch。
+- **小程序流式**：`uni.request({ enableChunked: true })` + `onChunkReceived`，`TextDecoder` 流式解码处理多字节截断，按 `\n\n` 分帧解析 SSE；H5 走 fetch，支付宝小程序在生成完成后整段返回（见 `switch-ai-moderation-to-aliyun`）。
 
 ## Risks / Trade-offs
 

@@ -57,7 +57,7 @@
 #### Scenario: Dark theme colors
 - **GIVEN** 深色主题激活
 - **THEN** 主题色为 `#409eff`（比浅色稍亮）
-- **AND** 背景色为 `#141414`（主背景）、`#1d1d1d`（灰色背景）
+- **AND** 背景色为 `#141414`（主背景）、`#0a0a0a`（灰色背景）、`#1d1d1d`（卡片背景）
 - **AND** 文字色为 `#e5eaf3`（主文字）、`#a3a6ad`（次要文字）
 - **AND** 边框色为 `#363637`
 
@@ -165,12 +165,12 @@
 | `--color-text` | #323233 | #e5eaf3 |
 | `--color-text-secondary` | #969799 | #a3a6ad |
 | `--color-bg` | #fff | #141414 |
-| `--color-bg-grey` | #f7f8fa | #1d1d1d |
+| `--color-bg-grey` | #f7f8fa | #0a0a0a |
 | `--color-border` | #ebedf0 | #363637 |
 
 ### Store Configuration
 - Store 名称：`global`
-- 持久化字段：`currentTheme`, `currentLocale`
+- 持久化字段：`currentTheme`, `followSystemTheme`, `currentLocale`, `showDevOptions`
 - 存储方式：`uni.storage`
 
 ### Restrictions

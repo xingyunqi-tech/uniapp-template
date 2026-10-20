@@ -45,7 +45,7 @@
 ## 6. 小程序
 
 - [x] 6.1 `pages.config.ts`：TabBar 四项、`pages-sub/exam`、`pages-sub/study`、`pages-sub/ai` 分包声明；`pages/ai` 占位页
-- [x] 6.2 公式渲染技术验证（mp-html + latex 插件 / 服务端 SVG），结论更新到业务文档第 8 节
+- [x] 6.2 公式渲染技术验证（mp-html + latex 插件 / 服务端 SVG），结论更新到业务文档第 7 节
 - [x] 6.3 `UQuestionContent` 组件：Markdown、LaTeX、图片预览、音频播放
 - [x] 6.4 选择考试页（考试日期、每日目标）、游客本地暂存与登录后同步
 - [x] 6.5 题库页：科目切换、知识点树、试卷列表

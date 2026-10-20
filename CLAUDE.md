@@ -71,16 +71,36 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ```
 src/
 ├── pages.json           # 路由配置 (由 pages.config.ts + definePage 生成)
-├── pages/               # 主包页面 (7 个)
+├── pages/               # 主包页面
 │   ├── index/           # 首页 (TabBar)
+│   ├── bank/            # 题库 (TabBar)
+│   ├── ai/              # AI 助教 (TabBar)
 │   ├── mine/            # 我的 (TabBar)
 │   ├── login/           # 登录
 │   ├── register/        # 注册
 │   ├── forgot-password/ # 忘记密码
 │   ├── agreement/       # 协议
+│   ├── consent/         # 协议同意
 │   └── error/           # 错误页
 │
-└── pages-sub/           # 分包页面 (3 个分包)
+└── pages-sub/           # 分包页面
+    ├── exam/            # 考试分包
+    │   ├── select/      # 选择考试
+    │   ├── paper/       # 试卷详情
+    │   ├── paper-rules/ # 按规则组卷
+    │   ├── trial/       # 每日一练试做
+    │   ├── answer/      # 答题
+    │   ├── report/      # 成绩报告
+    │   └── history/     # 练习历史
+    ├── study/           # 学习分包
+    │   ├── wrong-book/  # 错题本
+    │   ├── favorites/   # 我的收藏
+    │   ├── notes/       # 我的笔记
+    │   ├── checkin/     # 打卡日历
+    │   ├── reports/     # 我的纠错
+    │   └── question/    # 题目详情
+    ├── ai/              # AI 分包
+    │   └── chat/        # AI 讲题
     ├── order/           # 订单分包
     │   ├── list/        # 订单列表
     │   ├── detail/      # 订单详情
@@ -98,7 +118,8 @@ src/
         ├── about/       # 关于我们
         ├── contact/     # 联系客服
         ├── feedback/    # 意见反馈
-        └── webview/     # Webview 容器
+        ├── webview/     # Webview 容器
+        └── component-demo/ # 组件演示
 ```
 
 **路由跳转方式**:
@@ -138,6 +159,9 @@ definePage({
 
 ```ts
 subPackages: [
+  { root: 'pages-sub/exam', pages: [] },
+  { root: 'pages-sub/study', pages: [] },
+  { root: 'pages-sub/ai', pages: [] },
   { root: 'pages-sub/order', pages: [] },
   { root: 'pages-sub/user', pages: [] },
   { root: 'pages-sub/other', pages: [] },

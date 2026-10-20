@@ -33,6 +33,12 @@
 - **WHEN** 题目发布、下架或修改知识点标签
 - **THEN** 相关叶子知识点的已发布题目数在同一事务内更新
 
+#### Scenario: Chapter practice entry
+- **GIVEN** 非叶子知识点的子孙叶子节点有已发布题目
+- **WHEN** 用户浏览题库页知识点树
+- **THEN** 该节点显示练习入口，按子树抽题
+- **AND** 题目数只在叶子节点显示
+
 ---
 
 ### Requirement: Target Exam Profile
@@ -52,6 +58,12 @@
 - **GIVEN** 用户关注了考试 A（当前）与 B
 - **WHEN** 用户取消关注 A
 - **THEN** B 成为当前考试
+
+#### Scenario: Followed exam taken offline
+- **GIVEN** 用户关注的考试已下架
+- **WHEN** 用户打开首页、题库页或选择考试页
+- **THEN** 该考试不再展示，也不作为当前考试
+- **AND** 未选择当前考试时引导用户重新选择
 
 #### Scenario: Guest selection synced after login
 - **GIVEN** 游客在本地选择了目标考试

@@ -62,7 +62,7 @@
 - **GIVEN** 需要标签页切换
 - **WHEN** 使用 `<UTabs v-model="active" :tabs="tabs" />`
 - **THEN** 显示可切换的标签页
-- **AND** 支持下划线指示器动画
+- **AND** 选中项显示下划线指示器
 
 ---
 
@@ -114,7 +114,7 @@
 
 #### Scenario: UPasswordStrength - Password strength
 - **GIVEN** 需要显示密码强度
-- **WHEN** 使用 `<UPasswordStrength v-bind="strengthState" />`（强度数据由 `usePasswordStrength` 计算后传入）
+- **WHEN** 使用 `<UPasswordStrength :password="password" />`（组件内部以 `usePasswordStrength` 计算强度）
 - **THEN** 显示密码强度指示器
 - **AND** 根据密码复杂度显示不同等级
 
@@ -216,7 +216,7 @@
 
 ## Technical Notes
 
-### Component List (22 components)
+### Component List
 
 | 组件 | 说明 | 组件 | 说明 |
 |------|------|------|------|
@@ -229,8 +229,23 @@
 | `UFormItem` | 表单项 | `USmsInput` | 短信验证码 |
 | `UImageUpload` | 图片上传 | `UPasswordStrength` | 密码强度 |
 | `URichText` | 富文本 | `UFixedButton` | 固定按钮 |
-| `UTag` | 标签 | `ULoadMore` | 加载更多 |
-| `USearchBar` | 搜索栏 | `AuthLayout` | 认证布局 |
+| `ULoadMore` | 加载更多 | `USearchBar` | 搜索栏 |
+| `UAgreementCheck` | 协议勾选 | `UPrivacyPopup` | 微信隐私授权弹窗 |
+| `UTag` | 标签 | `AuthLayout` | 认证布局 |
+| `UIcon` | 图标（尺寸默认 rpx） | `URegionPicker` | 省市区选择 |
+| `UButton` | 按钮 | `UCard` | 卡片容器 |
+| `UList` | 分页列表状态 | `UPrice` | 金额展示 |
+| `UDivider` | 分割线 | `USticky` | 吸顶容器 |
+| `UBackTop` | 回到顶部 | `UForm` | 表单容器（规则校验） |
+| `UInput` | 输入框 | `UTextarea` | 多行输入框 |
+| `UPageState` | 页面状态容器 | `UDialog` | 页面内对话框（配合 `useDialog`） |
+| `UCheckboxGroup` | 多选框组 | `URadioGroup` | 单选框组 |
+| `UDatePicker` | 日期/时间选择 | `UStepper` | 步进器 |
+| `UCountdown` | 倒计时 | `USwipeAction` | 左滑操作 |
+| `UQuestionContent` | 题目内容（Markdown + LaTeX、图片预览、材料题、音频） | `UReportEditor` | 题目纠错表单弹层 |
+| `UQuestionActions` | 题目收藏、笔记与问 AI 入口 | `UNoteEditor` | 题目笔记编辑弹层 |
+| `UAiMessage` | AI 回答（思考折叠、AI 生成标识、反馈与追问建议） | `UAiConsentPopup` | AI 服务声明弹窗 |
+| `UAgreementContent` | 协议正文（加载、失败重试、链接与表格） | | |
 
 ### Style Guidelines
 - 所有组件必须使用 CSS 变量

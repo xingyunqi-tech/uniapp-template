@@ -24,7 +24,8 @@
 #### Scenario: No phone binding
 - **GIVEN** 账号未绑定手机号（如仅有支付宝 openId 或仅有邮箱的账号）
 - **WHEN** 发起 AI 讲题
-- **THEN** 返回 `phoneBindingRequired`，小程序提示绑定手机号后使用
+- **THEN** 返回 `phoneBindingRequired`，小程序提示退出后以手机号登录，确认后退出并前往登录页，登录后回到原页面
+- **AND** 微信账号以微信手机号快捷登录时，手机号绑定到原账号
 
 #### Scenario: AI on H5
 - **GIVEN** 用户在 H5 端登录且已绑定手机号

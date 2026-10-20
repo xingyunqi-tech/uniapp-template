@@ -75,6 +75,12 @@
 - **WHEN** 补交窗口结束后写入
 - **THEN** 返回 `sessionClosed`
 
+#### Scenario: Logout with unsynced answers
+- **GIVEN** 本机有待同步的作答
+- **WHEN** 用户主动退出登录
+- **THEN** 小程序先补交本机全部待同步作答
+- **AND** 补交后仍有未同步作答时提示将丢失，用户确认后才退出
+
 ---
 
 ### Requirement: Atomic Submission

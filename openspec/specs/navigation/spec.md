@@ -161,19 +161,25 @@
 | `router.reLaunch()` | `uni.reLaunch()` |
 
 ### Current Page Structure
-**主包 (7 页面)**:
+**主包**:
 - pages/index/index (TabBar)
+- pages/bank/index (TabBar)
+- pages/ai/index (TabBar)
 - pages/mine/index (TabBar)
 - pages/login/index
 - pages/register/index
 - pages/forgot-password/index
 - pages/agreement/index
+- pages/consent/index
 - pages/error/index
 
 **分包**:
-- pages-sub/order (3 页面: list、detail、payment-result)
-- pages-sub/user (8 页面: address、address-edit、favorite、notifications、notification-settings、password、profile、settings)
-- pages-sub/other (4 页面: about、contact、feedback、webview)
+- pages-sub/exam: select、paper、paper-rules、trial、answer、report、history
+- pages-sub/study: wrong-book、favorites、notes、checkin、reports、question
+- pages-sub/ai: chat
+- pages-sub/order: list、detail、payment-result
+- pages-sub/user: address、address-edit、favorite、notifications、notification-settings、password、profile、settings
+- pages-sub/other: about、contact、feedback、webview、component-demo
 
 ### Restrictions
 - 禁止使用 Vue Router

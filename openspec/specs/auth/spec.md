@@ -123,13 +123,13 @@
 - **WHEN** 用户点击退出登录
 - **THEN** 清除 Pinia Store 中的用户信息
 - **AND** 清除 uni.storage 中的 Token
-- **AND** 跳转到登录页面
+- **AND** 回到首页
 
 #### Scenario: Logout on API failure
 - **GIVEN** 用户已登录
 - **WHEN** 用户点击退出登录但 API 调用失败
 - **THEN** 仍然清除本地状态和 Token
-- **AND** 跳转到登录页面
+- **AND** 回到首页
 
 ---
 
