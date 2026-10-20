@@ -96,7 +96,7 @@ describe('question-collection store 收藏', () => {
     expect(store.favorites.map(item => item.targetId)).toEqual(['p1']);
   });
 
-  it('切换到试卷收藏时按试卷类型请求，不写入题目收藏状态', async () => {
+  it('切换到试卷收藏时按试卷类型请求，写入试卷收藏状态而不写入题目收藏状态', async () => {
     const store = useQuestionCollectionStore();
     api.getFavorites.mockResolvedValueOnce(page([{ ...favorite('p1'), targetType: 'paper' }]));
 
@@ -104,6 +104,29 @@ describe('question-collection store 收藏', () => {
 
     expect(api.getFavorites).toHaveBeenCalledWith(expect.objectContaining({ targetType: 'paper', page: 1 }));
     expect(store.favoriteOf('p1')).toBeUndefined();
+    expect(store.paperFavoriteOf('p1')).toBe(true);
+  });
+
+  it('查询与切换试卷收藏按试卷类型请求，取消后从试卷收藏列表移除', async () => {
+    const store = useQuestionCollectionStore();
+    api.checkFavorite.mockResolvedValueOnce({ isFavorited: false });
+    await expect(store.isPaperFavorited('P1')).resolves.toBe(false);
+    expect(api.checkFavorite).toHaveBeenCalledWith({ targetType: 'paper', targetId: 'P1' }, { showError: false });
+
+    api.toggleFavorite.mockResolvedValueOnce({ isFavorited: true });
+    await expect(store.togglePaper('P1')).resolves.toBe(true);
+    expect(api.toggleFavorite).toHaveBeenCalledWith({ targetType: 'paper', targetId: 'P1' });
+    expect(store.paperFavoriteOf('p1')).toBe(true);
+    expect(store.favoriteOf('p1')).toBeUndefined();
+    expect(store.favoritesDirty).toBe(true);
+
+    api.getFavorites.mockResolvedValueOnce(page([{ ...favorite('p1'), targetType: 'paper' }]));
+    await store.setFavoriteFilter({ type: 'paper' });
+    api.toggleFavorite.mockResolvedValueOnce({ isFavorited: false });
+    await store.togglePaper('p1');
+
+    expect(store.paperFavoriteOf('p1')).toBe(false);
+    expect(store.favorites).toEqual([]);
   });
 
   it('按收藏记录删除后从列表移除并把状态置为未收藏', async () => {

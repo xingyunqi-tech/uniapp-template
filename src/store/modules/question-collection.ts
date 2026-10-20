@@ -21,6 +21,7 @@ export const NOTE_MAX_LENGTH = 1000;
 export type FavoriteTab = typeof CreateFavoriteDtoTargetType.question | typeof CreateFavoriteDtoTargetType.paper;
 
 const QUESTION = CreateFavoriteDtoTargetType.question;
+const PAPER = CreateFavoriteDtoTargetType.paper;
 const SILENT = { showError: false };
 
 interface SubjectQuery {
@@ -29,6 +30,11 @@ interface SubjectQuery {
 
 function keyOf(questionId: string): string {
   return questionId.toLowerCase();
+}
+
+/** 收藏状态的键：题目为小写 id，试卷为 `paper:` 加小写 id */
+function statusKey(targetType: FavoriteTab, targetId: string): string {
+  return targetType === QUESTION ? keyOf(targetId) : `${targetType}:${keyOf(targetId)}`;
 }
 
 function toNote(item: QuestionNoteItemDto): QuestionNoteDto {
@@ -43,7 +49,7 @@ function subjectQuery(subjectId: string): SubjectQuery {
 export const useQuestionCollectionStore = defineStore('questionCollection', () => {
   const userStore = useUserStore();
 
-  /** 键为小写题目 id */
+  /** 键见 statusKey */
   const favoriteStatus = ref<Record<string, boolean>>({});
   /** 键为小写题目 id，null 表示没有笔记 */
   const notes = ref<Record<string, QuestionNoteDto | null>>({});
@@ -60,7 +66,8 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
     onPageLoaded: items => {
       const next = { ...favoriteStatus.value };
       items.forEach(item => {
-        if (item.targetType === QUESTION) next[keyOf(item.targetId)] = true;
+        if (item.targetType === QUESTION || item.targetType === PAPER)
+          next[statusKey(item.targetType, item.targetId)] = true;
       });
       favoriteStatus.value = next;
     },
@@ -75,7 +82,11 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
   });
 
   function favoriteOf(questionId: string): boolean | undefined {
-    return favoriteStatus.value[keyOf(questionId)];
+    return favoriteStatus.value[statusKey(QUESTION, questionId)];
+  }
+
+  function paperFavoriteOf(paperId: string): boolean | undefined {
+    return favoriteStatus.value[statusKey(PAPER, paperId)];
   }
 
   /** undefined 表示尚未加载 */
@@ -113,14 +124,22 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
     return fetchNotes(true);
   }
 
-  async function isFavorited(questionId: string, force = false): Promise<boolean> {
-    const key = keyOf(questionId);
+  async function checkTarget(targetType: FavoriteTab, targetId: string, force: boolean): Promise<boolean> {
+    const key = statusKey(targetType, targetId);
     const cached = favoriteStatus.value[key];
     if (!force && cached !== undefined) return cached;
     const current = generation;
-    const { isFavorited: value } = await checkFavorite({ targetType: QUESTION, targetId: questionId }, SILENT);
+    const { isFavorited: value } = await checkFavorite({ targetType, targetId }, SILENT);
     if (current === generation) setFavorite(key, value);
     return value;
+  }
+
+  function isFavorited(questionId: string, force = false): Promise<boolean> {
+    return checkTarget(QUESTION, questionId, force);
+  }
+
+  function isPaperFavorited(paperId: string, force = false): Promise<boolean> {
+    return checkTarget(PAPER, paperId, force);
   }
 
   function removeFavoriteItem(targetType: FavoriteTab, targetId: string) {
@@ -129,21 +148,28 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
       item => item.targetType === targetType && keyOf(item.targetId) === key,
     );
     if (index === -1) return;
-    favoritePager.list.value.splice(index, 1);
-    favoritePager.total.value = Math.max(0, favoritePager.total.value - 1);
+    favoritePager.remove(index);
+  }
+
+  async function toggleTarget(targetType: FavoriteTab, targetId: string): Promise<boolean> {
+    const current = generation;
+    const response = await toggleFavorite({ targetType, targetId });
+    const value = response.isFavorited ?? false;
+    if (current !== generation) return value;
+    setFavorite(statusKey(targetType, targetId), value);
+    if (value) favoritesDirty.value = true;
+    else removeFavoriteItem(targetType, targetId);
+    return value;
   }
 
   /** 切换题目收藏，返回切换后是否已收藏 */
-  async function toggle(questionId: string): Promise<boolean> {
-    const key = keyOf(questionId);
-    const current = generation;
-    const response = await toggleFavorite({ targetType: QUESTION, targetId: questionId });
-    const value = response.isFavorited ?? false;
-    if (current !== generation) return value;
-    setFavorite(key, value);
-    if (value) favoritesDirty.value = true;
-    else removeFavoriteItem(QUESTION, questionId);
-    return value;
+  function toggle(questionId: string): Promise<boolean> {
+    return toggleTarget(QUESTION, questionId);
+  }
+
+  /** 切换试卷收藏，返回切换后是否已收藏 */
+  function togglePaper(paperId: string): Promise<boolean> {
+    return toggleTarget(PAPER, paperId);
   }
 
   /** 按收藏记录取消收藏 */
@@ -151,7 +177,7 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
     const current = generation;
     await deleteFavorite(item.id);
     if (current !== generation) return;
-    if (item.targetType === QUESTION) setFavorite(keyOf(item.targetId), false);
+    setFavorite(statusKey(item.targetType as FavoriteTab, item.targetId), false);
     removeFavoriteItem(item.targetType as FavoriteTab, item.targetId);
   }
 
@@ -170,8 +196,7 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
   function removeNoteItem(key: string) {
     const index = notePager.list.value.findIndex(item => keyOf(item.questionId) === key);
     if (index === -1) return;
-    notePager.list.value.splice(index, 1);
-    notePager.total.value = Math.max(0, notePager.total.value - 1);
+    notePager.remove(index);
   }
 
   async function deleteNote(questionId: string): Promise<void> {
@@ -239,13 +264,16 @@ export const useQuestionCollectionStore = defineStore('questionCollection', () =
     notesError: notePager.error,
     notesHasMore: notePager.hasMore,
     favoriteOf,
+    paperFavoriteOf,
     noteOf,
     fetchFavorites,
     fetchNotes,
     setFavoriteFilter,
     setNoteSubject,
     isFavorited,
+    isPaperFavorited,
     toggle,
+    togglePaper,
     removeFavorite,
     fetchNote,
     saveNote,

@@ -450,6 +450,37 @@ describe('Token 临近过期时主动刷新', () => {
     expect(refreshToken).toHaveBeenCalledTimes(1);
   });
 
+  it('主动刷新遇到临时错误时，冷却期内不再主动刷新，冷却期后再次主动刷新', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      storage.set(STORAGE_KEYS.TOKEN, 'transient-refresh');
+      storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 50_000);
+      const refreshToken = vi
+        .fn<() => Promise<string | null>>()
+        .mockRejectedValueOnce(new Error('request:fail'))
+        .mockImplementationOnce(async () => {
+          storage.set(STORAGE_KEYS.TOKEN, 'fresh');
+          return 'fresh';
+        });
+      registerHandlers({ refreshToken });
+      const calls = mockServer(() => ok());
+
+      await customMutator({ url: '/a', method: 'GET' });
+      await customMutator({ url: '/b', method: 'GET' });
+      vi.setSystemTime(Date.now() + 30_000);
+      await customMutator({ url: '/c', method: 'GET' });
+
+      expect(refreshToken).toHaveBeenCalledTimes(2);
+      expect(calls.map(call => call.header.Authorization)).toEqual([
+        'Bearer transient-refresh',
+        'Bearer transient-refresh',
+        'Bearer fresh',
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('刷新失败时仍用原 Token 发出请求', async () => {
     storage.set(STORAGE_KEYS.TOKEN, 'refresh-failing');
     storage.set(STORAGE_KEYS.TOKEN_EXPIRES, Date.now() + 10_000);

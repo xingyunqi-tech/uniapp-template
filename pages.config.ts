@@ -66,7 +66,7 @@ export default defineUniPages({
     },
     'pages/mine/index': {
       network: 'all',
-      packages: ['pages-sub/user', 'pages-sub/order'],
+      packages: ['pages-sub/user', 'pages-sub/study'],
     },
     'pages-sub/user/settings/index': {
       network: 'all',

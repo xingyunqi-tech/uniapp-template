@@ -46,6 +46,60 @@ describe('createPagedList', () => {
     expect(calls).toHaveLength(2);
   });
 
+  it('remove 移除条目后，下一次加载回退位置补齐前移的条目', async () => {
+    const { list, total, hasMore, load, remove, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], total: 9, totalPages: 3 });
+    await first;
+    remove(1);
+    expect(total.value).toBe(8);
+    const second = load();
+    calls[1].result.resolve({ list: [1, 3, 4], total: 8, totalPages: 3 });
+    await second;
+    const third = load();
+    calls[2].result.resolve({ list: [5, 6, 7], total: 8, totalPages: 3 });
+    await third;
+
+    expect(calls.map(c => c.params.page)).toEqual([1, 1, 2]);
+    expect(list.value).toEqual([1, 3, 4, 5, 6, 7]);
+    expect(hasMore.value).toBe(true);
+  });
+
+  it('加载下一页进行中时 remove 作废该请求，下一次加载按移除后的位置请求', async () => {
+    const { list, loading, load, remove, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], totalPages: 3 });
+    await first;
+    const second = load();
+    remove(0);
+    expect(loading.value).toBe(false);
+    calls[1].result.resolve({ list: [5, 6, 7], totalPages: 3 });
+    await expect(second).resolves.toEqual([2, 3]);
+
+    const third = load();
+    calls[2].result.resolve({ list: [2, 3, 4], totalPages: 3 });
+    await third;
+
+    expect(calls.map(c => c.params.page)).toEqual([1, 2, 1]);
+    expect(list.value).toEqual([2, 3, 4]);
+  });
+
+  it('刷新进行中时 remove 不作废刷新', async () => {
+    const { list, load, remove, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], totalPages: 1 });
+    await first;
+    const refresh = load(undefined, true);
+    remove(0);
+    calls[1].result.resolve({ list: [2, 3], totalPages: 1 });
+    await refresh;
+
+    expect(list.value).toEqual([2, 3]);
+  });
+
   it('没有 totalPages 时按 total 判断是否还有更多', async () => {
     const { hasMore, load, calls } = setup();
 

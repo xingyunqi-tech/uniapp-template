@@ -63,8 +63,7 @@ export const useWrongBookStore = defineStore('wrongBook', () => {
       pager.list.value.splice(index, 1, { ...pager.list.value[index], ...state });
       return;
     }
-    pager.list.value.splice(index, 1);
-    pager.total.value = Math.max(0, pager.total.value - 1);
+    pager.remove(index);
   }
 
   async function changeStatus(action: (questionId: string) => Promise<WrongQuestionStateDto>, questionId: string) {

@@ -148,14 +148,14 @@ describe('AI 讲题对话页', () => {
     expect(wrapper.find('.chat-input__button').text()).toBe('发送');
   });
 
-  it('未绑定手机号时提示手机号登录并可前往登录页', async () => {
+  it('未绑定手机号时提示退出后手机号登录并前往登录页', async () => {
     api.createAiConversation.mockRejectedValue(
       new ApiError('forbidden', 403, undefined, 'phoneBindingRequired', { errorKey: 'phoneBindingRequired' }),
     );
     const wrapper = await mountPage();
 
     expect(modal.confirm).toHaveBeenCalledWith(
-      expect.objectContaining({ content: '请使用手机号登录后使用 AI 助教', confirmText: '去登录' }),
+      expect.objectContaining({ content: '当前账号未绑定手机号，需要退出后使用手机号登录', confirmText: '退出并登录' }),
     );
     expect(router.push).toHaveBeenCalledWith(
       '/pages/login/index',

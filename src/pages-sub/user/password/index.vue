@@ -59,6 +59,7 @@ import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
 import { useAsyncAction, usePasswordStrength } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
+import { usePracticeStore } from '@/store/modules/practice';
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, PAGES } from '@/constants';
 import type { FormRules } from '@/utils/form-rules';
 
@@ -76,6 +77,7 @@ const formData = reactive({
 // 修改成功后清除登录状态，让用户重新登录
 const saveAction = useAsyncAction({
   action: async () => {
+    await usePracticeStore().flushAll();
     await userStore.changePassword(formData.oldPassword, formData.newPassword);
     await userStore.logout();
   },

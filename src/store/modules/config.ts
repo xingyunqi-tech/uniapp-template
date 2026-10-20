@@ -91,12 +91,15 @@ export const useConfigStore = defineStore(
     });
 
     /**
-     * 同步读取配置，未加载或加载失败时返回默认值
+     * 同步读取配置值（配置存储结构 `{ value }` 中的 value），未加载、加载失败或缺少 value 时返回默认值
      * @param key 配置 key
      * @param defaultValue 默认值
      */
-    function get<T = ConfigValue>(key: string, defaultValue: T): T {
-      return Object.prototype.hasOwnProperty.call(values.value, key) ? (values.value[key] as T) : defaultValue;
+    function get<T = unknown>(key: string, defaultValue: T): T {
+      const config = values.value[key];
+      return config !== undefined && Object.prototype.hasOwnProperty.call(config, 'value')
+        ? (config.value as T)
+        : defaultValue;
     }
 
     return {

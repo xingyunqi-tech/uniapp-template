@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import {
   ApiError,
+  ContentStatus,
   deleteMyExamProfile,
   getExamSubjects,
   getExams,
@@ -39,6 +40,7 @@ export const useExamStore = defineStore(
     const userStore = useUserStore();
 
     const examGroups = ref<ExamGroupDto[]>([]);
+    const examsLoaded = ref(false);
     const subjectsByExam = ref<Record<string, Subject[]>>({});
     const profiles = ref<UserExamProfile[]>([]);
     const profilesLoaded = ref(false);
@@ -51,7 +53,10 @@ export const useExamStore = defineStore(
     const subjectTasks = new Map<string, Promise<Subject[]>>();
 
     const isLoggedIn = computed(() => userStore.isLoggedIn);
-    const myProfiles = computed<ExamProfileView[]>(() => (isLoggedIn.value ? profiles.value : guestProfiles.value));
+    /** 目标考试中已下架的考试不展示；考试列表已加载时以列表为准 */
+    const myProfiles = computed<ExamProfileView[]>(() =>
+      (isLoggedIn.value ? profiles.value : guestProfiles.value).filter(isListed),
+    );
     const currentProfile = computed(() => myProfiles.value.find(profile => profile.isCurrent) ?? null);
     const currentExam = computed<Exam | null>(() => {
       const profile = currentProfile.value;
@@ -74,15 +79,21 @@ export const useExamStore = defineStore(
       return null;
     }
 
+    function isListed(profile: ExamProfileView): boolean {
+      if (profile.exam && profile.exam.status !== ContentStatus.PUBLISHED) return false;
+      return !examsLoaded.value || findExam(profile.examId) !== null;
+    }
+
     function getProfile(examId: string): ExamProfileView | null {
       return myProfiles.value.find(profile => profile.examId === examId) ?? null;
     }
 
     function fetchExams(force = false): Promise<ExamGroupDto[]> {
-      if (!force && examGroups.value.length > 0) return Promise.resolve(examGroups.value);
+      if (!force && examsLoaded.value) return Promise.resolve(examGroups.value);
       examsTask ??= getExams()
         .then(groups => {
           examGroups.value = groups;
+          examsLoaded.value = true;
           return groups;
         })
         .finally(() => {
@@ -126,9 +137,12 @@ export const useExamStore = defineStore(
       return profilesTask;
     }
 
-    /** 已登录时先同步游客选择，再按需拉取目标考试 */
+    /** 已登录时先同步游客选择，再按需拉取目标考试；游客有目标考试时拉取考试列表用于排除已下架的考试 */
     async function ensureProfiles(force = false): Promise<void> {
-      if (!isLoggedIn.value) return;
+      if (!isLoggedIn.value) {
+        if (guestProfiles.value.length > 0) await fetchExams(force).catch(() => undefined);
+        return;
+      }
       await syncGuestProfiles().catch(() => undefined);
       if (force || !profilesLoaded.value) await fetchProfiles();
     }

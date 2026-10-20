@@ -303,6 +303,7 @@ let stopNetworkListener: (() => void) | null = null;
 const items = computed(() => practiceStore.items);
 const total = computed(() => practiceStore.total);
 const session = computed(() => practiceStore.session);
+const ownsSession = computed(() => sessionId.value !== '' && practiceStore.session?.id === sessionId.value);
 const modeLabel = computed(() => (practiceStore.mode ? PRACTICE_MODE_LABELS[practiceStore.mode] : ''));
 const slots = computed(() => slotIndexes(currentIndex.value, swiperCurrent.value, total.value));
 const nextSlot = computed(() => (swiperCurrent.value + 1) % 3);
@@ -642,14 +643,16 @@ async function handleTimeUp() {
 watch(
   () => practiceStore.timeUp,
   value => {
-    if (value && !loading.value) handleTimeUp();
+    if (value && !loading.value && ownsSession.value) handleTimeUp();
   },
 );
 
 watch(
   () => practiceStore.pendingCount,
   count => {
-    if (count === 0 && timeUpHandled.value && !timeUpAlerting.value && practiceStore.inProgress) submitSession();
+    if (count === 0 && ownsSession.value && timeUpHandled.value && !timeUpAlerting.value && practiceStore.inProgress) {
+      submitSession();
+    }
   },
 );
 
@@ -678,7 +681,7 @@ async function handleEnd(reason: 'takenOver' | 'closed') {
 watch(
   () => practiceStore.endReason,
   reason => {
-    if (reason) handleEnd(reason);
+    if (reason && ownsSession.value) handleEnd(reason);
   },
 );
 
@@ -694,6 +697,7 @@ async function load() {
     const detail = await practiceStore.open(sessionId.value);
     const last = Math.max(0, detail.questionCount - 1);
     currentIndex.value = Math.min(Math.max(initialIndex ?? detail.lastIndex, 0), last);
+    initialIndex = null;
     swiperCurrent.value = 0;
     viewStartedAt = Date.now();
     await loadItems(currentIndex.value);
@@ -719,7 +723,12 @@ onLoad(options => {
 });
 
 onShow(() => {
-  if (!loading.value && practiceStore.inProgress && practiceStore.session?.id === sessionId.value) {
+  if (loading.value) return;
+  if (!ownsSession.value) {
+    load();
+    return;
+  }
+  if (practiceStore.inProgress) {
     viewStartedAt = Date.now();
     practiceStore.startAutoSync();
     if (practiceStore.isMock) practiceStore.refresh().catch(() => undefined);
@@ -738,7 +747,7 @@ onUnload(() => {
   stopNetworkListener?.();
   flushDraftTimers();
   leaveQuestion(currentIndex.value);
-  practiceStore.stopAutoSync();
+  if (ownsSession.value) practiceStore.stopAutoSync();
   if (practiceStore.pendingCount > 0) practiceStore.flush().catch(() => undefined);
 });
 </script>

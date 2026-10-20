@@ -52,6 +52,25 @@ describe('flattenKnowledgeTree', () => {
 
     expect(row).toMatchObject({ hasChildren: false, expanded: false });
   });
+
+  it('只有子孙节点挂题时父节点也标记为有题', () => {
+    const empty = (id: string, children: PublicKnowledgePointTreeNodeDto[] = []) => ({
+      ...node(id, children),
+      questionCount: 0,
+    });
+    const rows = flattenKnowledgeTree(
+      [empty('a', [empty('a1', [node('a1x')])]), empty('b', [empty('b1')])],
+      new Set(['a', 'a1', 'b']),
+    );
+
+    expect(rows.map(row => [row.node.id, row.hasQuestions])).toEqual([
+      ['a', true],
+      ['a1', true],
+      ['a1x', true],
+      ['b', false],
+      ['b1', false],
+    ]);
+  });
 });
 
 function progress(overrides: Partial<NonNullable<PublicKnowledgePointTreeNodeDto['progress']>> = {}) {

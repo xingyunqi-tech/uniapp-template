@@ -87,7 +87,7 @@ const { consentVisible, ensureConsent, resolveConsent } = useAiAccess();
 const consentDeclined = ref(false);
 let consentPrompted = false;
 
-const { list, loading, error, hasMore, isEmpty, refresh, loadMore, retry, reset } = useList<AiConversationDto>({
+const { list, loading, error, hasMore, isEmpty, refresh, loadMore, retry, remove, reset } = useList<AiConversationDto>({
   limit: AI_CONVERSATION_PAGE_SIZE,
   fetchPage: ({ page, limit }) => getAiConversations({ page, limit }, { showError: false }),
 });
@@ -130,7 +130,7 @@ async function handleDelete(item: AiConversationDto) {
   if (!(await confirm({ content: '删除后该讲题记录将无法恢复，确定删除吗？', confirmText: '删除' }))) return;
   try {
     await deleteAiConversation(item.id);
-    list.value = list.value.filter(conversation => conversation.id !== item.id);
+    remove(list.value.findIndex(conversation => conversation.id === item.id));
     aiStore.forgetSession(item.id);
     showToast('已删除');
   } catch (err) {

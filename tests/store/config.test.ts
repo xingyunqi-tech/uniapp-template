@@ -41,8 +41,8 @@ function createStore() {
   return useConfigStore();
 }
 
-function configOf(key: string, value: Record<string, unknown>) {
-  return { key, value, isPublic: true, createdAt: '', updatedAt: '' };
+function configOf(key: string, value: unknown) {
+  return { key, value: { value }, isPublic: true, createdAt: '', updatedAt: '' };
 }
 
 beforeEach(() => {
@@ -79,6 +79,19 @@ describe('config store', () => {
   it('未加载时返回默认值', () => {
     const store = createStore();
     expect(store.get('missing', { enabled: false })).toEqual({ enabled: false });
+  });
+
+  it('读取配置存储结构中的 value，缺少 value 时返回默认值', async () => {
+    api.getConfig.mockImplementation((key: string) =>
+      Promise.resolve(
+        key === 'flag' ? configOf(key, false) : { key, value: {}, isPublic: true, createdAt: '', updatedAt: '' },
+      ),
+    );
+    const store = createStore();
+    await store.load(['flag', 'empty']);
+
+    expect(store.get('flag', true)).toBe(false);
+    expect(store.get('empty', 'fallback')).toBe('fallback');
   });
 
   it('缓存持久化，新实例启动即可读取', async () => {

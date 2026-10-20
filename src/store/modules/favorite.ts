@@ -120,10 +120,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     await deleteFavorite(id);
 
     // 从列表中移除
-    const index = favoriteList.value.findIndex(item => item.id === id);
-    if (index !== -1) {
-      favoriteList.value.splice(index, 1);
-    }
+    pager.remove(favoriteList.value.findIndex(item => item.id === id));
 
     // 更新缓存
     if (favorite) {
@@ -146,12 +143,9 @@ export const useFavoriteStore = defineStore('favorite', () => {
       insertIfMatches(response.favorite);
     } else {
       // 从列表中移除（使用 targetType 和 targetId 比较）
-      const index = favoriteList.value.findIndex(
-        item => item.targetType === data.targetType && item.targetId === data.targetId,
+      pager.remove(
+        favoriteList.value.findIndex(item => item.targetType === data.targetType && item.targetId === data.targetId),
       );
-      if (index !== -1) {
-        favoriteList.value.splice(index, 1);
-      }
     }
 
     // 更新缓存

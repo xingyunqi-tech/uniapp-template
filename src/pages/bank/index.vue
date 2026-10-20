@@ -90,9 +90,9 @@
                   {{ knowledgeMasteryText(row.node) }}
                 </text>
               </view>
-              <text v-else class="knowledge-row__count">{{ row.node.questionCount }} 题</text>
+              <text v-else-if="!row.hasChildren" class="knowledge-row__count">{{ row.node.questionCount }} 题</text>
               <text
-                v-if="row.node.questionCount > 0"
+                v-if="row.hasQuestions"
                 class="knowledge-row__practice"
                 @click.stop="openKnowledgeActions(row.node)"
               >

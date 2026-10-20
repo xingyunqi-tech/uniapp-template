@@ -115,6 +115,53 @@ describe('exam store 已登录', () => {
   });
 });
 
+describe('已下架考试', () => {
+  it('账号目标考试中已下架的考试不展示，也不作为当前考试', async () => {
+    login();
+    const offline = { ...serverProfile('a', true), exam: { ...exam('a'), status: 'OFFLINE' as Exam['status'] } };
+    api.getMyExamProfiles.mockResolvedValue([offline, serverProfile('b', false)]);
+    const store = useExamStore();
+
+    await store.ensureProfiles();
+
+    expect(store.myProfiles.map(profile => profile.examId)).toEqual(['b']);
+    expect(store.currentProfile).toBeNull();
+  });
+
+  it('游客的目标考试不在已发布考试列表中时不展示', async () => {
+    const store = useExamStore();
+    await store.followExam(exam('a'));
+    await store.followExam(exam('b'));
+    api.getExams.mockResolvedValue([{ category: 'CIVIL_SERVICE', exams: [exam('b')] }]);
+
+    await store.ensureProfiles();
+
+    expect(api.getExams).toHaveBeenCalledTimes(1);
+    expect(store.myProfiles.map(profile => profile.examId)).toEqual(['b']);
+    expect(store.currentProfile).toBeNull();
+  });
+
+  it('已发布考试列表为空时游客的目标考试都不展示', async () => {
+    const store = useExamStore();
+    await store.followExam(exam('a'));
+    api.getExams.mockResolvedValue([]);
+
+    await store.ensureProfiles();
+
+    expect(store.myProfiles).toEqual([]);
+  });
+
+  it('考试列表拉取失败时保留游客的目标考试', async () => {
+    const store = useExamStore();
+    await store.followExam(exam('a'));
+    api.getExams.mockRejectedValue(new Error('network'));
+
+    await store.ensureProfiles();
+
+    expect(store.currentExam?.id).toBe('a');
+  });
+});
+
 describe('游客选择同步', () => {
   it('登录后按关注顺序同步并设置当前考试，完成后清空本地', async () => {
     const store = useExamStore();

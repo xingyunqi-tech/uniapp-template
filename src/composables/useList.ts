@@ -91,6 +91,7 @@ export function useList<T, P extends object = object>(options: UseListOptions<T,
     refresh,
     loadMore,
     retry,
+    remove: pager.remove,
     reset,
   };
 }

@@ -134,7 +134,8 @@ import { ref, computed, reactive } from 'vue';
 import { onShow, onUnload } from '@dcloudio/uni-app';
 import { useUserStore } from '@/store/modules/user';
 import { useGlobalStore } from '@/store/modules/global';
-import { useAsyncAction, useDialog, useRouter, useSendSms } from '@/composables';
+import { usePracticeStore } from '@/store/modules/practice';
+import { useAsyncAction, useDialog, useRouter, useSendSms, withLoading } from '@/composables';
 import { FEATURE_FLAGS, PAGES, THEME_TYPE, LOCALE_TYPE } from '@/constants';
 import { formatFileSize, formatPhone, storage } from '@/utils';
 import { smsCodeRules, type FormRules } from '@/utils/form-rules';
@@ -144,6 +145,7 @@ import type { UFormExpose } from '@/components/UForm/context';
 const router = useRouter();
 const userStore = useUserStore();
 const globalStore = useGlobalStore();
+const practiceStore = usePracticeStore();
 const dialog = useDialog();
 
 // 计算属性
@@ -217,7 +219,11 @@ const logoutAction = useAsyncAction({
 
 async function handleLogout() {
   const confirmed = await dialog.confirm('确定要退出登录吗？');
-  if (confirmed) logoutAction.execute();
+  if (!confirmed) return;
+  let unsynced = practiceStore.countUnsynced();
+  if (unsynced > 0) unsynced = await withLoading(() => practiceStore.flushAll(), { text: '同步作答中', mask: true });
+  if (unsynced > 0 && !(await dialog.confirm(`还有 ${unsynced} 条作答未同步，退出后将丢失，确定退出吗？`))) return;
+  logoutAction.execute();
 }
 
 // 注销账号
@@ -233,6 +239,7 @@ const boundPhone = computed(() => userStore.userInfo?.phone || '');
 const DELETE_CLEANUP_ITEMS = [
   '练习记录与作答、错题本、学习统计与打卡',
   '笔记、收藏、分享记录、目标考试与个人生成的试卷',
+  'AI 讲题对话与消息',
   '上传的头像、照片等文件',
   '站内通知、通知设置与收货地址',
 ];

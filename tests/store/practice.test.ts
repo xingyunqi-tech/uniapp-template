@@ -604,6 +604,74 @@ describe('权限与状态', () => {
     expect(store.ongoing).toHaveLength(1);
   });
 
+  it('不在列表中但服务端仍进行中的会话，待同步作答保留不补交', async () => {
+    const patch = { questionId: 'q0', answer: { keys: ['A'] }, clientSeq: 1, clientAnsweredAt: SERVER_NOW };
+    saveAnswerCache('daily', { deviceId: 'device-1', seq: 1, pending: [patch] });
+    api.getOngoingPracticeSessions.mockResolvedValueOnce([sessionResult({ id: 'chapter' })]);
+    api.getPracticeSession.mockResolvedValueOnce(sessionResult({ id: 'daily', mode: PracticeMode.DAILY }));
+    const store = usePracticeStore();
+
+    await store.fetchOngoing({ excludeModes: [PracticeMode.DAILY] });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(api.getPracticeSession).toHaveBeenCalledWith('daily', { showError: false });
+    expect(api.savePracticeAnswers).not.toHaveBeenCalled();
+    expect(uni.getStorageSync('uni_practiceAnswers:daily')).not.toBe('');
+  });
+
+  it('查询会话状态遇到临时错误时保留待同步作答', async () => {
+    const patch = { questionId: 'q0', answer: { keys: ['A'] }, clientSeq: 1, clientAnsweredAt: SERVER_NOW };
+    saveAnswerCache('unknown', { deviceId: 'device-1', seq: 1, pending: [patch] });
+    api.getOngoingPracticeSessions.mockResolvedValueOnce([]);
+    api.getPracticeSession.mockRejectedValueOnce(new Error('request:fail'));
+    const store = usePracticeStore();
+
+    await store.fetchOngoing();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(api.savePracticeAnswers).not.toHaveBeenCalled();
+    expect(uni.getStorageSync('uni_practiceAnswers:unknown')).not.toBe('');
+  });
+
+  it('flushAll 补交本机全部待同步作答，返回仍未同步的条数', async () => {
+    const patch = { questionId: 'q0', answer: { keys: ['A'] }, clientSeq: 1, clientAnsweredAt: SERVER_NOW };
+    saveAnswerCache('synced', { deviceId: 'device-1', seq: 1, pending: [patch] });
+    saveAnswerCache('offline', { deviceId: 'device-1', seq: 1, pending: [patch] });
+    api.savePracticeAnswers.mockImplementation((id: string) =>
+      id === 'synced' ? Promise.resolve(saved([{ questionId: 'q0' }])) : Promise.reject(new Error('request:fail')),
+    );
+    const store = usePracticeStore();
+
+    expect(store.countUnsynced()).toBe(2);
+    await expect(store.flushAll()).resolves.toBe(1);
+    expect(uni.getStorageSync('uni_practiceAnswers:synced')).toBe('');
+    expect(uni.getStorageSync('uni_practiceAnswers:offline')).not.toBe('');
+  });
+
+  it('flushAll 分批补交超过单批上限的待同步作答', async () => {
+    const pending = Array.from({ length: 201 }, (_, i) => ({
+      questionId: `q${i}`,
+      answer: { keys: ['A'] },
+      clientSeq: 1,
+      clientAnsweredAt: SERVER_NOW,
+    }));
+    saveAnswerCache('large', { deviceId: 'device-1', seq: 1, pending });
+    api.savePracticeAnswers.mockResolvedValue(saved([]));
+    const store = usePracticeStore();
+
+    await expect(store.flushAll()).resolves.toBe(0);
+    expect(api.savePracticeAnswers.mock.calls.map(call => call[1].answers.length)).toEqual([200, 1]);
+    expect(uni.getStorageSync('uni_practiceAnswers:large')).toBe('');
+  });
+
+  it('flushAll 没有待同步作答时不发请求', async () => {
+    saveAnswerCache('idle', { deviceId: 'device-1', seq: 1, pending: [] });
+    const store = usePracticeStore();
+
+    await expect(store.flushAll()).resolves.toBe(0);
+    expect(api.savePracticeAnswers).not.toHaveBeenCalled();
+  });
+
   it('拉取未完成会话后清理已结束会话的缓存，有待同步作答的先补交', async () => {
     const patch = { questionId: 'q0', answer: { keys: ['A'] }, clientSeq: 1, clientAnsweredAt: SERVER_NOW };
     saveAnswerCache('active', { deviceId: 'device-1', seq: 1, pending: [] });
@@ -611,6 +679,9 @@ describe('权限与状态', () => {
     saveAnswerCache('unsynced', { deviceId: 'device-1', seq: 1, pending: [patch] });
     saveAnswerCache('offline', { deviceId: 'device-1', seq: 1, pending: [patch] });
     api.getOngoingPracticeSessions.mockResolvedValueOnce([sessionResult({ id: 'active' })]);
+    api.getPracticeSession.mockImplementation((id: string) =>
+      Promise.resolve(sessionResult({ id, status: PracticeSessionStatus.SUBMITTED })),
+    );
     api.savePracticeAnswers.mockImplementation((id: string) =>
       id === 'unsynced' ? Promise.resolve(saved([{ questionId: 'q0' }])) : Promise.reject(new Error('request:fail')),
     );

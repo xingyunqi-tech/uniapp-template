@@ -139,8 +139,7 @@ export const useOrderStore = defineStore('order', () => {
       if (matchesListParams(order)) {
         orderList.value[index] = order;
       } else {
-        orderList.value.splice(index, 1);
-        total.value--;
+        pager.remove(index);
       }
     }
     if (currentOrder.value && getOrderIdString(currentOrder.value.id) === orderId) {
@@ -154,10 +153,7 @@ export const useOrderStore = defineStore('order', () => {
    */
   function remove(orderId: string) {
     const index = orderList.value.findIndex(o => getOrderIdString(o.id) === orderId);
-    if (index > -1) {
-      orderList.value.splice(index, 1);
-      total.value--;
-    }
+    pager.remove(index);
 
     if (currentOrder.value && getOrderIdString(currentOrder.value.id) === orderId) {
       currentOrder.value = null;

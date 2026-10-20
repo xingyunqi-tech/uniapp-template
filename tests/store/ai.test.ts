@@ -23,7 +23,7 @@ describe('AI Store', () => {
     const store = useAiStore();
     expect(store.enabled).toBe(true);
 
-    api.getConfig.mockResolvedValue({ key: 'ai.enabled', value: false });
+    api.getConfig.mockResolvedValue({ key: 'ai.enabled', value: { value: false } });
     await expect(store.loadEnabled()).resolves.toBe(false);
     expect(api.getConfig).toHaveBeenCalledWith('ai.enabled', expect.anything());
     expect(store.enabled).toBe(false);

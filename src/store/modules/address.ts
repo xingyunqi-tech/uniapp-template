@@ -123,9 +123,7 @@ export const useAddressStore = defineStore('address', () => {
     // 从列表中移除
     const index = addressList.value.findIndex(item => item.id === id);
     const wasDefault = defaultAddress.value?.id === id || (index !== -1 && addressList.value[index].isDefault);
-    if (index !== -1) {
-      addressList.value.splice(index, 1);
-    }
+    pager.remove(index);
 
     // 删除默认地址后后端会另选一条作为默认，重新获取
     if (wasDefault) {

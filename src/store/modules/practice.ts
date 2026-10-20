@@ -572,18 +572,32 @@ export const usePracticeStore = defineStore('practice', () => {
   }
 
   async function syncDetachedCache(sessionId: string, saved: AnswerCache): Promise<void> {
+    let current = saved;
     try {
-      const batch = saved.pending.slice(0, MAX_BATCH);
-      await savePracticeAnswers(sessionId, { deviceId: saved.deviceId, offline: true, answers: batch }, SILENT);
-      const next = acknowledgePatches(saved, batch);
-      if (next.pending.length === 0) clearAnswerCache(sessionId);
-      else saveAnswerCache(sessionId, next);
+      while (current.pending.length > 0) {
+        const batch = current.pending.slice(0, MAX_BATCH);
+        await savePracticeAnswers(sessionId, { deviceId: current.deviceId, offline: true, answers: batch }, SILENT);
+        current = acknowledgePatches(current, batch);
+        if (current.pending.length === 0) clearAnswerCache(sessionId);
+        else saveAnswerCache(sessionId, current);
+      }
     } catch (error) {
       if (isClosingError(error) || !isTransientError(error)) clearAnswerCache(sessionId);
     }
   }
 
-  /** 不在进行中列表的会话：没有待同步作答的删除缓存，有的尝试补交 */
+  /** 有待同步作答且不在进行中列表的会话：服务端确认未进行中时补交，查询失败（临时错误）时保留 */
+  async function evictPendingCache(sessionId: string, saved: AnswerCache): Promise<void> {
+    try {
+      const detail = await getPracticeSession(sessionId, SILENT);
+      if (detail.status === PracticeSessionStatus.IN_PROGRESS) return;
+    } catch (error) {
+      if (isTransientError(error)) return;
+    }
+    await syncDetachedCache(sessionId, saved);
+  }
+
+  /** 不在进行中列表的会话：没有待同步作答的删除缓存，有的确认已结束后补交 */
   function evictCaches(activeIds: string[]): Promise<void> {
     const keep = new Set(activeIds);
     if (session.value) keep.add(session.value.id);
@@ -595,9 +609,29 @@ export const usePracticeStore = defineStore('practice', () => {
           clearAnswerCache(id);
           return Promise.resolve();
         }
-        return syncDetachedCache(id, saved);
+        return evictPendingCache(id, saved);
       });
     return Promise.all(tasks).then(() => undefined);
+  }
+
+  /** 本机缓存中待同步的作答条数 */
+  function countUnsynced(): number {
+    return listCachedSessionIds().reduce((sum, id) => sum + (readAnswerCache(id)?.pending.length ?? 0), 0);
+  }
+
+  /** 补交本机全部待同步作答，返回仍未同步的条数 */
+  async function flushAll(): Promise<number> {
+    if (countUnsynced() === 0) return 0;
+    const currentId = session.value?.id;
+    const tasks = listCachedSessionIds()
+      .filter(id => id !== currentId)
+      .map(id => {
+        const saved = readAnswerCache(id);
+        return saved && saved.pending.length > 0 ? syncDetachedCache(id, saved) : Promise.resolve();
+      });
+    if (currentId && pendingCount.value > 0) tasks.push(flush().then(() => undefined));
+    await Promise.all(tasks.map(task => task.catch(() => undefined)));
+    return countUnsynced();
   }
 
   async function fetchOngoing(params?: GetOngoingPracticeSessionsParams): Promise<PracticeSessionDto[]> {
@@ -675,6 +709,8 @@ export const usePracticeStore = defineStore('practice', () => {
     startAutoSync,
     stopAutoSync,
     fetchOngoing,
+    countUnsynced,
+    flushAll,
     reset,
   };
 });

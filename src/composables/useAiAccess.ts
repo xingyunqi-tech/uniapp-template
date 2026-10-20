@@ -6,10 +6,13 @@ import { ApiError, ConsentType } from '@/api';
 import { PAGES } from '@/constants/pages';
 import { useAiStore } from '@/store/modules/ai';
 import { useConsentStore } from '@/store/modules/consent';
+import { usePracticeStore } from '@/store/modules/practice';
+import { useUserStore } from '@/store/modules/user';
 import { getBusinessErrorMessage } from '@/utils/business-error';
 import { confirm } from '@/utils/modal';
 import { getCurrentFullPath } from '@/utils/router';
 import { showToast } from '@/utils/toast';
+import { withLoading } from './useLoading';
 import { useRouter } from './useRouter';
 
 /** retry：已补齐前置条件可重试；handled：已提示；unhandled：非前置条件错误 */
@@ -21,6 +24,7 @@ export type AiAccessResolution = 'retry' | 'handled' | 'unhandled';
 export function useAiAccess() {
   const consentStore = useConsentStore();
   const aiStore = useAiStore();
+  const userStore = useUserStore();
   const router = useRouter();
 
   /** AI 服务声明弹窗是否显示 */
@@ -53,14 +57,25 @@ export function useAiAccess() {
     resolve?.(agreed);
   }
 
-  /** 提示未绑定手机号的用户以手机号登录，确认后前往登录页并带回当前页 */
+  /** 提示未绑定手机号的用户退出后以手机号登录，确认后退出并前往登录页，登录后带回当前页 */
   async function guidePhoneLogin(): Promise<void> {
     const confirmed = await confirm({
       title: '需要手机号登录',
-      content: getBusinessErrorMessage('phoneBindingRequired'),
-      confirmText: '去登录',
+      content: '当前账号未绑定手机号，需要退出后使用手机号登录',
+      confirmText: '退出并登录',
     });
-    if (confirmed) await router.push(PAGES.LOGIN, { redirect: getCurrentFullPath() }).catch(() => {});
+    if (!confirmed) return;
+    const redirect = getCurrentFullPath();
+    if (userStore.isLoggedIn) {
+      const practiceStore = usePracticeStore();
+      let unsynced = practiceStore.countUnsynced();
+      if (unsynced > 0)
+        unsynced = await withLoading(() => practiceStore.flushAll(), { text: '同步作答中', mask: true });
+      if (unsynced > 0 && !(await confirm({ content: `还有 ${unsynced} 条作答未同步，退出后将丢失，确定退出吗？` })))
+        return;
+      await userStore.logout();
+    }
+    await router.push(PAGES.LOGIN, { redirect }).catch(() => {});
   }
 
   /** 处理 AI 前置条件错误：aiConsentRequired、phoneBindingRequired、aiUnavailable */

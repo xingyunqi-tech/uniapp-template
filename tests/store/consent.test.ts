@@ -92,7 +92,7 @@ beforeEach(() => {
   api.getConfig.mockReset().mockImplementation((key: string) => {
     const version = versions[VERSION_KEYS[key]];
     return version
-      ? Promise.resolve({ key, value: version, isPublic: true, createdAt: '', updatedAt: '' })
+      ? Promise.resolve({ key, value: { value: version }, isPublic: true, createdAt: '', updatedAt: '' })
       : Promise.reject(new ApiError('Config not found', 404));
   });
   api.getMyConsents.mockReset();

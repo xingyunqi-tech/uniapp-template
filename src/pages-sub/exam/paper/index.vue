@@ -6,6 +6,14 @@
           <view class="paper-info__header">
             <UTag :text="PAPER_TYPE_LABELS[paper.type]" type="primary" size="small" plain />
             <text class="paper-info__title">{{ paper.title }}</text>
+            <view v-if="paper.type !== PaperType.GENERATED" class="paper-info__favorite" @click="toggleFavorite">
+              <UIcon
+                :name="favorited ? 'star-filled' : 'star'"
+                size="34rpx"
+                :color="favorited ? 'var(--color-warning)' : 'var(--color-text-secondary)'"
+              />
+              <text class="paper-info__favorite-label">{{ favorited ? '已收藏' : '收藏' }}</text>
+            </view>
           </view>
           <view class="paper-info__meta">
             <text v-if="paper.year">{{ paper.year }} 年</text>
@@ -64,7 +72,7 @@ definePage({
   },
 });
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import {
   PaperType,
@@ -74,17 +82,23 @@ import {
   type PracticeSessionDto,
   type PublicPaperDetailDto,
 } from '@/api';
+import { useRouter } from '@/composables';
 import { usePracticeLauncher } from '@/composables/usePracticeLauncher';
-import { PAPER_TYPE_LABELS, QUESTION_TYPE_LABELS } from '@/constants';
+import { PAGES, PAPER_TYPE_LABELS, QUESTION_TYPE_LABELS } from '@/constants';
 import { useGlobalStore } from '@/store/modules/global';
 import { usePracticeStore } from '@/store/modules/practice';
+import { useQuestionCollectionStore } from '@/store/modules/question-collection';
 import { useUserStore } from '@/store/modules/user';
 import { danger } from '@/utils/modal';
 import { clearAnswerCache } from '@/utils/practice-cache';
+import { getCurrentFullPath } from '@/utils/router';
+import { showToast } from '@/utils/toast';
 
 const globalStore = useGlobalStore();
 const userStore = useUserStore();
 const practiceStore = usePracticeStore();
+const collectionStore = useQuestionCollectionStore();
+const router = useRouter();
 const { launching, launch, resume } = usePracticeLauncher();
 
 const paperId = ref('');
@@ -93,7 +107,32 @@ const ongoing = ref<PracticeSessionDto | null>(null);
 const loading = ref(false);
 const loadError = ref(false);
 const restarting = ref(false);
+const toggling = ref(false);
 let loaded = false;
+
+const favorited = computed(() => userStore.isLoggedIn && collectionStore.paperFavoriteOf(paperId.value) === true);
+
+function loadFavorite() {
+  if (!userStore.isLoggedIn || !paperId.value) return;
+  collectionStore.isPaperFavorited(paperId.value).catch(error => console.error('查询收藏状态失败:', error));
+}
+
+async function toggleFavorite() {
+  if (!userStore.isLoggedIn) {
+    router.push(PAGES.LOGIN, { redirect: getCurrentFullPath() });
+    return;
+  }
+  if (toggling.value) return;
+  toggling.value = true;
+  try {
+    const value = await collectionStore.togglePaper(paperId.value);
+    showToast(value ? '已收藏' : '已取消收藏');
+  } catch (error) {
+    console.error('切换收藏失败:', error);
+  } finally {
+    toggling.value = false;
+  }
+}
 
 async function loadOngoing() {
   if (!userStore.isLoggedIn) {
@@ -161,6 +200,7 @@ onLoad(options => {
 
 onShow(() => {
   if (loaded) load();
+  loadFavorite();
 });
 </script>
 
@@ -188,6 +228,18 @@ onShow(() => {
     color: var(--color-text);
     font-size: 34rpx;
     font-weight: 600;
+  }
+
+  &__favorite {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8rpx;
+  }
+
+  &__favorite-label {
+    color: var(--color-text-secondary);
+    font-size: 26rpx;
   }
 
   &__meta,

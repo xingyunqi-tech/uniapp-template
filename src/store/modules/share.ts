@@ -157,7 +157,7 @@ export const useShareStore = defineStore('share', () => {
     try {
       await deleteShare(shareId);
       // 从列表中移除
-      shareList.value = shareList.value.filter(item => item.id !== shareId);
+      pager.remove(shareList.value.findIndex(item => item.id === shareId));
       // 如果是当前分享，清空
       if (currentShare.value?.id === shareId) {
         currentShare.value = null;

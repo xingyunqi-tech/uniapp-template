@@ -164,7 +164,7 @@ export const useNotificationStore = defineStore('notification', () => {
           unreadRequestId++;
           unreadCount.value--;
         }
-        notifications.value.splice(index, 1);
+        pager.remove(index);
       }
 
       uni.showToast({ title: '删除成功', icon: 'success' });

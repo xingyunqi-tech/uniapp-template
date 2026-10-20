@@ -124,8 +124,13 @@ function refreshTokenOnce(): Promise<string | null> {
   return refreshingToken;
 }
 
-/** 主动刷新失败时的 Token，同一 Token 不再主动刷新，交由 401 流程处理 */
+/** 主动刷新遇到临时错误后，同一 Token 再次主动刷新前的等待时间 */
+const PROACTIVE_REFRESH_RETRY_MS = 30_000;
+
+/** 主动刷新被拒绝时的 Token，同一 Token 停止主动刷新，交由 401 流程处理 */
 let proactiveRefreshFailedToken = '';
+/** 主动刷新遇到临时错误时的 Token 与可再次主动刷新的时间 */
+let proactiveRefreshRetry = { token: '', at: 0 };
 
 /**
  * 发请求时使用的 Token：即将过期时先刷新（并发请求共用一次刷新），刷新失败仍返回原 Token，由 401 流程处理
@@ -134,7 +139,14 @@ let proactiveRefreshFailedToken = '';
 export async function resolveRequestToken(skipAuthHandling = false): Promise<string> {
   const token = getAccessToken();
   if (!token || skipAuthHandling || token === proactiveRefreshFailedToken || !isAccessTokenExpiring()) return token;
-  const fresh = await refreshTokenOnce().catch(() => null);
+  if (proactiveRefreshRetry.token === token && Date.now() < proactiveRefreshRetry.at) return token;
+  let fresh: string | null;
+  try {
+    fresh = await refreshTokenOnce();
+  } catch {
+    proactiveRefreshRetry = { token, at: Date.now() + PROACTIVE_REFRESH_RETRY_MS };
+    return getAccessToken();
+  }
   if (!fresh) proactiveRefreshFailedToken = token;
   return fresh || getAccessToken();
 }

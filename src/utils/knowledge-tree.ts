@@ -6,6 +6,13 @@ export interface KnowledgeTreeRow {
   depth: number;
   hasChildren: boolean;
   expanded: boolean;
+  /** 自身或子孙节点有已发布题目 */
+  hasQuestions: boolean;
+}
+
+/** 自身或子孙节点是否有已发布题目 */
+export function hasKnowledgeQuestions(node: PublicKnowledgePointTreeNodeDto): boolean {
+  return node.questionCount > 0 || node.children.some(hasKnowledgeQuestions);
 }
 
 /** 按展开状态展开为可见行，父节点在前 */
@@ -17,7 +24,7 @@ export function flattenKnowledgeTree(
   return nodes.flatMap(node => {
     const hasChildren = node.children.length > 0;
     const expanded = hasChildren && expandedIds.has(node.id);
-    const row: KnowledgeTreeRow = { node, depth, hasChildren, expanded };
+    const row: KnowledgeTreeRow = { node, depth, hasChildren, expanded, hasQuestions: hasKnowledgeQuestions(node) };
     return expanded ? [row, ...flattenKnowledgeTree(node.children, expandedIds, depth + 1)] : [row];
   });
 }
