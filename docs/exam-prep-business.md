@@ -52,6 +52,8 @@
 | 用户   | `RoleEnum.user`       | 全部学习功能，AI 功能受额度限制且须绑定手机号、同意 AI 服务声明 |
 | 会员   | 用户 + 有效会员（P2） | 付费题库、更高 AI 额度                                       |
 | 管理员 | `RoleEnum.admin`      | 内容管理、审核、勘误、纠错处理、AI 出题、配置与数据查看      |
+| 内容编辑 | `RoleEnum.editor`   | 内容录入与导入、提交审核、AI 出题                            |
+| 内容审核 | `RoleEnum.reviewer` | 内容录入与导入，以及审核、发布、下架、勘误、纠错处理         |
 
 新增权限：
 
@@ -60,15 +62,15 @@
 | `practice:write` | user  | 创建练习、提交作答                         |
 | `ai:chat`        | user  | AI 对话与讲题                              |
 | `ai:grading`     | user  | 提交 AI 批改                               |
-| `content:manage` | admin | 考试、科目、知识点、题目、试卷、组卷规则、导入 |
-| `content:review` | admin | 题目审核、发布、下架、勘误、纠错处理       |
-| `ai:generate`    | admin | AI 批量出题                                |
+| `content:manage` | admin、editor、reviewer | 考试、科目、知识点、题目、试卷、组卷规则、导入 |
+| `content:review` | admin、reviewer | 题目审核、驳回，考试、科目、题目、试卷的发布与下架，修改非草稿组卷规则，勘误、纠错处理 |
+| `ai:generate`    | admin、editor | AI 批量出题                                |
 | `ai:admin`       | admin | AI 用量与成本查询                          |
 
 落地要求：
 
 1. 权限以数据库 `role_permission` 表为准（`PermissionsService` 带缓存），新增权限须同时写 migration/seed 授权、同步 `src/core/permissions/role-permissions.ts` 静态映射，上线后清理权限缓存。
-2. admin 拥有全部权限，单人运营，编辑与审核不做分离。
+2. admin 拥有全部权限；editor 只能录入与提交，reviewer 另可审核与上线。除 admin 外，不能发布或驳回自己创建或提交审核的题目；导入时直接发布仅 admin 可用。
 3. 会员资格不走 RBAC，由业务层根据 `UserMembership` 判断。
 4. 「公开、登录后附带个人数据」的接口使用新增的可选鉴权 guard：带合法 token 时解析用户，否则按游客处理。
 
@@ -850,17 +852,17 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 
 | 资源         | 接口                                                                                           | 权限             |
 | ------------ | ---------------------------------------------------------------------------------------------- | ---------------- |
-| 考试         | `GET/POST /admin/exams`、`GET/PATCH/DELETE /admin/exams/:id`、`POST /admin/exams/:id/publish`、`POST /admin/exams/:id/offline` | `content:manage` |
-| 科目         | `GET/POST /admin/subjects`、`GET/PATCH/DELETE /admin/subjects/:id`、`POST /admin/subjects/:id/publish`、`POST /admin/subjects/:id/offline` | `content:manage` |
+| 考试         | `GET/POST /admin/exams`、`GET/PATCH/DELETE /admin/exams/:id`、`POST /admin/exams/:id/publish`、`POST /admin/exams/:id/offline` | `content:manage`（发布与下架 `content:review`） |
+| 科目         | `GET/POST /admin/subjects`、`GET/PATCH/DELETE /admin/subjects/:id`、`POST /admin/subjects/:id/publish`、`POST /admin/subjects/:id/offline` | `content:manage`（发布与下架 `content:review`） |
 | 知识点       | `GET /admin/subjects/:id/knowledge-points`（树）、`POST /admin/knowledge-points`、`PATCH/DELETE /admin/knowledge-points/:id`、`POST /admin/knowledge-points/:id/move`、`POST /admin/knowledge-points/:id/migrate-questions` | `content:manage` |
-| 题目         | `GET/POST /admin/questions`、`GET/PATCH /admin/questions/:id`、`GET /admin/questions/:id/versions`、`POST /admin/questions/:id/submit`、`DELETE /admin/questions/:id`（仅从未发布的草稿） | `content:manage`（列表与详情 `content:manage` 或 `content:review`） |
-| 审核         | `POST /admin/questions/:id/publish`、`POST /admin/questions/:id/reject`、`POST /admin/questions/:id/offline`、`POST /admin/questions/batch-publish` | `content:review` |
+| 题目         | `GET/POST /admin/questions`、`GET/PATCH /admin/questions/:id`、`GET /admin/questions/:id/versions`、`POST /admin/questions/:id/submit`、`DELETE /admin/questions/:id`（仅从未发布的草稿）、`POST /admin/questions/batch-submit`、`POST /admin/questions/batch-delete`、`PATCH /admin/questions/batch-update`（知识点追加或替换、难度、来源、是否免费） | `content:manage`（列表与详情 `content:manage` 或 `content:review`） |
+| 审核         | `POST /admin/questions/:id/publish`、`POST /admin/questions/:id/reject`、`POST /admin/questions/:id/offline`、`POST /admin/questions/batch-publish`、`POST /admin/questions/batch-reject`、`POST /admin/questions/batch-offline`（批量接口最多 100 条，逐条处理并按请求顺序返回各条结果） | `content:review` |
 | 勘误         | `POST /admin/questions/:id/errata`、`GET /admin/errata`、`GET /admin/errata/:id`（进度）、`POST /admin/errata/:id/retry`（失败或超过 10 分钟未进展的任务从中断处继续） | `content:review` |
 | 纠错与举报   | `GET /admin/question-reports`（含题目纠错与 AI 内容举报，按类型筛选）、`GET /admin/question-reports/:id`、`PATCH /admin/question-reports/:id`（状态、回复、关联勘误） | `content:review` |
-| 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`DELETE /admin/papers/:id`（仅草稿）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage` |
-| 组卷规则     | `GET/POST /admin/paper-rules`、`GET/PATCH/DELETE /admin/paper-rules/:id`、`POST /admin/paper-rules/:id/preview`（试生成，不落库） | `content:manage` |
+| 试卷         | `GET/POST /admin/papers`、`GET/PATCH /admin/papers/:id`、`PUT /admin/papers/:id/questions`（整体设置题目、分区、顺序、分值）、`DELETE /admin/papers/:id`（仅草稿）、`POST /admin/papers/:id/publish`、`POST /admin/papers/:id/offline`、`POST /admin/papers/:id/copy` | `content:manage`（发布与下架 `content:review`） |
+| 组卷规则     | `GET/POST /admin/paper-rules`、`GET/PATCH/DELETE /admin/paper-rules/:id`、`POST /admin/paper-rules/:id/preview`（试生成，不落库） | `content:manage`（修改状态或修改非草稿规则 `content:review`） |
 | 每日一练     | `GET /admin/subjects/:id/daily-sets?from=&to=`（含按顺序的题目摘要：`id`、`parentId`、`type`、`stem`、`fileUrls`）、`POST /admin/subjects/:id/daily-sets/:date/regenerate` | `content:manage` |
-| 导入         | `POST /admin/imports`（上传导入包，返回任务 ID）、`GET /admin/imports`、`GET /admin/imports/:id`（进度、统计）、`GET /admin/imports/:id/errors`（错误行报告 xlsx 文件流） | `content:manage` |
+| 导入         | `POST /admin/imports/precheck`（预检，同步返回将新建、更新、跳过的数量与错误行，不写入数据）、`POST /admin/imports`（上传导入包，返回任务 ID）、`GET /admin/imports`、`GET /admin/imports/:id`（进度、统计）、`GET /admin/imports/:id/errors.json`（错误行明细，分页）、`GET /admin/imports/:id/errors`（错误行报告 xlsx 文件流） | `content:manage` |
 | AI 用量      | `GET /admin/ai/usage?from=&to=`                                                                | `ai:admin`       |
 | 监控         | `GET /admin/monitor/queues`、`GET /admin/monitor/alerts`                                       | `system:metrics` |
 | 远程配置     | 复用现有 `GET /config/admin/:key`、`PUT /config/:key`（AI 额度、熔断、错题阈值、补交窗口等）     | `system:config`  |
@@ -871,7 +873,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
 后台导入与后端脚本 `pnpm import:content <file>` 共用同一套异步导入服务：
 
 - 导入为 BullMQ 任务，记录 `ImportJob`：`id`、`fileId`、`status`（`PENDING` / `RUNNING` / `DONE` / `FAILED`）、`publishOnImport`、`total`、`succeeded`、`failed`、`skipped`（内容已存在、未写入的单元数）、`errorReportFileId`、`failureReason`（任务整体失败的错误键）、`createdBy`、`startedAt`、`finishedAt`。
-- `POST /admin/imports` 可直接上传导入包（`multipart/form-data` 的 `file`），也可传已上传（`purpose=import`）文件的 `fileId`（JSON）；导入后直接发布还需 `content:review` 权限。
+- `POST /admin/imports` 可直接上传导入包（`multipart/form-data` 的 `file`），也可传已上传（`purpose=import`）文件的 `fileId`（JSON）；导入后直接发布仅 admin 可用。
 - 复用 service 层校验与 `contentHash` 去重；行内带 ID 且已存在时更新，更新行留空的单元格表示保持原值（新建行留空用默认值）；已发布题目内容有变化时生成 `EDIT` 新版本；修改已发布题目答案、题型、选项 key 或空数的行判为错误，答案须走勘误。
 - 新建行内容与已有题目重复时视为已存在：`questionKey` / `materialKey` 绑定到已有题目供试卷引用，计入 `skipped`，不记错误行；已存在的知识点路径、未填 `id` 且同科目已有同名试卷的试卷行同样计入 `skipped`。
 - 材料与其全部小题为一个导入单元，任一行出错则整组失败；试卷所引用的题目任一失败则该试卷失败。
@@ -907,7 +909,7 @@ P0 只开放题目讲题（`contextType = QUESTION`）；自由对话（`GENERAL
   | `order`                 | 材料内小题顺序，材料小题必填                          |
   | `type`                  | `SINGLE` / `MULTIPLE` / `JUDGE` / `FILL` / `SHORT_ANSWER` / `ESSAY` |
   | `stem`                  | 题干，Markdown + LaTeX                                |
-  | `optionA` … `optionH`   | 选项                                                  |
+  | `optionA` … `optionZ` / `options` | 选项：每列一个，或 `options` 单列每行一个（行首可带 `A.`、`A、`、`A：`、`(A)` 等前缀，全部不带时按顺序编号），两种写法不可同时使用 |
   | `answer`                | 见下方答案写法                                        |
   | `points`                | 主观题要点，每行一个                                  |
   | `analysis`              | 解析                                                  |
