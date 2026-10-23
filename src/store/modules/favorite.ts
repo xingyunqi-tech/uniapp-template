@@ -48,8 +48,7 @@ export const useFavoriteStore = defineStore('favorite', () => {
     if (currentPage.value === 0) return;
     if (currentTargetType.value && favorite.targetType !== currentTargetType.value) return;
     if (favoriteList.value.some(item => item.id === favorite.id)) return;
-    favoriteList.value.unshift(favorite);
-    pager.total.value++;
+    pager.prepend(favorite);
   }
 
   /**

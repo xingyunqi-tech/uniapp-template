@@ -709,7 +709,7 @@ async function load() {
   } finally {
     loading.value = false;
   }
-  if (practiceStore.timeUp) handleTimeUp();
+  if (ownsSession.value && practiceStore.timeUp) handleTimeUp();
 }
 
 onLoad(options => {

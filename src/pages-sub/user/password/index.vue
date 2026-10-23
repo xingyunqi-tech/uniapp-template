@@ -44,6 +44,8 @@
 
     <!-- 保存按钮 -->
     <UFixedButton text="确认修改" loading-text="提交中..." :loading="saveAction.loading.value" @click="handleSave" />
+
+    <UDialog />
   </view>
 </template>
 
@@ -57,7 +59,7 @@ definePage({
 import { ref, reactive, toRef } from 'vue';
 import type { UFormExpose } from '@/components/UForm/context';
 import { useUserStore } from '@/store/modules/user';
-import { useAsyncAction, usePasswordStrength } from '@/composables';
+import { useAsyncAction, useDialog, usePasswordStrength, withLoading } from '@/composables';
 import { useGlobalStore } from '@/store/modules/global';
 import { usePracticeStore } from '@/store/modules/practice';
 import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, PAGES } from '@/constants';
@@ -74,10 +76,11 @@ const formData = reactive({
   confirmPassword: '',
 });
 
+const dialog = useDialog();
+
 // 修改成功后清除登录状态，让用户重新登录
 const saveAction = useAsyncAction({
   action: async () => {
-    await usePracticeStore().flushAll();
     await userStore.changePassword(formData.oldPassword, formData.newPassword);
     await userStore.logout();
   },
@@ -113,6 +116,15 @@ const rules: FormRules<typeof formData> = {
 // 保存密码
 async function handleSave() {
   if (!(await formRef.value?.validate())) return;
+  const practiceStore = usePracticeStore();
+  let unsynced = practiceStore.countUnsynced();
+  if (unsynced > 0) unsynced = await withLoading(() => practiceStore.flushAll(), { text: '同步作答中', mask: true });
+  if (
+    unsynced > 0 &&
+    !(await dialog.confirm(`还有 ${unsynced} 条作答未同步，修改密码后需重新登录，未同步的作答将丢失，确定修改吗？`))
+  ) {
+    return;
+  }
   saveAction.execute();
 }
 </script>

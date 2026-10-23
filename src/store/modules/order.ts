@@ -88,8 +88,7 @@ export const useOrderStore = defineStore('order', () => {
   async function create(params: CreateOrderDto) {
     const order = await createOrder(params);
     if (currentPage.value > 0 && matchesListParams(order)) {
-      orderList.value.unshift(order);
-      total.value++;
+      pager.prepend(order);
     }
     return order;
   }

@@ -66,6 +66,53 @@ describe('createPagedList', () => {
     expect(hasMore.value).toBe(true);
   });
 
+  it('prepend 插入条目后，下一次加载跳过服务端后移的条目', async () => {
+    const { list, total, load, prepend, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], total: 6, totalPages: 2 });
+    await first;
+    prepend(0);
+    expect(total.value).toBe(7);
+    const second = load();
+    calls[1].result.resolve({ list: [3, 4, 5], total: 7, totalPages: 3 });
+    await second;
+
+    expect(calls.map(c => c.params.page)).toEqual([1, 2]);
+    expect(list.value).toEqual([0, 1, 2, 3, 4, 5]);
+  });
+
+  it('prepend 后再 remove 同一条，下一次加载从原位置继续', async () => {
+    const { list, load, prepend, remove, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], total: 6, totalPages: 2 });
+    await first;
+    prepend(0);
+    remove(0);
+    const second = load();
+    calls[1].result.resolve({ list: [4, 5, 6], total: 6, totalPages: 2 });
+    await second;
+
+    expect(calls.map(c => c.params.page)).toEqual([1, 2]);
+    expect(list.value).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('加载下一页进行中时 prepend 作废该请求', async () => {
+    const { list, loading, load, prepend, calls } = setup({ limit: 3 });
+
+    const first = load(undefined, true);
+    calls[0].result.resolve({ list: [1, 2, 3], total: 6, totalPages: 2 });
+    await first;
+    const second = load();
+    prepend(0);
+    expect(loading.value).toBe(false);
+    calls[1].result.resolve({ list: [4, 5, 6], total: 6, totalPages: 2 });
+
+    expect(await second).toEqual([0, 1, 2, 3]);
+    expect(list.value).toEqual([0, 1, 2, 3]);
+  });
+
   it('加载下一页进行中时 remove 作废该请求，下一次加载按移除后的位置请求', async () => {
     const { list, loading, load, remove, calls } = setup({ limit: 3 });
 

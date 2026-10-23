@@ -78,7 +78,7 @@ export const useAddressStore = defineStore('address', () => {
     const address = await createAddress(data);
 
     // 添加到列表头部
-    addressList.value.unshift(address);
+    pager.prepend(address);
 
     // 如果是默认地址，更新默认地址
     if (address.isDefault) {

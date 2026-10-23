@@ -44,7 +44,7 @@ export function createPagedList<T, P extends object = object>(options: PagedList
   const total = ref(0);
 
   let requestId = 0;
-  /** 上次加载后经 remove 移除的条数 */
+  /** 上次加载后经 remove 移除的条数减去经 prepend 插入的条数 */
   let removed = 0;
   /** 进行中的追加请求 id，0 表示没有 */
   let appendingId = 0;
@@ -59,7 +59,7 @@ export function createPagedList<T, P extends object = object>(options: PagedList
    * 加载下一页；refresh 为 true 时从第 1 页重新加载并作废进行中的请求
    * 加载中或没有更多时直接返回当前列表；页码与是否还有更多只在请求成功后更新，
    * 查询参数变化后的刷新失败时，下一次加载从第 1 页开始；
-   * 经 remove 移除过条目时，下一次加载按移除条数回退位置补齐；追加请求进行中时 remove 会作废该请求
+   * 经 remove 移除或 prepend 插入过条目时，下一次加载按净移除条数调整位置补齐；追加请求进行中时 remove 与 prepend 会作废该请求
    * 请求失败时抛出错误，被作废的请求失败时不抛出并标记 stale
    */
   async function loadPage(params?: P, refresh = false): Promise<PagedLoadResult<T>> {
@@ -104,16 +104,28 @@ export function createPagedList<T, P extends object = object>(options: PagedList
     return (await loadPage(params, refresh)).list;
   }
 
+  function cancelAppending() {
+    if (loading.value && appendingId === requestId) {
+      requestId++;
+      loading.value = false;
+    }
+  }
+
   /** 从列表移除一条并减少总数，下一次加载补齐服务端随之前移的条目 */
   function remove(index: number) {
     if (index < 0 || index >= list.value.length) return;
     list.value.splice(index, 1);
     total.value = Math.max(0, total.value - 1);
     removed++;
-    if (loading.value && appendingId === requestId) {
-      requestId++;
-      loading.value = false;
-    }
+    cancelAppending();
+  }
+
+  /** 在列表头部插入服务端新建的一条并增加总数，下一次加载跳过服务端随之后移的条目 */
+  function prepend(item: T) {
+    list.value.unshift(item);
+    total.value++;
+    removed--;
+    cancelAppending();
   }
 
   /** 清空列表并作废进行中的请求 */
@@ -129,5 +141,5 @@ export function createPagedList<T, P extends object = object>(options: PagedList
     loadedKey = '';
   }
 
-  return { list, loading, error, hasMore, page, total, load, loadPage, remove, reset };
+  return { list, loading, error, hasMore, page, total, load, loadPage, remove, prepend, reset };
 }

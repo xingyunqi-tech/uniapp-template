@@ -74,8 +74,7 @@ export const useFeedbackStore = defineStore('feedback', () => {
     try {
       const feedback = await createFeedback(data);
       if (currentPage.value > 0 && (!currentType.value || feedback.type === currentType.value)) {
-        feedbackList.value.unshift(feedback);
-        pager.total.value++;
+        pager.prepend(feedback);
       }
 
       return feedback;
