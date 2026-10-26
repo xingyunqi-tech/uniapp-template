@@ -21,10 +21,19 @@ on:
   # 允许被其他工作流调用
   workflow_call:
 
+# 同一 PR 的新提交取消旧的检查；分支推送与发布不取消
+concurrency:
+  group: check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
   check:
     name: Lint & Type Check & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code

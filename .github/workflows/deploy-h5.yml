@@ -39,6 +39,9 @@ concurrency:
   group: deploy-h5
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 env:
   PNPM_VERSION: '11'
 
@@ -47,6 +50,7 @@ jobs:
   build:
     name: Build H5
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -103,6 +107,7 @@ jobs:
     name: Deploy to Aliyun
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: ${{ !cancelled() && !failure() && inputs.deploy }}
 
     steps:
@@ -159,17 +164,23 @@ jobs:
             fi
           fi
 
+      # 先增量上传 assets，再同步 index.html 等其余文件，最后清理过期的旧 assets
       - name: Deploy via rsync
         env:
           SSH_HOST: ${{ secrets.ALIYUN_HOST }}
           SSH_PORT: ${{ secrets.ALIYUN_PORT || 22 }}
           SSH_USER: ${{ secrets.ALIYUN_USER }}
           DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
+          ASSET_RETENTION_DAYS: 7
         run: |
-          rsync -avz --delete \
-            -e "ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/deploy_known_hosts" \
-            dist/build/h5/ \
-            "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+          SSH_CMD="ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/deploy_known_hosts"
+          REMOTE="$SSH_USER@$SSH_HOST"
+
+          rsync -avz -e "$SSH_CMD" dist/build/h5/assets "$REMOTE:$DEPLOY_PATH/"
+
+          rsync -avz --delete --exclude='/assets/' -e "$SSH_CMD" dist/build/h5/ "$REMOTE:$DEPLOY_PATH/"
+
+          $SSH_CMD "$REMOTE" "find '$DEPLOY_PATH/assets' -type f -mtime +$ASSET_RETENTION_DAYS -print -delete"
 
       - name: Cleanup SSH key
         if: always()
@@ -190,6 +201,7 @@ jobs:
     name: Notify
     needs: [build, deploy]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
 
     steps:

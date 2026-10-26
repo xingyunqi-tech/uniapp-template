@@ -174,10 +174,10 @@ base64 -i private.wx.key | tr -d '\n'
 |--------|------|---------|------|
 | Check | `.github/workflows/check.yml` | 推送/PR 到 master/main、手动触发、被其他工作流调用 | lint:check、checkCssVars、type-check、test:coverage |
 | Release | `.github/workflows/release.yml` | Tag 推送 (`v*.*.*`) | 跑一次 Check，通过后并行调用 Deploy H5 与 Deploy MiniProgram |
-| Deploy H5 | `.github/workflows/deploy-h5.yml` | 被 Release 调用 / 手动触发 | 手动触发时先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器（`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并告警） |
+| Deploy H5 | `.github/workflows/deploy-h5.yml` | 被 Release 调用 / 手动触发 | 手动触发时先调用 Check，构建 H5 后通过 SSH + rsync 部署到服务器：先增量上传 `assets/`，再同步 `index.html` 等其余文件，`assets/` 中超过 7 天未更新的旧文件最后清理（`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并告警） |
 | Deploy MiniProgram | `.github/workflows/deploy-mp.yml` | 被 Release 调用 / 手动触发 | 手动触发时先调用 Check，构建并上传微信 / 支付宝小程序；手动预览时微信二维码作为构建产物上传 |
 
-并发：Release、Deploy H5、Deploy MiniProgram 各用固定的并发组，运行中的部署不会被取消；同组最多一个运行、一个等待，再次触发时等待中的那个会被取消。发布进行中不要手动触发部署，以免 H5 与小程序停在不同版本。
+并发：Release、Deploy H5、Deploy MiniProgram 各用固定的并发组，运行中的部署不会被取消；同组最多一个运行、一个等待，再次触发时等待中的那个会被取消。Check 在 PR 上有新提交时取消旧的运行，分支推送与发布不取消。发布进行中不要手动触发部署，以免 H5 与小程序停在不同版本。
 
 ### Secrets 配置
 

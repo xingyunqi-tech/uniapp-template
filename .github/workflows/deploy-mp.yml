@@ -86,6 +86,9 @@ concurrency:
   group: deploy-mp
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 env:
   PNPM_VERSION: '11'
 
@@ -94,6 +97,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       version: ${{ steps.version.outputs.version }}
       description: ${{ steps.version.outputs.description }}
@@ -267,6 +271,7 @@ jobs:
     name: Deploy WeChat
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       ${{ !cancelled() && !failure() && (
         inputs.platform == 'weixin' ||
@@ -362,6 +367,7 @@ jobs:
     name: Deploy Alipay
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       ${{ !cancelled() && !failure() && (
         inputs.platform == 'alipay' ||
@@ -456,6 +462,7 @@ jobs:
     name: Notify
     needs: [build, deploy-weixin, deploy-alipay]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
 
     steps:

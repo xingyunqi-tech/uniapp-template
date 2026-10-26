@@ -56,7 +56,7 @@ pnpm dev:app          # App
 ### H5 部署 (deploy-h5.yml)
 
 - **触发**: 推送 `v*.*.*` tag 时由 `release.yml` 调用，或手动触发
-- **流程**: 手动触发时先调用 `check.yml` → `pnpm build:h5` → rsync 同步 `dist/build/h5/` 到服务器（`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并输出警告，指纹未固定）
+- **流程**: 手动触发时先调用 `check.yml` → `pnpm build:h5` → rsync 同步 `dist/build/h5/` 到服务器（先增量上传 `assets/` 再同步其余文件，旧 assets 保留 7 天；`StrictHostKeyChecking=yes`；主机指纹取自 `ALIYUN_KNOWN_HOSTS`，未配置时运行时 `ssh-keyscan` 获取并输出警告，指纹未固定）
 - **Secrets**: `ALIYUN_HOST`、`ALIYUN_PORT`（可选，默认 22）、`ALIYUN_USER`、`ALIYUN_SSH_KEY`、`ALIYUN_DEPLOY_PATH`；`ALIYUN_KNOWN_HOSTS`（可选，在可信网络执行 `ssh-keyscan -p <port> -H <host>` 并核对指纹后填入）
 
 ### 小程序部署 (deploy-mp.yml)
