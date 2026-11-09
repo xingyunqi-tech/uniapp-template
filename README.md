@@ -213,7 +213,7 @@ uniapp-template/
 
 ### 环境要求
 
-- **Node.js**: >= 22.22.2（见 `.nvmrc`）
+- **Node.js**: >= 24.21.0（见 `.nvmrc`）
 - **包管理器**: pnpm >= 11
 
 ### 安装依赖
@@ -525,7 +525,7 @@ pnpm install
 ### Node 版本不匹配
 
 ```bash
-# 检查 Node 版本 (需要 >= 22.22.2)
+# 检查 Node 版本 (需要 >= 24.21.0)
 node -v
 
 # 使用 nvm 切换版本

@@ -153,7 +153,7 @@ fix(auth): 修复表单验证问题
 
 ### 环境要求
 
-- Node.js >= 22.22.2（见 `.nvmrc`）
+- Node.js >= 24.21.0（见 `.nvmrc`）
 - 包管理器：pnpm >= 11
 - `package.json` 为 `"type": "module"`
 
