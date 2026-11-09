@@ -18,7 +18,7 @@
       "network": "all",
       "packages": [
         "pages-sub/user",
-        "pages-sub/order"
+        "pages-sub/study"
       ]
     },
     "pages-sub/user/settings/index": {
