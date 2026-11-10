@@ -13,6 +13,8 @@
 #     - <PREFIX>_SSH_KEY: SSH 私钥 (完整内容，包括 BEGIN/END)
 #     - <PREFIX>_PATH: 部署目标路径 (如 /var/www/h5)
 #     - <PREFIX>_KNOWN_HOSTS: 服务器 known_hosts 行 (可选，未配置时用 ssh-keyscan 获取)
+#
+#   部署 job 使用的 Environments: aliyun-production / tencent-production
 
 name: Deploy H5
 
@@ -68,7 +70,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -123,7 +125,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'all' && '[{"key":"ALIYUN","name":"阿里云"},{"key":"TENCENT","name":"腾讯云"}]' || inputs.target == 'tencent' && '[{"key":"TENCENT","name":"腾讯云"}]' || '[{"key":"ALIYUN","name":"阿里云"}]') }}
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"key":"ALIYUN","name":"阿里云","environment":"aliyun-production"},{"key":"TENCENT","name":"腾讯云","environment":"tencent-production"}]' || inputs.target == 'tencent' && '[{"key":"TENCENT","name":"腾讯云","environment":"tencent-production"}]' || '[{"key":"ALIYUN","name":"阿里云","environment":"aliyun-production"}]') }}
+    environment:
+      name: ${{ matrix.environment }}
 
     steps:
       - name: Check secrets
