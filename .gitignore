@@ -50,6 +50,7 @@ test-results/
 
 #lockfile
 package-lock.json
+!scripts/mp-ci/package-lock.json
 # pnpm-lock.yaml
 yarn.lock
 

@@ -1,18 +1,20 @@
 # H5 自动部署工作流
-# 构建 H5 版本并通过 SSH + rsync 部署到阿里云服务器
+# 构建 H5 版本并通过 SSH + rsync 部署到阿里云 / 腾讯云服务器
 #
 # 触发条件:
 #   1. 推送 tag (v*.*.*)   - 由 release 工作流调用，自动部署
-#   2. 手动触发            - 可选择是否部署
+#   2. 手动触发            - 可选择是否部署及部署目标（aliyun / tencent / all）
 #
 # 配置步骤:
-#   在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中添加:
-#     - ALIYUN_HOST: 服务器 IP 或域名
-#     - ALIYUN_PORT: SSH 端口 (默认 22)
-#     - ALIYUN_USER: SSH 用户名
-#     - ALIYUN_SSH_KEY: SSH 私钥 (完整内容，包括 BEGIN/END)
-#     - ALIYUN_DEPLOY_PATH: 部署目标路径 (如 /var/www/h5)
-#     - ALIYUN_KNOWN_HOSTS: 服务器 known_hosts 行 (可选，未配置时用 ssh-keyscan 获取)
+#   在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中添加（<PREFIX> 为 ALIYUN 或 TENCENT，按部署目标配置）:
+#     - <PREFIX>_HOST: 服务器 IP 或域名
+#     - <PREFIX>_PORT: SSH 端口 (默认 22)
+#     - <PREFIX>_USER: SSH 用户名
+#     - <PREFIX>_SSH_KEY: SSH 私钥 (完整内容，包括 BEGIN/END)
+#     - <PREFIX>_PATH: 部署目标路径 (如 /var/www/h5)
+#     - <PREFIX>_KNOWN_HOSTS: 服务器 known_hosts 行 (可选，未配置时用 ssh-keyscan 获取)
+#
+#   部署 job 使用的 Environments: aliyun-production / tencent-production
 
 name: Deploy H5
 
@@ -24,6 +26,11 @@ on:
         required: false
         default: true
         type: boolean
+      target:
+        description: '部署目标: aliyun | tencent | all'
+        required: false
+        default: aliyun
+        type: string
 
   # 手动触发
   workflow_dispatch:
@@ -33,11 +40,20 @@ on:
         required: true
         default: true
         type: boolean
+      target:
+        description: '部署目标'
+        required: true
+        default: aliyun
+        type: choice
+        options: [aliyun, tencent, all]
 
 # 并发控制: 固定 group、不中途取消；同组最多一个运行、一个等待，新的等待项会取消旧的等待项
 concurrency:
   group: deploy-h5
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 env:
   PNPM_VERSION: '11'
@@ -47,18 +63,19 @@ jobs:
   build:
     name: Build H5
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
@@ -92,57 +109,59 @@ jobs:
 
       # 上传构建产物 (用于下载和部署)
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: h5-build
           path: dist/build/h5
           retention-days: 7
 
-  # ==================== 部署到阿里云服务器 ====================
+  # ==================== 部署到服务器 ====================
   deploy:
-    name: Deploy to Aliyun
+    name: Deploy to ${{ matrix.name }}
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: ${{ !cancelled() && !failure() && inputs.deploy }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.target == 'all' && '[{"key":"ALIYUN","name":"阿里云","environment":"aliyun-production"},{"key":"TENCENT","name":"腾讯云","environment":"tencent-production"}]' || inputs.target == 'tencent' && '[{"key":"TENCENT","name":"腾讯云","environment":"tencent-production"}]' || '[{"key":"ALIYUN","name":"阿里云","environment":"aliyun-production"}]') }}
+    environment:
+      name: ${{ matrix.environment }}
 
     steps:
       - name: Check secrets
         env:
-          ALIYUN_HOST: ${{ secrets.ALIYUN_HOST }}
-          ALIYUN_USER: ${{ secrets.ALIYUN_USER }}
-          ALIYUN_SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
-          ALIYUN_DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
+          PREFIX: ${{ matrix.key }}
+          SSH_HOST: ${{ secrets[format('{0}_HOST', matrix.key)] }}
+          SSH_USER: ${{ secrets[format('{0}_USER', matrix.key)] }}
+          SSH_KEY: ${{ secrets[format('{0}_SSH_KEY', matrix.key)] }}
+          DEPLOY_PATH: ${{ secrets[format('{0}_PATH', matrix.key)] }}
         run: |
-          if [[ -z "$ALIYUN_HOST" ]]; then
-            echo "::error::缺少 ALIYUN_HOST secret"
-            exit 1
-          fi
-          if [[ -z "$ALIYUN_USER" ]]; then
-            echo "::error::缺少 ALIYUN_USER secret"
-            exit 1
-          fi
-          if [[ -z "$ALIYUN_SSH_KEY" ]]; then
-            echo "::error::缺少 ALIYUN_SSH_KEY secret"
-            exit 1
-          fi
-          if [[ -z "$ALIYUN_DEPLOY_PATH" ]]; then
-            echo "::error::缺少 ALIYUN_DEPLOY_PATH secret"
-            exit 1
-          fi
+          has_error=0
+          for pair in HOST:SSH_HOST USER:SSH_USER SSH_KEY:SSH_KEY PATH:DEPLOY_PATH; do
+            var="${pair#*:}"
+            if [[ -z "${!var}" ]]; then
+              echo "::error::缺少 ${PREFIX}_${pair%%:*} secret"
+              has_error=1
+            fi
+          done
+          [[ $has_error -eq 1 ]] && exit 1
           echo "✅ Secrets 配置正确"
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: h5-build
           path: dist/build/h5
 
       - name: Setup SSH
         env:
-          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
-          SSH_PORT: ${{ secrets.ALIYUN_PORT || 22 }}
-          SSH_KEY: ${{ secrets.ALIYUN_SSH_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.ALIYUN_KNOWN_HOSTS }}
+          PREFIX: ${{ matrix.key }}
+          SSH_HOST: ${{ secrets[format('{0}_HOST', matrix.key)] }}
+          SSH_PORT: ${{ secrets[format('{0}_PORT', matrix.key)] || 22 }}
+          SSH_KEY: ${{ secrets[format('{0}_SSH_KEY', matrix.key)] }}
+          SSH_KNOWN_HOSTS: ${{ secrets[format('{0}_KNOWN_HOSTS', matrix.key)] }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -151,7 +170,7 @@ jobs:
           if [[ -n "$SSH_KNOWN_HOSTS" ]]; then
             printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/deploy_known_hosts
           else
-            echo "::warning::未配置 ALIYUN_KNOWN_HOSTS，主机指纹未固定，本次通过 ssh-keyscan 临时获取；建议配置该 secret"
+            echo "::warning::未配置 ${PREFIX}_KNOWN_HOSTS，主机指纹未固定，本次通过 ssh-keyscan 临时获取；建议配置该 secret"
             # 非 22 端口时 ssh-keyscan 以 [host]:port 格式写入
             if ! ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/deploy_known_hosts || [[ ! -s ~/.ssh/deploy_known_hosts ]]; then
               echo "::error::ssh-keyscan 获取主机公钥失败: $SSH_HOST:$SSH_PORT"
@@ -159,17 +178,23 @@ jobs:
             fi
           fi
 
+      # 先增量上传 assets，再同步 index.html 等其余文件，最后清理过期的旧 assets
       - name: Deploy via rsync
         env:
-          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
-          SSH_PORT: ${{ secrets.ALIYUN_PORT || 22 }}
-          SSH_USER: ${{ secrets.ALIYUN_USER }}
-          DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
+          SSH_HOST: ${{ secrets[format('{0}_HOST', matrix.key)] }}
+          SSH_PORT: ${{ secrets[format('{0}_PORT', matrix.key)] || 22 }}
+          SSH_USER: ${{ secrets[format('{0}_USER', matrix.key)] }}
+          DEPLOY_PATH: ${{ secrets[format('{0}_PATH', matrix.key)] }}
+          ASSET_RETENTION_DAYS: 7
         run: |
-          rsync -avz --delete \
-            -e "ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/deploy_known_hosts" \
-            dist/build/h5/ \
-            "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+          SSH_CMD="ssh -i $HOME/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/deploy_known_hosts"
+          REMOTE="$SSH_USER@$SSH_HOST"
+
+          rsync -avz -e "$SSH_CMD" dist/build/h5/assets "$REMOTE:$DEPLOY_PATH/"
+
+          rsync -avz --delete --exclude='/assets/' -e "$SSH_CMD" dist/build/h5/ "$REMOTE:$DEPLOY_PATH/"
+
+          $SSH_CMD "$REMOTE" "find '$DEPLOY_PATH/assets' -type f -mtime +$ASSET_RETENTION_DAYS -print -delete"
 
       - name: Cleanup SSH key
         if: always()
@@ -178,10 +203,10 @@ jobs:
       - name: Deployment notification
         if: success()
         env:
-          SSH_HOST: ${{ secrets.ALIYUN_HOST }}
-          DEPLOY_PATH: ${{ secrets.ALIYUN_DEPLOY_PATH }}
+          SSH_HOST: ${{ secrets[format('{0}_HOST', matrix.key)] }}
+          DEPLOY_PATH: ${{ secrets[format('{0}_PATH', matrix.key)] }}
         run: |
-          echo "✅ H5 部署成功!"
+          echo "✅ H5 部署成功（${{ matrix.name }}）!"
           echo "🖥️ 服务器: $SSH_HOST"
           echo "📁 路径: $DEPLOY_PATH"
 
@@ -190,6 +215,7 @@ jobs:
     name: Notify
     needs: [build, deploy]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
 
     steps:
@@ -203,5 +229,5 @@ jobs:
           echo "| 部署 | ${{ needs.deploy.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
           if [[ "${{ needs.deploy.result }}" == "success" ]]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "🖥️ **服务器**: 阿里云" >> $GITHUB_STEP_SUMMARY
+            echo "🖥️ **部署目标**: ${{ inputs.target }}" >> $GITHUB_STEP_SUMMARY
           fi

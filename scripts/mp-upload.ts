@@ -7,6 +7,8 @@
  *   pnpm mp:upload:alipay          # 上传支付宝小程序
  *   pnpm mp:preview:weixin         # 生成微信小程序预览二维码
  *
+ * 微信上传依赖独立安装的 miniprogram-ci: npm ci --prefix scripts/mp-ci
+ *
  * 环境变量:
  *   MP_VERSION                     # 版本号 (可选，默认读取 package.json)
  *   MP_DESC                        # 版本描述 (可选)
@@ -31,6 +33,7 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve, join } from 'node:path';
 
 // ==================== 类型定义 ====================
@@ -61,11 +64,18 @@ interface AlipayConfig {
   projectPath: string;
 }
 
+interface MiniprogramCi {
+  Project: new (options: Record<string, unknown>) => unknown;
+  upload: (options: Record<string, unknown>) => Promise<unknown>;
+  preview: (options: Record<string, unknown>) => Promise<unknown>;
+}
+
 // ==================== 常量 ====================
 
 const ROOT_DIR = resolve(import.meta.dirname, '..');
 const DIST_DIR = resolve(ROOT_DIR, 'dist/build');
 const TEMP_DIR = resolve(ROOT_DIR, '.temp');
+const MP_CI_DIR = resolve(ROOT_DIR, 'scripts/mp-ci');
 
 // 构建输出目录
 const BUILD_PATHS = {
@@ -319,6 +329,18 @@ function getWeixinConfig(): WeixinConfig {
   };
 }
 
+function loadMiniprogramCi(): MiniprogramCi {
+  const requireFromMpCi = createRequire(join(MP_CI_DIR, 'package.json'));
+  try {
+    return requireFromMpCi('miniprogram-ci') as MiniprogramCi;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') {
+      throw new Error(`未安装 miniprogram-ci: ${MP_CI_DIR}\n请先执行: npm ci --prefix scripts/mp-ci`, { cause: error });
+    }
+    throw error;
+  }
+}
+
 /**
  * 上传微信小程序
  */
@@ -336,8 +358,7 @@ async function uploadWeixin(config: UploadConfig): Promise<void> {
     throw new Error(`构建产物不存在: ${weixinConfig.projectPath}\n请先执行: pnpm build:mp-weixin`);
   }
 
-  // 动态导入 miniprogram-ci
-  const ci = await import('miniprogram-ci');
+  const ci = loadMiniprogramCi();
 
   // 创建项目实例
   const project = new ci.Project({
@@ -586,4 +607,5 @@ async function main() {
   }
 }
 
-main();
+// miniprogram-ci 的编译子进程在空闲期保持 IPC 连接，需主动退出
+main().finally(() => process.exit());

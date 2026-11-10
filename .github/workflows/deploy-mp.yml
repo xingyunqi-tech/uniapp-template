@@ -1,5 +1,5 @@
 # 小程序自动部署工作流
-# 支持微信小程序和支付宝小程序的自动构建和上传
+# 支持微信小程序和支付宝小程序的自动构建与上传
 #
 # 触发条件:
 #   1. 推送 tag (v*.*.*)   - 由 release 工作流调用，自动上传到体验版
@@ -86,6 +86,9 @@ concurrency:
   group: deploy-mp
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 env:
   PNPM_VERSION: '11'
 
@@ -94,21 +97,22 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       version: ${{ steps.version.outputs.version }}
       description: ${{ steps.version.outputs.description }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
@@ -248,7 +252,7 @@ jobs:
       # 上传构建产物
       - name: Upload WeChat build artifact
         if: inputs.platform == 'weixin' || inputs.platform == 'all'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mp-weixin-build
           path: dist/build/mp-weixin
@@ -256,7 +260,7 @@ jobs:
 
       - name: Upload Alipay build artifact
         if: inputs.platform == 'alipay' || inputs.platform == 'all'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mp-alipay-build
           path: dist/build/mp-alipay
@@ -267,6 +271,7 @@ jobs:
     name: Deploy WeChat
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       ${{ !cancelled() && !failure() && (
         inputs.platform == 'weixin' ||
@@ -290,15 +295,15 @@ jobs:
           echo "✅ 微信小程序 secrets 配置正确"
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
@@ -306,8 +311,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache miniprogram-ci
+        id: mp-ci-cache
+        uses: actions/cache@v6
+        with:
+          path: scripts/mp-ci/node_modules
+          key: mp-ci-${{ runner.os }}-node-${{ hashFiles('.nvmrc') }}-${{ hashFiles('scripts/mp-ci/package-lock.json') }}
+
+      - name: Install miniprogram-ci
+        if: steps.mp-ci-cache.outputs.cache-hit != 'true'
+        run: npm ci --prefix scripts/mp-ci --no-audit --no-fund
+
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: mp-weixin-build
           path: dist/build/mp-weixin
@@ -323,7 +339,7 @@ jobs:
 
       - name: Upload preview QR code
         if: always() && inputs.action == 'preview'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mp-weixin-preview-qrcode
           path: .temp/preview-qrcode.png
@@ -351,6 +367,7 @@ jobs:
     name: Deploy Alipay
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       ${{ !cancelled() && !failure() && (
         inputs.platform == 'alipay' ||
@@ -386,17 +403,17 @@ jobs:
 
       - name: Checkout code
         if: steps.secrets.outputs.configured == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
         if: steps.secrets.outputs.configured == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         if: steps.secrets.outputs.configured == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: 'pnpm'
@@ -407,7 +424,7 @@ jobs:
 
       - name: Download build artifact
         if: steps.secrets.outputs.configured == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: mp-alipay-build
           path: dist/build/mp-alipay
@@ -420,7 +437,7 @@ jobs:
           ALIPAY_TOOL_ID: ${{ secrets.ALIPAY_TOOL_ID }}
           MP_VERSION: ${{ needs.build.outputs.version }}
           MP_DESC: ${{ needs.build.outputs.description }}
-          # Node.js 22 使用 OpenSSL 3.x，需要启用 legacy provider 以支持支付宝私钥签名
+          # Node.js 24 使用 OpenSSL 3.x，需要启用 legacy provider 以支持支付宝私钥签名
           NODE_OPTIONS: --openssl-legacy-provider
           MP_ACTION: ${{ inputs.action }}
         run: pnpm tsx scripts/mp-upload.ts alipay "$MP_ACTION"
@@ -445,6 +462,7 @@ jobs:
     name: Notify
     needs: [build, deploy-weixin, deploy-alipay]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: always()
 
     steps:

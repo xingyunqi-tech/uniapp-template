@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">= 22.22.2",
+    "node": ">= 24.21.0",
     "pnpm": ">= 11"
   },
   "scripts": {
@@ -118,7 +118,6 @@
     "markdownlint-cli2": "^0.23.3",
     "minidev": "^2.2.5",
     "miniprogram-api-typings": "^5.2.3",
-    "miniprogram-ci": "^2.1.31",
     "openapi3-ts": "^4.6.1",
     "orval": "^8.40.0",
     "playwright": "1.64.0",
