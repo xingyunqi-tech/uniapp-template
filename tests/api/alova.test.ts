@@ -192,15 +192,15 @@ describe('语言与错误提示', () => {
     (uni.showToast as Mock).mockClear();
   });
 
-  it('按界面语言携带 x-custom-lang 请求头', async () => {
+  it('按界面语言携带 Accept-Language 请求头', async () => {
     const calls = mockServer(() => ok());
 
     await http.Get('/lang-zh').send();
     i18n.global.locale.value = 'en-US';
     await http.Get('/lang-en').send();
 
-    expect(calls[0].header['x-custom-lang']).toBe('zh');
-    expect(calls[1].header['x-custom-lang']).toBe('en');
+    expect(calls[0].header['Accept-Language']).toBe('zh');
+    expect(calls[1].header['Accept-Language']).toBe('en');
   });
 
   it('校验失败时提示第一条字段错误', async () => {

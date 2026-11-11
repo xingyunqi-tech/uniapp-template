@@ -70,8 +70,8 @@ interface InternalRequestMeta extends RequestMeta {
 /** 接口地址前缀 */
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || '';
 
-/** 后端按此请求头选择返回语言，与后端 APP_HEADER_LANGUAGE 一致 */
-const LANGUAGE_HEADER = 'x-custom-lang';
+/** 后端按此请求头选择返回语言 */
+const LANGUAGE_HEADER = 'Accept-Language';
 
 /** 当前界面语言对应的后端语言 */
 function getRequestLanguage(): string {

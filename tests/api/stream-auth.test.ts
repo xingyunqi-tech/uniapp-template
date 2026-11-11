@@ -26,11 +26,11 @@ describe('不经过 alova 的请求的鉴权', () => {
     storage.set(STORAGE_KEYS.TOKEN, 't1');
     i18n.global.locale.value = LOCALE_TYPE.EN_US;
 
-    await expect(resolveRequestHeaders()).resolves.toEqual({ Authorization: 'Bearer t1', 'x-custom-lang': 'en' });
+    await expect(resolveRequestHeaders()).resolves.toEqual({ Authorization: 'Bearer t1', 'Accept-Language': 'en' });
   });
 
   it('未登录时只带语言', async () => {
-    await expect(resolveRequestHeaders()).resolves.toEqual({ 'x-custom-lang': 'zh' });
+    await expect(resolveRequestHeaders()).resolves.toEqual({ 'Accept-Language': 'zh' });
   });
 
   it('Token 已被其他请求刷新时直接重发', async () => {

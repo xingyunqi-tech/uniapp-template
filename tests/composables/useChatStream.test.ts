@@ -104,7 +104,7 @@ function setup(options: UseChatStreamOptions = {}) {
 
 beforeEach(() => {
   Object.values(api).forEach(fn => fn.mockReset());
-  api.resolveRequestHeaders.mockResolvedValue({ Authorization: 'Bearer t1', 'x-custom-lang': 'zh' });
+  api.resolveRequestHeaders.mockResolvedValue({ Authorization: 'Bearer t1', 'Accept-Language': 'zh' });
   api.recoverUnauthorized.mockResolvedValue(false);
 });
 
@@ -121,7 +121,7 @@ describe('useChatStream 发送', () => {
       body: { content: '为什么选 A？', sessionId: 's1' },
       headers: {
         Authorization: 'Bearer t1',
-        'x-custom-lang': 'zh',
+        'Accept-Language': 'zh',
         Accept: 'text/event-stream',
         'Content-Type': 'application/json',
       },
@@ -572,7 +572,7 @@ describe('useChatStream 平台传输', () => {
           body: '{"content":"q"}',
           headers: {
             Authorization: 'Bearer t1',
-            'x-custom-lang': 'zh',
+            'Accept-Language': 'zh',
             Accept: 'text/event-stream',
             'Content-Type': 'application/json',
           },
