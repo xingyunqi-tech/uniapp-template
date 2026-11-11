@@ -45,7 +45,10 @@ export interface UpdateAppProfileDto {
    * @nullable
    */
   serviceHours?: string | null;
-  /** @nullable */
+  /**
+   * @maxLength 100
+   * @nullable
+   */
   serviceEmail?: string | null;
   /**
    * @maxLength 40

@@ -60,6 +60,11 @@ export {
   adminGetQuestions,
   adminCreateQuestion,
   adminBatchPublishQuestions,
+  adminBatchSubmitQuestions,
+  adminBatchRejectQuestions,
+  adminBatchOfflineQuestions,
+  adminBatchDeleteQuestions,
+  adminBatchUpdateQuestions,
   adminGetQuestion,
   adminUpdateQuestion,
   adminDeleteQuestion,
@@ -90,7 +95,9 @@ export {
   acknowledgeMonitorAlert,
   adminCreateImport,
   adminGetImports,
+  adminPrecheckImport,
   adminGetImport,
+  adminGetImportErrors,
   adminDownloadImportErrors,
   adminCreateErrata,
   adminGetErrataList,
@@ -143,6 +150,9 @@ export {
   getCurrentUser,
   updateCurrentUser,
   deleteCurrentUser,
+  getMySessions,
+  revokeMySession,
+  revokeOtherSessions,
   sendSmsCode,
   loginWithPhone,
   loginWithSms,
@@ -171,6 +181,8 @@ export {
 export { createFeedback, getFeedbacks, getFeedback } from './generated/feedbacks/feedbacks';
 
 export { uploadFile } from './generated/files/files';
+
+export { gameLogin, gameRefreshToken } from './generated/game/game';
 
 export { healthCheck, livenessProbe, readinessProbe } from './generated/health/health';
 
